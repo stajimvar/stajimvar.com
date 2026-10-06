@@ -512,13 +512,18 @@ export async function vknKaydet(companyId: string, vkn: string, mersis?: string)
  * hâlinde olmayan bir sütun isteniyordu ve sorgu sessizce hata verip
  * boş liste dönüyordu — yani doğrulanmış şirket de kart göremiyordu.
  */
+function kopyaOku(gomulu: unknown): unknown {
+  const satir = Array.isArray(gomulu) ? gomulu[0] : gomulu;
+  return satir && typeof satir === 'object' ? ((satir as { kopya?: unknown }).kopya ?? null) : null;
+}
+
 export async function sirketBasvurulari(companyId: string) {
   const db = await istemci();
   const { data, error } = await db
     .from('applications')
     .select(
       'id, status, applied_at, match_score, listing_id, student_id, cover_letter, cv_path, ' +
-        'cv_snapshot_path, profile_snapshot, contact_share_consent_at, application_method, paylasim_izni_at, ' +
+        'cv_snapshot_path, contact_share_consent_at, application_method, paylasim_izni_at, ' +
         'interview_date, interview_time, interview_type, interview_location, ' +
         'interview_note, interview_response, interview_responded_at, ' +
         'status_changed_at, offer_note, offer_start_date, offer_compensation, ' +
@@ -539,6 +544,13 @@ export async function sirketBasvurulari(companyId: string) {
           Teklif özeti çalışma biçimini, süreyi ve ücreti İLANDAN
           okuyor: şirket teklif gönderirken bunları tekrar yazmıyor.
         */
+        /*
+          PROFİL KOPYASI KORUMALI TABLODAN (20261203010000). RLS yalnız
+          şirket doğrulanmışsa VE paylaşım etkinse satır veriyor; değilse
+          gömülü alan boş geliyor. `applications.profile_snapshot` artık
+          hep boş — okunmuyor.
+        */
+        'basvuru_profil_kopyalari(kopya), ' +
         'listings!inner(id, title, company_id, work_type, duration, stipend_text)'
     )
     .eq('listings.company_id', companyId)
@@ -552,6 +564,12 @@ export async function sirketBasvurulari(companyId: string) {
 
   return (data ?? []).map((s: Record<string, unknown>) => ({
     ...s,
+    /*
+      Gömülü kopya bire bir ilişkide nesne, eski PostgREST'te dizi olarak
+      gelebiliyor; ikisi de karşılanıyor. Kart oluşturucu kopyayı
+      `profile_snapshot` adıyla okuyor.
+    */
+    profile_snapshot: kopyaOku(s.basvuru_profil_kopyalari),
     ilanBasligi: (s.listings as { title?: string } | null)?.title ?? null,
     ilanCalismaBicimi: (s.listings as { work_type?: string } | null)?.work_type ?? null,
     ilanSuresi: (s.listings as { duration?: string } | null)?.duration ?? null,

@@ -119,6 +119,7 @@ import { konfetiAt } from './lib/konfeti';
 import { CheckCircle2 } from 'lucide-react';
 import { SAYFA_GENISLIGI } from './lib/duzen';
 import { cikisiDinle, sayfaBildir } from './lib/izleme.mjs';
+import { PAYLASIM_SURUMU } from './lib/basvuru-durumu.mjs';
 
 /*
   GECİKMELİ YÜKLEME
@@ -2719,7 +2720,11 @@ export default function App() {
                 onIletisimPaylasimi={async (id, acik) => {
                   const an = await iletisimPaylasimi(id, acik);
                   setApplications((prev) =>
-                    prev.map((a) => (a.id === id ? { ...a, contactShareConsentAt: an } : a)),
+                    prev.map((a) =>
+                      a.id === id
+                        ? { ...a, contactShareConsentAt: an, contactShareConsentVersion: an ? PAYLASIM_SURUMU : null }
+                        : a,
+                    ),
                   );
                   return an;
                 }}

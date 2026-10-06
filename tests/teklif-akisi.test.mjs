@@ -219,8 +219,15 @@ test('eski tekliflerde içerik yoksa ekran uydurmuyor', () => {
 /* ------------------------------------------------- 5. RLS regresyonu */
 
 test('regresyon teklif akışının iki yönünü de sınıyor', () => {
+  /*
+    SADE AKIŞ (20261204010000): şirket YENİ teklif gönderemiyor; eski
+    açık teklif servis rolüyle kuruluyor ve öğrencinin yanıt yolu
+    sınanmaya devam ediyor.
+  */
   const beklenen = [
-    'A, adaya teklif gonderebilir',
+    'A, adaya YENI teklif gonderemez (sade akis, sunucuda)',
+    'A, teklif alanlarini yazamaz (sade akis, sunucuda)',
+    'Eski acik teklif kuruldu (servis rolu)',
     'B, A adayina teklif gonderemez',
     'C, kendi basvurusuna teklif olusturamaz',
     'C, kendi teklifini kabul edebilir',

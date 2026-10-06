@@ -59,6 +59,10 @@ const RIZALI = {
   match_score: 80,
   listing_id: 'i1',
   contact_share_consent_at: '2026-08-20T09:00:00Z',
+
+  /* Gerçek satırda NOT NULL; sade akışta paylaşım kuralı buna bakıyor. */
+
+  application_method: 'internal',
   profile_snapshot: {
     ad: 'Aday A',
     universite: 'Örnek Üni',

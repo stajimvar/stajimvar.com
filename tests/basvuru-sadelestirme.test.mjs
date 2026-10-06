@@ -171,5 +171,114 @@ test('öğrenci anahtarı kapsamı dürüst söylüyor (profil + iletişim)', ()
     ve e-posta" deseydi, profilin de gizlendiğini saklamış olurdu.
   */
   assert.match(TAKIP, /Profilim ve iletişim bilgilerim bu şirkete açık/);
-  assert.match(TAKIP, /şirket ekranında profilin de gizlenir/);
+  /*
+    Kapalıyken ne kapanıp ne kaldığı açıkça yazıyor: profil ve iletişim
+    kapanıyor (sunucuda, 20261201 ve 20261203); başvuru kaydı, ön yazı ve
+    CV başvurunun parçası olarak kalıyor ve CV'de iletişim olabilir.
+  */
+  assert.match(TAKIP, /profil bilgilerini, telefonunu ve e-postanı göremez/);
+  assert.match(TAKIP, /CV'nde iletişim bilgisi varsa görünür/);
+  /*
+    Anahtarın durumu SUNUCUDAKİ ETKİN kuraldan: eski dış başvuru
+    rızasında "Açık" yazıp sunucuda kapalı olmasın.
+  */
+  assert.match(TAKIP, /app\.applicationMethod === 'internal' \|\| app\.contactShareConsentVersion === PAYLASIM_SURUMU/);
+  assert.match(TAKIP, /aria-checked=\{paylasimEtkinMi\(app\)\}/);
+  assert.doesNotMatch(TAKIP, /aria-checked=\{Boolean\(app\.contactShareConsentAt\)\}/);
+});
+
+/* ------------------------------------------- veri sınırı (bozuk kopya) */
+
+test('bozuk kopya alanları yalnız KENDİLERİNİ düşürüyor', async () => {
+  const { kartVerisi } = await import('../src/lib/aday-kart.mjs');
+  const k = kartVerisi({
+    id: 'x1',
+    application_method: 'internal',
+    contact_share_consent_at: '2026-09-01T08:00:00Z',
+    profile_snapshot: {
+      ad: { bozuk: true },
+      universite: 'Örnek Üniversitesi',
+      bolum: ['dizi'],
+      sinif: 3,
+      sehir: '   ',
+      linkedin: 42,
+      projeler: [
+        { baslik: 'Sağlam proje', aciklama: { bozuk: true }, adres: ['x'] },
+        { baslik: 7, aciklama: 'sayı başlık metne çevrilir' },
+        { baslik: { bozuk: true }, aciklama: 'başlıksız düşer' },
+        null,
+        'metin',
+        ['dizi'],
+      ],
+    },
+  });
+  /* Geçerli olanlar duruyor. */
+  assert.equal(k.paylasildi, true);
+  assert.equal(k.universite, 'Örnek Üniversitesi');
+  assert.equal(k.sinif, '3');
+  /* Bozuk olanlar null. */
+  assert.equal(k.ad, null);
+  assert.equal(k.bolum, null);
+  assert.equal(k.sehir, null);
+  /* Proje: başlık zorunlu, açıklama/adres bozuksa yalnız onlar düşüyor. */
+  assert.deepEqual(k.projeler, [
+    { baslik: 'Sağlam proje', aciklama: null, adres: null },
+    { baslik: '7', aciklama: 'sayı başlık metne çevrilir', adres: null },
+  ]);
+  /* Her alan ya metin ya null: çekmece hiçbir nesneyi çizmeye çalışmıyor. */
+  for (const alan of ['ad', 'fotoUrl', 'universite', 'bolum', 'sinif', 'sehir', 'github', 'portfolyo', 'linkedin']) {
+    assert.ok(k[alan] === null || typeof k[alan] === 'string', alan);
+  }
+});
+
+test('kopya nesne değilse hiç paylaşılmış sayılmıyor', async () => {
+  const { kartVerisi } = await import('../src/lib/aday-kart.mjs');
+  for (const kopya of [['dizi'], 'metin', 42]) {
+    const k = kartVerisi({ id: 'x2', application_method: 'internal', contact_share_consent_at: '2026-09-01', profile_snapshot: kopya });
+    assert.equal(k.paylasildi, false, JSON.stringify(kopya));
+  }
+});
+
+test('eski dış başvuru rızası profil kopyasını da açmıyor (etkin kural)', async () => {
+  const { kartVerisi } = await import('../src/lib/aday-kart.mjs');
+  const k = kartVerisi({
+    id: 'x3',
+    application_method: 'external',
+    contact_share_consent_at: '2026-08-20T09:00:00Z',
+    contact_share_consent_version: '2026-08-v1',
+    profile_snapshot: { ad: 'Aday' },
+  });
+  assert.equal(k.paylasildi, false);
+  assert.equal(k.ad, null);
+});
+
+/* --------------------------------------- sunucu: kopya ve sade akış */
+
+const GOC_KOPYA = oku('supabase/migrations/20261203010000_profil_kopyasi_korumasi.sql');
+const GOC_KORUMA = oku('supabase/migrations/20261204010000_sade_akis_sunucu_korumasi.sql');
+const VERI = oku('src/lib/sirket-veri.ts');
+
+test('profil kopyası korumalı tabloda, şirket yalnız etkin paylaşımda okuyor', () => {
+  assert.match(GOC_KOPYA, /create table if not exists public\.basvuru_profil_kopyalari/);
+  assert.match(GOC_KOPYA, /public\.sirket_adaylarini_gorebilir\(l\.company_id\)\s*and public\.basvuru_iletisimi_acik\(a\.id\)/);
+  /* Var olan kopyalar taşındı ve sütun boşaltıldı. */
+  assert.match(GOC_KOPYA, /update public\.applications set profile_snapshot = null where profile_snapshot is not null;/);
+  /* Yeni yazılanlar da anında taşınıyor. */
+  assert.match(GOC_KOPYA, /after insert or update of profile_snapshot on public\.applications/);
+  /* Güncel profil ve yetenekler aynı kapıdan. */
+  assert.equal((GOC_KOPYA.match(/if not public\.basvuru_iletisimi_acik\(p_basvuru\) then/g) ?? []).length, 2);
+  /* İstemci kopyayı başvuru satırından DEĞİL korumalı tablodan alıyor. */
+  assert.match(VERI, /'basvuru_profil_kopyalari\(kopya\), '/);
+  const secim = VERI.slice(VERI.indexOf('export async function sirketBasvurulari'));
+  assert.doesNotMatch(secim.slice(0, secim.indexOf('.eq(')), /profile_snapshot,/);
+});
+
+test('sunucu: şirket kaldırılan aşamalara geçemez ve davet/teklif yazamaz', () => {
+  assert.match(GOC_KORUMA, /new\.status::text in \('technical_assessment', 'interview_scheduled', 'offer_extended'\)/);
+  assert.match(GOC_KORUMA, /old\.interview_location, old\.interview_note, old\.interview_response\)/);
+  assert.match(GOC_KORUMA, /\(old\.offer_note, old\.offer_start_date, old\.offer_compensation\)/);
+  /* Öğrencinin kendi hamleleri, servis rolü ve yönetici serbest. */
+  assert.match(GOC_KORUMA, /if v_aktor is null or public\.is_admin\(\) then/);
+  assert.match(GOC_KORUMA, /if v_aktor = new\.student_id then/);
+  assert.match(GOC_KORUMA, /before update on public\.applications/);
 });

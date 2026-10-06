@@ -253,6 +253,8 @@ test('kart verisi LinkedIn ve paylaşım iznini taşıyor', () => {
   const k = kartVerisi({
     id: 'b3',
     contact_share_consent_at: '2026-09-01T08:00:00Z',
+    /* Gerçek satırda NOT NULL; sade akışta paylaşım kuralı buna bakıyor. */
+    application_method: 'internal',
     paylasim_izni_at: '2026-09-02T08:00:00Z',
     profile_snapshot: { ad: 'Aday C', linkedin: 'https://linkedin.com/in/c' },
   });

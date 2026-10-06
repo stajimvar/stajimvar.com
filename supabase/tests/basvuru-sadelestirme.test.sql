@@ -392,4 +392,231 @@ select s.ok((select count(*) from public.basvuru_iletisimi('1111aaaa-0000-0000-0
             'ESKI KABUL: ogrenci sirket yetkilisini HALA goruyor');
 rollback;
 
+/* ================================================================== */
+/*  6) PROFİL KOPYASI SUNUCUDA DA KAPANIYOR (20261203010000)           */
+/* ================================================================== */
+--
+-- Kopya korumalı tabloda (`basvuru_profil_kopyalari`). Şirket yalnız
+-- doğrulanmış şirkette VE paylaşım ETKİNKEN okur. Ölçülen yollar:
+-- doğrudan tablo, başvuru satırı (eski sütun), güncel profil RPC'si,
+-- yetenek RPC'si ve iletişim RPC'si.
+
+begin;
+select s.yonetici();
+/*
+  KURULUM: üç başvuruya kopya yazılıyor. Kasten e-postalı ve telefonlu:
+  temizlik tetikleyicisinin taşınan kopyada da çalıştığı ölçülüyor.
+*/
+update public.applications
+   set profile_snapshot = '{"ad":"Aday Bir","universite":"Ornek Universitesi","eposta":"sizinti@ornek.test","telefon":"+900000000000"}'::jsonb
+ where id in ('1111aaaa-0000-0000-0000-000000001001',
+              '3333aaaa-0000-0000-0000-000000003001',
+              '4444cccc-0000-0000-0000-000000004001');
+
+select s.ok((select count(*) from public.basvuru_profil_kopyalari
+              where basvuru_id in ('1111aaaa-0000-0000-0000-000000001001',
+                                   '3333aaaa-0000-0000-0000-000000003001',
+                                   '4444cccc-0000-0000-0000-000000004001')) = 3,
+            'KOPYA KURULUM: uc kopya korumali tabloya tasindi');
+select s.ok((select count(*) from public.applications
+              where id in ('1111aaaa-0000-0000-0000-000000001001',
+                           '3333aaaa-0000-0000-0000-000000003001',
+                           '4444cccc-0000-0000-0000-000000004001')
+                and profile_snapshot is not null) = 0,
+            'KOPYA KURULUM: basvuru satirinda kopya KALMADI');
+select s.ok((select count(*) from public.basvuru_profil_kopyalari
+              where kopya ? 'eposta' or kopya ? 'telefon') = 0,
+            'KOPYA KURULUM: tasinan kopyada e-posta/telefon YOK');
+commit;
+
+/* ---- PAYLAŞIM AÇIK: yetkili şirket okur ---- */
+begin;
+select s.kimlik('11111111-aaaa-0000-0000-000000000001');
+select s.ok((select count(*) from public.basvuru_profil_kopyalari
+              where basvuru_id = '1111aaaa-0000-0000-0000-000000001001') = 1,
+            'ACIK: Owner kopyayi okur');
+select s.ok((public.basvuru_aday_guncel_profili('1111aaaa-0000-0000-0000-000000001001') ->> 'riza') = 'true',
+            'ACIK: Owner guncel profili okur');
+select s.kimlik('22222222-aaaa-0000-0000-000000000002');
+select s.ok((select count(*) from public.basvuru_profil_kopyalari
+              where basvuru_id = '1111aaaa-0000-0000-0000-000000001001') = 1,
+            'ACIK: Recruiter kopyayi okur');
+/* Profil Viewer'a açık; iletişim değil (bölüm 2'de ölçüldü). */
+select s.kimlik('33333333-aaaa-0000-0000-000000000003');
+select s.ok((select count(*) from public.basvuru_profil_kopyalari
+              where basvuru_id = '1111aaaa-0000-0000-0000-000000001001') = 1,
+            'ACIK: Viewer profil kopyasini okur (iletisimi okumaz)');
+commit;
+
+/* ---- ÖĞRENCİ KAPATIYOR: hiçbir yoldan okunmuyor ---- */
+begin;
+select s.kimlik('66666666-dddd-0000-0000-000000000006');
+select public.ogrenci_paylasimi_ac('1111aaaa-0000-0000-0000-000000001001', false);
+
+select s.kimlik('11111111-aaaa-0000-0000-000000000001');
+select s.ok((select count(*) from public.basvuru_profil_kopyalari
+              where basvuru_id = '1111aaaa-0000-0000-0000-000000001001') = 0,
+            'KAPALI: Owner korumali tablodan OKUYAMAZ');
+select s.ok((select count(*) from public.applications
+              where id = '1111aaaa-0000-0000-0000-000000001001'
+                and profile_snapshot is not null) = 0,
+            'KAPALI: Owner basvuru satirindan (eski sutun) OKUYAMAZ');
+select s.ok((select count(*) from public.applications a
+               left join public.basvuru_profil_kopyalari k on k.basvuru_id = a.id
+              where a.id = '1111aaaa-0000-0000-0000-000000001001'
+                and k.kopya is not null) = 0,
+            'KAPALI: birlestirme ile de OKUYAMAZ');
+select s.ok((public.basvuru_aday_guncel_profili('1111aaaa-0000-0000-0000-000000001001') ->> 'riza') = 'false',
+            'KAPALI: guncel profil RPC kapali');
+select s.ok((public.basvuru_aday_guncel_profili('1111aaaa-0000-0000-0000-000000001001') -> 'guncel') is null,
+            'KAPALI: guncel profil RPC veri DONDURMUYOR');
+select s.ok(cardinality(public.basvuru_aday_yetenekleri('1111aaaa-0000-0000-0000-000000001001')) = 0,
+            'KAPALI: yetenek RPC bos');
+select s.ok((select count(*) from public.basvuru_iletisimi('1111aaaa-0000-0000-0000-000000001001')) = 0,
+            'KAPALI: iletisim RPC bos');
+select s.kimlik('33333333-aaaa-0000-0000-000000000003');
+select s.ok((select count(*) from public.basvuru_profil_kopyalari
+              where basvuru_id = '1111aaaa-0000-0000-0000-000000001001') = 0,
+            'KAPALI: Viewer da OKUYAMAZ');
+
+/* Başvurunun temel kaydı duruyor. */
+select s.kimlik('11111111-aaaa-0000-0000-000000000001');
+select s.ok((select count(*) from public.applications
+              where id = '1111aaaa-0000-0000-0000-000000001001'
+                and status = 'submitted' and applied_at is not null) = 1,
+            'KAPALI: basvurunun temel kaydi sirkete gorunur kaliyor');
+
+/* Öğrenci kendi kopyasını HER durumda okur. */
+select s.kimlik('66666666-dddd-0000-0000-000000000006');
+select s.ok((select count(*) from public.basvuru_profil_kopyalari
+              where basvuru_id = '1111aaaa-0000-0000-0000-000000001001') = 1,
+            'KAPALI: ogrenci KENDI kopyasini okur');
+
+/* ---- TEKRAR AÇIYOR: aynı kopya geri geliyor ---- */
+select public.ogrenci_paylasimi_ac('1111aaaa-0000-0000-0000-000000001001', true);
+select s.kimlik('11111111-aaaa-0000-0000-000000000001');
+select s.ok((select kopya ->> 'ad' from public.basvuru_profil_kopyalari
+              where basvuru_id = '1111aaaa-0000-0000-0000-000000001001') = 'Aday Bir',
+            'TEKRAR ACIK: ayni kopya geri geldi (silinmemis)');
+select s.ok((public.basvuru_aday_guncel_profili('1111aaaa-0000-0000-0000-000000001001') ->> 'riza') = 'true',
+            'TEKRAR ACIK: guncel profil RPC acik');
+select s.ok((select count(*) from public.basvuru_iletisimi('1111aaaa-0000-0000-0000-000000001001')) = 1,
+            'TEKRAR ACIK: iletisim RPC acik');
+rollback;
+
+/* ---- KAPALIYKEN BİLDİRİM METNİ DE ADI TAŞIMIYOR ---- */
+begin;
+select s.yonetici();
+delete from public.notifications where application_id = '1111aaaa-0000-0000-0000-000000001001';
+select s.kimlik('66666666-dddd-0000-0000-000000000006');
+select public.ogrenci_paylasimi_ac('1111aaaa-0000-0000-0000-000000001001', false);
+update public.applications set status = 'withdrawn'
+ where id = '1111aaaa-0000-0000-0000-000000001001';
+select s.yonetici();
+/* Bildirim şirketin HER üyesine gidiyor; hepsi adsız olmalı. */
+select s.ok((select count(*) > 0
+                    and count(*) = count(*) filter (where title like 'Bir aday%')
+               from public.notifications
+              where application_id = '1111aaaa-0000-0000-0000-000000001001'
+                and type = 'geri_cekildi'),
+            'KAPALI: sirkete giden geri cekme bildirimlerinin HEPSI adsiz');
+select s.ok((select count(*) from public.notifications
+              where application_id = '1111aaaa-0000-0000-0000-000000001001'
+                and (title like '%Aday Bir%' or body like '%Aday Bir%')) = 0,
+            'KAPALI: bildirimin hicbir yerinde ad yok');
+rollback;
+
+/* ---- ERİŞİMİ OLMAYANLAR ---- */
+begin;
+/* Başka şirket */
+select s.kimlik('44444444-bbbb-0000-0000-000000000004');
+select s.ok((select count(*) from public.basvuru_profil_kopyalari) = 0,
+            'BASKA SIRKET: hicbir kopyayi OKUYAMAZ');
+do $$
+begin
+  perform public.basvuru_aday_guncel_profili('1111aaaa-0000-0000-0000-000000001001');
+  raise exception 'DUSTU  baska sirket guncel profili okudu';
+exception when sqlstate '42501' then
+  raise notice 'GECTI  BASKA SIRKET: guncel profil RPC reddediyor';
+end $$;
+
+/* Doğrulanmamış şirket, KENDİ ilanındaki onaylı başvuru */
+select s.kimlik('55555555-cccc-0000-0000-000000000005');
+select s.ok((select count(*) from public.basvuru_profil_kopyalari
+              where basvuru_id = '4444cccc-0000-0000-0000-000000004001') = 0,
+            'DOGRULANMAMIS SIRKET: kendi basvurusunun kopyasini OKUYAMAZ');
+
+/* Eski external rıza: A kendi ilanında bile okuyamaz */
+select s.kimlik('11111111-aaaa-0000-0000-000000000001');
+select s.ok((select count(*) from public.basvuru_profil_kopyalari
+              where basvuru_id = '3333aaaa-0000-0000-0000-000000003001') = 0,
+            'ESKI EXTERNAL RIZA: kopya kapali (yeni onay varsayilmiyor)');
+select s.ok((public.basvuru_aday_guncel_profili('3333aaaa-0000-0000-0000-000000003001') ->> 'riza') = 'false',
+            'ESKI EXTERNAL RIZA: guncel profil kapali');
+commit;
+
+/* Giriş yapmamış kullanıcı */
+begin;
+select s.anonim();
+do $$
+begin
+  perform count(*) from public.basvuru_profil_kopyalari;
+  raise exception 'DUSTU  anon kopya tablosunu okudu';
+exception when insufficient_privilege then
+  raise notice 'GECTI  ANON: kopya tablosuna YETKISI YOK';
+end $$;
+rollback;
+
+/* Öğrenci external başvuruda paylaşımı AÇARSA kopya açılıyor */
+begin;
+select s.kimlik('66666666-dddd-0000-0000-000000000006');
+select public.ogrenci_paylasimi_ac('3333aaaa-0000-0000-0000-000000003001', true);
+select s.kimlik('11111111-aaaa-0000-0000-000000000001');
+select s.ok((select count(*) from public.basvuru_profil_kopyalari
+              where basvuru_id = '3333aaaa-0000-0000-0000-000000003001') = 1,
+            'EXTERNAL + OGRENCI ACTI: kopya acildi');
+rollback;
+
+/* ---- YENİ BAŞVURU: kopya yazıldığı anda taşınıyor ---- */
+begin;
+/* Öğrenci yalnız YAYINDAKİ ilana başvurabiliyor; ilan servis rolüyle. */
+select s.yonetici();
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+insert into public.listings (id, company_id, title, status, origin, application_method)
+values ('aaaa3333-0000-0000-0000-00000000000a', 'a0000000-0000-0000-0000-00000000000a',
+        'Sade Akis Yeni Ilan', 'published', 'employer_posted', 'internal');
+
+select s.kimlik('77777777-dddd-0000-0000-000000000007');
+insert into public.applications
+  (id, listing_id, student_id, match_score, application_method,
+   email_delivery_status, created_via, contact_share_consent_at,
+   contact_share_consent_version, profile_snapshot)
+values ('5555aaaa-0000-0000-0000-000000005001', 'aaaa3333-0000-0000-0000-00000000000a',
+        '77777777-dddd-0000-0000-000000000007', 70, 'internal', 'not_required', 'web', now(),
+        '2026-10-sade-v1',
+        '{"ad":"Yeni Aday","bolum":"Ornek Bolum","eposta":"yeni@ornek.test","telefon":"+900000000001"}');
+
+select s.ok((select count(*) from public.basvuru_profil_kopyalari
+              where basvuru_id = '5555aaaa-0000-0000-0000-000000005001') = 1,
+            'YENI BASVURU: ogrenci kendi kopyasini korumali tabloda goruyor');
+
+select s.yonetici();
+select s.ok((select profile_snapshot is null from public.applications
+              where id = '5555aaaa-0000-0000-0000-000000005001'),
+            'YENI BASVURU: basvuru satirindaki sutun BOS');
+select s.ok((select kopya ->> 'ad' = 'Yeni Aday' and not (kopya ? 'eposta') and not (kopya ? 'telefon')
+               from public.basvuru_profil_kopyalari
+              where basvuru_id = '5555aaaa-0000-0000-0000-000000005001'),
+            'YENI BASVURU: kopya dogru tasindi, iletisim temizlendi');
+select s.ok((select count(*) from public.notifications
+              where application_id = '5555aaaa-0000-0000-0000-000000005001'
+                and type = 'yeni_basvuru' and body like 'Yeni Aday%') >= 1,
+            'YENI BASVURU: sirket bildirimi adi TASIYOR (paylasim acik)');
+
+select s.kimlik('11111111-aaaa-0000-0000-000000000001');
+select s.ok((select count(*) from public.basvuru_profil_kopyalari
+              where basvuru_id = '5555aaaa-0000-0000-0000-000000005001') = 1,
+            'YENI BASVURU: yetkili sirket kopyayi okur');
+rollback;
+
 select 'TUM SADELESTIRME SINAMALARI GECTI' as sonuc;

@@ -262,8 +262,16 @@ test('ekranlar gönderilmeyen bildirimi vaat etmiyor', () => {
 /* --------------------------------------------- 8. RLS regresyonu kapsamı */
 
 test('regresyon görüşme akışının her iki yönünü sınıyor', () => {
+  /*
+    SADE AKIŞ (20261204010000): şirketin YENİ davet hamleleri artık
+    sunucuda reddediliyor; iki iddia "yapabilir"den "yapamaz"a döndü.
+    Öğrencinin yanıt yolu ve yanıtının korunması listede kalıyor.
+  */
   const beklenen = [
-    'A, kendi adayini gorusmeye davet edebilir',
+    'A, kendi adayini YENI gorusmeye davet edemez (sade akis, sunucuda)',
+    'A, yeni davet gonderip yaniti sifirlayamaz (sade akis, sunucuda)',
+    'Ogrencinin gorusme yaniti korunuyor',
+    'A, eski gorusme asamasindaki adayi olumsuz kapatabilir (cikis serbest)',
     'B, A adayini gorusmeye davet edemez',
     'C, kendine gorusme daveti olusturamaz',
     'A, ogrenci adina davete yanit veremez',
@@ -274,7 +282,6 @@ test('regresyon görüşme akışının her iki yönünü sınıyor', () => {
     'Geri cekilmis basvuruda gorusme yanitlanamaz',
     'Olumsuz kapanmis basvuruda gorusme yanitlanamaz',
     'C, katilamayacagini bildirebilir',
-    'A, yeni davet gonderip yaniti sifirlayabilir',
     'Sirket kopyada e-posta goremez',
   ];
   for (const ad of beklenen) {

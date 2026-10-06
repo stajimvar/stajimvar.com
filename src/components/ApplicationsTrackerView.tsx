@@ -22,6 +22,20 @@ import {
 import { ApplicationRecord, InternshipListing } from '../types';
 import { ListingLogo } from './ListingLogo';
 import { ODAK_HALKASI } from '../lib/renk-token';
+import { PAYLASIM_SURUMU } from '../lib/basvuru-durumu.mjs';
+
+/*
+  PAYLAŞIM ETKİN Mİ — sunucudaki `basvuru_iletisimi_acik` ile AYNI kural.
+
+  Anahtar yalnız rıza damgasına bakıyordu: eski bir dış başvuru rızasında
+  "Açık" yazıyordu ama sunucu o başvuruda ne iletişimi ne profili
+  açıyordu. Öğrenciye gösterilen durum, şirketin gerçekten gördüğü şey
+  olmalı.
+*/
+function paylasimEtkinMi(app: ApplicationRecord): boolean {
+  if (!app.contactShareConsentAt) return false;
+  return app.applicationMethod === 'internal' || app.contactShareConsentVersion === PAYLASIM_SURUMU;
+}
 
 /**
  * Uyum halkasının rengi. Eşikler ilan kartıyla birebir aynı; iki ekranda
@@ -828,22 +842,22 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
                         >
                           {iletisimIslemde === app.id
                             ? 'Kaydediliyor…'
-                            : app.contactShareConsentAt
-                              ? `Açık: ${listing?.companyName ?? 'Şirket'} profilini, telefonunu ve e-postanı görebilir; seni arayabilir ya da e-posta gönderebilir.`
-                              : `Kapalı: ${listing?.companyName ?? 'Şirket'} telefonunu ve e-postanı göremez; şirket ekranında profilin de gizlenir.`}
+                            : paylasimEtkinMi(app)
+                              ? `Açık: ${listing?.companyName ?? 'Şirket'} profil bilgilerini, telefonunu ve e-postanı görebilir; seni arayabilir ya da e-posta gönderebilir.`
+                              : `Kapalı: ${listing?.companyName ?? 'Şirket'} profil bilgilerini, telefonunu ve e-postanı göremez. Başvuru kaydın, ön yazın ve CV'n başvurunun parçası olarak kalır; CV'nde iletişim bilgisi varsa görünür.`}
                         </p>
                       </div>
                       <button
                         type="button"
                         role="switch"
-                        aria-checked={Boolean(app.contactShareConsentAt)}
+                        aria-checked={paylasimEtkinMi(app)}
                         aria-labelledby={`iletisim-paylasimi-${app.id}`}
                         aria-describedby={`iletisim-paylasimi-aciklama-${app.id}`}
                         aria-busy={iletisimIslemde === app.id}
                         disabled={iletisimIslemde === app.id}
                         onClick={() => {
                           setIletisimIslemde(app.id);
-                          Promise.resolve(onIletisimPaylasimi(app.id, !app.contactShareConsentAt))
+                          Promise.resolve(onIletisimPaylasimi(app.id, !paylasimEtkinMi(app)))
                             .catch(() => undefined)
                             .finally(() => setIletisimIslemde(null));
                         }}
@@ -852,12 +866,12 @@ export const ApplicationsTrackerView: React.FC<ApplicationsTrackerViewProps> = (
                         <span
                           aria-hidden
                           className={`relative inline-block h-6 w-11 rounded-full transition-colors ${
-                            app.contactShareConsentAt ? 'bg-blue-600' : 'bg-gray-300'
+                            paylasimEtkinMi(app) ? 'bg-blue-600' : 'bg-gray-300'
                           }`}
                         >
                           <span
                             className={`absolute left-0 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
-                              app.contactShareConsentAt ? 'translate-x-[22px]' : 'translate-x-0.5'
+                              paylasimEtkinMi(app) ? 'translate-x-[22px]' : 'translate-x-0.5'
                             }`}
                           />
                         </span>

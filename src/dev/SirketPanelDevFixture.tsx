@@ -1111,10 +1111,12 @@ export const SirketPanelDevFixture: React.FC = () => {
     değişimi kartlara işliyor.
   */
   /*
-    `dev-cekmece-hata=1`: test-1'in kopyasına BOZUK bir proje açıklaması
-    (nesne) konuyor. Çekmece onu çizerken hata veriyor ve hata sınırı
-    devreye giriyor — "ayrıntı yüklenemedi" hâli. Kart oluşturucu
-    proje BAŞLIĞINI süzüyor ama açıklamayı süzmüyor; bozulma oradan.
+    `dev-cekmece-hata=1`: test-1'in kopyasına BİRDEN ÇOK bozuk alan
+    konuyor (nesne açıklama, sayı başlık, başlıksız proje, null öğe,
+    nesne üniversite, dizi bölüm, nesne dil). Kart oluşturucu her alanı
+    veri sınırında doğruluyor (aday-kart.mjs `metin`, `projeListesi`):
+    bozuk alanlar yalnız KENDİLERİNİ düşürüyor, çekmece açılıyor ve
+    geçerli bilgiler (ad, sınıf, şehir, sağlam proje başlığı) görünüyor.
   */
   const [satirlar, setSatirlar] = React.useState(() =>
     new URLSearchParams(window.location.search).get('dev-cekmece-hata') === '1'
@@ -1124,7 +1126,15 @@ export const SirketPanelDevFixture: React.FC = () => {
                 ...r,
                 profile_snapshot: {
                   ...(r.profile_snapshot as Record<string, unknown>),
-                  projeler: [{ baslik: 'Bozuk kayıt', aciklama: { bozuk: true } }],
+                  universite: { bozuk: true },
+                  bolum: ['dizi'],
+                  diller: ['Türkçe', { bozuk: true }],
+                  projeler: [
+                    { baslik: 'Sağlam proje', aciklama: { bozuk: true }, adres: ['x'] },
+                    { baslik: 2026, aciklama: 'Sayı başlık metne çevrilir' },
+                    { baslik: { bozuk: true }, aciklama: 'Başlıksız proje düşer' },
+                    null,
+                  ],
                 },
               }
             : r,
