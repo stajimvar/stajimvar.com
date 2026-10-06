@@ -28,11 +28,21 @@ const satir = (fark = {}) => ({
 });
 
 test('öğrencinin başvuru durumu bildiriminde şirket adı, logo ve ilan adı', () => {
-  for (const tur of ['inceleniyor', 'degerlendirme', 'gorusme_daveti', 'gorusme_guncellendi', 'teklif', 'olumsuz']) {
+  /*
+    7 Ekim 2026: "Şirket başvurunu görüntüledi" (`basvuru_goruntulendi`) da
+    öğrencinin başvuru bildirimi; logo yerine belge simgesi çiziliyordu.
+  */
+  for (const tur of ['inceleniyor', 'degerlendirme', 'gorusme_daveti', 'gorusme_guncellendi', 'teklif', 'olumsuz', 'basvuru_goruntulendi']) {
     assert.deepEqual(basvuruGorseli(tur, satir(), DEPO), {
       tip: 'sirket', sirketAdi: 'Örnek AŞ', logo: '/isveren-logolari/ornek.svg', ilanAdi: 'Yazılım Stajyeri',
     }, tur);
   }
+});
+
+test('görüntülenme bildiriminin rozeti göz simgesi', async () => {
+  const fs = await import('node:fs');
+  const merkez = fs.readFileSync('src/components/BildirimMerkezi.tsx', 'utf8');
+  assert.match(merkez, /: tur === 'basvuru_goruntulendi' \? Eye/);
 });
 
 test('logo yoksa ya da güvensizse null — simgeye dönülür', () => {

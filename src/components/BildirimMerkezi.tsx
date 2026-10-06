@@ -6,6 +6,7 @@ import {
   CalendarClock,
   CheckCircle2,
   ChevronLeft,
+  Eye,
   FileText,
   Heart,
   Loader2,
@@ -47,6 +48,8 @@ function turSimgesi(tur: string) {
     /* Takip de kişiye dair bir olay: belge simgesine düşüyordu, oysa ortada belge yok. */
     : tur === 'baglanti_istegi' || tur === 'baglanti_kabul' || tur === 'takip' ? UserPlus
     : tur === 'paylasim_begeni' ? Heart
+    /* Şirket başvuruyu açtı: belge değil, bir bakış. Rozette logonun köşesinde. */
+    : tur === 'basvuru_goruntulendi' ? Eye
     : FileText;
 }
 

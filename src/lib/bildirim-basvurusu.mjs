@@ -33,7 +33,15 @@
  * ya da HTTPS adres kabul ediliyor. Başka her şeyde `null` ve tür simgesi.
  */
 
-/** Öğrenciye giden başvuru durumu bildirimleri (`bildir_ogrenciye`). */
+/**
+ * Öğrenciye giden başvuru bildirimleri: durum bildirimleri
+ * (`bildir_ogrenciye`) ve şirketin başvuruyu ilk açışı
+ * (`basvuru_goruntulendi`, 20261202010000 — `basvuru_goruntulendi_isaretle`).
+ *
+ * Görüntülenme bildirimi de `application_id` taşıyor; listede olmadığı
+ * için şirket logosu yerine genel belge simgesi çiziliyordu (kullanıcı
+ * bildirdi, 7 Ekim 2026).
+ */
 export const OGRENCI_BASVURU_TURLERI = new Set([
   'inceleniyor',
   'degerlendirme',
@@ -41,6 +49,7 @@ export const OGRENCI_BASVURU_TURLERI = new Set([
   'gorusme_guncellendi',
   'teklif',
   'olumsuz',
+  'basvuru_goruntulendi',
 ]);
 
 /** Adayın fotoğrafının gösterildiği işveren bildirimi. */
