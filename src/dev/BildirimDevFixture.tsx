@@ -71,6 +71,18 @@ const OGRENCI: Bildirim[] = [
     tarih: dk(75),
   },
   {
+    /* Şirketin başvuruyu ilk açışı (7 Ekim 2026): logo görünmeli, rozet göz. */
+    id: '20',
+    tur: 'basvuru_goruntulendi',
+    baslik: 'Şirket başvurunu görüntüledi',
+    govde: 'Örnek Teknoloji · Yazılım Geliştirme Stajyeri başvurunu açıp inceledi.',
+    hedef: '/profil?basvuru=b1',
+    basvuruId: 'b1',
+    anahtar: null,
+    okunduMu: false,
+    tarih: dk(30),
+  },
+  {
     /* Canlı ekran görüntüsündeki satırın birebiri: kısa ilan adı cümleye yapışıyordu. */
     id: '9',
     tur: 'inceleniyor',
