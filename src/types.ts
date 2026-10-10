@@ -46,7 +46,50 @@ export interface StudentProject {
   techStack: string[];
   githubUrl?: string;
   liveUrl?: string;
+  /** İsteğe bağlı tarih (20261206010000). Boşsa CV'de tarih yazılmıyor. */
+  startYear?: number | null;
+  endYear?: number | null;
+  ongoing?: boolean;
 }
+
+/** Eğitim düzeyi — veritabanındaki CHECK listesiyle birebir (20261206010000). */
+export type EgitimDuzeyi = 'lise' | 'on_lisans' | 'lisans' | 'yuksek_lisans' | 'doktora';
+
+/**
+ * EK EĞİTİM — önceki okul, yüksek lisans, değişim programı…
+ *
+ * Birincil eğitim `StudentProfile.university/department` üzerinde kalıyor:
+ * sitenin her yeri onu okuyor ve iki kaynak birbirinden ayrışırdı.
+ */
+export interface StudentEducation {
+  id: string;
+  school: string;
+  department: string;
+  level: EgitimDuzeyi | null;
+  startYear: number | null;
+  endYear: number | null;
+  ongoing: boolean;
+  gpa: number | null;
+}
+
+export interface StudentCertificate {
+  id: string;
+  name: string;
+  issuer: string;
+  issueYear: number | null;
+  issueMonth: number | null;
+  /** Doğrulama bağlantısı — yalnız http(s), sunucu da denetliyor. */
+  url: string;
+}
+
+/**
+ * CV ÇIKTISINDA GİZLENEBİLEN ALANLAR — profilden silinmiyor, yalnız
+ * basılmıyor. Liste veritabanındaki CHECK ile birebir.
+ */
+export type CvGizliAlan = 'telefon' | 'eposta' | 'konum' | 'linkedin' | 'portfoy' | 'foto' | 'not' | 'ilgi';
+
+/** Deneyimde çalışma türü — veritabanındaki CHECK listesiyle birebir. */
+export type CalismaTuru = 'tam_zamanli' | 'yari_zamanli' | 'staj' | 'gonullu' | 'serbest' | 'donemlik';
 
 /**
  * DENEYİM — iş, staj, yarı zamanlı çalışma ya da gönüllülük.
@@ -65,6 +108,8 @@ export interface StudentExperience {
   endMonth: number | null;
   ongoing: boolean;
   description: string;
+  /** İsteğe bağlı (20261206010000); boşsa CV'de yazılmıyor. */
+  employmentType?: CalismaTuru | null;
 }
 
 export interface StudentPreferences {
@@ -140,6 +185,20 @@ export interface StudentProfile {
     'İstanbul'.toLowerCase() 'i̇stanbul' veriyor.
   */
   city?: string;
+  /*
+    CV ALANLARI (20261206010000) — hepsi isteğe bağlı; eski kayıtlarda yok.
+  */
+  /** Birincil eğitimin düzeyi (Ön lisans, Lisans…). */
+  educationLevel?: EgitimDuzeyi | null;
+  educationStartYear?: number | null;
+  /** NULL = bilinmiyor; arayüz sınıf bilgisinden türetiyor. */
+  educationOngoing?: boolean | null;
+  /** Ek eğitimler; birincil eğitim yukarıdaki alanlarda. */
+  educations?: StudentEducation[];
+  certificates?: StudentCertificate[];
+  interests?: string[];
+  /** CV'de basılmayacak alanlar. */
+  cvGizli?: CvGizliAlan[];
 }
 
 export interface CompanyAccount {
