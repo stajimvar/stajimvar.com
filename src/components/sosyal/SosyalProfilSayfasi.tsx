@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, Camera, Plus } from 'lucide-react';
 import { SayfaKabugu } from '../SayfaKabugu';
 import { SAYFA_GENISLIGI } from '../../lib/duzen';
 import { BIRINCIL_EYLEM, ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
@@ -195,6 +195,12 @@ interface SayfaProps {
   duzenlemeParcasi?: 'tumu' | 'fotograf' | 'sosyal';
   /** 'fotograf' parçasında kartta yazan ad (öğrencinin adı). Verilmezse sosyal görünen ad. */
   fotografKartiAdi?: string;
+  /**
+   * Fotoğraf kartındaki eylemlerin sonuna eklenen öğe (11 Ekim 2026):
+   * "Profilini düzenle" ekranı buraya "Profili görüntüle"yi koyuyor —
+   * çıkış sorusu o ekranda, kart App'te kuruluyor.
+   */
+  fotografKartiEk?: React.ReactNode;
   /**
    * ÖĞRENCİ KAYDINDAKİ ESKİ FOTOĞRAF — YALNIZ YEDEK
    *
@@ -528,6 +534,7 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
   gomuluKip = 'portfolyo',
   duzenlemeParcasi = 'tumu',
   fotografKartiAdi,
+  fotografKartiEk,
   ogrenciAvatarAdresi = null,
   onAvatarYolu,
   onPortfolyoSatiri,
@@ -1613,9 +1620,12 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
             ad={fotografKartiAdi || 'Profil'}
             yol={null}
             yedekAdres={ogrenciAvatarAdresi}
-            className="h-14 w-14 shrink-0 rounded-full"
+            className="h-20 w-20 shrink-0 rounded-full text-2xl sm:h-24 sm:w-24"
           />
-          <p className="min-w-0 break-words text-base font-bold text-gray-900">{fotografKartiAdi}</p>
+          <div className="min-w-0">
+            <p className="break-words text-lg font-bold text-gray-900 sm:text-xl">{fotografKartiAdi}</p>
+            {fotografKartiEk}
+          </div>
         </div>
       );
     }
@@ -1789,18 +1799,36 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
     if (duzenlemeParcasi === 'fotograf') {
       const kartAdi = fotografKartiAdi || profil!.gorunenAd || `@${profil!.kullaniciAdi}`;
       const fotografYok = profilFotografi(profil!.avatarYolu, ogrenciAvatarAdresi).tur === 'yok';
+      /*
+        KULLANICININ MOBİL TASARIMI (11 Ekim 2026): büyük yuvarlak fotoğraf,
+        köşesinde kamera rozeti (dokununca yükleme açılıyor), yanında ad ve
+        altında "Fotoğrafı değiştir | Profili görüntüle →".
+      */
       return (
         <section aria-label="Profil fotoğrafın" className={`${KART} space-y-2`}>
-          <div className="flex items-center gap-3 sm:gap-4">
-            <ProfilFotografi
-              ad={kartAdi}
-              yol={profil!.avatarYolu}
-              yedekAdres={ogrenciAvatarAdresi}
-              className="h-14 w-14 shrink-0 rounded-full sm:h-16 sm:w-16"
-            />
+          <div className="flex items-center gap-4 sm:gap-5">
+            <button
+              type="button"
+              onClick={() => setGorunum('fotograf')}
+              aria-label={fotografYok ? 'Profil fotoğrafı ekle' : 'Profil fotoğrafını değiştir'}
+              className={`relative shrink-0 cursor-pointer rounded-full ${ODAK_HALKASI}`}
+            >
+              <ProfilFotografi
+                ad={kartAdi}
+                yol={profil!.avatarYolu}
+                yedekAdres={ogrenciAvatarAdresi}
+                className="h-20 w-20 rounded-full text-2xl sm:h-24 sm:w-24"
+              />
+              <span
+                aria-hidden
+                className="absolute -bottom-0.5 -right-0.5 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-white text-gray-900 shadow-sm"
+              >
+                <Camera className="h-4 w-4" />
+              </span>
+            </button>
             <div className="min-w-0">
-              <p className="break-words text-base font-bold text-gray-900">{kartAdi}</p>
-              <div className="flex flex-wrap gap-x-4">
+              <p className="break-words text-lg font-bold text-gray-900 sm:text-xl">{kartAdi}</p>
+              <div className="flex flex-wrap items-center gap-x-3">
                 <button
                   type="button"
                   onClick={() => setGorunum('fotograf')}
@@ -1818,6 +1846,12 @@ export const SosyalProfilSayfasi: React.FC<SayfaProps> = ({
                   >
                     {fotografKaldirmaDurumu === 'gonderiliyor' ? 'Kaldırılıyor…' : 'Kaldır'}
                   </button>
+                )}
+                {fotografKartiEk && (
+                  <>
+                    <span aria-hidden className="h-4 w-px bg-gray-300" />
+                    {fotografKartiEk}
+                  </>
                 )}
               </div>
             </div>

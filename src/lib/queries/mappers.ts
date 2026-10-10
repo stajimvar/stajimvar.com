@@ -658,6 +658,96 @@ export function splitStudentUpdate(patch: Partial<StudentProfile>) {
   return { profilePatch, studentPatch };
 }
 
+/*
+  ÇOCUK TABLO SATIRLARI — toplu kayıt yükündeki biçim.
+
+  `verified` HİÇBİR satırda gönderilmiyor: doğrulama yalnız testten gelir,
+  öğrenci kendi becerisini ya da dilini onaylayamaz (RLS de reddediyor).
+  `student_id` de gönderilmiyor: sunucu `auth.uid()` kullanıyor.
+*/
+const yetenekSatiri = (s: StudentProfile['skills'][number]) => ({
+  name: s.name,
+  level: s.level,
+  category: toDbSkillCategory(s.category),
+  domain: s.domain ?? null,
+  years_of_exp: s.yearsOfExp ?? null,
+});
+
+const dilSatiri = (l: NonNullable<StudentProfile['languages']>[number]) => ({
+  language: l.language,
+  level: l.level,
+  proficiency_text: l.proficiencyText || null,
+});
+
+const projeSatiri = (project: StudentProfile['projects'][number], index: number) => ({
+  title: project.title,
+  description: project.description || null,
+  tech_stack: project.techStack ?? [],
+  github_url: project.githubUrl || null,
+  live_url: project.liveUrl || null,
+  /* İsteğe bağlı tarih (20261206010000); süren projenin bitişi yok. */
+  start_year: project.startYear || null,
+  end_year: project.ongoing ? null : project.endYear || null,
+  ongoing: Boolean(project.ongoing),
+  sort_order: index,
+});
+
+/*
+  Deneyimler: sunucu tarih sırasını ve 30 üst sınırını kendisi denetliyor
+  (20261205010000); arayüz aynı kuralları kaydetmeden önce gösteriyor ki
+  kullanıcı sunucu hatasıyla karşılaşmasın.
+*/
+const deneyimSatiri = (d: NonNullable<StudentProfile['experiences']>[number], index: number) => ({
+  position: d.position.trim(),
+  organization: d.organization.trim(),
+  start_year: d.startYear,
+  start_month: d.startMonth,
+  end_year: d.ongoing ? null : d.endYear,
+  end_month: d.ongoing ? null : d.endMonth,
+  ongoing: d.ongoing,
+  description: d.description.trim() || null,
+  employment_type: d.employmentType || null,
+  sort_order: index,
+});
+
+const egitimSatiri = (e: NonNullable<StudentProfile['educations']>[number], index: number) => ({
+  school: e.school.trim(),
+  department: e.department.trim() || null,
+  level: e.level || null,
+  start_year: e.startYear || null,
+  end_year: e.ongoing ? null : e.endYear || null,
+  ongoing: e.ongoing,
+  gpa: e.gpa ?? null,
+  sort_order: index,
+});
+
+const sertifikaSatiri = (c: NonNullable<StudentProfile['certificates']>[number], index: number) => ({
+  name: c.name.trim(),
+  issuer: c.issuer.trim() || null,
+  issue_year: c.issueYear || null,
+  issue_month: c.issueYear ? c.issueMonth || null : null,
+  url: c.url.trim() || null,
+  sort_order: index,
+});
+
+/**
+ * Profil yamasını toplu kayıt yüküne çevirir. Yamada olmayan bölüm
+ * yükte de yok: sunucu ona dokunmuyor.
+ */
+export function profilKayitYuku(patch: Partial<StudentProfile>): Record<string, unknown> {
+  const { profilePatch, studentPatch } = splitStudentUpdate(patch);
+  const yuk: Record<string, unknown> = {};
+  if (Object.keys(profilePatch).length > 0) yuk.profil = profilePatch;
+  if (Object.keys(studentPatch).length > 0) yuk.ogrenci = studentPatch;
+  if (patch.skills) yuk.yetenekler = patch.skills.map(yetenekSatiri);
+  if (patch.languages) yuk.diller = patch.languages.map(dilSatiri);
+  if (patch.projects) yuk.projeler = patch.projects.map(projeSatiri);
+  if (patch.experiences) yuk.deneyimler = patch.experiences.map(deneyimSatiri);
+  if (patch.educations) yuk.egitimler = patch.educations.map(egitimSatiri);
+  if (patch.certificates) yuk.sertifikalar = patch.certificates.map(sertifikaSatiri);
+  return yuk;
+}
+
 // ---------------------------------------------------------------- Şirket
 
 /* Yalnız COMPANY_SELECT'in istediği sütunlar; özel sütunlar (hr_email, vkn…) tipte de yok. */

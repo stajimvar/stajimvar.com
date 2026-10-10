@@ -309,13 +309,12 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     });
   };
 
-  /* Eski bölüm kimlikleri (cv-hazirlik.mjs) → düzenleme bölümleri. */
-  const adimBolumu = (anahtar: string, bolum: string): DuzenlemeBolumu => {
-    if (bolum === 'kisisel') return anahtar === 'okul' ? 'egitim' : 'temel';
-    if (bolum === 'teknik' || bolum === 'sosyal' || bolum === 'dil') return 'yetenek';
-    if (bolum === 'cv' || bolum === 'proje' || bolum === 'tercih') return bolum;
-    return 'temel';
-  };
+  /*
+    Profil fotoğrafı iki kaynaktan gelebiliyor: sosyal profilin yolu ya da
+    eski kamera düğmesiyle yüklenmiş adres. Yol henüz okunmadıysa
+    (`undefined`) yalnız eski adrese bakılıyor.
+  */
+  const fotografVar = Boolean(sosyalAvatarYolu || student.avatarUrl);
 
   const yetenekler = student.skills ?? [];
   const sosyal = student.softSkills ?? [];
@@ -340,8 +339,13 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     bağlı ve yüzdeye girmiyor; CV adımı platformda oluşturulan CV ya da
     yüklenen PDF'ten biriyle tamamlanıyor.
   */
-  const { adimlar: dolulukAdimlari, oran } = profilDolulugu(student);
-  const adimlar = dolulukAdimlari as { anahtar: string; tamam: boolean; etiket: string; bolum: string }[];
+  /*
+    11 EKİM 2026: yüzde yalnız temel bilgilere bakıyor (ad soyad, fotoğraf,
+    şehir, telefon, e-posta, hakkımda, eğitim, dil). Yetenek, proje,
+    sertifika, deneyim ve bağlantılar isteğe bağlı; kurallar cv-hazirlik.mjs'te.
+  */
+  const { adimlar: dolulukAdimlari, oran } = profilDolulugu(student, { fotografVar });
+  const adimlar = dolulukAdimlari as { anahtar: string; tamam: boolean; etiket: string; bolum: string; alan: string | null }[];
 
   /*
     EKSİKLER
@@ -355,9 +359,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
     .map((a) => ({
       etiket: a.etiket,
       onClick: () =>
-        a.anahtar === 'cv' && onCvOlustur
-          ? onCvOlustur()
-          : bolumeGit(adimBolumu(a.anahtar, a.bolum), a.anahtar === 'okul' ? 'universite' : null),
+        a.bolum === 'foto' ? fotografDegistir() : bolumeGit(a.bolum as DuzenlemeBolumu, a.alan),
     }));
 
   /*
@@ -505,6 +507,8 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
           acilisBolumu={acilis.bolum}
           odakAlani={acilis.odak}
           fotografKarti={sosyalFotografKarti}
+          fotografVar={fotografVar}
+          onFotografEkle={() => window.dispatchEvent(new Event('stajimvar:profil-fotografi-degistir'))}
           sosyalProfilDuzenleme={sosyalProfilDuzenleme}
           onCvOlustur={onOpenCv}
           quizzes={quizzes}

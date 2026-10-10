@@ -35,15 +35,24 @@ test('CV adımı: oluşturulmuş CV ya da yüklenmiş PDF birbirinin alternatifi
   assert.equal(cvVarMi({ skills: [] }), false);
 });
 
-test('doluluk: fotoğraf ve not ortalaması adım değil; oluşturulan CV PDF istemeden tamam', () => {
+/*
+  11 EKİM 2026 (kullanıcı kararı): yüzde yalnız temel bilgilere bakıyor.
+  Fotoğraf artık zorunlu adım; CV, yetenek, proje ve not ortalaması değil.
+  Senaryolar tests/profil-taslagi.test.mjs'de.
+*/
+test('doluluk: temel bilgiler tamamsa %100; CV, yetenek, proje ve not adım değil', () => {
   const ogrenci = {
-    university: 'X', department: 'Y', bio: 'b', phone: '1', skills: [{ name: 'Canva' }], softSkills: ['İletişim'],
-    languages: [{}], projects: [{}], targetRoles: ['r'], preferences: { cities: ['İstanbul'] }, avatarUrl: '', gpa: 0,
+    fullName: 'Deniz Yılmaz', email: 'd@ornek.test', city: 'İzmir', phone: '1', bio: 'b',
+    university: 'X', department: 'Y', educationLevel: 'lisans', educationStartYear: 2024, educationOngoing: true,
+    languages: [{ language: 'Türkçe', level: 'Ana dil' }], skills: [], projects: [], gpa: 0,
   };
-  const { oran, adimlar } = profilDolulugu(ogrenci);
+  const { oran, adimlar, tamam } = profilDolulugu(ogrenci, { fotografVar: true });
   assert.equal(oran, 100);
-  assert.ok(!adimlar.some((a) => /fotoğraf|ortalama/i.test(a.etiket)));
-  assert.equal(adimlar.find((a) => a.anahtar === 'cv').tamam, true);
+  assert.equal(tamam, true);
+  assert.deepEqual(adimlar.map((a) => a.anahtar), ['ad', 'foto', 'sehir', 'telefon', 'eposta', 'tanitim', 'egitim', 'dil']);
+  assert.ok(!adimlar.some((a) => /cv|program|beceri|proje|ortalama|hedef/i.test(a.anahtar + a.etiket)));
+  /* Fotoğraf yoksa %100 değil. */
+  assert.equal(profilDolulugu(ogrenci, { fotografVar: false }).oran, 88);
 });
 
 test('karşılama yalnız yayından sonra açılan yeni hesaba, bir kez, hesap bazında', () => {
@@ -82,13 +91,14 @@ test('depo erişilemezse karşılama açılmıyor değil, açılıyor ama işare
 test('profildeki "CV oluştur" adımı kısa CV akışını açıyor; PDF yükleme ayrı bölümde', async () => {
   const fs = await import('node:fs');
   const profil = fs.readFileSync('src/components/StudentProfileView.tsx', 'utf8');
-  assert.match(profil, /a\.anahtar === 'cv' && onCvOlustur\s*\?\s*onCvOlustur\(\)/);
+  /* Eksik adım doğru yere götürüyor: fotoğraf yüklemeye, ötekiler kendi bölümüne ve alanına. */
+  assert.match(profil, /a\.bolum === 'foto' \? fotografDegistir\(\) : bolumeGit\(a\.bolum as DuzenlemeBolumu, a\.alan\)/);
   /*
     PDF yükleme ve "Profilimden CV oluştur" düzenleme ekranının CV satırında
     (6 Ekim 2026, ProfilDuzenleme): ikisi ayrı ve net seçenek.
   */
   const duzenleme = fs.readFileSync('src/components/ProfilDuzenleme.tsx', 'utf8');
-  const cvSatiri = duzenleme.slice(duzenleme.indexOf('id="duzenle-cv"'));
+  const cvSatiri = duzenleme.slice(duzenleme.indexOf('baslik="CV"'));
   assert.match(cvSatiri, /PDF yükle/);
   assert.match(cvSatiri, /Profilimden CV oluştur/);
   assert.match(cvSatiri, /<CvAlani\s+kompakt/);

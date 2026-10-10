@@ -1,12 +1,11 @@
 import { ODAK_HALKASI } from '../../lib/renk-token';
 
 /*
-  PROFİL FORMU SINIFLARI — yeni bileşenler için ortak kaynak.
+  PROFİL FORMU SINIFLARI — profil düzenleme ekranının tek kaynağı.
 
-  Değerler ProfilDuzenleme.tsx'teki sabitlerle BİREBİR aynı; ekleme
-  bileşenleri (ek eğitim, sertifika) aynı ekranda çiziliyor ve farklı bir
-  alan yüksekliği ya da düğme kalıbı göze batardı. Ayrışmayı
-  tests/profil-cv-arayuzu.test.mjs yakalıyor.
+  11 Ekim 2026'dan beri ekran ve bütün bölüm bileşenleri (kişisel bilgiler,
+  kayıt listeleri, dil ve yetenek, tercihler) bu sabitleri kullanıyor;
+  ekranda ayrı bir kopya yok (tests/profil-cv-arayuzu.test.mjs).
 */
 export const ALAN =
   'w-full min-h-11 rounded-xl border border-gray-300 bg-white px-3 text-base text-gray-900 placeholder:text-gray-500 focus:border-blue-600 focus:outline-none sm:text-sm';

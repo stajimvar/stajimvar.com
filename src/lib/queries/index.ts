@@ -23,7 +23,7 @@ import {
   toStudentProfile,
   toCompanyUpdate,
   toDbSkillCategory,
-  splitStudentUpdate,
+  profilKayitYuku,
   LISTING_COLUMNS,
   type CompanyRowWithMembers,
   type ListingRowWithCompany,
@@ -485,60 +485,6 @@ export async function fetchOpenStudentProfiles(): Promise<StudentProfile[]> {
   return (data as unknown as StudentRowBundle[]).map(toStudentProfile);
 }
 
-/** Profil yaması. `profiles` ve `student_profiles` ayrı ayrı güncellenir. */
-export async function updateStudentProfile(
-  userId: string,
-  patch: Partial<StudentProfile>
-): Promise<void> {
-  const { profilePatch, studentPatch } = splitStudentUpdate(patch);
-
-  if (Object.keys(profilePatch).length > 0) {
-    const { error } = await supabase.from('profiles').update(profilePatch).eq('id', userId);
-    if (error) fail('Profil güncellenemedi', error);
-  }
-
-  if (Object.keys(studentPatch).length > 0) {
-    const { error } = await supabase
-      .from('student_profiles')
-      .update(studentPatch)
-      .eq('id', userId);
-    if (error) fail('Öğrenci bilgileri güncellenemedi', error);
-  }
-}
-
-/**
- * Beceri listesini toptan değiştirir (sil-yeniden yaz).
- *
- * DİKKAT: `verified` bilerek gönderilmiyor. RLS öğrencinin kendi becerisini
- * doğrulanmış işaretlemesine izin vermiyor; rozet yalnızca quiz üzerinden gelir.
- * Bu yüzden yeniden yazma, quizle kazanılmış doğrulamaları sıfırlar —
- * beceri ekleme/çıkarma dışında bu fonksiyonu çağırma.
- */
-export async function replaceStudentSkills(
-  userId: string,
-  skills: StudentProfile['skills']
-): Promise<void> {
-  const { error: delError } = await supabase
-    .from('student_skills')
-    .delete()
-    .eq('student_id', userId);
-  if (delError) fail('Beceriler temizlenemedi', delError);
-
-  if (skills.length === 0) return;
-
-  const { error } = await supabase.from('student_skills').insert(
-    skills.map((s) => ({
-      student_id: userId,
-      name: s.name,
-      level: s.level,
-      category: toDbSkillCategory(s.category),
-      domain: s.domain ?? null,
-      years_of_exp: s.yearsOfExp ?? null,
-    }))
-  );
-  if (error) fail('Beceriler kaydedilemedi', error);
-}
-
 /**
  * Profil fotoğrafını `avatars` kovasına yükler ve herkese açık adresi döndürür.
  *
@@ -570,182 +516,40 @@ export async function uploadAvatar(userId: string, file: File): Promise<string> 
   return `${data.publicUrl}?v=${Date.now()}`;
 }
 
-/**
- * Dilleri toptan değiştirir. `verified` gönderilmiyor: doğrulama yalnızca
- * sınav üzerinden gelir, öğrenci kendi dilini onaylayamaz.
- */
-export async function replaceStudentLanguages(
-  userId: string,
-  languages: NonNullable<StudentProfile['languages']>
-): Promise<void> {
-  const { error: delError } = await supabase
-    .from('student_languages')
-    .delete()
-    .eq('student_id', userId);
-  if (delError) fail('Diller temizlenemedi', delError);
-
-  if (languages.length === 0) return;
-
-  const { error } = await supabase.from('student_languages').insert(
-    languages.map((l) => ({
-      student_id: userId,
-      language: l.language,
-      level: l.level,
-      proficiency_text: l.proficiencyText || null,
-    }))
-  );
-  if (error) fail('Diller kaydedilemedi', error);
-}
 
 /*
-  YENİ TABLOLAR — TİPSİZ İSTEMCİ
+  TİPSİZ İSTEMCİ
 
-  `student_educations` ve `student_certificates` (20261206010000) üretilmiş
-  `database.types.ts`te henüz yok ve o dosya elle düzenlenmiyor (bir
-  sonraki üretimde geri alınırdı). Aynı göçün projelere ve deneyimlere
-  eklediği sütunlar da orada yok; üretilmiş tipler fazla alanı
-  reddettiği için bu yazımlar tipsiz istemciden geçiyor. Satır biçimleri
-  `mappers.ts`te (EgitimSatiri / SertifikaSatiri). Tipler yeniden
-  üretilince bu kısayol kaldırılabilir.
+  `student_educations`, `student_certificates` (20261206010000) ve toplu
+  kayıt işlevi (20261207010000) üretilmiş `database.types.ts`te henüz yok
+  ve o dosya elle düzenlenmiyor (bir sonraki üretimde geri alınırdı).
+  Çağrılar bu yüzden tipsiz istemciden geçiyor; satır biçimleri aşağıda
+  ve `mappers.ts`te. Tipler yeniden üretilince bu kısayol kaldırılabilir.
 */
 const tipsiz = supabase as unknown as import('@supabase/supabase-js').SupabaseClient;
 
-/** Projeleri toptan değiştirir; sıra korunur. */
-export async function replaceStudentProjects(
-  userId: string,
-  projects: StudentProfile['projects']
-): Promise<void> {
-  const { error: delError } = await supabase
-    .from('student_projects')
-    .delete()
-    .eq('student_id', userId);
-  if (delError) fail('Projeler temizlenemedi', delError);
-
-  if (projects.length === 0) return;
-
-  const { error } = await tipsiz.from('student_projects').insert(
-    projects.map((project, index) => ({
-      student_id: userId,
-      title: project.title,
-      description: project.description || null,
-      tech_stack: project.techStack ?? [],
-      github_url: project.githubUrl || null,
-      live_url: project.liveUrl || null,
-      /* İsteğe bağlı tarih (20261206010000); süren projenin bitişi yok. */
-      start_year: project.startYear || null,
-      end_year: project.ongoing ? null : project.endYear || null,
-      ongoing: Boolean(project.ongoing),
-      sort_order: index,
-    }))
-  );
-  if (error) fail('Projeler kaydedilemedi', error);
-}
-
 /**
- * Deneyimleri yeniler — projelerle aynı kalıp (sil + sırayla yaz).
+ * PROFİLİ KAYDET — TEK İŞLEM (20261207010000)
  *
- * Sunucu tarih sırasını ve 30 üst sınırını kendisi denetliyor
- * (20261205010000); arayüz aynı kuralları kaydetmeden önce gösteriyor ki
- * kullanıcı sunucu hatasıyla karşılaşmasın.
- */
-export async function replaceStudentExperiences(
-  userId: string,
-  experiences: NonNullable<StudentProfile['experiences']>
-): Promise<void> {
-  const { error: delError } = await supabase
-    .from('student_experiences')
-    .delete()
-    .eq('student_id', userId);
-  if (delError) fail('Deneyimler temizlenemedi', delError);
-
-  if (experiences.length === 0) return;
-
-  const { error } = await tipsiz.from('student_experiences').insert(
-    experiences.map((d, index) => ({
-      student_id: userId,
-      position: d.position.trim(),
-      organization: d.organization.trim(),
-      start_year: d.startYear,
-      start_month: d.startMonth,
-      end_year: d.ongoing ? null : d.endYear,
-      end_month: d.ongoing ? null : d.endMonth,
-      ongoing: d.ongoing,
-      description: d.description.trim() || null,
-      employment_type: d.employmentType || null,
-      sort_order: index,
-    }))
-  );
-  if (error) fail('Deneyimler kaydedilemedi', error);
-}
-
-
-
-/** Ek eğitimleri yeniler — deneyimlerle aynı kalıp (sil + sırayla yaz). */
-export async function replaceStudentEducations(
-  userId: string,
-  educations: NonNullable<StudentProfile['educations']>
-): Promise<void> {
-  const { error: delError } = await tipsiz.from('student_educations').delete().eq('student_id', userId);
-  if (delError) fail('Eğitimler temizlenemedi', delError);
-  if (educations.length === 0) return;
-
-  const { error } = await tipsiz.from('student_educations').insert(
-    educations.map((e, index) => ({
-      student_id: userId,
-      school: e.school.trim(),
-      department: e.department.trim() || null,
-      level: e.level || null,
-      start_year: e.startYear || null,
-      end_year: e.ongoing ? null : e.endYear || null,
-      ongoing: e.ongoing,
-      gpa: e.gpa ?? null,
-      sort_order: index,
-    }))
-  );
-  if (error) fail('Eğitimler kaydedilemedi', error);
-}
-
-/** Sertifikaları yeniler — aynı kalıp. */
-export async function replaceStudentCertificates(
-  userId: string,
-  certificates: NonNullable<StudentProfile['certificates']>
-): Promise<void> {
-  const { error: delError } = await tipsiz.from('student_certificates').delete().eq('student_id', userId);
-  if (delError) fail('Sertifikalar temizlenemedi', delError);
-  if (certificates.length === 0) return;
-
-  const { error } = await tipsiz.from('student_certificates').insert(
-    certificates.map((c, index) => ({
-      student_id: userId,
-      name: c.name.trim(),
-      issuer: c.issuer.trim() || null,
-      issue_year: c.issueYear || null,
-      issue_month: c.issueYear ? c.issueMonth || null : null,
-      url: c.url.trim() || null,
-      sort_order: index,
-    }))
-  );
-  if (error) fail('Sertifikalar kaydedilemedi', error);
-}
-
-/**
- * Profil yamasını ilgili tablolara dağıtır.
+ * Arayüz tek bir `Partial<StudentProfile>` gönderiyor; veri yedi tabloya
+ * yayılmış. Önceden her tablo ayrı istekle yazılıyordu ve ortada bir
+ * istek düşerse profil yarı kaydedilmiş kalıyordu (ör. deneyimler
+ * silinmiş, yenileri yazılmamış). Artık hepsi `ogrenci_profilini_kaydet`
+ * işlevinde tek işlem: bir parça hata verirse hiçbiri yazılmıyor.
  *
- * Arayüz tek bir `Partial<StudentProfile>` gönderiyor ama veri dört tabloya
- * yayılmış durumda. Bu dağıtımı bileşenlere bırakmak, her düzenleme ekranının
- * şemayı bilmesini gerektirirdi.
+ * İşlev `security invoker`: RLS ve sütun yetkileri doğrudan yazımdakiyle
+ * aynı. Kimlik sunucuda `auth.uid()`; `userId` yalnız çağıranların
+ * imzası değişmesin diye duruyor.
  */
 export async function saveStudentProfile(
   userId: string,
   patch: Partial<StudentProfile>
 ): Promise<void> {
-  await updateStudentProfile(userId, patch);
-  if (patch.skills) await replaceStudentSkills(userId, patch.skills);
-  if (patch.languages) await replaceStudentLanguages(userId, patch.languages);
-  if (patch.projects) await replaceStudentProjects(userId, patch.projects);
-  if (patch.experiences) await replaceStudentExperiences(userId, patch.experiences);
-  if (patch.educations) await replaceStudentEducations(userId, patch.educations);
-  if (patch.certificates) await replaceStudentCertificates(userId, patch.certificates);
+  if (!userId) throw new Error('Oturum yok');
+  const yuk = profilKayitYuku(patch);
+  if (Object.keys(yuk).length === 0) return;
+  const { error } = await tipsiz.rpc('ogrenci_profilini_kaydet', { p: yuk });
+  if (error) fail('Profil kaydedilemedi', error);
 }
 
 // ---------------------------------------------------------------- Şirket

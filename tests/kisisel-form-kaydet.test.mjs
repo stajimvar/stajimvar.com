@@ -4,64 +4,49 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 /*
-  KİŞİSEL FORMUN "KAYDET"İ GERÇEKTEN `kisiselKaydet`E BAĞLI MI?
+  KİŞİSEL BİLGİLERİN KAYDI GERÇEKTEN İŞLEYİCİYE GİDİYOR MU?
 
   Ölçülen kusur şuydu: adı boş olan hesapta (kayıt sırasında ad
   sorulmuyor) "Kaydet"e basınca hiçbir şey olmuyordu. Sebep React değildi
-  — `#ad-soyad` alanı `required` olduğu için tarayıcı doğrulaması formu
-  gönderilmeden durduruyordu. Tarayıcıda ölçüldü: submit olayı 0 kez
-  tetiklendi, odak `#ad-soyad`a kaçtı, `student_profiles`a tek istek
-  gitmedi. Handler'ın İÇİNDEKİ şehir kontrolü de bu yüzden hiç
+  — ad alanı `required` olduğu için tarayıcı doğrulaması formu
+  gönderilmeden durduruyordu; işleyicideki şehir kontrolü de hiç
   çalışamıyor, kullanıcı "Listeden bir il seç" uyarısını göremiyordu.
 
-  Bu dosya o zinciri kaynaktan bağlıyor: düğme bu formun içinde, form
-  `kisiselKaydet`e bağlı ve tarayıcı doğrulaması formu ele geçirmiyor
-  (`noValidate`) — zorunluluk kararı tek yerde, handler'da.
+  11 Ekim 2026: kişisel bilgiler artık kendi formuyla değil, ekranın
+  altındaki TEK "Tüm değişiklikleri kaydet" ile kaydediliyor. Aynı güvence
+  yeni yapıda: alanlarda tarayıcı doğrulaması yok, karar tek yerde
+  (`taslaktanYama`), hata metni alanın altında çiziliyor ve kayıt düğmesi
+  bir form gönderimine bağlı değil (doğrudan işleyiciyi çağırıyor).
 
-  Ölçülen şey kaynağın yapısı: bileşen Supabase oturumu olmadan
-  çizilemediği için burada gerçek render çalıştırılmıyor.
+  Kuralın davranışı tests/profil-taslagi.test.mjs'de gerçek verilerle
+  sınanıyor; burada kaynağın yapısı.
 */
 
 const KOK = path.resolve(import.meta.dirname, '..');
-/*
-  6 Ekim 2026: form "Profilini düzenle" ekranının "Temel bilgiler" bölümünde
-  (ProfilDuzenleme). Aynı güvence: düğme formun içinde, form işleyiciye
-  bağlı, tarayıcı doğrulaması formu ele geçirmiyor.
-*/
-const kaynak = readFileSync(
-  path.join(KOK, 'src/components/ProfilDuzenleme.tsx'),
-  'utf8',
-).replace(/\r\n/g, '\n');
+const oku = (p) => readFileSync(path.join(KOK, p), 'utf8').replace(/\r\n/g, '\n');
+const KISISEL = oku('src/components/profil/KisiselBilgiler.tsx');
+const DUZENLEME = oku('src/components/ProfilDuzenleme.tsx');
+const TASLAK = oku('src/lib/profil-taslagi.mjs');
 
-const bolumBasi = kaynak.indexOf('id="temel"');
-const formBasi = kaynak.indexOf('<form', bolumBasi);
-const kisiselForm = kaynak.slice(formBasi, kaynak.indexOf('</form>', formBasi));
-
-test('şehir alanı temel bilgiler formunun içinde ve form temelKaydet e bağlı', () => {
-  assert.ok(bolumBasi > -1 && formBasi > bolumBasi, 'Temel bilgiler bölümünde bir form olmalı');
-  assert.match(kisiselForm, /void temelKaydet\(\);/);
-  assert.match(kisiselForm, /id="sehir"/);
-  assert.match(kisiselForm, /id="ad-soyad"/);
+test('ad ve şehir alanları kişisel bilgilerde; hata metni alanın altında', () => {
+  assert.match(KISISEL, /<Alan id="ad" etiket="Ad" hata=\{hata\('ad'\)\}>/);
+  assert.match(KISISEL, /<Alan id="sehir" etiket="Şehir" hata=\{hata\('sehir'\)\}>/);
+  assert.match(KISISEL, /<AutocompleteField\s+id="sehir"/);
 });
 
-test('gönderim düğmesi aynı formun içinde ve type="submit"', () => {
-  const dugme = kisiselForm.slice(kisiselForm.indexOf('type="submit"'));
-  assert.ok(kisiselForm.includes('type="submit"'), 'Kaydet düğmesi form dışında kalmamalı');
-  assert.match(dugme, /Kaydet/);
+test('tarayıcı doğrulaması kaydı ele geçirmiyor: alanlarda required yok, form yok', () => {
+  assert.doesNotMatch(KISISEL, /\srequired\b/);
+  assert.doesNotMatch(KISISEL, /<form\b/);
+  /* Kaydet düğmesi form gönderimi değil, işleyicinin kendisi. */
+  assert.match(DUZENLEME, /type="button"\s+onClick=\{\(\) => void kaydetHepsi\(\)\}/);
 });
 
-test('tarayıcı doğrulaması formu ele geçirmiyor: karar temelKaydet te', () => {
-  assert.match(kisiselForm, /^<form\s+noValidate/);
-  assert.doesNotMatch(kisiselForm, /\srequired\b/);
-  const handler = kaynak.slice(kaynak.indexOf('const temelKaydet'), kaynak.indexOf('/* ============================== EĞİTİM'));
-  assert.match(handler, /if \(!temel\.fullName\.trim\(\)\) \{/);
-  assert.match(handler, /Adını yaz: profilinde ve CV’nde bu ad görünüyor\./);
-  assert.match(handler, /if \(sehir && !TR_CITIES\.includes\(sehir\)\) \{/);
-  assert.match(handler, /Listeden bir il seç\./);
-  /* Hata metni formun içinde, alanın altında çiziliyor. */
-  assert.match(kisiselForm, /\{temelHata\.mesaj\}/);
-});
-
-test('iç içe form yok: submit olayı başka bir forma kaçamaz', () => {
-  assert.equal(kisiselForm.slice('<form'.length).includes('<form'), false);
+test('karar tek yerde: ad boşsa ve şehir listede değilse anlaşılır mesaj', () => {
+  const kisisel = TASLAK.slice(TASLAK.indexOf("if (degisti('kisisel'))"), TASLAK.indexOf("if (degisti('baglanti'))"));
+  assert.match(kisisel, /if \(!ad\) hata\('kisisel', 'ad', 'Adını yaz: profilinde ve CV’nde bu ad görünüyor\.'\);/);
+  assert.match(kisisel, /if \(sehir && secenekler\.sehirler && !secenekler\.sehirler\.includes\(sehir\)\) \{/);
+  assert.match(kisisel, /Listeden bir il seç\./);
+  /* Ekran şehir listesini veriyor; hata varsa kayıt yapılmıyor ve alana gidiliyor. */
+  assert.match(DUZENLEME, /sehirler: TR_CITIES/);
+  assert.match(DUZENLEME, /if \(bulunan\.length > 0\) \{\s*setDurum\('bos'\);\s*yereGit\(bulunan\[0\]\.bolum, bulunan\[0\]\.alan\);\s*return false;/);
 });
