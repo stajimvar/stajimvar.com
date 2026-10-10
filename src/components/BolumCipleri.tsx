@@ -1,4 +1,5 @@
 import React from 'react';
+import { ChevronRight, GraduationCap } from 'lucide-react';
 import { YUZEY } from '../ui/tokens';
 import { ALANLAR } from '../lib/bolum-eslestirme.mjs';
 
@@ -133,13 +134,23 @@ export const BolumCipleri: React.FC<{
       */
       className={
         panelde
-          ? 'px-4 py-3'
+          ? /*
+              MASAÜSTÜ (10 Ekim 2026, referans tasarım): panelin içinde açık
+              mavi tonlu ayrı bir bölüm. Telefonda `px-4 py-3` olduğu gibi.
+            */
+            'px-4 py-3 lg:mx-2 lg:my-2 lg:rounded-xl lg:bg-blue-50/70 lg:px-3 lg:py-3.5 xl:mx-3 xl:my-3 xl:px-3.5 xl:py-4'
           : `border-y border-blue-100 bg-blue-50/60 p-4 sm:rounded-2xl sm:border ${YUZEY.kap}`
       }
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-sm font-bold text-gray-900">Bölümün ne?</p>
+        {panelde && (
+          <GraduationCap aria-hidden className="mt-0.5 hidden h-6 w-6 shrink-0 text-blue-600 xl:block" />
+        )}
+        <div className="min-w-0 lg:flex-1">
+          <p className="text-sm font-bold text-gray-900 lg:text-[15px]">
+            <span className={panelde ? 'lg:hidden' : undefined}>Bölümün ne?</span>
+            {panelde && <span className="hidden lg:inline">Bölümüne göre keşfet</span>}
+          </p>
           <p className="mt-0.5 text-xs leading-relaxed text-gray-600">
             {secili
               ? 'Alanına uyan ilanlar listenin başına alındı. Diğer ilanlar altta duruyor.'
@@ -155,6 +166,19 @@ export const BolumCipleri: React.FC<{
             </p>
           )}
         </div>
+        {/*
+          Ok GERÇEK bir yere gidiyor: bölüm bölüm staj sayfaları (/bolumler).
+          Süs olarak çizilen bir ok, basınca hiçbir şey olmayan bir düğme olurdu.
+        */}
+        {panelde && (
+          <a
+            href="/bolumler"
+            aria-label="Bütün bölümler"
+            className="hidden h-7 w-7 shrink-0 items-center justify-center rounded-full text-blue-600 hover:bg-blue-100 lg:inline-flex"
+          >
+            <ChevronRight aria-hidden className="h-5 w-5" />
+          </a>
+        )}
         {!secili && !panelde && (
           <button
             type="button"
@@ -169,7 +193,7 @@ export const BolumCipleri: React.FC<{
         )}
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className="mt-3 flex flex-wrap gap-2 lg:gap-1.5">
         {gosterilecek.map((a: { id: string; etiket: string }) => {
           const aktif = a.id === secili;
           return (
@@ -178,15 +202,21 @@ export const BolumCipleri: React.FC<{
               type="button"
               onClick={() => sec(aktif ? null : a.id)}
               aria-pressed={aktif}
-              className={`min-h-9 cursor-pointer rounded-full border px-3 text-xs font-semibold transition-colors ${
+              className={`min-h-9 cursor-pointer rounded-full border px-3 text-xs font-semibold transition-colors lg:inline-flex lg:min-h-9 lg:items-center lg:px-2.5 lg:text-xs ${
                 aktif
                   ? 'border-blue-600 bg-blue-600 text-white'
-                  : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400 lg:border-gray-200 lg:text-gray-800 lg:shadow-2xs lg:hover:border-blue-300'
               }`}
             >
               {a.etiket}
               {sayilar && sayilar[a.id] != null && (
-                <span className={aktif ? 'ml-1.5 opacity-80' : 'ml-1.5 text-gray-400'}>
+                <span
+                  className={
+                    aktif
+                      ? 'ml-1.5 opacity-80 lg:ml-1.5 lg:inline-flex lg:h-[18px] lg:min-w-[18px] lg:items-center lg:justify-center lg:rounded-full lg:bg-white/20 lg:px-1 lg:text-[10px] lg:font-bold lg:opacity-100'
+                      : 'ml-1.5 text-gray-400 lg:ml-1.5 lg:inline-flex lg:h-[18px] lg:min-w-[18px] lg:items-center lg:justify-center lg:rounded-full lg:bg-blue-100 lg:px-1 lg:text-[10px] lg:font-bold lg:text-blue-700'
+                  }
+                >
                   {sayilar[a.id]}
                 </span>
               )}

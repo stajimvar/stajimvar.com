@@ -964,8 +964,18 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
 
             {/* Desktop Student Navigation Bar */}
+            {/*
+              SEKMELER BAĞIMSIZ (10 Ekim 2026, referans tasarım)
+
+              Dört sekme gri bir hap grubunun içindeydi. Artık her biri kendi
+              başına duruyor: simge üstte, yazı altta; etkin sekmede mavi
+              simge, mavi yazı, açık mavi zemin ve altta mavi çizgi. Bu menü
+              yalnız masaüstünde çiziliyor (`hidden lg:flex`), telefonun alt
+              menüsü ayrı ve dokunulmadı. Bağlantılar, `aria-current` ve
+              tıklama işleyicileri aynı.
+            */}
             {userRole === 'student' && activeTab !== 'company-portal' && (
-              <nav className="hidden lg:flex items-center p-1 bg-gray-100/90 rounded-2xl border border-gray-200/90 shadow-2xs transition-all gap-0.5 shrink-0">
+              <nav className="hidden lg:flex items-stretch gap-1 shrink-0">
                 {/*
                   1. İş & Staj İlanları
 
@@ -999,14 +1009,14 @@ export const Header: React.FC<HeaderProps> = ({
                     setActiveTab('internships');
                     setActiveSubTab('all');
                   })}
-                  className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
+                  className={`relative flex flex-col items-center justify-center gap-1 min-w-[68px] xl:min-w-[84px] px-3 py-2 xl:px-4 rounded-xl text-[13px] font-semibold transition-colors cursor-pointer select-none whitespace-nowrap shrink-0 ${
                     ilanlardaMi
-                      ?'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold'
-                      :'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+                      ?'bg-blue-50 text-blue-700 font-bold after:absolute after:inset-x-3 after:-bottom-px after:h-[3px] after:rounded-full after:bg-blue-600'
+                      :'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
                   <Briefcase
-                    className={`w-3.5 h-3.5 shrink-0 transition-colors ${
+                    className={`w-5 h-5 shrink-0 transition-colors ${
                       ilanlardaMi ? 'text-blue-600' : 'text-gray-400'
                     }`}
                   />
@@ -1058,11 +1068,11 @@ export const Header: React.FC<HeaderProps> = ({
                   href="/firsatlar"
                   aria-current={firsatlardaMi ? 'page' : undefined}
                   onClick={baglantiTiklamasi(() => onOpenOpportunities?.())}
-                  className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                    firsatlardaMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+                  className={`relative flex flex-col items-center justify-center gap-1 min-w-[68px] xl:min-w-[84px] px-3 py-2 xl:px-4 rounded-xl text-[13px] font-semibold transition-colors cursor-pointer select-none whitespace-nowrap shrink-0 ${
+                    firsatlardaMi ? 'bg-blue-50 text-blue-700 font-bold after:absolute after:inset-x-3 after:-bottom-px after:h-[3px] after:rounded-full after:bg-blue-600' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
-                  <Sparkles className={`w-3.5 h-3.5 shrink-0 ${firsatlardaMi ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <Sparkles className={`w-5 h-5 shrink-0 ${firsatlardaMi ? 'text-blue-600' : 'text-gray-400'}`} />
                   <span>Fırsatlar</span>
                 </a>
 
@@ -1082,11 +1092,11 @@ export const Header: React.FC<HeaderProps> = ({
                   href="/baglantilar"
                   aria-current={agimdaMi ? 'page' : undefined}
                   onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/agim')) : undefined}
-                  className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                    agimdaMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+                  className={`relative flex flex-col items-center justify-center gap-1 min-w-[68px] xl:min-w-[84px] px-3 py-2 xl:px-4 rounded-xl text-[13px] font-semibold transition-colors cursor-pointer select-none whitespace-nowrap shrink-0 ${
+                    agimdaMi ? 'bg-blue-50 text-blue-700 font-bold after:absolute after:inset-x-3 after:-bottom-px after:h-[3px] after:rounded-full after:bg-blue-600' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
-                  <Users className={`w-3.5 h-3.5 shrink-0 ${agimdaMi ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <Users className={`w-5 h-5 shrink-0 ${agimdaMi ? 'text-blue-600' : 'text-gray-400'}`} />
                   <span>Ağım</span>
                 </a>
 
@@ -1102,12 +1112,12 @@ export const Header: React.FC<HeaderProps> = ({
                   href="/rehber"
                   aria-current={rehberdeMi && !isverendeMi ? 'page' : undefined}
                   onClick={baglantiTiklamasi(() => onOpenGuides?.())}
-                  className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                    rehberdeMi && !isverendeMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+                  className={`relative flex flex-col items-center justify-center gap-1 min-w-[68px] xl:min-w-[84px] px-3 py-2 xl:px-4 rounded-xl text-[13px] font-semibold transition-colors cursor-pointer select-none whitespace-nowrap shrink-0 ${
+                    rehberdeMi && !isverendeMi ? 'bg-blue-50 text-blue-700 font-bold after:absolute after:inset-x-3 after:-bottom-px after:h-[3px] after:rounded-full after:bg-blue-600' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
                   <BookOpen
-                    className={`w-3.5 h-3.5 shrink-0 ${
+                    className={`w-5 h-5 shrink-0 ${
                       rehberdeMi && !isverendeMi ? 'text-blue-600' : 'text-gray-400'
                     }`}
                   />

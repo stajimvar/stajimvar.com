@@ -909,33 +909,38 @@ export const OpportunitiesPage: React.FC<{
             açık değil.
 
             Kart kabı ve ölçüler İlanlar'daki şeridin birebir aynısı;
-            ikinci bir görünüm türetilmedi.
+            ikinci bir görünüm türetilmedi. (10 Ekim 2026: İlanlar'daki şerit
+            simgeli tasarıma geçince bu da birlikte geçti — kural aynı.)
           */}
           {!filters.arsiv && listeDurumu === 'loading' ? (
             <div
               role="status"
               aria-label="Fırsat sayıları yükleniyor"
-              className="grid grid-cols-3 gap-2 bg-white rounded-2xl border border-gray-200 px-4 py-3.5"
+              className="grid grid-cols-3 divide-x divide-gray-100 bg-white rounded-2xl border border-gray-200 py-4 shadow-xs"
             >
               {[1, 2, 3].map((x) => (
-                <div key={x} aria-hidden className="min-w-0">
-                  <div className="mx-auto h-6 w-10 rounded bg-gray-100 animate-pulse" />
+                <div key={x} aria-hidden className="flex min-w-0 flex-col items-center px-2">
+                  <div className="mb-2 h-9 w-9 rounded-xl bg-gray-100 animate-pulse" />
+                  <div className="mx-auto h-7 w-10 rounded bg-gray-100 animate-pulse" />
                   <div className="mx-auto mt-1 h-3 w-14 rounded bg-gray-100 animate-pulse" />
                 </div>
               ))}
             </div>
           ) : !filters.arsiv && listeDurumu === 'ready' && sayaclar.firsat > 0 ? (
-            <div className="grid grid-cols-3 gap-2 bg-white rounded-2xl border border-gray-200 px-4 py-3.5">
+            <div className="grid grid-cols-3 divide-x divide-gray-100 bg-white rounded-2xl border border-gray-200 py-4 shadow-xs">
               {[
-                { etiket: 'Açık fırsat', deger: String(sayaclar.firsat) },
-                { etiket: 'Kurum', deger: String(sayaclar.kurum) },
-                { etiket: 'Ülke', deger: String(sayaclar.ulke) },
+                { etiket: 'Açık fırsat', deger: String(sayaclar.firsat), ikon: Sparkles },
+                { etiket: 'Kurum', deger: String(sayaclar.kurum), ikon: Building2 },
+                { etiket: 'Ülke', deger: String(sayaclar.ulke), ikon: Globe2 },
               ].map((kutu) => (
-                <div key={kutu.etiket} className="min-w-0 text-center">
-                  <p className="text-2xl font-black text-gray-900 tabular-nums leading-none">
+                <div key={kutu.etiket} className="flex min-w-0 flex-col items-center px-2 text-center">
+                  <span aria-hidden className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                    <kutu.ikon className="h-[18px] w-[18px]" />
+                  </span>
+                  <p className="text-[28px] font-black text-gray-900 tabular-nums leading-none">
                     {kutu.deger}
                   </p>
-                  <p className="text-[11px] font-semibold text-gray-500 mt-1 truncate">
+                  <p className="text-xs font-medium text-gray-500 mt-1.5 truncate">
                     {kutu.etiket}
                   </p>
                 </div>

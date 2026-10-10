@@ -8,6 +8,22 @@ const gorunum = readFileSync('src/components/MatchedInternshipsView.tsx', 'utf8'
 
 /* ----------------------------------------------------- başlıktaki sayı */
 
+/*
+  10 Ekim 2026: masaüstü tasarımı FiltreBlogu'na özellik ekledi (ikon,
+  masaüstü başlığı, varsayılan açıklık); bazı açılış etiketleri çok
+  satırlı oldu. Blok başı `<FiltreBlogu baslik=…` ÖNEKİYLE aranıyor —
+  sıra ve varlık iddiaları aynı.
+*/
+const blokBasi = (kaynak, baslik) => {
+  let i = kaynak.indexOf('<FiltreBlogu');
+  while (i !== -1) {
+    const geri = kaynak.slice(i + '<FiltreBlogu'.length).trimStart();
+    if (geri.startsWith('baslik=' + baslik)) return i;
+    i = kaynak.indexOf('<FiltreBlogu', i + 1);
+  }
+  return -1;
+};
+
 test('daraltma yokken sunucudan gelen toplam gösteriliyor', () => {
   // Asıl hata buydu: sayfa 24'lük sayfalar hâlinde yüklerken başlıkta "(24)"
   // yazıyordu, katalogda 62 ilan varken. Kullanıcı 24 ilan kaldığını sandı.
@@ -142,7 +158,7 @@ test('daraltma bayrağı mevcut sinyallerden türetiliyor, bölüm çipinden de�
 });
 
 test('ülke seçici filtre panelinin Konum bloğunda ve şehrin üstünde', () => {
-  const bas = gorunum.indexOf("<FiltreBlogu baslik={seciliBolge === 'turkiye' ? 'Şehir' : 'Ülke'}>");
+  const bas = blokBasi(gorunum, "{seciliBolge === 'turkiye' ? 'Şehir' : 'Ülke'}");
   assert.notEqual(bas, -1, 'Konum bloğu bulunamadı');
   const son = gorunum.indexOf('</FiltreBlogu>', bas);
   assert.notEqual(son, -1);

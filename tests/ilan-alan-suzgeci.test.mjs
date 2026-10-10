@@ -15,6 +15,22 @@ const SEKTORLER = [
 const SEKTORLER_L = [...SEKTORLER, { id: 'lojistik', slug: 'lojistik-havacilik-denizcilik', ad: 'Lojistik' }];
 
 /* ------------------------------------------------------------ süzme */
+/*
+  10 Ekim 2026: masaüstü tasarımı FiltreBlogu'na özellik ekledi (ikon,
+  masaüstü başlığı, varsayılan açıklık) ve bazı açılış etiketleri çok
+  satırlı oldu. Arama `<FiltreBlogu baslik=…` ÖNEKİYLE yapılıyor; sıra ve
+  varlık iddiaları aynı.
+*/
+const blokBasi = (kaynak, baslik) => {
+  let i = kaynak.indexOf('<FiltreBlogu');
+  while (i !== -1) {
+    const geri = kaynak.slice(i + '<FiltreBlogu'.length).trimStart();
+    if (geri.startsWith('baslik=' + baslik)) return i;
+    i = kaynak.indexOf('<FiltreBlogu', i + 1);
+  }
+  return -1;
+};
+
 
 test('seçim yokken alanı olmayan ilan da geçiyor', () => {
   assert.equal(alanaUyuyorMu([], []), true);
@@ -139,11 +155,11 @@ test('alan seçiliyken kalan sayfalar yükleniyor', () => {
 
 test('alan bloğu yalnız seçenek varken çiziliyor ve Konum bloğunun üstünde', () => {
   /* A paketi (26 Eylül 2026): başlıklar "Bölüm veya alan" ve Türkiye'de "Şehir" / dışında "Ülke". */
-  const alan = gorunum.indexOf('<FiltreBlogu baslik="Bölüm veya alan">');
-  const konum = gorunum.indexOf("<FiltreBlogu baslik={seciliBolge === 'turkiye' ? 'Şehir' : 'Ülke'}>");
+  const alan = blokBasi(gorunum, '"Bölüm veya alan"');
+  const konum = blokBasi(gorunum, "{seciliBolge === 'turkiye' ? 'Şehir' : 'Ülke'}");
   assert.notEqual(alan, -1, 'Alan bloğu bulunamadı');
   assert.ok(alan < konum, 'Alan bloğu Konum bloğunun üstünde değil');
-  assert.match(gorunum, /\{alanSecenekListesi\.length > 0 && \(\s*<FiltreBlogu baslik="Bölüm veya alan">/);
+  assert.match(gorunum, /\{alanSecenekListesi\.length > 0 && \(\s*<FiltreBlogu baslik="Bölüm veya alan"/);
 });
 
 test('alan adları alınamazsa durum null kalıyor, sıfır yazılmıyor', () => {
