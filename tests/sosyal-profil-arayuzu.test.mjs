@@ -2401,14 +2401,20 @@ test('kaldırılan bölümler silinmedi: düzenleme ekranının içindeler', () 
     Yetenekler ve diller; projeler → Projeler ve bağlantılar; tercihler,
     testler ve sosyal profil "Diğer ayarlar"da.
   */
-  for (const kimlik of ['temel', 'egitim', 'deneyim', 'yetenek', 'proje', 'tercih', 'rozet', 'sosyal']) {
+  /*
+    11 Ekim 2026 (kullanıcının mobil tasarımı): kartlar Temel bilgiler,
+    Yetenekler ve ilgi alanları, Projeler, Sertifikalar, CV ve "Diğer
+    ayarlar"daki tercih, testler, sosyal profil. Temel bilgilerin beş alt
+    bölümü (kişisel, bağlantılar, deneyim, eğitim, diller) kendi panelinde.
+  */
+  for (const kimlik of ['temel', 'yetenek', 'proje', 'sertifika', 'cv', 'tercih', 'rozet', 'sosyal']) {
     assert.equal(
       (duzenlemeEkrani.match(new RegExp(`id="${kimlik}"\n`, 'g')) ?? []).length,
       1,
       `${kimlik} bölümü tam olarak bir kez çizilmeli`,
     );
   }
-  assert.equal((duzenlemeEkrani.match(/id="duzenle-cv"/g) ?? []).length, 1);
+  assert.match(duzenlemeEkrani, /\(\['kisisel', 'baglanti', 'deneyim', 'egitim', 'dil'\] as AltBolum\[\]\)\.map/);
   /* Büyük sol menü yok. */
   assert.doesNotMatch(ogrenciProfili, /ProfilBolumListesi/);
   assert.doesNotMatch(duzenlemeEkrani, /ProfilBolumListesi/);
@@ -2482,10 +2488,12 @@ test('kariyer hedefi ve yetkinlik testleri kartları ana görünümde YOK; testl
   assert.doesNotMatch(temiz, /Kariyer hedefin/);
   assert.doesNotMatch(temiz, /Yetkinlik testleri/);
   /* Veri ve yol duruyor: hedef alanı düzenleme ekranının `tercih` bölümünde, giriş de oraya. */
-  const duzenlemeTemiz = yorumsuz(duzenlemeEkrani);
-  assert.match(duzenlemeTemiz, /const hedefler = student\.targetRoles \?\? \[\];/);
+  /* 11 Ekim 2026: tercihler taslakta; alanlar TercihAyarlari'nda. */
+  const tercihTemiz = yorumsuz(oku('src/components/profil/TercihAyarlari.tsx'));
+  assert.match(oku('src/lib/profil-taslagi.mjs'), /hedefler: \[\.\.\.\(s\.targetRoles \?\? \[\]\)\],/);
   assert.match(temiz, /onEtiketDuzenle=\{\(\) => bolumeGit\('tercih'\)\}/);
-  assert.match(duzenlemeTemiz, /Aradığın pozisyon/);
+  assert.match(tercihTemiz, /Aradığın pozisyon/);
+  assert.match(duzenlemeEkrani, /<TercihAyarlari t=\{t\} degistir=\{degistir\} \/>/);
   assert.equal((duzenlemeEkrani.match(/id="rozet"\n/g) ?? []).length, 1);
   /* Karta giden iki prop: gerçek sayı ve mevcut eylem. */
   assert.match(temiz, /rozetSayisi=\{rozetler\.length\}/);

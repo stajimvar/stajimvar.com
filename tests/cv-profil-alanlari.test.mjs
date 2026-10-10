@@ -100,10 +100,12 @@ test('profil okuması yeni tabloları da getiriyor', () => {
 });
 
 test('kaydetme her yeni alanı ilgili tabloya dağıtıyor', () => {
-  assert.match(SORGU, /if \(patch\.educations\) await replaceStudentEducations\(userId, patch\.educations\);/);
-  assert.match(SORGU, /if \(patch\.certificates\) await replaceStudentCertificates\(userId, patch\.certificates\);/);
-  assert.match(SORGU, /employment_type: d\.employmentType \|\| null/);
-  assert.match(SORGU, /start_year: project\.startYear \|\| null/);
+  /* 11 Ekim 2026: tek işlemde (ogrenci_profilini_kaydet). */
+  assert.match(ESLEYICI, /if \(patch\.educations\) yuk\.egitimler = patch\.educations\.map\(egitimSatiri\);/);
+  assert.match(ESLEYICI, /if \(patch\.certificates\) yuk\.sertifikalar = patch\.certificates\.map\(sertifikaSatiri\);/);
+  assert.match(SORGU, /await tipsiz\.rpc\('ogrenci_profilini_kaydet', \{ p: yuk \}\)/);
+  assert.match(ESLEYICI, /employment_type: d\.employmentType \|\| null/);
+  assert.match(ESLEYICI, /start_year: project\.startYear \|\| null/);
   for (const alan of ['education_level', 'education_start_year', 'education_ongoing', 'interests', 'cv_gizli']) {
     assert.ok(ESLEYICI.includes(`ekYama.${alan} =`), `${alan} yazılmıyor`);
   }

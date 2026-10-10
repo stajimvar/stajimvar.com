@@ -67,8 +67,9 @@ test('liste kaynaklı: hedef pozisyonlar + yayındaki ilan başlıkları + iki g
   assert.equal(new Set(POZISYONLAR.map(katla)).size, POZISYONLAR.length);
   /* Öğrenci profili aynı listeyi kullanıyor; ikinci kopya yok. */
   /* 6 Ekim 2026: hedef pozisyonlar düzenleme ekranında (ProfilDuzenleme). */
-  const PROFIL = oku('src/components/ProfilDuzenleme.tsx');
-  assert.match(PROFIL, /import \{ HEDEF_POZISYONLAR \} from '\.\.\/lib\/pozisyonlar\.mjs';/);
+  /* 11 Ekim 2026: alanlar profil/TercihAyarlari'nda. */
+  const PROFIL = oku('src/components/profil/TercihAyarlari.tsx');
+  assert.match(PROFIL, /import \{ HEDEF_POZISYONLAR \} from '\.\.\/\.\.\/lib\/pozisyonlar\.mjs';/);
   assert.doesNotMatch(PROFIL, /const HEDEF_POZISYONLAR = \[/);
 });
 

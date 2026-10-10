@@ -135,3 +135,15 @@
     font-size: 16px;
   }
 }
+
+/*
+  PROFİL DÜZENLEME: ALT MENÜ YERİNE KAYDET ÇUBUĞU (11 Ekim 2026)
+
+  Düzenleme ekranında telefonun altında sabit "Tüm değişiklikleri kaydet"
+  çubuğu duruyor. Alt menü de aynı yerde sabit; ikisi üst üste binerdi
+  (menü kaydırınca gizlenip geri geldiği için çubuk da zıplardı).
+  Düzenleme açıkken `ProfilDuzenleme` köke işaret koyuyor; menü gizli.
+*/
+html[data-profil-duzenleme] [data-alt-menu] {
+  display: none;
+}

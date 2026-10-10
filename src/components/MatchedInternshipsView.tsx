@@ -210,6 +210,8 @@ interface MatchedInternshipsViewProps {
   kendiSirketId?: string | null;
   /** Profil sekmesine geçiş. Verilmezse profil çubuğu bir şey yapmaz. */
   onGoToProfile?: () => void;
+  /** Profil fotoğrafı var mı (sosyal profil yolu ya da eski adres) — yüzde profil ekranıyla aynı olsun. */
+  fotografVar?: boolean;
   /** CV oluşturma akışını açar (App'teki `CvOlusturucu`). */
   onCvOlustur?: () => void;
   /** Giriş penceresini açar; misafirin kaydet düğmesi buraya bağlanıyor. */
@@ -264,6 +266,7 @@ interface MatchedInternshipsViewProps {
 
 export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   student,
+  fotografVar,
   allListings,
   applications,
   subTab = 'all',
@@ -975,7 +978,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     Burada ayrı bir liste vardı (not ortalaması dahil, CV hariç) ve aynı
     profil iki ekranda iki farklı yüzde gösteriyordu.
   */
-  const doluluk = student ? profilDolulugu(student) : null;
+  const doluluk = student ? profilDolulugu(student, { fotografVar: fotografVar ?? Boolean(student.avatarUrl) }) : null;
   const profileChecks: boolean[] = doluluk ? doluluk.adimlar.map((a) => a.tamam) : [];
   const profileCompletion = doluluk ? doluluk.oran : 0;
 

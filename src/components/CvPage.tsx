@@ -95,13 +95,14 @@ const anahtar = (s: string) => s.trim().toLocaleLowerCase('tr-TR');
   yazılanın kendisi basılıyor ve çubuk ÇİZİLMİYOR — seviyeyi tahmin
   etmek uydurma olurdu.
 */
+/* Profil ekranındaki altı basamakla aynı adlar (lib/profil-taslagi.mjs DIL_SEVIYELERI). */
 const DIL_OLCEGI: Record<string, { oran: number; etiket: string }> = {
-  A1: { oran: 20, etiket: 'Başlangıç · A1' },
-  A2: { oran: 35, etiket: 'Başlangıç · A2' },
-  B1: { oran: 50, etiket: 'Orta · B1' },
-  B2: { oran: 65, etiket: 'Orta · B2' },
-  C1: { oran: 82, etiket: 'İleri · C1' },
-  C2: { oran: 95, etiket: 'İleri · C2' },
+  A1: { oran: 20, etiket: 'Başlangıç' },
+  A2: { oran: 35, etiket: 'Temel' },
+  B1: { oran: 50, etiket: 'Orta' },
+  B2: { oran: 65, etiket: 'İyi' },
+  C1: { oran: 82, etiket: 'İleri' },
+  C2: { oran: 95, etiket: 'İleri' },
 };
 const dilSeviyesi = (level: string, metin: string) => {
   const ham = (level || metin || '').trim();

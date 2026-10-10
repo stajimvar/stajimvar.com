@@ -4107,6 +4107,7 @@ export default function App() {
               */}
               <MatchedInternshipsView
                 student={isLoggedIn ? activeStudent : null}
+                fotografVar={Boolean(sosyalAvatarYolu || activeStudent?.avatarUrl)}
                 allListings={globalListings.page.listings}
                 applications={applications}
                 subTab={activeSubTab}

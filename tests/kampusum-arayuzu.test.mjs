@@ -177,7 +177,15 @@ test('okulsuz öğrenciye "Üniversiteni ekle": gerçek adres, /cv içinde doğr
   assert.match(CV, /const universiteEkle = \(\) => bolumeGit\('egitim', 'universite'\);/);
   const DUZENLEME = oku('src/components/ProfilDuzenleme.tsx');
   assert.match(DUZENLEME, /if \(odakAlani\) document\.getElementById\(odakAlani\)\?\.focus\(\);/);
-  assert.match(DUZENLEME, /<AutocompleteField\s+id="universite"/);
+  /*
+    11 Ekim 2026: okul alanı eğitim listesinin ana kartında; kimliği
+    değişmedi ve eksik ana okulun kartı açık başlıyor — odak alana düşüyor.
+  */
+  const LISTE = oku('src/components/profil/KayitListeleri.tsx');
+  assert.match(LISTE, /okul: 'universite'/);
+  assert.match(LISTE, /<AutocompleteField\s+id=\{kimlik\(e, 'okul'\)\}/);
+  assert.match(LISTE, /acikBaslat=\{\(e\) => e\.ana && \(!e\.okul\.trim\(\)/);
+  assert.match(DUZENLEME, /\(ALT_BOLUMLER as string\[\]\)\.includes\(ilkYer\)/);
 });
 
 test('panel BAKAN öğrencinin verisiyle: okul prop olarak girmiyor, bakılan profilin okulu kullanılmıyor', () => {

@@ -249,54 +249,83 @@ test('gezinme kapısı: kirli yoksa sormuyor; "hayır" kalıyor, "evet" temizliy
 
 /* -------------------------------------------------------- ekran kaynağı */
 
-test('onaylı tasarım: tek sütun, sıra ve başlıklar', () => {
-  assert.match(DUZENLEME, /<h1[^>]*>Profilini düzenle<\/h1>/);
-  assert.match(DUZENLEME, /Kendini anlat, bilgilerini istediğin zaman güncelle\./);
-  assert.match(DUZENLEME, /mx-auto w-full max-w-3xl/);
-  const sira = ['baslik="Temel bilgiler"', 'baslik="Eğitim"', 'baslik="Deneyim"', 'baslik="Yetenekler ve diller"', 'baslik="Projeler ve bağlantılar"', 'id="duzenle-cv"'];
-  const yerler = sira.map((s) => DUZENLEME.indexOf(s));
-  yerler.forEach((y, i) => assert.ok(y > 0, `${sira[i]} bulunmalı`));
+/*
+  11 EKİM 2026: ekran kullanıcının mobil tasarımına göre yenilendi —
+  kartlar, Temel bilgilerin beş alt bölümü ve TEK "Tüm değişiklikleri
+  kaydet". Taslağın davranışı tests/profil-taslagi.test.mjs'de gerçek
+  verilerle sınanıyor; buradakiler ekranın o taslağa bağlı kaldığını tutuyor.
+*/
+const LISTE = oku('src/components/profil/KayitListeleri.tsx');
+const DIL_YETENEK = oku('src/components/profil/DilVeYetenek.tsx');
+const KISISEL = oku('src/components/profil/KisiselBilgiler.tsx');
+
+test('onaylı tasarım: kartlar ve Temel bilgilerin beş alt bölümü, bu sırayla', () => {
+  assert.match(DUZENLEME, /<h1 className="sr-only">Profilini düzenle<\/h1>/);
+  const kartlar = ['baslik="Temel bilgiler"', 'baslik="Yetenekler ve ilgi alanları"', 'baslik="Projeler"', 'baslik="Sertifikalar"', 'baslik="CV"', 'Diğer ayarlar</h2>'];
+  const yerler = kartlar.map((s) => DUZENLEME.indexOf(s));
+  yerler.forEach((y, i) => assert.ok(y > 0, `${kartlar[i]} bulunmalı`));
   assert.deepEqual([...yerler].sort((a, b) => a - b), yerler);
-  /* Fotoğraf yalnız üstte; sosyal ayarlar kendi satırında. */
-  assert.equal((DUZENLEME.match(/\{fotografKarti\}/g) ?? []).length, 1);
-  assert.ok(DUZENLEME.indexOf('{fotografKarti}') < DUZENLEME.indexOf('baslik="Temel bilgiler"'));
+  assert.match(DUZENLEME, /\(\['kisisel', 'baglanti', 'deneyim', 'egitim', 'dil'\] as AltBolum\[\]\)\.map/);
+  for (const ad of ['Kişisel bilgiler', 'Bağlantılar', 'Deneyim', 'Eğitim', 'Diller']) assert.ok(DUZENLEME.includes(`baslik: '${ad}'`), ad);
+  /* Temel bilgiler ve CV açık başlıyor (tasarımdaki gibi). */
+  assert.match(DUZENLEME, /new Set<KartKimligi>\(\['temel', 'cv'\]\)/);
+  /* Fotoğraf yalnız üstte; sosyal ayarlar kendi kartında. */
+  assert.ok(DUZENLEME.indexOf('{ustKart}') < DUZENLEME.indexOf('baslik="Temel bilgiler"'));
   assert.equal((DUZENLEME.match(/\{sosyalProfilDuzenleme\}/g) ?? []).length, 1);
 });
 
-test('formu kalabalıklaştıranlar yok: tamamlanma sayacı ve doğrulama çağrısı', () => {
-  const k = kodu(DUZENLEME);
-  assert.doesNotMatch(k, /profilDolulugu|oran\b|konfeti|%/);
-  assert.doesNotMatch(k, /onOpenQuiz|Doğrula\b|Testi çöz/);
+test('tamamlanma yalnız tek kaynaktan; %100 olunca olumlu mesaj, eksik uyarısı yok', () => {
+  assert.match(DUZENLEME, /const doluluk = profilDolulugu\(student, \{ fotografVar \}\);/);
+  assert.match(DUZENLEME, /\{doluluk\.tamam \? \(/);
+  assert.match(DUZENLEME, /Artık profilini kullanarak başvurularını yapabilirsin\. İstersen yetenek, deneyim ve projelerini ekleyerek\s+profilini zenginleştirebilirsin\./);
+  /* Doğrulama çağrıları (testler) formun içinde değil, ayrı kartta. */
+  assert.doesNotMatch(kodu(DUZENLEME), /onOpenQuiz|Testi çöz/);
 });
 
-test('isteğe bağlı bölümler: boş durum "Ekle" ile açılıyor; deneyim formu ekle ile', () => {
-  assert.match(DUZENLEME, /Deneyim ekle/);
-  assert.match(DUZENLEME, /Deneyimin yoksa bu bölümü boş bırakabilirsin\./);
-  assert.match(DUZENLEME, /Proje ekle/);
-  assert.match(DUZENLEME, /Dil ekle/);
-  /* Deneyim alanları onaylı tasarımdaki gibi. */
-  for (const etiket of ['Pozisyon', 'Kurum', 'Başlangıç', 'Bitiş', 'Devam ediyorum', 'Kısaca ne yaptın?', 'Deneyimi kaydet']) {
-    assert.ok(DUZENLEME.includes(etiket), etiket);
+test('isteğe bağlı bölümler: boş durum "Ekle" ile açılıyor; deneyim alanları istenen gibi', () => {
+  assert.match(LISTE, /ekleMetni="Deneyim ekle"/);
+  assert.match(LISTE, /Deneyimin yoksa bu bölümü boş bırakabilirsin; profilin yine tamamlanır\./);
+  assert.match(LISTE, /ekleMetni="Proje ekle"/);
+  assert.match(LISTE, /ekleMetni="Sertifika ekle"/);
+  assert.match(LISTE, /ekleMetni="Eğitim ekle"/);
+  assert.match(DIL_YETENEK, /Dil ekle/);
+  for (const etiket of ['Şirket adı', 'Pozisyon', 'Çalışma türü', 'Başlangıç', 'Bitiş', 'Hâlen çalışıyorum', 'Görevler ve sorumluluklar']) {
+    assert.ok(LISTE.includes(etiket), etiket);
   }
   /* Kaldırma önce soruyor. */
-  assert.match(DUZENLEME, /Bu deneyim kaldırılsın mı\?/);
+  assert.match(LISTE, /kaldırılsın mı\?/);
+  assert.match(LISTE, /<KaldirmaSorusu/);
 });
 
-test('dil seviyesi kısa bir seçim alanı; program ve beceri ayrımı ve seviyeleri korunuyor', () => {
-  assert.match(DUZENLEME, /aria-label=\{`\$\{l\.language\} seviyesi`\}/);
-  assert.match(DUZENLEME, /aria-label=\{`\$\{s\.name\} seviyesi`\}/);
-  assert.match(DUZENLEME, /skills: yetenekler\.map\(\(s\) => \(s\.name === ad \? \{ \.\.\.s, level: seviye \} : s\)\)/);
-  assert.match(DUZENLEME, /softSkills: \[\.\.\.beceriler, temiz\]/);
+test('dil: aranabilir liste ve altı basamaklı seviye; doğrulanmış dilin seviyesi kilitli', () => {
+  assert.match(DIL_YETENEK, /options=\{DIL_ADLARI\}/);
+  assert.match(DIL_YETENEK, /disabled=\{l\.dogrulandi\}/);
+  const TASLAK = oku('src/lib/profil-taslagi.mjs');
+  for (const ad of ['Başlangıç', 'Temel', 'Orta', 'İyi', 'İleri', 'Ana dil']) assert.ok(TASLAK.includes(`etiket: '${ad}'`), ad);
 });
 
-test('kaydetme anlaşılır ve sessiz kayıp yok', () => {
+test('kaydetme: tek düğme, çift kayıt yok, sessiz kayıp yok', () => {
+  assert.match(DUZENLEME, /Tüm değişiklikleri kaydet/);
+  assert.equal((DUZENLEME.match(/onUpdateProfile\(/g) ?? []).length, 2, 'toplu kayıt + PDF yükleme');
+  assert.match(DUZENLEME, /if \(kilit\.current\) return false;/);
+  assert.match(DUZENLEME, /disabled=\{!kirli \|\| durum === 'kaydediliyor'\}/);
   assert.match(DUZENLEME, /Kaydedilemedi\. Yazdıkların duruyor; yeniden dene\./);
-  assert.match(DUZENLEME, /Bu bölümde kaydedilmemiş değişiklik var\./);
-  assert.match(DUZENLEME, /kaydedilmemisIsaretle\(`profil:\$\{b\}`/);
+  /* Başarısız kayıtta taslak atılmıyor: atma yalnız başarı dalında. */
+  const govde = DUZENLEME.slice(DUZENLEME.indexOf('const kaydetHepsi'), DUZENLEME.indexOf('const tekKayit'));
+  assert.ok(govde.indexOf("setDurum('hata')") < govde.lastIndexOf('setTaslak(null)'));
+  assert.match(DUZENLEME, /kaydedilmemisIsaretle\('profil:taslak', kirli\)/);
   assert.match(DUZENLEME, /window\.addEventListener\('beforeunload', dur\)/);
   assert.match(DUZENLEME, /if \(kaydedilmemisVarMi\(\) && !window\.confirm\(AYRILMA_SORUSU\)\) return;/);
   /* Geri tuşu önce düzenlemeden çıkıyor; kirliyse soruluyor. */
   assert.match(PROFIL, /if \(!ayrilmaOnayi\(\)\) \{\s*window\.history\.pushState/);
+});
+
+test('telefonda kaydet çubuğu alt menünün yerinde; güvenli alan hesaba katılıyor', () => {
+  assert.match(DUZENLEME, /document\.documentElement\.setAttribute\('data-profil-duzenleme', ''\)/);
+  assert.match(oku('src/index.css'), /html\[data-profil-duzenleme\] \[data-alt-menu\] \{\s*display: none;/);
+  assert.match(oku('src/components/Header.tsx'), /aria-label="Mobil Alt Navigasyon"\s*data-alt-menu/);
+  assert.match(DUZENLEME, /pb-\[calc\(env\(safe-area-inset-bottom\)\+0\.75rem\)\]/);
+  assert.match(DUZENLEME, /pb-\[calc\(env\(safe-area-inset-bottom\)\+8rem\)\]/);
 });
 
 test('sosyal profil formu da korumada: alanlar ve kullanıcı adı', () => {
@@ -306,26 +335,26 @@ test('sosyal profil formu da korumada: alanlar ve kullanıcı adı', () => {
   assert.match(SOSYAL, /React\.useEffect\(\(\) => \(\) => kaydedilmemisIsaretle\('sosyal:alanlar', false\), \[\]\);/);
   assert.match(SOSYAL, /<form ref=\{formRef\} onSubmit=\{gonder\}/);
   assert.match(KULLANICI_ADI, /kaydedilmemisIsaretle\('sosyal:kullanici-adi', degisiyorMu, \(\) => formRef\.current\?\.requestSubmit\(\)\);/);
-  /* Düzenleme ekranı kayda abone; satır kapatma, işaret ve yenileme aynı yoldan. */
+  /* Düzenleme ekranı kayda abone; kirli sosyal kart sessizce kapanmıyor. */
   assert.match(DUZENLEME, /useSyncExternalStore\(\s*kaydedilmemisAbone,\s*\(\) => kaydedilmemisOnekVarMi\('sosyal:'\)/);
-  assert.match(DUZENLEME, /const kirliHarita: Partial<Record<DuzenlemeBolumu, boolean>> = \{ \.\.\.yerelKirli, sosyal: sosyalKirli \};/);
-  assert.match(DUZENLEME, /sosyal: \(\) => kaydedilmemisKaydet\('sosyal:'\),/);
-  assert.match(DUZENLEME, /kirli=\{sosyalKirli\}\s*>\s*\{uyariSatiri\('sosyal'\)\}/);
-  /* Diğer ayarlar ana formdan sonra, ayrı başlık altında ve kapalı başlıyor. */
-  assert.ok(DUZENLEME.indexOf('Diğer ayarlar') > DUZENLEME.indexOf('id="duzenle-cv"'));
-  assert.match(DUZENLEME, /new Set\(acilisBolumu && acilisBolumu !== 'cv' \? \[acilisBolumu\] : \[\]\)/);
+  assert.match(DUZENLEME, /if \(id === 'sosyal' && acikKartlar\.has\('sosyal'\) && sosyalKirli\)/);
+  assert.match(DUZENLEME, /onClick=\{\(\) => kaydedilmemisKaydet\('sosyal:'\)\}/);
+  /* Diğer ayarlar ana bölümlerden sonra. */
+  assert.ok(DUZENLEME.indexOf('Diğer ayarlar</h2>') > DUZENLEME.indexOf('baslik="CV"'));
 });
 
 test('telefon ve e-posta herkese açık değil; e-posta düzenlenmiyor', () => {
-  assert.match(DUZENLEME, /Telefon ve e-posta herkese açık profilinde görünmez/);
-  assert.doesNotMatch(DUZENLEME, /email:\s*temel|fullName,\s*email/);
+  assert.match(KISISEL, /Telefon ve e-posta herkese açık profilinde görünmez/);
+  assert.doesNotMatch(KISISEL, /id="eposta"|type="email"/);
+  assert.doesNotMatch(oku('src/lib/profil-taslagi.mjs'), /yama\.email/);
 });
 
 test('CV: iki net seçenek, yüklü PDF değişmiyor, boş başlık yok', () => {
-  const satir = DUZENLEME.slice(DUZENLEME.indexOf('id="duzenle-cv"'));
+  const satir = DUZENLEME.slice(DUZENLEME.indexOf('baslik="CV"'));
   assert.match(satir, /onClick=\{\(\) => document\.getElementById\('cv-dosya-girdisi'\)\?\.click\(\)\}/);
-  assert.match(satir, /onClick=\{onCvOlustur\}/);
-  /* "Profilimden CV oluştur" profildeki bilgilerle yazdırılabilir CV'yi açıyor; form sormuyor. */
+  /* Kaydedilmemiş değişiklik varken önce kaydettiriyor: CV kayıtlı bilgiden oluşuyor. */
+  assert.match(satir, /onClick=\{\(\) => \(kirli \? setCvSorusu\(true\) : onCvOlustur\(\)\)\}/);
+  assert.match(satir, /Kaydet ve CV’yi aç/);
   assert.match(PROFIL, /onCvOlustur=\{onOpenCv\}/);
   /* CV belgesinde boş bölüm başlığı yok. */
   assert.match(CV, /\{egitimler\.length > 0 && \(/);
@@ -337,8 +366,11 @@ test('CV: iki net seçenek, yüklü PDF değişmiyor, boş başlık yok', () => 
 
 test('kayıt: deneyimler kendi tablosuna, sırayla; okuma profil sorgusunda', () => {
   assert.match(SORGU, /student_experiences \( \* \)/);
-  assert.match(SORGU, /if \(patch\.experiences\) await replaceStudentExperiences\(userId, patch\.experiences\);/);
-  assert.match(SORGU, /end_year: d\.ongoing \? null : d\.endYear,/);
+  /* 11 Ekim 2026: bütün profil tek işlemde (ogrenci_profilini_kaydet). */
+  const ESLEYICI = oku('src/lib/queries/mappers.ts');
+  assert.match(ESLEYICI, /if \(patch\.experiences\) yuk\.deneyimler = patch\.experiences\.map\(deneyimSatiri\);/);
+  assert.match(ESLEYICI, /end_year: d\.ongoing \? null : d\.endYear,/);
+  assert.match(SORGU, /await tipsiz\.rpc\('ogrenci_profilini_kaydet', \{ p: yuk \}\)/);
 });
 
 test('göç: sahibine özel, şirkete doğrudan okuma yok, güncel profil aynı kapıdan', () => {

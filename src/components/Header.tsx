@@ -1866,6 +1866,7 @@ export const Header: React.FC<HeaderProps> = ({
     {userRole === 'student' ? (
       <nav
         aria-label="Mobil Alt Navigasyon"
+        data-alt-menu
         className={altMenuClass}
         style={altMenuStil}
       >
