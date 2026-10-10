@@ -19,6 +19,11 @@ import type {
   StudentExperience,
   StudentProject,
   StudentSkill,
+  StudentEducation,
+  StudentCertificate,
+  EgitimDuzeyi,
+  CalismaTuru,
+  CvGizliAlan,
 } from '../../types';
 import { normalizeCountryCode, normalizeLanguageCode } from '../global-preferences.mjs';
 
@@ -369,7 +374,84 @@ export type StudentRowBundle = Tables<'student_profiles'> & {
   */
   is_arayan?: boolean | null;
   staj_arayan?: boolean | null;
+  /*
+    CV ALANLARI (20261206010000) — aynı gerekçe: üretilmiş tipler henüz
+    bilmiyor, isteğe bağlı bildiriliyor. Tablolar yeni, satır tipleri
+    aşağıda elle yazıldı (EgitimSatiri, SertifikaSatiri).
+  */
+  education_level?: string | null;
+  education_start_year?: number | null;
+  education_ongoing?: boolean | null;
+  interests?: string[] | null;
+  cv_gizli?: string[] | null;
+  student_educations?: EgitimSatiri[] | null;
+  student_certificates?: SertifikaSatiri[] | null;
 };
+
+/** `student_educations` satırı (20261206010000). */
+export interface EgitimSatiri {
+  id: string;
+  student_id: string;
+  school: string;
+  department: string | null;
+  level: string | null;
+  start_year: number | null;
+  end_year: number | null;
+  ongoing: boolean;
+  gpa: number | string | null;
+  sort_order: number;
+  created_at: string;
+}
+
+/** `student_certificates` satırı (20261206010000). */
+export interface SertifikaSatiri {
+  id: string;
+  student_id: string;
+  name: string;
+  issuer: string | null;
+  issue_year: number | null;
+  issue_month: number | null;
+  url: string | null;
+  sort_order: number;
+  created_at: string;
+}
+
+const EGITIM_DUZEYLERI = ['lise', 'on_lisans', 'lisans', 'yuksek_lisans', 'doktora'] as const;
+const CV_GIZLI_ALANLAR = ['telefon', 'eposta', 'konum', 'linkedin', 'portfoy', 'foto', 'not', 'ilgi'] as const;
+const CALISMA_TURLERI = ['tam_zamanli', 'yari_zamanli', 'staj', 'gonullu', 'serbest', 'donemlik'] as const;
+
+/* Bilinmeyen değer `null`/atılıyor: sunucuda CHECK var ama okuma tarafı da uydurmuyor. */
+const egitimDuzeyi = (v: string | null | undefined): EgitimDuzeyi | null =>
+  (EGITIM_DUZEYLERI as readonly string[]).includes(v ?? '') ? (v as EgitimDuzeyi) : null;
+const calismaTuru = (v: string | null | undefined): CalismaTuru | null =>
+  (CALISMA_TURLERI as readonly string[]).includes(v ?? '') ? (v as CalismaTuru) : null;
+
+export function toStudentEducation(row: EgitimSatiri): StudentEducation {
+  return {
+    id: row.id,
+    school: row.school,
+    department: row.department ?? '',
+    level: egitimDuzeyi(row.level),
+    startYear: row.start_year,
+    endYear: row.ongoing ? null : row.end_year,
+    ongoing: row.ongoing,
+    gpa: row.gpa == null ? null : Number(row.gpa),
+  };
+}
+
+export function toStudentCertificate(row: SertifikaSatiri): StudentCertificate {
+  return {
+    id: row.id,
+    name: row.name,
+    issuer: row.issuer ?? '',
+    issueYear: row.issue_year,
+    issueMonth: row.issue_month,
+    url: row.url ?? '',
+  };
+}
+
+const sirala = <T extends { sort_order: number; created_at: string }>(satirlar: T[] | null | undefined) =>
+  [...(satirlar ?? [])].sort((a, b) => a.sort_order - b.sort_order || a.created_at.localeCompare(b.created_at));
 
 export function toStudentProfile(row: StudentRowBundle): StudentProfile {
   const p = row.profiles;
@@ -418,6 +500,15 @@ export function toStudentProfile(row: StudentRowBundle): StudentProfile {
     contentLanguage: p?.content_language ?? undefined,
     homeCountry: p?.home_country ?? undefined,
     preferredJobCountries: row.preferred_job_countries ?? [],
+    educationLevel: egitimDuzeyi(row.education_level),
+    educationStartYear: row.education_start_year ?? null,
+    educationOngoing: row.education_ongoing ?? null,
+    educations: sirala(row.student_educations).map(toStudentEducation),
+    certificates: sirala(row.student_certificates).map(toStudentCertificate),
+    interests: row.interests ?? [],
+    cvGizli: (row.cv_gizli ?? []).filter((a): a is CvGizliAlan =>
+      (CV_GIZLI_ALANLAR as readonly string[]).includes(a),
+    ),
   };
 }
 
@@ -453,6 +544,7 @@ export function toStudentExperience(row: Tables<'student_experiences'>): Student
     endMonth: row.ongoing ? null : row.end_month,
     ongoing: row.ongoing,
     description: row.description ?? '',
+    employmentType: calismaTuru((row as { employment_type?: string | null }).employment_type),
   };
 }
 
@@ -464,6 +556,10 @@ export function toStudentProject(row: Tables<'student_projects'>): StudentProjec
     techStack: row.tech_stack,
     githubUrl: row.github_url ?? undefined,
     liveUrl: row.live_url ?? undefined,
+    /* 20261206010000 sütunları; üretilmiş tipler henüz bilmiyor. */
+    startYear: (row as { start_year?: number | null }).start_year ?? null,
+    endYear: (row as { end_year?: number | null }).end_year ?? null,
+    ongoing: (row as { ongoing?: boolean | null }).ongoing ?? false,
   };
 }
 
@@ -516,6 +612,28 @@ export function splitStudentUpdate(patch: Partial<StudentProfile>) {
   if (patch.cvPath !== undefined) studentPatch.cv_path = patch.cvPath || null;
   if (patch.targetRoles !== undefined) studentPatch.target_roles = patch.targetRoles;
   if (patch.softSkills !== undefined) studentPatch.soft_skills = patch.softSkills;
+  /*
+    CV ALANLARI (20261206010000). Üretilmiş tip henüz bilmediği için yazım
+    `ekYama`dan geçiyor; değerler sunucudaki CHECK'lerle aynı biçimde.
+  */
+  const ekYama = studentPatch as Record<string, unknown>;
+  if (patch.educationLevel !== undefined) ekYama.education_level = patch.educationLevel || null;
+  if (patch.educationStartYear !== undefined) ekYama.education_start_year = patch.educationStartYear || null;
+  if (patch.educationOngoing !== undefined) ekYama.education_ongoing = patch.educationOngoing;
+  if (patch.interests !== undefined) {
+    /* Tekrar ve boşluk sunucuya gitmiyor; büyük/küçük harf farkı da tekrar sayılıyor. */
+    const gorulen = new Set<string>();
+    ekYama.interests = patch.interests
+      .map((i) => i.trim())
+      .filter((i) => {
+        const anahtar = i.toLocaleLowerCase('tr-TR');
+        if (!i || gorulen.has(anahtar)) return false;
+        gorulen.add(anahtar);
+        return true;
+      })
+      .slice(0, 20);
+  }
+  if (patch.cvGizli !== undefined) ekYama.cv_gizli = [...new Set(patch.cvGizli)];
   if (patch.preferredJobCountries !== undefined) {
     const values=patch.preferredJobCountries.map(value=>normalizeCountryCode(value));
     if(values.some(value=>!value)||new Set(values).size!==values.length)throw new Error('Geçersiz veya tekrarlanan ülke tercihi');

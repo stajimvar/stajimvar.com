@@ -428,8 +428,15 @@ const STUDENT_SELECT = `
   student_skills ( * ),
   student_languages ( * ),
   student_projects ( * ),
-  student_experiences ( * )
+  student_experiences ( * ),
+  student_educations ( * ),
+  student_certificates ( * )
 `;
+/*
+  `student_educations` ve `student_certificates` (20261206010000) yalnız
+  SAHİBİNE açık. Bu seçim şirketin aday havuzunda da kullanılıyor; orada
+  RLS boş dizi döndürüyor — hata değil, gizlilik.
+*/
 
 /** Tek öğrenci profili. Yoksa null döner (henüz profil oluşturmamış kullanıcı). */
 export async function fetchStudentProfile(userId: string): Promise<StudentProfile | null> {
@@ -590,6 +597,19 @@ export async function replaceStudentLanguages(
   if (error) fail('Diller kaydedilemedi', error);
 }
 
+/*
+  YENİ TABLOLAR — TİPSİZ İSTEMCİ
+
+  `student_educations` ve `student_certificates` (20261206010000) üretilmiş
+  `database.types.ts`te henüz yok ve o dosya elle düzenlenmiyor (bir
+  sonraki üretimde geri alınırdı). Aynı göçün projelere ve deneyimlere
+  eklediği sütunlar da orada yok; üretilmiş tipler fazla alanı
+  reddettiği için bu yazımlar tipsiz istemciden geçiyor. Satır biçimleri
+  `mappers.ts`te (EgitimSatiri / SertifikaSatiri). Tipler yeniden
+  üretilince bu kısayol kaldırılabilir.
+*/
+const tipsiz = supabase as unknown as import('@supabase/supabase-js').SupabaseClient;
+
 /** Projeleri toptan değiştirir; sıra korunur. */
 export async function replaceStudentProjects(
   userId: string,
@@ -603,7 +623,7 @@ export async function replaceStudentProjects(
 
   if (projects.length === 0) return;
 
-  const { error } = await supabase.from('student_projects').insert(
+  const { error } = await tipsiz.from('student_projects').insert(
     projects.map((project, index) => ({
       student_id: userId,
       title: project.title,
@@ -611,6 +631,10 @@ export async function replaceStudentProjects(
       tech_stack: project.techStack ?? [],
       github_url: project.githubUrl || null,
       live_url: project.liveUrl || null,
+      /* İsteğe bağlı tarih (20261206010000); süren projenin bitişi yok. */
+      start_year: project.startYear || null,
+      end_year: project.ongoing ? null : project.endYear || null,
+      ongoing: Boolean(project.ongoing),
       sort_order: index,
     }))
   );
@@ -636,7 +660,7 @@ export async function replaceStudentExperiences(
 
   if (experiences.length === 0) return;
 
-  const { error } = await supabase.from('student_experiences').insert(
+  const { error } = await tipsiz.from('student_experiences').insert(
     experiences.map((d, index) => ({
       student_id: userId,
       position: d.position.trim(),
@@ -647,10 +671,61 @@ export async function replaceStudentExperiences(
       end_month: d.ongoing ? null : d.endMonth,
       ongoing: d.ongoing,
       description: d.description.trim() || null,
+      employment_type: d.employmentType || null,
       sort_order: index,
     }))
   );
   if (error) fail('Deneyimler kaydedilemedi', error);
+}
+
+
+
+/** Ek eğitimleri yeniler — deneyimlerle aynı kalıp (sil + sırayla yaz). */
+export async function replaceStudentEducations(
+  userId: string,
+  educations: NonNullable<StudentProfile['educations']>
+): Promise<void> {
+  const { error: delError } = await tipsiz.from('student_educations').delete().eq('student_id', userId);
+  if (delError) fail('Eğitimler temizlenemedi', delError);
+  if (educations.length === 0) return;
+
+  const { error } = await tipsiz.from('student_educations').insert(
+    educations.map((e, index) => ({
+      student_id: userId,
+      school: e.school.trim(),
+      department: e.department.trim() || null,
+      level: e.level || null,
+      start_year: e.startYear || null,
+      end_year: e.ongoing ? null : e.endYear || null,
+      ongoing: e.ongoing,
+      gpa: e.gpa ?? null,
+      sort_order: index,
+    }))
+  );
+  if (error) fail('Eğitimler kaydedilemedi', error);
+}
+
+/** Sertifikaları yeniler — aynı kalıp. */
+export async function replaceStudentCertificates(
+  userId: string,
+  certificates: NonNullable<StudentProfile['certificates']>
+): Promise<void> {
+  const { error: delError } = await tipsiz.from('student_certificates').delete().eq('student_id', userId);
+  if (delError) fail('Sertifikalar temizlenemedi', delError);
+  if (certificates.length === 0) return;
+
+  const { error } = await tipsiz.from('student_certificates').insert(
+    certificates.map((c, index) => ({
+      student_id: userId,
+      name: c.name.trim(),
+      issuer: c.issuer.trim() || null,
+      issue_year: c.issueYear || null,
+      issue_month: c.issueYear ? c.issueMonth || null : null,
+      url: c.url.trim() || null,
+      sort_order: index,
+    }))
+  );
+  if (error) fail('Sertifikalar kaydedilemedi', error);
 }
 
 /**
@@ -669,6 +744,8 @@ export async function saveStudentProfile(
   if (patch.languages) await replaceStudentLanguages(userId, patch.languages);
   if (patch.projects) await replaceStudentProjects(userId, patch.projects);
   if (patch.experiences) await replaceStudentExperiences(userId, patch.experiences);
+  if (patch.educations) await replaceStudentEducations(userId, patch.educations);
+  if (patch.certificates) await replaceStudentCertificates(userId, patch.certificates);
 }
 
 // ---------------------------------------------------------------- Şirket
