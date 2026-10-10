@@ -206,8 +206,10 @@ test('şirket ekranı ve CV deneyimleri kesmiyor', () => {
   assert.match(CEKMECE, /\{deneyimler\.map\(\(d: any, i: number\) => \(/);
   assert.doesNotMatch(CEKMECE, /deneyimler\.slice/);
   assert.doesNotMatch(GUNCEL, /en çok on deneyim|Başvuru kopyasında yer almayan' : 'Yeni deneyim'/);
-  assert.match(CV, /const deneyimler = deneyimKopyasi\(\[\.\.\.\(student\.experiences \?\? \[\]\)\]\.sort\(deneyimSirasi\)\);/);
-  assert.match(CV, /\{deneyimler\.map\(\(d, i\) => \(/);
+  /* Mavi şablon (10 Ekim 2026): okunamayan kayıt önce süzülüyor ki çalışma türü aynı sırada eşleşsin. */
+  assert.match(CV, /const siraliDeneyim = \[\.\.\.\(student\.experiences \?\? \[\]\)\]\.sort\(deneyimSirasi\)\.filter\(\(e\) => deneyimKaydi\(e\)\);/);
+  assert.match(CV, /const deneyimler = deneyimKopyasi\(siraliDeneyim\);/);
+  assert.match(CV, /\{deneyimler\.map\(\(d, i\) => \{/);
 });
 
 /* ------------------------------------------- kaydedilmemiş değişiklik */
@@ -326,7 +328,7 @@ test('CV: iki net seçenek, yüklü PDF değişmiyor, boş başlık yok', () => 
   /* "Profilimden CV oluştur" profildeki bilgilerle yazdırılabilir CV'yi açıyor; form sormuyor. */
   assert.match(PROFIL, /onCvOlustur=\{onOpenCv\}/);
   /* CV belgesinde boş bölüm başlığı yok. */
-  assert.match(CV, /\{egitimVar && \(/);
+  assert.match(CV, /\{egitimler\.length > 0 && \(/);
   assert.match(CV, /\{deneyimler\.length > 0 && \(\s*<AnaBolum baslik="Deneyim"/);
   assert.doesNotMatch(kodu(CV), /Belirtilmemiş/);
 });
