@@ -22,22 +22,20 @@ import {
   User,
   X,
 } from 'lucide-react';
-import type {
-  SkillLevel,
-  SkillQuiz,
-  StudentExperience,
-  StudentLanguage,
-  StudentProfile,
-  StudentProject,
-  StudentSkill,
-} from '../types';
+import type { SkillLevel, SkillQuiz, StudentExperience, StudentLanguage, StudentProfile, StudentProject, StudentSkill, CalismaTuru, EgitimDuzeyi } from '../types';
 import { CvAlani } from './CvAlani';
 import { AutocompleteField } from './AutocompleteField';
 import { PredictiveInput } from './PredictiveInput';
 import { adYazimi } from '../lib/ad';
 import { ODAK_HALKASI } from '../lib/renk-token';
 import { TR_CITIES, TR_DEPARTMENTS, TR_UNIVERSITIES } from '../data/turkeyData';
-import { HARD_SKILLS_DICTIONARY, LANGUAGES_DICTIONARY, SOFT_SKILLS_DICTIONARY } from '../data/skillsDictionary';
+import { HARD_SKILLS_DICTIONARY, LANGUAGES_DICTIONARY } from '../data/skillsDictionary';
+import { ILGI_ALANLARI, YETENEK_GRUPLARI } from '../data/cv-secenekleri';
+import { EtiketSecici } from './profil/EtiketSecici';
+import { EkEgitimler } from './profil/EkEgitimler';
+import { Sertifikalar } from './profil/Sertifikalar';
+import { CvGorunurluk } from './profil/CvGorunurluk';
+import { CALISMA_TURU_ETIKET, EGITIM_DUZEYI_ETIKET } from './profil/form-siniflari';
 import { HEDEF_POZISYONLAR } from '../lib/pozisyonlar.mjs';
 import {
   ACIKLAMA_UZUNLUGU,
@@ -97,6 +95,7 @@ export type DuzenlemeBolumu =
   | 'deneyim'
   | 'yetenek'
   | 'proje'
+  | 'sertifika'
   | 'cv'
   | 'tercih'
   | 'rozet'
@@ -131,8 +130,14 @@ const SEVIYE_ETIKET: Record<SkillLevel, string> = {
   Advanced: 'İleri',
   Expert: 'Uzman',
 };
-const DIL_SEVIYELERI = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+/*
+  "ANA DİL" (10 Ekim 2026): CEFR ölçeği yabancı diller için; ana dilini
+  "C2" diye işaretlemek CV'de yanlış okunuyordu. Sunucuda kısıt yok,
+  değer olduğu gibi saklanıyor.
+*/
+const DIL_SEVIYELERI = ['Ana dil', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 const DIL_SEVIYE_METNI: Record<string, string> = {
+  'Ana dil': 'Ana dil',
   A1: 'A1 · Başlangıç',
   A2: 'A2 · Temel',
   B1: 'B1 · Orta',
@@ -312,6 +317,8 @@ interface DeneyimTaslagi {
   endYear: string;
   ongoing: boolean;
   description: string;
+  /** İsteğe bağlı (20261206010000); boş = belirtilmedi. */
+  employmentType: string;
 }
 
 const bosDeneyim: DeneyimTaslagi = {
@@ -323,6 +330,7 @@ const bosDeneyim: DeneyimTaslagi = {
   endYear: '',
   ongoing: false,
   description: '',
+  employmentType: '',
 };
 
 const deneyimTaslagi = (d: StudentExperience): DeneyimTaslagi => ({
@@ -334,6 +342,7 @@ const deneyimTaslagi = (d: StudentExperience): DeneyimTaslagi => ({
   endYear: d.endYear ? String(d.endYear) : '',
   ongoing: d.ongoing,
   description: d.description ?? '',
+  employmentType: d.employmentType ?? '',
 });
 
 const deneyimTaslakEsit = (a: DeneyimTaslagi, b: DeneyimTaslagi) =>
@@ -343,7 +352,8 @@ const deneyimTaslakEsit = (a: DeneyimTaslagi, b: DeneyimTaslagi) =>
   a.startYear === b.startYear &&
   a.ongoing === b.ongoing &&
   (a.ongoing || (a.endMonth === b.endMonth && a.endYear === b.endYear)) &&
-  metinEsit(a.description, b.description);
+  metinEsit(a.description, b.description) &&
+  a.employmentType === b.employmentType;
 
 /* GitHub alanı kullanıcı adı; tam adres yapıştırılırsa adı ayıklanıyor. */
 const githubAdi = (deger: string) => {
@@ -457,15 +467,38 @@ export const ProfilDuzenleme: React.FC<Props> = ({
   };
 
   /* ============================== EĞİTİM ============================= */
+  /*
+    EĞİTİM DÜZEYİ VE TARİHLER (20261206010000)
+
+    `educationOngoing` boşsa (eski kayıt) sınıftan türetiliyor: "Yüksek
+    Lisans / Mezun" bitmiş, diğerleri sürüyor. Değer metin olarak
+    tutuluyor ('evet'/'hayir') ki kirli denetimi öteki alanlarla aynı
+    karşılaştırmadan geçsin.
+  */
   const egitimKayitli = useMemo(
     () => ({
       university: student.university ?? '',
       department: student.department ?? '',
       gradeLevel: (student.gradeLevel ?? '') as string,
       gpa: student.gpa ? String(student.gpa) : '',
+      educationLevel: (student.educationLevel ?? '') as string,
+      educationStartYear: student.educationStartYear ? String(student.educationStartYear) : '',
+      ongoing:
+        (student.educationOngoing ?? student.gradeLevel !== 'Yüksek Lisans / Mezun') ? 'evet' : 'hayir',
+      graduationYear: student.graduationYear ? String(student.graduationYear) : '',
     }),
-    [student.university, student.department, student.gradeLevel, student.gpa],
+    [
+      student.university,
+      student.department,
+      student.gradeLevel,
+      student.gpa,
+      student.educationLevel,
+      student.educationStartYear,
+      student.educationOngoing,
+      student.graduationYear,
+    ],
   );
+  const [egitimTarihHatasi, setEgitimTarihHatasi] = useState(false);
   const [egitimTaslak, setEgitimTaslak] = useState<typeof egitimKayitli | null>(null);
   const egitim = egitimTaslak ?? egitimKayitli;
   const egitimKirli =
@@ -475,6 +508,7 @@ export const ProfilDuzenleme: React.FC<Props> = ({
   const egitimDegis = (alan: keyof typeof egitimKayitli, deger: string) => {
     setEgitimTaslak({ ...egitim, [alan]: deger });
     if (alan === 'gpa') setGpaHatasi(false);
+    if (alan === 'educationStartYear' || alan === 'graduationYear' || alan === 'ongoing') setEgitimTarihHatasi(false);
   };
   const egitimKaydet = async () => {
     const gpaMetni = egitim.gpa.trim().replace(',', '.');
@@ -484,11 +518,24 @@ export const ProfilDuzenleme: React.FC<Props> = ({
       document.getElementById('gpa')?.focus();
       return;
     }
+    const suruyor = egitim.ongoing === 'evet';
+    const basYil = egitim.educationStartYear ? Number(egitim.educationStartYear) : null;
+    const mezuniyet = egitim.graduationYear ? Number(egitim.graduationYear) : null;
+    if (!suruyor && basYil && mezuniyet && mezuniyet < basYil) {
+      setEgitimTarihHatasi(true);
+      document.getElementById('mezuniyet-yili')?.focus();
+      return;
+    }
     const tamam = await kaydet('egitim', {
       university: egitim.university.trim(),
       department: egitim.department.trim(),
       gradeLevel: egitim.gradeLevel as StudentProfile['gradeLevel'],
       gpa,
+      educationLevel: (egitim.educationLevel || null) as EgitimDuzeyi | null,
+      educationStartYear: basYil,
+      educationOngoing: suruyor,
+      /* Mezuniyet yılı yalnız bitmiş eğitimde yazılıyor; sürerken eski değer korunuyor. */
+      ...(!suruyor && mezuniyet ? { graduationYear: mezuniyet } : {}),
     });
     if (tamam) setEgitimTaslak(null);
   };
@@ -539,6 +586,7 @@ export const ProfilDuzenleme: React.FC<Props> = ({
       endMonth: t.ongoing ? null : Number(t.endMonth),
       ongoing: t.ongoing,
       description: t.description.trim(),
+      employmentType: (t.employmentType || null) as CalismaTuru | null,
     };
     const yeniListe = (deneyimFormu.id
       ? deneyimler.map((d) => (d.id === deneyimFormu.id ? kayit : d))
@@ -609,6 +657,52 @@ export const ProfilDuzenleme: React.FC<Props> = ({
       languages: diller.map((l) => (l.id === id ? { ...l, level: seviye, proficiencyText: DIL_SEVIYE_METNI[seviye] ?? seviye } : l)),
     });
   const dilSil = (id: string) => void kaydet('yetenek', { languages: diller.filter((l) => l.id !== id) });
+  /*
+    ÇOKLU SEÇİM (10 Ekim 2026)
+
+    Hazır etiketin türü verinin nereye yazılacağını söylüyor: 'program' →
+    student_skills (seviyeli), 'beceri' → soft_skills. Listede olmayan bir
+    etiket eklenirse geniş program sözlüğünde varsa program, yoksa beceri
+    sayılıyor. Her dokunuş mevcut ekleme/silme işlevinden geçiyor, yani
+    anında kaydediliyor ve tekrar engeli aynı.
+  */
+  const yetenekTurleri = useMemo(
+    () => new Map(YETENEK_GRUPLARI.flatMap((g) => g.ogeler).map((o) => [o.ad.toLocaleLowerCase('tr-TR'), o.tur])),
+    [],
+  );
+  const programSozlugu = useMemo(() => new Set(HARD_SKILLS_DICTIONARY.map((h) => h.toLocaleLowerCase('tr-TR'))), []);
+  const seciliYetenekler = [...yetenekler.map((s) => s.name), ...beceriler];
+  const hizliSec = (ad: string) => {
+    const k = ad.toLocaleLowerCase('tr-TR');
+    const tur = yetenekTurleri.get(k) ?? (programSozlugu.has(k) ? 'program' : 'beceri');
+    if (tur === 'program') programEkle(ad);
+    else beceriEkle(ad);
+  };
+  const hizliKaldir = (ad: string) => {
+    if (yetenekler.some((s) => s.name === ad)) programSil(ad);
+    else beceriSil(ad);
+  };
+  const yetenekGruplari = useMemo(
+    () => YETENEK_GRUPLARI.map((g) => ({ baslik: g.baslik, ogeler: g.ogeler.map((o) => o.ad) })),
+    [],
+  );
+
+  /* İLGİ ALANLARI — aynı seçici; sunucu en fazla 20 kabul ediyor. */
+  const ilgiler = student.interests ?? [];
+  const [ilgiSiniri, setIlgiSiniri] = useState(false);
+  const ilgiSec = (ad: string) => {
+    if (ilgiler.some((i) => i.toLocaleLowerCase('tr-TR') === ad.toLocaleLowerCase('tr-TR'))) return;
+    if (ilgiler.length >= 20) {
+      setIlgiSiniri(true);
+      return;
+    }
+    void kaydet('yetenek', { interests: [...ilgiler, ad] });
+  };
+  const ilgiKaldir = (ad: string) => {
+    setIlgiSiniri(false);
+    void kaydet('yetenek', { interests: ilgiler.filter((i) => i !== ad) });
+  };
+
   const yetenekBekleyenleriEkle = () => {
     if (yeniProgram.trim()) programEkle(yeniProgram);
     if (yeniBeceri.trim()) beceriEkle(yeniBeceri);
@@ -622,7 +716,26 @@ export const ProfilDuzenleme: React.FC<Props> = ({
 
   /* ===================== PROJELER VE BAĞLANTILAR ===================== */
   const projeler = student.projects ?? [];
-  const [projeFormu, setProjeFormu] = useState<{ baslik: string; aciklama: string; araclar: string; adres: string } | null>(null);
+  /*
+    PROJE FORMU — EKLEME VE DÜZENLEME (10 Ekim 2026)
+
+    Önce yalnız ekleme vardı; yanlış yazılan bir proje silinip yeniden
+    girilmek zorundaydı. `id` doluysa form o kaydı güncelliyor. Tarih
+    alanları isteğe bağlı (20261206010000); boşsa CV'de tarih yazılmıyor.
+  */
+  type ProjeTaslagi = {
+    id: string | null;
+    baslik: string;
+    aciklama: string;
+    araclar: string;
+    adres: string;
+    basYil: string;
+    sonYil: string;
+    suruyor: boolean;
+  };
+  const bosProje: ProjeTaslagi = { id: null, baslik: '', aciklama: '', araclar: '', adres: '', basYil: '', sonYil: '', suruyor: false };
+  const [projeFormu, setProjeFormu] = useState<ProjeTaslagi | null>(null);
+  const [projeTarihHatasi, setProjeTarihHatasi] = useState(false);
   const [projeAdresHatasi, setProjeAdresHatasi] = useState(false);
   const [silinecekProje, setSilinecekProje] = useState<string | null>(null);
   const projeKirli = Boolean(
@@ -638,16 +751,33 @@ export const ProfilDuzenleme: React.FC<Props> = ({
       document.getElementById('proje-adres')?.focus();
       return;
     }
+    const basYil = projeFormu.basYil ? Number(projeFormu.basYil) : null;
+    const sonYil = projeFormu.suruyor ? null : projeFormu.sonYil ? Number(projeFormu.sonYil) : null;
+    if (basYil && sonYil && sonYil < basYil) {
+      setProjeTarihHatasi(true);
+      document.getElementById('proje-son')?.focus();
+      return;
+    }
     const adres = projeFormu.adres.trim();
+    const onceki = projeFormu.id ? projeler.find((p) => p.id === projeFormu.id) : undefined;
     const yeni: StudentProject = {
-      id: `proj-${Date.now()}`,
+      id: projeFormu.id ?? `proj-${Date.now()}`,
       title: projeFormu.baslik.trim(),
       description: projeFormu.aciklama.trim(),
       techStack: projeFormu.araclar.split(',').map((t) => t.trim()).filter(Boolean),
       githubUrl: adres ? (/^https?:\/\//i.test(adres) ? adres : `https://${adres}`) : undefined,
+      /* Düzenlemede canlı adres korunuyor; form tek bağlantı alanı gösteriyor. */
+      liveUrl: adres ? undefined : onceki?.liveUrl,
+      startYear: basYil,
+      endYear: sonYil,
+      ongoing: projeFormu.suruyor,
     };
-    const tamam = await kaydet('proje', { projects: [...projeler, yeni] });
-    if (tamam) setProjeFormu(null);
+    const yeniListe = projeFormu.id ? projeler.map((p) => (p.id === projeFormu.id ? yeni : p)) : [...projeler, yeni];
+    const tamam = await kaydet('proje', { projects: yeniListe });
+    if (tamam) {
+      setProjeFormu(null);
+      setProjeTarihHatasi(false);
+    }
   };
   const projeSil = async (id: string) => {
     const tamam = await kaydet('proje', { projects: projeler.filter((p) => p.id !== id) });
@@ -762,6 +892,7 @@ export const ProfilDuzenleme: React.FC<Props> = ({
     egitim: () => {
       setEgitimTaslak(null);
       setGpaHatasi(false);
+      setEgitimTarihHatasi(false);
     },
     deneyim: () => {
       setDeneyimFormu(null);
@@ -1064,6 +1195,80 @@ export const ProfilDuzenleme: React.FC<Props> = ({
               )}
             </div>
           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={ETIKET} htmlFor="egitim-duzeyi">
+                Eğitim düzeyi
+              </label>
+              <select
+                id="egitim-duzeyi"
+                value={egitim.educationLevel}
+                onChange={(e) => egitimDegis('educationLevel', e.target.value)}
+                className={ALAN}
+              >
+                <option value="">Seç</option>
+                {Object.entries(EGITIM_DUZEYI_ETIKET).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={ETIKET} htmlFor="baslangic-yili">
+                Başlangıç yılı
+              </label>
+              <select
+                id="baslangic-yili"
+                value={egitim.educationStartYear}
+                onChange={(e) => egitimDegis('educationStartYear', e.target.value)}
+                className={ALAN}
+              >
+                <option value="">Seç</option>
+                {YILLAR.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 items-end gap-4">
+            <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-sm text-gray-900">
+              <input
+                type="checkbox"
+                checked={egitim.ongoing === 'evet'}
+                onChange={(e) => egitimDegis('ongoing', e.target.checked ? 'evet' : 'hayir')}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600"
+              />
+              Devam ediyorum
+            </label>
+            <div>
+              <label className={ETIKET} htmlFor="mezuniyet-yili">
+                Mezuniyet yılı
+              </label>
+              <select
+                id="mezuniyet-yili"
+                value={egitim.ongoing === 'evet' ? '' : egitim.graduationYear}
+                disabled={egitim.ongoing === 'evet'}
+                onChange={(e) => egitimDegis('graduationYear', e.target.value)}
+                aria-invalid={egitimTarihHatasi || undefined}
+                className={`${ALAN} disabled:bg-gray-100 disabled:text-gray-500`}
+              >
+                <option value="">{egitim.ongoing === 'evet' ? 'Devam ediyor' : 'Seç'}</option>
+                {YILLAR.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+              {egitimTarihHatasi && (
+                <p role="alert" className={HATA}>
+                  Mezuniyet yılı başlangıçtan önce olamaz.
+                </p>
+              )}
+            </div>
+          </div>
           <div className="flex flex-wrap items-center gap-3">
             <button type="submit" disabled={durumlar.egitim === 'kaydediliyor'} className={BIRINCIL}>
               Kaydet
@@ -1076,6 +1281,13 @@ export const ProfilDuzenleme: React.FC<Props> = ({
             <KayitDurumu durum={durumlar.egitim ?? 'bos'} />
           </div>
         </form>
+        <div className="mt-6 border-t border-gray-100 pt-5">
+          <EkEgitimler
+            kayitlar={student.educations ?? []}
+            onKaydet={(yeni) => kaydet('egitim', { educations: yeni })}
+            kilitli={durumlar.egitim === 'kaydediliyor'}
+          />
+        </div>
       </Satir>
 
       {/* ----------------------------- DENEYİM --------------------------- */}
@@ -1191,6 +1403,24 @@ export const ProfilDuzenleme: React.FC<Props> = ({
                 />
               </div>
             </div>
+            <div className="sm:w-1/2">
+              <label className={ETIKET} htmlFor="deneyim-tur">
+                Çalışma türü <span className="font-normal text-gray-600">(isteğe bağlı)</span>
+              </label>
+              <select
+                id="deneyim-tur"
+                value={deneyimFormu.taslak.employmentType}
+                onChange={(e) => deneyimDegis({ employmentType: e.target.value })}
+                className={ALAN}
+              >
+                <option value="">Seç</option>
+                {Object.entries(CALISMA_TURU_ETIKET).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
               <AyYil
                 idOnEki="deneyim-bas"
@@ -1281,9 +1511,23 @@ export const ProfilDuzenleme: React.FC<Props> = ({
         kirli={yetenekKirli}
       >
         {uyariSatiri('yetenek')}
-
         <div className="space-y-2">
-          <h3 className="text-sm font-bold text-gray-900">Programlar</h3>
+          <h3 className="text-sm font-bold text-gray-900">Yetenekler</h3>
+          <p className={IPUCU}>
+            Dokunarak seç ya da kaldır; listede olmayanı arama kutusuna yazıp ekle. Seçimin hemen kaydediliyor.
+          </p>
+          <EtiketSecici
+            kimlik="yetenek-sec"
+            gruplar={yetenekGruplari}
+            secili={seciliYetenekler}
+            onSec={hizliSec}
+            onKaldir={hizliKaldir}
+            aramaYeri="Yetenek ara ya da ekle"
+            kilitli={durumlar.yetenek === 'kaydediliyor'}
+          />
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-bold text-gray-900">Programlar ve seviyeleri</h3>
           {yetenekler.length > 0 && (
             <ul className="flex flex-wrap gap-2">
               {yetenekler.map((s) => (
@@ -1325,34 +1569,24 @@ export const ProfilDuzenleme: React.FC<Props> = ({
           />
         </div>
 
+        {/*
+          "BECERİLER" GİRİŞİ KALKTI (10 Ekim 2026): kişisel beceriler artık
+          üstteki çoklu seçiciden ekleniyor ve kaldırılıyor. Aynı listeyi
+          iki ayrı kontrolle yönetmek, iki farklı davranış demekti.
+        */}
         <div className="space-y-2">
-          <h3 className="text-sm font-bold text-gray-900">Beceriler</h3>
-          {beceriler.length > 0 && (
-            <ul className="flex flex-wrap gap-2">
-              {beceriler.map((b) => (
-                <li
-                  key={b}
-                  className="inline-flex min-h-11 items-center gap-1 rounded-xl border border-blue-100 bg-blue-50 pl-3 pr-1 text-sm font-semibold text-blue-900"
-                >
-                  {b}
-                  <button type="button" onClick={() => beceriSil(b)} aria-label={`${b} kaldır`} className={KUCUK_EYLEM}>
-                    <X aria-hidden className="h-4 w-4" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          <PredictiveInput
-            id="beceri-ekle"
-            value={yeniBeceri}
-            onChange={setYeniBeceri}
-            onSubmit={beceriEkle}
-            dictionary={SOFT_SKILLS_DICTIONARY}
-            excludeList={beceriler}
-            placeholder="Beceri ekle (iletişim, ekip çalışması…)"
-            buttonText="Ekle"
-            accentColor="blue"
+          <h3 className="text-sm font-bold text-gray-900">İlgi alanları</h3>
+          <p className={IPUCU}>CV'nin sol sütununda görünür. İstersen CV ayarlarından gizleyebilirsin.</p>
+          <EtiketSecici
+            kimlik="ilgi-sec"
+            gruplar={[{ baslik: 'Öneriler', ogeler: ILGI_ALANLARI }]}
+            secili={ilgiler}
+            onSec={ilgiSec}
+            onKaldir={ilgiKaldir}
+            aramaYeri="İlgi alanı ara ya da ekle"
+            kilitli={durumlar.yetenek === 'kaydediliyor'}
           />
+          {ilgiSiniri && <p className={HATA}>En fazla 20 ilgi alanı ekleyebilirsin.</p>}
         </div>
 
         <div className="space-y-2">
@@ -1478,7 +1712,33 @@ export const ProfilDuzenleme: React.FC<Props> = ({
                       </p>
                       {p.description && <p className="mt-0.5 break-words text-sm text-gray-600">{p.description}</p>}
                       {p.techStack.length > 0 && <p className="mt-0.5 text-xs text-gray-600">{p.techStack.join(' · ')}</p>}
+                      {(p.startYear || p.ongoing) && (
+                        <p className="mt-0.5 text-xs text-gray-500">
+                          {[p.startYear, p.ongoing ? 'Devam ediyor' : p.endYear].filter(Boolean).join(' – ')}
+                        </p>
+                      )}
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProjeFormu({
+                          id: p.id,
+                          baslik: p.title,
+                          aciklama: p.description,
+                          araclar: p.techStack.join(', '),
+                          adres: p.githubUrl || p.liveUrl || '',
+                          basYil: p.startYear ? String(p.startYear) : '',
+                          sonYil: p.endYear ? String(p.endYear) : '',
+                          suruyor: Boolean(p.ongoing),
+                        });
+                        setProjeTarihHatasi(false);
+                        requestAnimationFrame(() => document.getElementById('proje-baslik')?.focus());
+                      }}
+                      aria-label={`${p.title} projesini düzenle`}
+                      className={KUCUK_EYLEM}
+                    >
+                      <Pencil aria-hidden className="h-4 w-4" />
+                    </button>
                     <button
                       type="button"
                       onClick={() => setSilinecekProje(p.id)}
@@ -1511,7 +1771,7 @@ export const ProfilDuzenleme: React.FC<Props> = ({
                 void projeEkle();
               }}
               className="space-y-3 rounded-xl border border-gray-200 p-3"
-              aria-label="Yeni proje"
+              aria-label={projeFormu.id ? 'Projeyi düzenle' : 'Yeni proje'}
             >
               <div>
                 <label className={ETIKET} htmlFor="proje-baslik">
@@ -1574,15 +1834,79 @@ export const ProfilDuzenleme: React.FC<Props> = ({
                   )}
                 </div>
               </div>
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
+                <div>
+                  <label className={ETIKET} htmlFor="proje-bas">
+                    Başlangıç yılı <span className="font-normal text-gray-600">(isteğe bağlı)</span>
+                  </label>
+                  <select
+                    id="proje-bas"
+                    value={projeFormu.basYil}
+                    onChange={(e) => {
+                      setProjeFormu({ ...projeFormu, basYil: e.target.value });
+                      setProjeTarihHatasi(false);
+                    }}
+                    className={ALAN}
+                  >
+                    <option value="">Seç</option>
+                    {YILLAR.map((y) => (
+                      <option key={y} value={y}>
+                        {y}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className={ETIKET} htmlFor="proje-son">
+                    Bitiş yılı
+                  </label>
+                  <select
+                    id="proje-son"
+                    value={projeFormu.suruyor ? '' : projeFormu.sonYil}
+                    disabled={projeFormu.suruyor}
+                    aria-invalid={projeTarihHatasi || undefined}
+                    onChange={(e) => {
+                      setProjeFormu({ ...projeFormu, sonYil: e.target.value });
+                      setProjeTarihHatasi(false);
+                    }}
+                    className={`${ALAN} disabled:bg-gray-100 disabled:text-gray-500`}
+                  >
+                    <option value="">{projeFormu.suruyor ? 'Devam ediyor' : 'Seç'}</option>
+                    {YILLAR.map((y) => (
+                      <option key={y} value={y}>
+                        {y}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-sm text-gray-900">
+                  <input
+                    type="checkbox"
+                    checked={projeFormu.suruyor}
+                    onChange={(e) => {
+                      setProjeFormu({ ...projeFormu, suruyor: e.target.checked });
+                      setProjeTarihHatasi(false);
+                    }}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600"
+                  />
+                  Devam ediyor
+                </label>
+              </div>
+              {projeTarihHatasi && (
+                <p role="alert" className={HATA}>
+                  Bitiş yılı başlangıçtan önce olamaz.
+                </p>
+              )}
               <div className="flex flex-wrap items-center gap-3">
                 <button type="submit" disabled={!projeFormu.baslik.trim() || durumlar.proje === 'kaydediliyor'} className={BIRINCIL}>
-                  Projeyi ekle
+                  {projeFormu.id ? 'Projeyi güncelle' : 'Projeyi ekle'}
                 </button>
                 <button
                   type="button"
                   onClick={() => {
                     setProjeFormu(null);
                     setProjeAdresHatasi(false);
+                    setProjeTarihHatasi(false);
                   }}
                   className={IKINCIL}
                 >
@@ -1594,7 +1918,7 @@ export const ProfilDuzenleme: React.FC<Props> = ({
             <button
               type="button"
               onClick={() => {
-                setProjeFormu({ baslik: '', aciklama: '', araclar: '', adres: '' });
+                setProjeFormu(bosProje);
                 requestAnimationFrame(() => document.getElementById('proje-baslik')?.focus());
               }}
               className={EKLE}
@@ -1670,6 +1994,30 @@ export const ProfilDuzenleme: React.FC<Props> = ({
         </form>
       </Satir>
 
+      {/* --------------------------- SERTİFİKALAR ------------------------- */}
+      <Satir
+        id="sertifika"
+        ikon={<Award />}
+        baslik="Sertifikalar"
+        ozet={
+          (student.certificates ?? []).length
+            ? `${(student.certificates ?? []).length} sertifika · ${listeOzeti((student.certificates ?? []).map((c) => c.name), 1)}`
+            : 'Aldığın eğitim ve sertifikalar'
+        }
+        acik={acik.has('sertifika')}
+        onToggle={toggle}
+        kirli={false}
+      >
+        <Sertifikalar
+          kayitlar={student.certificates ?? []}
+          onKaydet={(yeni) => kaydet('sertifika', { certificates: yeni })}
+          kilitli={durumlar.sertifika === 'kaydediliyor'}
+        />
+        <div className="mt-3">
+          <KayitDurumu durum={durumlar.sertifika ?? 'bos'} />
+        </div>
+      </Satir>
+
       {/* ------------------------------- CV ------------------------------ */}
       <section id="duzenle-cv" aria-labelledby="duzenle-cv-baslik" className="scroll-mt-24 rounded-2xl border border-gray-200 bg-white px-4 py-3 sm:px-5">
         <div className="flex flex-wrap items-center gap-3 sm:gap-4">
@@ -1711,6 +2059,19 @@ export const ProfilDuzenleme: React.FC<Props> = ({
               const tamam = await kaydet('cv', { cvPath: yeniYol ?? '' });
               if (!tamam) throw new Error('CV kaydedilemedi.');
             }}
+          />
+        </div>
+        {/*
+          CV'DE NELER GÖRÜNSÜN (20261206010000)
+
+          Gizlenen bilgi profilden SİLİNMİYOR; yalnız StajımVar'ın
+          oluşturduğu CV'de basılmıyor. Yüklenen PDF'e dokunulmuyor.
+        */}
+        <div className="mt-4 border-t border-gray-100 pt-4">
+          <CvGorunurluk
+            student={student}
+            onDegis={(gizli) => kaydet('cv', { cvGizli: gizli })}
+            kilitli={durumlar.cv === 'kaydediliyor'}
           />
         </div>
       </section>
