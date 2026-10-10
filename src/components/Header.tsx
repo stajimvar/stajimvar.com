@@ -191,6 +191,28 @@ interface HeaderProps {
   Aktif sekmede aria-current="page": ekran okuyucu hangi sayfada
   olunduğunu söylüyor; renk tek başına bunu anlatmıyor.
 */
+/*
+  MASAÜSTÜ ÜST MENÜ SEKMESİ — ÖĞRENCİ VE İŞVEREN AYNI DİL (10 Ekim 2026)
+
+  Öğrenci menüsü #327 ile bağımsız sekmelere geçti: simge üstte, yazı
+  altta; etkin sekmede mavi simge ve yazı, açık mavi zemin, altta 3 px
+  mavi çizgi. İşveren menüsü gri kapsülde kalmıştı. İki menü artık
+  sınıflarını BURADAN alıyor; biri değişince öteki geride kalmıyor.
+
+  İki menü de yalnız masaüstünde çiziliyor (`hidden lg:flex`); telefonun
+  alt menüsü ayrı bir bileşen ve bu sınıfları kullanmıyor.
+*/
+const MASAUSTU_MENU = 'hidden lg:flex items-stretch gap-1 shrink-0';
+const MASAUSTU_SEKME =
+  'relative flex flex-col items-center justify-center gap-1 min-w-[68px] xl:min-w-[84px] px-3 py-2 xl:px-4 rounded-xl text-[13px] font-semibold transition-colors cursor-pointer select-none whitespace-nowrap shrink-0';
+const MASAUSTU_SEKME_AKTIF =
+  'bg-blue-50 text-blue-700 font-bold after:absolute after:inset-x-3 after:-bottom-px after:h-[3px] after:rounded-full after:bg-blue-600';
+const MASAUSTU_SEKME_PASIF = 'text-gray-600 hover:text-gray-900 hover:bg-gray-50';
+const masaustuSekme = (aktif: boolean) =>
+  `${MASAUSTU_SEKME} ${aktif ? MASAUSTU_SEKME_AKTIF : MASAUSTU_SEKME_PASIF}`;
+const masaustuSekmeIkonu = (aktif: boolean) =>
+  `w-5 h-5 shrink-0 transition-colors ${aktif ? 'text-blue-600' : 'text-gray-400'}`;
+
 function baglantiTiklamasi(calistir: () => void) {
   return (e: React.MouseEvent) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
@@ -975,7 +997,7 @@ export const Header: React.FC<HeaderProps> = ({
               tıklama işleyicileri aynı.
             */}
             {userRole === 'student' && activeTab !== 'company-portal' && (
-              <nav className="hidden lg:flex items-stretch gap-1 shrink-0">
+              <nav className={MASAUSTU_MENU}>
                 {/*
                   1. İş & Staj İlanları
 
@@ -1009,16 +1031,10 @@ export const Header: React.FC<HeaderProps> = ({
                     setActiveTab('internships');
                     setActiveSubTab('all');
                   })}
-                  className={`relative flex flex-col items-center justify-center gap-1 min-w-[68px] xl:min-w-[84px] px-3 py-2 xl:px-4 rounded-xl text-[13px] font-semibold transition-colors cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                    ilanlardaMi
-                      ?'bg-blue-50 text-blue-700 font-bold after:absolute after:inset-x-3 after:-bottom-px after:h-[3px] after:rounded-full after:bg-blue-600'
-                      :'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
+                  className={masaustuSekme(ilanlardaMi)}
                 >
                   <Briefcase
-                    className={`w-5 h-5 shrink-0 transition-colors ${
-                      ilanlardaMi ? 'text-blue-600' : 'text-gray-400'
-                    }`}
+                    className={masaustuSekmeIkonu(ilanlardaMi)}
                   />
                   <span className="hidden xl:inline">Staj İlanları</span>
                   <span className="inline xl:hidden">İlanlar</span>
@@ -1068,11 +1084,9 @@ export const Header: React.FC<HeaderProps> = ({
                   href="/firsatlar"
                   aria-current={firsatlardaMi ? 'page' : undefined}
                   onClick={baglantiTiklamasi(() => onOpenOpportunities?.())}
-                  className={`relative flex flex-col items-center justify-center gap-1 min-w-[68px] xl:min-w-[84px] px-3 py-2 xl:px-4 rounded-xl text-[13px] font-semibold transition-colors cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                    firsatlardaMi ? 'bg-blue-50 text-blue-700 font-bold after:absolute after:inset-x-3 after:-bottom-px after:h-[3px] after:rounded-full after:bg-blue-600' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
+                  className={masaustuSekme(firsatlardaMi)}
                 >
-                  <Sparkles className={`w-5 h-5 shrink-0 ${firsatlardaMi ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <Sparkles className={masaustuSekmeIkonu(firsatlardaMi)} />
                   <span>Fırsatlar</span>
                 </a>
 
@@ -1092,11 +1106,9 @@ export const Header: React.FC<HeaderProps> = ({
                   href="/baglantilar"
                   aria-current={agimdaMi ? 'page' : undefined}
                   onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/agim')) : undefined}
-                  className={`relative flex flex-col items-center justify-center gap-1 min-w-[68px] xl:min-w-[84px] px-3 py-2 xl:px-4 rounded-xl text-[13px] font-semibold transition-colors cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                    agimdaMi ? 'bg-blue-50 text-blue-700 font-bold after:absolute after:inset-x-3 after:-bottom-px after:h-[3px] after:rounded-full after:bg-blue-600' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
+                  className={masaustuSekme(agimdaMi)}
                 >
-                  <Users className={`w-5 h-5 shrink-0 ${agimdaMi ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <Users className={masaustuSekmeIkonu(agimdaMi)} />
                   <span>Ağım</span>
                 </a>
 
@@ -1112,14 +1124,10 @@ export const Header: React.FC<HeaderProps> = ({
                   href="/rehber"
                   aria-current={rehberdeMi && !isverendeMi ? 'page' : undefined}
                   onClick={baglantiTiklamasi(() => onOpenGuides?.())}
-                  className={`relative flex flex-col items-center justify-center gap-1 min-w-[68px] xl:min-w-[84px] px-3 py-2 xl:px-4 rounded-xl text-[13px] font-semibold transition-colors cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                    rehberdeMi && !isverendeMi ? 'bg-blue-50 text-blue-700 font-bold after:absolute after:inset-x-3 after:-bottom-px after:h-[3px] after:rounded-full after:bg-blue-600' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
+                  className={masaustuSekme(rehberdeMi && !isverendeMi)}
                 >
                   <BookOpen
-                    className={`w-5 h-5 shrink-0 ${
-                      rehberdeMi && !isverendeMi ? 'text-blue-600' : 'text-gray-400'
-                    }`}
+                    className={masaustuSekmeIkonu(rehberdeMi && !isverendeMi)}
                   />
                   <span>Rehber</span>
                   {/*
@@ -1172,19 +1180,15 @@ export const Header: React.FC<HeaderProps> = ({
               Profil sağdaki hesap bağlantısında (öğrencide de öyle).
             */}
             {sirketKabugu && (
-              <nav className="hidden lg:flex items-center p-1 bg-gray-100/90 rounded-2xl border border-gray-200/90 shadow-2xs transition-all gap-0.5 shrink-0">
+              <nav className={MASAUSTU_MENU}>
                 <a
                   id="nav-tab-sirket-ilanlar"
                   href="/sirket/ilanlar"
                   aria-current={sirketIlanlarindaMi ? 'page' : undefined}
                   onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/sirket/ilanlar')) : undefined}
-                  className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                    sirketIlanlarindaMi
-                      ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
-                  }`}
+                  className={masaustuSekme(sirketIlanlarindaMi)}
                 >
-                  <Briefcase className={`w-3.5 h-3.5 shrink-0 ${sirketIlanlarindaMi ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <Briefcase className={masaustuSekmeIkonu(sirketIlanlarindaMi)} />
                   <span>İlanlar</span>
                 </a>
                 {/*
@@ -1203,11 +1207,9 @@ export const Header: React.FC<HeaderProps> = ({
                   href="/sirket/basvuranlar"
                   aria-current={sirketBasvuranlarindaMi ? 'page' : undefined}
                   onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/sirket/basvuranlar')) : undefined}
-                  className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                    sirketBasvuranlarindaMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
-                  }`}
+                  className={masaustuSekme(sirketBasvuranlarindaMi)}
                 >
-                  <Users className={`w-3.5 h-3.5 shrink-0 ${sirketBasvuranlarindaMi ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <Users className={masaustuSekmeIkonu(sirketBasvuranlarindaMi)} />
                   <span>Başvurular</span>
                 </a>
                 <a
@@ -1215,11 +1217,9 @@ export const Header: React.FC<HeaderProps> = ({
                   href="/agim"
                   aria-current={agimdaMi ? 'page' : undefined}
                   onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/agim')) : undefined}
-                  className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                    agimdaMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
-                  }`}
+                  className={masaustuSekme(agimdaMi)}
                 >
-                  <Heart className={`w-3.5 h-3.5 shrink-0 ${agimdaMi ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <Heart className={masaustuSekmeIkonu(agimdaMi)} />
                   <span>Takipçiler</span>
                 </a>
                 <a
@@ -1227,11 +1227,9 @@ export const Header: React.FC<HeaderProps> = ({
                   href="/rehber"
                   aria-current={rehberdeMi && !isverendeMi ? 'page' : undefined}
                   onClick={baglantiTiklamasi(() => onOpenGuides?.())}
-                  className={`flex items-center gap-1.5 xl:gap-2 px-3 py-1.5 xl:px-4 xl:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                    rehberdeMi && !isverendeMi ? 'bg-white text-blue-700 shadow-xs border border-blue-200/80 ring-1 ring-blue-500/10 font-extrabold' : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
-                  }`}
+                  className={masaustuSekme(rehberdeMi && !isverendeMi)}
                 >
-                  <BookOpen className={`w-3.5 h-3.5 shrink-0 ${rehberdeMi && !isverendeMi ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <BookOpen className={masaustuSekmeIkonu(rehberdeMi && !isverendeMi)} />
                   <span>Rehber</span>
                 </a>
               </nav>
