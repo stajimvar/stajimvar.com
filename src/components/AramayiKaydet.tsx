@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookmarkPlus } from 'lucide-react';
+import { BookmarkPlus, ChevronRight } from 'lucide-react';
 import {
   aramayiKaydet,
   fetchEslesmeIcinIlanlar,
@@ -139,10 +139,16 @@ export const AramayiKaydet: React.FC<AramayiKaydetProps> = ({
       <button
         type="button"
         onClick={() => setAcik(true)}
-        className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 text-sm font-bold text-gray-700 hover:bg-gray-50 cursor-pointer"
+        /*
+          MASAÜSTÜ (10 Ekim 2026, referans tasarım): tam genişlik, açık mavi
+          zemin, ince mavi kenarlık ve sağda ok. Telefonda düğme olduğu gibi
+          — bütün yeni sınıflar `lg:` önekli.
+        */
+        className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 text-sm font-bold text-gray-700 hover:bg-gray-50 cursor-pointer lg:flex lg:w-full lg:min-h-12 lg:gap-2 lg:border-blue-200 lg:bg-blue-50/60 lg:px-3 lg:text-gray-900 xl:gap-2.5 xl:px-4 lg:hover:bg-blue-50"
       >
-        <BookmarkPlus className="h-4 w-4" aria-hidden="true" />
+        <BookmarkPlus className="h-4 w-4 lg:h-5 lg:w-5 lg:text-blue-600" aria-hidden="true" />
         Bu aramayı kaydet
+        <ChevronRight className="ml-auto hidden h-4 w-4 shrink-0 text-blue-600 xl:block" aria-hidden="true" />
       </button>
     );
   }

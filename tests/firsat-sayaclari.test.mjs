@@ -22,9 +22,14 @@ const firsatlar = oku('src/components/OpportunitiesPage.tsx');
 const ilanlar = oku('src/components/MatchedInternshipsView.tsx');
 
 test('şerit İlanlar\'daki kartın sınıflarını birebir kullanıyor', () => {
-  const kap = 'grid grid-cols-3 gap-2 bg-white rounded-2xl border border-gray-200 px-4 py-3.5';
-  const sayi = 'text-2xl font-black text-gray-900 tabular-nums leading-none';
-  const etiket = 'text-[11px] font-semibold text-gray-500 mt-1 truncate';
+  /*
+    10 Ekim 2026: İlanlar'daki şerit referans tasarıma geçti (sayının
+    üstünde simge, sütunlar arasında ince çizgi). Kural değişmedi: iki
+    sayfa AYNI kalıbı paylaşıyor; değişen kalıbın kendisi.
+  */
+  const kap = 'grid grid-cols-3 divide-x divide-gray-100 bg-white rounded-2xl border border-gray-200 py-4 shadow-xs';
+  const sayi = 'text-[28px] font-black text-gray-900 tabular-nums leading-none';
+  const etiket = 'text-xs font-medium text-gray-500 mt-1.5 truncate';
   for (const sinif of [kap, sayi, etiket]) {
     assert.ok(ilanlar.includes(sinif), `İlanlar kalıbı değişmiş: ${sinif}`);
     assert.ok(firsatlar.includes(sinif), `Fırsatlar aynı sınıfı kullanmalı: ${sinif}`);

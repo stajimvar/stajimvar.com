@@ -16,6 +16,22 @@ const oku = (p) => readFileSync(path.join(KOK, p), 'utf8').replace(/\r\n/g, '\n'
 const GORUNUM = oku('src/components/MatchedInternshipsView.tsx');
 const kod = GORUNUM.replace(/\{\/\*[\s\S]*?\*\/\}/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
 
+/*
+  10 Ekim 2026: masaüstü tasarımı FiltreBlogu'na özellik ekledi (ikon,
+  masaüstü başlığı, varsayılan açıklık); bazı açılış etiketleri çok
+  satırlı oldu. Blok başı `<FiltreBlogu baslik=…` ÖNEKİYLE aranıyor —
+  sıra ve varlık iddiaları aynı.
+*/
+const blokBasi = (kaynak, baslik) => {
+  let i = kaynak.indexOf('<FiltreBlogu');
+  while (i !== -1) {
+    const geri = kaynak.slice(i + '<FiltreBlogu'.length).trimStart();
+    if (geri.startsWith('baslik=' + baslik)) return i;
+    i = kaynak.indexOf('<FiltreBlogu', i + 1);
+  }
+  return -1;
+};
+
 test('kısa giriş: tek görünür h1, açıklama gerçek veriyle uyumlu, ön render aynı', () => {
   assert.equal((kod.match(/<h1\b/g) || []).length, 1, 'ekranda tek h1');
   assert.match(kod, /<h1 className="text-lg font-extrabold[^"]*">\s*Staj aramaya buradan başla\.\s*<\/h1>/);
@@ -43,12 +59,12 @@ test('liste üstünde sayaç yok; etkin süzgeçler ve tek temizleme işlevi', (
 
 test('filtre grupları: bölüm veya alan, şehir, staj türü, çalışma biçimi; Uzaktan çalışma biçiminde', () => {
   for (const baslik of ['"Bölüm veya alan"', '"Staj türü"', '"Çalışma biçimi"']) {
-    assert.ok(kod.includes(`<FiltreBlogu baslik=${baslik}>`), baslik);
+    assert.ok(blokBasi(kod, baslik) !== -1, baslik);
   }
-  assert.ok(kod.includes("<FiltreBlogu baslik={seciliBolge === 'turkiye' ? 'Şehir' : 'Ülke'}>"));
-  const bicim = kod.slice(kod.indexOf('<FiltreBlogu baslik="Çalışma biçimi">'));
+  assert.ok(blokBasi(kod, "{seciliBolge === 'turkiye' ? 'Şehir' : 'Ülke'}") !== -1);
+  const bicim = kod.slice(blokBasi(kod, '"Çalışma biçimi"'));
   assert.match(bicim.slice(0, 400), /etiket: 'Uzaktan'/);
-  const tur = kod.slice(kod.indexOf('<FiltreBlogu baslik="Staj türü">'));
+  const tur = kod.slice(blokBasi(kod, '"Staj türü"'));
   assert.doesNotMatch(tur.slice(0, 900), /Uzaktan/);
 });
 

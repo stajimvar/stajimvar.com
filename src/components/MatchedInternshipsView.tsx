@@ -26,6 +26,11 @@ import {
   X,
   Home,
   BookOpen,
+  FileText,
+  ListChecks,
+  Info,
+  Briefcase,
+  GraduationCap,
 } from 'lucide-react';
 import { InternshipListing, StudentProfile, MatchBreakdown, ApplicationRecord } from '../types';
 import { calculateInternshipMatch } from '../utils/matchingEngine';
@@ -93,15 +98,54 @@ function eklenmeZamani(deger: string | null | undefined): number {
  * bolumde duruyor. Ayni yapiyi kuruyoruz: kisi aradigi olcutu basligindan
  * buluyor, secenekleri tek tek okumak zorunda kalmiyor.
  */
-const FiltreBlogu: React.FC<{ baslik: string; children: React.ReactNode }> = ({
-  baslik,
-  children,
-}) => (
-  <div className="px-4 py-3.5 space-y-2">
-    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-600">{baslik}</h3>
-    {children}
-  </div>
-);
+const FiltreBlogu: React.FC<{
+  baslik: string;
+  children: React.ReactNode;
+  /*
+    MASAÜSTÜ GÖRÜNÜMÜ (10 Ekim 2026, referans tasarım)
+
+    Geniş ekranda her blok ikonlu bir başlık ve aç/kapa oku taşıyor;
+    kapalı blokta içerik gizleniyor. TELEFON OLDUĞU GİBİ: başlık eski
+    büyük harfli satır, içerik her zaman açık. Masaüstü başlığı `hidden
+    lg:flex`, telefon başlığı `lg:hidden`; kapalılık da yalnız `lg:hidden`
+    olarak uygulanıyor — telefonda hiçbir blok kapanmıyor.
+
+    Seçimi olan blok açık başlıyor: kapalı bir başlığın arkasında süzgeç
+    açık kalsaydı, kişi listenin neden daraldığını göremezdi.
+  */
+  ikon?: React.ReactNode;
+  /** Masaüstündeki başlık; verilmezse `baslik`. */
+  masaustuBaslik?: string;
+  varsayilanAcik?: boolean;
+}> = ({ baslik, children, ikon, masaustuBaslik, varsayilanAcik = true }) => {
+  const [acik, setAcik] = React.useState(varsayilanAcik);
+  const govdeKimligi = React.useId();
+  return (
+    <div className="px-4 py-3.5 space-y-2 lg:px-5 lg:py-3">
+      <h3 className="text-xs font-bold uppercase tracking-wider text-gray-600 lg:hidden">{baslik}</h3>
+      <h3 className="hidden lg:block">
+        <button
+          type="button"
+          onClick={() => setAcik((o) => !o)}
+          aria-expanded={acik}
+          aria-controls={govdeKimligi}
+          className="flex w-full min-h-10 items-center gap-3 text-left cursor-pointer"
+        >
+          {ikon && <span className="text-gray-700 [&>svg]:h-5 [&>svg]:w-5">{ikon}</span>}
+          <span className="flex-1 text-[15px] font-bold text-gray-900">{masaustuBaslik ?? baslik}</span>
+          <ChevronDown
+            aria-hidden
+            className={`h-4 w-4 text-gray-500 transition-transform ${acik ? 'rotate-180' : ''}`}
+          />
+        </button>
+      </h3>
+      {/* `space-y-2` gövdede de: çocuklar eskiden doğrudan bloğun içindeydi; telefondaki aralık aynı kalıyor. */}
+      <div id={govdeKimligi} className={acik ? 'space-y-2' : 'space-y-2 lg:hidden'}>
+        {children}
+      </div>
+    </div>
+  );
+};
 
 /**
  * Filtre secenegi: onay kutusu veya radyo, yaninda ilan sayisi.
@@ -130,7 +174,7 @@ const SecenekSatiri: React.FC<{
     Yalnız `py-1.5` ile satır 32 piksel kalıyordu (20 px satır yüksekliği
     + 12 px dolgu); sitenin dokunma hedefi alt sınırı 44 piksel.
   */
-  <label className="flex min-h-11 items-center gap-2.5 py-1.5 cursor-pointer select-none group">
+  <label className="flex min-h-11 items-center gap-2.5 py-1.5 cursor-pointer select-none group lg:min-h-9 lg:py-1">
     <input
       type={tip}
       checked={secili}
@@ -766,6 +810,18 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
     uyanlar o sıra içinde öne alınıyor.
   */
   const [bolumAlani, setBolumAlani] = useState<string | null>(null);
+
+  /*
+    "BÖLÜM VEYA ALAN" — MASAÜSTÜ ARAMA VE "DAHA FAZLA GÖSTER" (10 Ekim 2026)
+
+    Referans tasarımda liste ilk beş bölümü gösteriyor, üstünde bir arama
+    kutusu var. İkisi de YALNIZ CSS ile uygulanıyor (`lg:hidden`): telefon
+    listesi eskisi gibi kaydırılabilir ve tam; masaüstündeki arama
+    telefonda hiçbir satırı gizlemiyor.
+  */
+  const [bolumAramasi, setBolumAramasi] = useState('');
+  const [bolumTumu, setBolumTumu] = useState(false);
+  const BOLUM_ILK = 5;
 
   // Filter & sort
   const filteredListings = useMemo(() => {
@@ -1566,7 +1622,16 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           hiçbir kutu çizilmiyor. `lg:block` ile geniş ekranda sütun
           eskisi gibi geri geliyor.
         */}
-        <div className="contents lg:block lg:col-span-3 lg:space-y-4 lg:sticky lg:top-4">
+        {/*
+          YAPIŞMA NOKTASI ÜST ÇUBUĞUN ALTINDA (10 Ekim 2026)
+
+          Üst çubuk yapışkan ve masaüstünde 73 piksel. Sütunlar `top-4`
+          (16 px) ile yapışıyordu, yani kaydırınca panelin üstü çubuğun
+          ALTINA giriyordu (ölçüldü: panel 16, çubuk 0-73). 88 px = çubuk +
+          15 px nefes. Panelin en büyük yüksekliği de buna göre: 88 üst +
+          16 alt boşluk.
+        */}
+        <div className="contents lg:block lg:col-span-3 lg:space-y-4 lg:sticky lg:top-[88px]">
           {/*
             BAŞLIK SOL SÜTUNDA
 
@@ -1817,7 +1882,13 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         Kap telefonda yalnız panel AÇIKKEN çiziliyor; kapalıyken kenarlığı
         ince bir çizgi olarak görünüyordu.
       */}
-      <div className={`${filtreAcik ? 'block' : 'hidden'} lg:block bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden`}>
+      {/*
+        MASAÜSTÜ KAYDIRMA (10 Ekim 2026): sol sütun zaten yapışkan
+        (`lg:sticky lg:top-4`). Panel ekrandan uzunsa artık KENDİ İÇİNDE
+        kayıyor; sayfa ikinci bir kaydırma çubuğu kazanmıyor. Telefonda
+        sınıflar aynı — yeni olanların hepsi `lg:` önekli.
+      */}
+      <div className={`${filtreAcik ? 'block' : 'hidden'} lg:block bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden lg:max-h-[calc(100vh-104px)] lg:overflow-y-auto lg:overscroll-contain lg:shadow-sm lg:[scrollbar-width:thin]`}>
 
         {/*
           ---- başlık: yalnızca geniş ekran ----
@@ -1825,15 +1896,15 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           Mobilde açma/kapama düğmesi arama kutusunun yanına taşındı; burada
           bir başlık daha bırakmak aynı kontrolü iki kez göstermek olurdu.
         */}
-        <div className="hidden lg:flex items-center gap-2 px-4 py-3">
+        <div className="hidden lg:flex items-center gap-2 px-5 pt-4 pb-3">
           <button
             type="button"
             onClick={() => setFiltreAcik((o) => !o)}
             aria-expanded={filtreAcik}
             className="flex items-center gap-2 min-w-0 flex-1 text-left cursor-pointer lg:cursor-default"
           >
-            <SlidersHorizontal className="w-4 h-4 text-gray-400 shrink-0" />
-            <span className="text-sm font-bold text-gray-900">Filtreler</span>
+            <SlidersHorizontal className="w-5 h-5 text-gray-800 shrink-0" />
+            <span className="text-lg font-bold tracking-tight text-gray-900">Filtreler</span>
             {acikSuzgecSayisi > 0 && (
               <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-blue-600 text-white leading-none shrink-0">
                 {acikSuzgecSayisi}
@@ -1846,15 +1917,19 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               }`}
             />
           </button>
-          {acikSuzgecSayisi > 0 && (
-            <button
-              type="button"
-              onClick={suzgecleriTemizle}
-              className="text-xs font-bold text-blue-600 hover:underline cursor-pointer shrink-0"
-            >
-              Temizle
-            </button>
-          )}
+          {/*
+            Referans tasarımda "Temizle" her zaman görünür bir kenarlıklı düğme.
+            Açık süzgeç yokken basılamaz (devre dışı) — basınca hiçbir şey
+            olmayan etkin bir düğme yanıltırdı. Bu satır yalnız masaüstünde.
+          */}
+          <button
+            type="button"
+            onClick={suzgecleriTemizle}
+            disabled={acikSuzgecSayisi === 0}
+            className="shrink-0 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 enabled:cursor-pointer disabled:text-gray-400 disabled:hover:bg-transparent"
+          >
+            Temizle
+          </button>
         </div>
 
         {/*
@@ -1941,9 +2016,36 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           konum, tür, tarih blokları o kadar aşağı itilirdi.
         */}
         {alanSecenekListesi.length > 0 && (
-          <FiltreBlogu baslik="Bölüm veya alan">
-            <div className="space-y-0.5 max-h-56 overflow-y-auto -mr-1 pr-1">
-              {alanSecenekListesi.map((a) => (
+          <FiltreBlogu baslik="Bölüm veya alan" ikon={<BookOpen />}>
+            <div className="relative mb-1 hidden lg:block">
+              <Search
+                aria-hidden
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+              />
+              <input
+                type="search"
+                value={bolumAramasi}
+                onChange={(e) => setBolumAramasi(e.target.value)}
+                placeholder="Bölüm ara..."
+                aria-label="Bölüm ara"
+                className="w-full min-h-10 rounded-xl border border-gray-200 bg-white pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              />
+            </div>
+            {/*
+              Liste ve masaüstündeki "Daha fazla göster" TEK sarmalayıcıda:
+              düğme telefonda gizli ama bloğun son çocuğu olsaydı `space-y`
+              listenin altına 8 piksel ekliyordu (ölçüldü, 390 px).
+            */}
+            <div>
+            <div className="space-y-0.5 max-h-56 overflow-y-auto -mr-1 pr-1 lg:max-h-none lg:overflow-visible lg:mr-0 lg:pr-0">
+              {alanSecenekListesi.map((a, sira) => {
+                const sorgu = bolumAramasi.trim().toLocaleLowerCase('tr-TR');
+                const secili = seciliAlanlar.includes(a.id);
+                const masaustundeGizli = sorgu
+                  ? !a.ad.toLocaleLowerCase('tr-TR').includes(sorgu)
+                  : !bolumTumu && sira >= BOLUM_ILK && !secili;
+                return (
+                <div key={a.id} className={masaustundeGizli ? 'lg:hidden' : undefined}>
                 <SecenekSatiri
                   key={a.id}
                   tip="checkbox"
@@ -1953,13 +2055,31 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                   onChange={() => alanSec(a.id)}
                   satirKir
                 />
-              ))}
+                </div>
+                );
+              })}
+            </div>
+            {!bolumAramasi.trim() && alanSecenekListesi.length > BOLUM_ILK && (
+              <button
+                type="button"
+                onClick={() => setBolumTumu((o) => !o)}
+                aria-expanded={bolumTumu}
+                className="hidden lg:inline-flex items-center gap-1 pt-1 text-sm font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
+              >
+                {bolumTumu ? 'Daha az göster' : 'Daha fazla göster'}
+                <ChevronDown aria-hidden className={`h-4 w-4 transition-transform ${bolumTumu ? 'rotate-180' : ''}`} />
+              </button>
+            )}
             </div>
           </FiltreBlogu>
         )}
 
         {/* ---- konum: Türkiye'de şehir, dışında ülke (A paketi, 26 Eylül 2026) ---- */}
-        <FiltreBlogu baslik={seciliBolge === 'turkiye' ? 'Şehir' : 'Ülke'}>
+        <FiltreBlogu
+          baslik={seciliBolge === 'turkiye' ? 'Şehir' : 'Ülke'}
+          ikon={<MapPin />}
+          varsayilanAcik={selectedCity !== 'all'}
+        >
           {/*
             Ülke şehrin ÜSTÜNDE: kapsamı geniş olan önce geliyor. Kişi önce
             hangi ülkenin ilanlarına baktığını seçiyor, sonra o ülkenin
@@ -1998,7 +2118,12 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         </FiltreBlogu>
 
         {/* ---- çalışma biçimi: "Uzaktan" burada, staj türünde değil ---- */}
-        <FiltreBlogu baslik="Çalışma biçimi">
+        <FiltreBlogu
+          baslik="Çalışma biçimi"
+          masaustuBaslik="Çalışma modeli"
+          ikon={<Home />}
+          varsayilanAcik={workTypes.length > 0}
+        >
           <div className="space-y-0.5">
             {[
               { id: 'On-site', etiket: 'İş yerinde' },
@@ -2031,7 +2156,12 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           Sayısı sıfır olan seçenek çizilmiyor (işaretliyse duruyor):
           boş bir kutu, orada bir şey olduğunu düşündürür.
         */}
-        <FiltreBlogu baslik="Staj türü">
+        <FiltreBlogu
+          baslik="Staj türü"
+          masaustuBaslik="İlan türü"
+          ikon={<FileText />}
+          varsayilanAcik={ilanTipleri.length > 0}
+        >
           <div className="space-y-0.5">
             {[
               { id: 'staj', etiket: 'Staj' },
@@ -2064,7 +2194,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         </FiltreBlogu>
 
         {/* ---- tarih ---- */}
-        <FiltreBlogu baslik="Tarih">
+        <FiltreBlogu baslik="Tarih" ikon={<Calendar />} varsayilanAcik={dateRange !== 'all'}>
           <div className="space-y-0.5">
             {[
               { id: 'all', etiket: 'Tümü' },
@@ -2086,7 +2216,11 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
 
         {/* ---- ilan özellikleri ---- */}
         {(mandatoryCount > 0 || paidCount > 0 || onlyMandatory || onlyPaid) && (
-          <FiltreBlogu baslik="İlan özellikleri">
+          <FiltreBlogu
+            baslik="İlan özellikleri"
+            ikon={<ListChecks />}
+            varsayilanAcik={onlyMandatory || onlyPaid}
+          >
             <div className="space-y-0.5">
               {(mandatoryCount > 0 || onlyMandatory) && (
                 <SecenekSatiri
@@ -2112,7 +2246,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
 
         {/* ---- şirket ---- */}
         {companyOptions.length > 1 && (
-          <FiltreBlogu baslik="Şirket">
+          <FiltreBlogu baslik="Şirket" ikon={<Building2 />} varsayilanAcik={selectedCompanies.length > 0}>
             {/*
               Arama kutusu yalnızca liste uzunsa. Sekiz şirket varken arama
               kutusu koymak, aramaya gerek olmayan bir yere kutu koymak olur.
@@ -2219,13 +2353,25 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             otomatik) ve StajımVar'da yayımlanıyor. Kayıt ya da süzgeç
             istemiyor; ilk kart 390 px'te ilk ekranda kalıyor.
           */}
-          <div className="pb-2 pt-3 sm:pb-0 sm:pt-0">
-            <h1 className="text-lg font-extrabold leading-6 tracking-tight text-slate-900 sm:text-xl sm:leading-7">
+          {/*
+            MASAÜSTÜ (10 Ekim 2026, referans tasarım): açık mavi tonlu bir
+            başlık kartı ve sağda çanta simgesi. Telefon ve tablet (`sm:`)
+            eskisi gibi iki satır — yeni sınıfların hepsi `lg:` önekli.
+            Simge süs: `aria-hidden`, metin onsuz da eksiksiz.
+          */}
+          <div className="pb-2 pt-3 sm:pb-0 sm:pt-0 lg:relative lg:overflow-hidden lg:rounded-2xl lg:border lg:border-blue-100 lg:bg-gradient-to-r lg:from-blue-50 lg:via-white lg:to-blue-50/80 lg:py-5 lg:px-6 lg:shadow-xs xl:pr-44">
+            <h1 className="text-lg font-extrabold leading-6 tracking-tight text-slate-900 sm:text-xl sm:leading-7 lg:text-[28px] lg:leading-9">
             Staj aramaya buradan başla.
             </h1>
-            <p className="mt-0.5 text-sm leading-5 text-gray-600">
+            <p className="mt-0.5 text-sm leading-5 text-gray-600 lg:mt-1.5">
             Şirketlerin kariyer sayfalarından derlenen ve StajımVar’da yayımlanan staj ilanlarını keşfet.
             </p>
+            <div aria-hidden className="pointer-events-none absolute right-8 top-1/2 hidden -translate-y-1/2 xl:block">
+              <span className="absolute -left-6 top-6 h-12 w-10 -rotate-12 rounded-lg border border-blue-100 bg-white shadow-sm" />
+              <span className="relative flex h-20 w-20 rotate-6 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 shadow-lg shadow-blue-600/30">
+                <Briefcase className="h-10 w-10 text-white" strokeWidth={1.75} />
+              </span>
+            </div>
           </div>
           <h2 className={`${LISTE_BASLIGI_YAZISI} sr-only`}>
             İlanları keşfet ({gosterilecekToplam})
@@ -2566,24 +2712,32 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           Yalnızca geniş ekranda. Mobilde sütunlar alt alta dizildiği için
           reklam ilanların arasına düşerdi; orada zaten akış içi reklam var.
         */}
-        <div className="hidden lg:block lg:col-span-3 space-y-4 lg:sticky lg:top-4">
+        <div className="hidden lg:block lg:col-span-3 space-y-4 lg:sticky lg:top-[88px]">
           {/*
             Sayaçlar. Başlık sol sütuna inince üst şerit kalktı; sayaçlar da
             sağ sütunun en üstüne, bilgi kutusunun üzerine geçti. Kart görünümü
             korunuyor, altındaki kutuyla aynı genişlikte.
           */}
-          <div className="grid grid-cols-3 gap-2 bg-white rounded-2xl border border-gray-200 px-4 py-3.5">
+          {/*
+            Referans tasarım (10 Ekim 2026): her sayının üstünde açık mavi
+            kutuda bir simge, sütunlar arasında ince dikey çizgi. Sayılar
+            değişmedi — aynı gerçek sorgular.
+          */}
+          <div className="grid grid-cols-3 divide-x divide-gray-100 bg-white rounded-2xl border border-gray-200 py-4 shadow-xs">
             {[
               /* Listeyle aynı sayı (A paketi): kesinse `sonucSayisi`; değilse eski kural. */
-              { etiket: 'Açık ilan', deger: String(sonucSayisi ?? gosterilecekToplam) },
-              { etiket: 'Şirket', deger: String(gosterilecekSirket) },
-              { etiket: 'Şehir', deger: String(gosterilecekSehir) },
+              { etiket: 'Açık ilan', deger: String(sonucSayisi ?? gosterilecekToplam), ikon: FileText },
+              { etiket: 'Şirket', deger: String(gosterilecekSirket), ikon: Building2 },
+              { etiket: 'Şehir', deger: String(gosterilecekSehir), ikon: MapPin },
             ].map((kutu) => (
-              <div key={kutu.etiket} className="min-w-0 text-center">
-                <p className="text-2xl font-black text-gray-900 tabular-nums leading-none">
+              <div key={kutu.etiket} className="flex min-w-0 flex-col items-center px-2 text-center">
+                <span aria-hidden className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                  <kutu.ikon className="h-[18px] w-[18px]" />
+                </span>
+                <p className="text-[28px] font-black text-gray-900 tabular-nums leading-none">
                   {kutu.deger}
                 </p>
-                <p className="text-[11px] font-semibold text-gray-500 mt-1 truncate">
+                <p className="text-xs font-medium text-gray-500 mt-1.5 truncate">
                   {kutu.etiket}
                 </p>
               </div>
@@ -2601,10 +2755,12 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               Bugün {bugunDogrulanan} ilan kaynağından yeniden kontrol edildi.
             </p>
           )}
-          <aside className="bg-white rounded-2xl p-5 border border-gray-200 space-y-4">
-            <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
+          <aside className="bg-white rounded-2xl p-5 border border-gray-200 space-y-4 shadow-xs">
+            {/* Referans tasarım: bilgi simgeli, tam genişlikte açık yeşil başlık bandı. */}
+            <p className="flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-emerald-700 xl:tracking-widest">
+              <Info aria-hidden className="h-4 w-4 shrink-0 fill-emerald-600 text-white" />
               İlanlar nereden geliyor
-            </span>
+            </p>
 
             {/*
               Metin ./lib/urun-metni dosyasından geliyor.
@@ -2644,6 +2800,29 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               (ALLOW_DEACTIVATION) hâlâ kapalı olduğu için geri yazılmamalı.
             */}
           </aside>
+
+          {/*
+            "KARİYERİNE BİR ADIM ÖNDE BAŞLA" (10 Ekim 2026, referans tasarım)
+
+            Tanıtım kartı; bir iddia ya da sayı taşımıyor. Görseldeki mobil
+            uygulama kartı EKLENMEDİ: StajımVar'ın yayımlanmış bir uygulaması
+            ve geçerli mağaza bağlantısı yok — olmayan bir uygulamaya "indir"
+            düğmesi koymak yanlış bir iddia olurdu.
+          */}
+          <div className="relative overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-blue-50 p-5 shadow-xs xl:pr-28">
+            <p className="text-lg font-extrabold leading-snug tracking-tight text-gray-900">
+              Kariyerine bir adım önde başla.
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-gray-600">
+              Sana en uygun staj fırsatlarını keşfet, ağını genişlet, geleceğini şekillendir.
+            </p>
+            <span
+              aria-hidden
+              className="absolute right-5 top-1/2 hidden h-16 w-16 -translate-y-1/2 -rotate-6 xl:flex items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 shadow-lg shadow-blue-600/30"
+            >
+              <GraduationCap className="h-9 w-9 text-white" strokeWidth={1.75} />
+            </span>
+          </div>
 
           {/* Altı reklam için ayrıldı; anahtar tanımlı değilken boş kalıyor. */}
         </div>
