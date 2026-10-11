@@ -93,7 +93,12 @@ test('Şirketim yan sütunları gerçek veriden; kademe kapalıysa başvuru say�
   const yan = oku('src/sirket/SirketYanSutunlari.tsx');
   assert.match(yan, /const basvuruBilgisi = !kartAcik\s*\? 'Doğrulamadan sonra açılır'/);
   assert.match(yan, /const son = kartAcik \? basvurular\.slice\(0, 4\) : \[\];/);
-  assert.match(yan, /takipci\.durum === 'hazir' \? `\$\{takipci\.deger\} takipçi` : null/);
+  /* 11 Ekim 2026: panelde Takipçiler satırı yok (liste /agim'de ve sayaçta duruyor). */
+  assert.doesNotMatch(yan, /etiket="Takipçiler"/);
+  /* Son başvurularda fotoğraf: öğrenci başına en yeni başvurudaki; yoksa nötr avatar. */
+  assert.match(yan, /if \(b\.ogrenciId && b\.fotoUrl && !fotograflar\.has\(b\.ogrenciId\)\) fotograflar\.set\(b\.ogrenciId, b\.fotoUrl\);/);
+  /* Rehber kartları sitedeki aynı kapakla; ikon yok. */
+  assert.match(yan, /<RehberKapagi slug=\{k\.kapak\} \/>/);
   /* Rehber verisi panelin ilk yüklemesine binmiyor. */
   assert.match(yan, /import\('\.\.\/data\/rehberler'\)/);
   assert.doesNotMatch(yan, /^import \{[^}]*REHBERLER/m);

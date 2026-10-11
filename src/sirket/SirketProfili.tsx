@@ -455,7 +455,6 @@ export const SirketProfili: React.FC<{
           ilanlar={ilanlar}
           basvurular={basvurular}
           kartAcik={adayGorebilir(baglam.kademe)}
-          takipci={takipciSayaci}
           onNavigate={onNavigate}
         />
       }

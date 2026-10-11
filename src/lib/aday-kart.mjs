@@ -164,6 +164,11 @@ export function kartVerisi(satir, ek = {}) {
   return {
     id: String(satir?.id ?? ''),
     ilanId: satir?.listing_id ? String(satir.listing_id) : null,
+    /*
+      Öğrenci kimliği (sorgu zaten getiriyor): aynı kişinin farklı
+      başvurularını eşlemek için — yan sütunda bir kişiye tek fotoğraf.
+    */
+    ogrenciId: satir?.student_id ? String(satir.student_id) : null,
     ilanBasligi: satir?.ilanBasligi ?? null,
     /* Teklif özetinde kullanılıyor; ilanda yoksa o satır hiç çizilmiyor. */
     ilanCalismaBicimi: satir?.ilanCalismaBicimi ? String(satir.ilanCalismaBicimi) : '',
