@@ -115,6 +115,9 @@ interface HeaderProps {
    * yani ilan listesi dışındaki sayfalarda üst çubuk eskisi gibi kalıyor.
    */
   searchQuery?: string;
+  /** Şirket kabuğunda üst çubuktaki aday araması (Başvurular süzgeci). */
+  sirketAramasi?: string;
+  onSirketAramaDegis?: (terim: string) => void;
   onSearchChange?: (q: string) => void;
   /**
    * Kişi aramasının gezinmesi: sonuç satırı `/profil/<kullaniciadi>`
@@ -244,6 +247,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenEmployerLogin,
   bulunulanYol = '/',
   searchQuery,
+  sirketAramasi,
+  onSirketAramaDegis,
   onSearchChange,
   onNavigate,
   isAdmin = false,
@@ -1353,6 +1358,34 @@ export const Header: React.FC<HeaderProps> = ({
                     />
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/*
+            ŞİRKET ARAMASI (11 Ekim 2026, kullanıcı isteği): şirket kabuğunun
+            rehber dışındaki sayfalarında üst çubukta da arama kutusu var.
+            Şirketin arayacağı şey kendi adayları: kutu Başvurular sayfasındaki
+            aday süzgecini (ad, okul, bölüm, şehir, yetenek) yönetiyor;
+            başka sayfadayken yazınca Başvurular'a gidiliyor. Rehberde öğrenci
+            kalıbındaki kutu rehberi arıyor (yukarıda). Yalnız lg ve üstü;
+            telefon menüsüne dokunulmadı.
+          */}
+          {sirketKabugu && !rehberSayfasindaMi && onSirketAramaDegis && (
+            <div className="hidden lg:block flex-1 min-w-0 max-w-xl mx-4">
+              <div className="relative">
+                <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="search"
+                  value={sirketAramasi ?? ''}
+                  onChange={(e) => {
+                    onSirketAramaDegis(e.target.value);
+                    if (e.target.value && !sirketBasvuranlarindaMi) onNavigate?.('/sirket/basvuranlar');
+                  }}
+                  placeholder="Aday ara: ad, okul, bölüm veya yetenek"
+                  aria-label="Başvuran adaylarda ara"
+                  className="w-full pl-10 pr-3 py-2.5 rounded-2xl border border-gray-200 bg-gray-50/80 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-600 focus:bg-white transition-colors"
+                />
               </div>
             </div>
           )}

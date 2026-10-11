@@ -62,7 +62,17 @@ const yaziAlaninda = (h: EventTarget | null) => {
   );
 };
 
+/**
+ * Üst çubuktaki şirket araması (11 Ekim 2026). Verilirse listenin arama
+ * terimi BU: üst çubukta yazılan ile sayfadaki kutu aynı değer. Geniş
+ * ekranda sayfadaki kutu çizilmiyor (aynı ekranda iki arama kutusu
+ * olmasın — rehberdeki kalıp); telefonda sayfadaki kutu aynen duruyor.
+ */
+export type AdayAramasi = { terim: string; degis: (terim: string) => void };
+
 export const AdayIzgarasi: React.FC<{
+  /** Üst çubuktaki şirket araması; verilmezse liste kendi kutusunu kullanıyor. */
+  adayAramasi?: AdayAramasi;
   kartlar: Record<string, any>[];
   ilanAdresi: string | null;
   /** Adresten gelen ilan süzgeci (`?ilan=<id>`); Genel'deki karttan. */
@@ -114,6 +124,7 @@ export const AdayIzgarasi: React.FC<{
   */
   onGoruntulendi?: (id: string) => void;
 }> = ({
+  adayAramasi,
   kartlar,
   ilanAdresi,
   baslangicIlan,
@@ -151,7 +162,9 @@ export const AdayIzgarasi: React.FC<{
     window.history.replaceState(window.history.state, '', adres.pathname + adres.search);
   }, [ilanSuzgeci]);
   const [durumSuzgeci, setDurumSuzgeci] = React.useState('');
-  const [arama, setArama] = React.useState('');
+  const [yerelArama, setYerelArama] = React.useState('');
+  const arama = adayAramasi ? adayAramasi.terim : yerelArama;
+  const setArama = adayAramasi ? adayAramasi.degis : setYerelArama;
   const [odak, setOdak] = React.useState(0);
   const [kaydediliyor, setKaydediliyor] = React.useState(false);
   const [kopyalandi, setKopyalandi] = React.useState(false);
@@ -478,7 +491,7 @@ export const AdayIzgarasi: React.FC<{
         )}
 
         <div className="flex min-w-0 items-stretch gap-2 md:flex-1">
-          <label className="relative min-w-0 flex-1">
+          <label className={`relative min-w-0 flex-1 ${adayAramasi ? 'lg:hidden' : ''}`}>
             <Search
               className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
               style={{ color: SIRKET_METIN_IKINCIL }}
