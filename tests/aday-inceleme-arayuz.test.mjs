@@ -274,7 +274,14 @@ test('deneyim başlığı yalnız deneyim varken açılıyor', () => {
   assert.match(guncel, /\{\(deneyimler\.eklenen\.length > 0 \|\| deneyimler\.guncellenen\.length > 0 \|\| deneyimler\.cikan\.length > 0\) && \(/);
   /* Kaynak yalnız başvuru kopyası; ham kart alanı doğrulanmış listeden. */
   /* CV başvuru kartından; iletişim yalnız sunucunun verdiği satırdan, salt okunur üyede hiç. */
-  assert.match(cekmece, /adayCvOgrencisi\(kart, \{\s*iletisim:\s*saltOkunur \|\| !iletisim\s*\? null/);
+  assert.match(cekmece, /saltOkunur \|\| !iletisim\s*\? null/);
+  /*
+    11 Ekim 2026: CV varsayılan olarak adayın GÜNCEL profilinden (yalnız
+    sunucunun etkin paylaşımda verdiği satır); "Başvuru anı" kopyaya dönüyor.
+  */
+  assert.match(cekmece, /const guncelCv = guncelProfil\.sonuc\?\.riza \? \(guncelProfil\.sonuc\.guncel \?\? null\) : null;/);
+  assert.match(cekmece, /cvKopya: guncelCv\.cv \?\? null,/);
+  assert.match(cekmece, /return adayCvOgrencisi\(kaynak, \{ iletisim: iletisimSatiri \}\)/);
 });
 
 test('başvuru anı ile güncel arasındaki fark işaretleniyor', () => {

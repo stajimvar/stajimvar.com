@@ -281,13 +281,15 @@ const ADAY_A_KOPYASI = {
   rozetler: ['quiz-react'],
   projeler: [{ baslik: 'Örnek proje', aciklama: 'Test açıklaması', adres: 'https://ornek.test/proje' }],
   /*
-    CV KOPYASI (11 Ekim 2026): başvuru anında yazılan CV alanları — gerçek
-    kopya üreticisiyle, uydurma örnek öğrenciden. İşveren ekranındaki CV
-    önizlemesi bundan çiziliyor. Öteki adayların kopyasında yok: eski
-    başvuru hâli de görülebilsin.
+    CV alanı YOK: 11 Ekim 2026'dan önce yapılmış bir başvurunun kopyası.
+    CV alanları adayın GÜNCEL profilinde (aşağıda `GUNCEL_CV`): işveren
+    ekranı varsayılan olarak onu, "Başvuru anı"nda bu seyrek kopyayı
+    gösteriyor — üretimdeki eski başvurularla aynı durum.
   */
-  cv: basvuruKopyasi(ORNEK_OGRENCI)?.cv,
 };
+
+/* Güncel profildeki CV alanı — gerçek kopya üreticisiyle, uydurma örnek öğrenciden. */
+const GUNCEL_CV = basvuruKopyasi(ORNEK_OGRENCI)?.cv ?? null;
 
 /*
   SORUMLU DAĞILIMI BİLEREK KARIŞIK: üçte biri Deniz'de (u-1), üçte biri
@@ -649,10 +651,12 @@ const fikstürGuncelProfil = (id: string) =>
           yetenekler: Array.isArray(kopya.yetenekler) ? kopya.yetenekler.filter((y: unknown) => typeof y === 'string') : [],
           diller: Array.isArray(kopya.diller) ? kopya.diller.filter((d: unknown) => typeof d === 'string' && !/undefined/.test(d)) : [],
           projeler: Array.isArray(kopya.projeler) ? kopya.projeler.filter((p: any) => p?.baslik) : [],
+          deneyimler: Array.isArray(kopya.deneyimler) ? kopya.deneyimler : [],
+          cv: id === 'test-1' || id === 'test-10' ? GUNCEL_CV : null,
           guncellendi: '2026-09-28T10:00:00Z',
           /* Güncel profil ÖĞRENCİNİN: test-10 aynı öğrencinin ikinci başvurusu, aynı güncel hâl. */
           ...GUNCEL_DEGISIMLERI[id === 'test-10' ? 'test-1' : id],
-        } as AdayGuncelProfili,
+        } as unknown as AdayGuncelProfili,
       });
     }, 300);
   });

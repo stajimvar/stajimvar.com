@@ -599,6 +599,13 @@ export type AdayGuncelProfili = {
   yetenekler: string[];
   diller: string[];
   projeler: { baslik: string; aciklama: string | null; adres: string | null }[];
+  /** Deneyimler başvuru kopyasıyla aynı biçimde (20261205010000). */
+  deneyimler?: unknown[];
+  /**
+   * CV alanları (20261208010000) — başvuru kopyasındaki `cv` ile aynı biçim;
+   * işveren ekranındaki CV önizlemesi bundan. Not ortalaması ve iletişim yok.
+   */
+  cv?: Record<string, unknown> | null;
   guncellendi: string | null;
   /** Adaya yönelik son gerçek ilerleme; bekleme bundan hesaplanıyor. */
   adayIlerlemesi: string | null;

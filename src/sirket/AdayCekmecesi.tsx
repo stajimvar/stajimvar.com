@@ -293,19 +293,17 @@ export const AdayCekmecesi: React.FC<{
   const [tamYakinlik, setTamYakinlik] = React.useState<number | null>(null);
   const [tamOlcek, setTamOlcek] = React.useState(1);
   const [yazdiriliyor, setYazdiriliyor] = React.useState(false);
+  /*
+    CV KAYNAĞI (11 Ekim 2026, kullanıcı geri bildirimi): öğrencinin kendi
+    gördüğü CV ile şirketin gördüğü aynı olsun. Varsayılan adayın GÜNCEL
+    profili — yalnız etkin paylaşımda sunucunun verdiği satır
+    (`basvuru_aday_guncel_profili`, aynı kapı). "Başvuru anı" başvurunun
+    yapıldığı andaki kopyayı gösteriyor. Güncel profil yoksa (paylaşım
+    kapalı, hata) kopya.
+  */
+  const [cvKaynagi, setCvKaynagi] = React.useState<'guncel' | 'basvuru'>('guncel');
   const tamEkranRef = React.useRef<HTMLDivElement | null>(null);
-  const cvOgrencisi = React.useMemo(
-    () =>
-      kart?.paylasildi
-        ? (adayCvOgrencisi(kart, {
-            iletisim:
-              saltOkunur || !iletisim
-                ? null
-                : { eposta: iletisim.eposta, telefon: iletisim.telefon ? telefonYaz(iletisim.telefon) : null },
-          }) as unknown as StudentProfile)
-        : null,
-    [kart, iletisim, saltOkunur],
-  );
+
   const govde = React.useRef<HTMLDivElement | null>(null);
   const kapatRef = React.useRef(onKapat);
   kapatRef.current = onKapat;
@@ -325,6 +323,37 @@ export const AdayCekmecesi: React.FC<{
     [kart, guncelProfil.sonuc],
   );
 
+  const guncelCv = guncelProfil.sonuc?.riza ? (guncelProfil.sonuc.guncel ?? null) : null;
+  const cvGuncelden = cvKaynagi === 'guncel' && Boolean(guncelCv);
+  const cvOgrencisi = React.useMemo(() => {
+    if (!kart?.paylasildi) return null;
+    const iletisimSatiri =
+      saltOkunur || !iletisim
+        ? null
+        : { eposta: iletisim.eposta, telefon: iletisim.telefon ? telefonYaz(iletisim.telefon) : null };
+    /* Güncel profil, başvuru kartıyla aynı alan adlarında; önyargısız kip (`gizli`) karttan geliyor. */
+    const kaynak =
+      cvGuncelden && guncelCv
+        ? {
+            ...kart,
+            ad: guncelCv.ad ?? kart.ad,
+            fotoUrl: guncelCv.fotoUrl ?? kart.fotoUrl,
+            universite: guncelCv.universite,
+            bolum: guncelCv.bolum,
+            sinif: guncelCv.sinif,
+            github: guncelCv.github,
+            portfolyo: guncelCv.portfolyo,
+            linkedin: guncelCv.linkedin,
+            yetenekler: guncelCv.yetenekler,
+            diller: guncelCv.diller,
+            projeler: guncelCv.projeler,
+            deneyimler: guncelCv.deneyimler ?? [],
+            cvKopya: guncelCv.cv ?? null,
+          }
+        : kart;
+    return adayCvOgrencisi(kaynak, { iletisim: iletisimSatiri }) as unknown as StudentProfile;
+  }, [kart, iletisim, saltOkunur, cvGuncelden, guncelCv]);
+
   /* Çekmece değiştiğinde ikinci sıra, not ve CV hatası sıfırlanıyor. */
   React.useEffect(() => {
     setIkinciAcik(false);
@@ -339,6 +368,7 @@ export const AdayCekmecesi: React.FC<{
     setYakinlik(null);
     setTamEkran(false);
     setTamYakinlik(null);
+    setCvKaynagi('guncel');
   }, [kart?.id, kart?.mulakatTarihi]);
 
   /*
@@ -1380,10 +1410,45 @@ saltOkunur ? (
                 <div className="min-w-0 flex-1 basis-64">
                   <BolumBasligi id="aday-kopya-basligi">Özgeçmiş önizleme</BolumBasligi>
                   <p className="mt-0.5 text-xs leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
-                    Adayın StajımVar profilinden oluşturulan CV — başvuru anındaki paylaşılan kopya
-                    {basvuruTarihi ? ` (${basvuruTarihi})` : ''}. Profil sonradan değişse de burası
-                    değişmiyor.{kart.cvYolu ? ' Adayın yüklediği PDF aşağıda.' : ''}
+                    {cvGuncelden
+                      ? `Adayın StajımVar profilinden oluşturulan güncel CV${
+                          guncelCv?.guncellendi && ortakTarihMetni(guncelCv.guncellendi)
+                            ? ` (son güncelleme: ${ortakTarihMetni(guncelCv.guncellendi)})`
+                            : ''
+                        }. Aday paylaşımı açık tuttuğu sürece görünür.`
+                      : `Başvuru anındaki paylaşılan kopya${basvuruTarihi ? ` (${basvuruTarihi})` : ''}; profil sonradan değişse de bu görünüm değişmiyor.`}
+                    {kart.cvYolu ? ' Adayın yüklediği PDF aşağıda.' : ''}
                   </p>
+                  {guncelCv && (
+                    <div
+                      role="group"
+                      aria-label="CV kaynağı"
+                      className="mt-2 inline-flex rounded-xl border p-0.5"
+                      style={{ borderColor: SIRKET_KENAR, background: SIRKET_YUZEY }}
+                    >
+                      {(
+                        [
+                          ['guncel', 'Güncel profil'],
+                          ['basvuru', 'Başvuru anı'],
+                        ] as const
+                      ).map(([deger, etiket]) => (
+                        <button
+                          key={deger}
+                          type="button"
+                          aria-pressed={cvKaynagi === deger}
+                          onClick={() => setCvKaynagi(deger)}
+                          className={`min-h-9 cursor-pointer rounded-lg px-3 text-xs font-bold ${SIRKET_ODAK}`}
+                          style={
+                            cvKaynagi === deger
+                              ? { background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }
+                              : { color: SIRKET_METIN_IKINCIL }
+                          }
+                        >
+                          {etiket}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 {/*
                   ARAÇ ÇUBUĞU: yakınlaştır/uzaklaştır (yüzdeye basınca sığdırır),
@@ -1441,7 +1506,12 @@ saltOkunur ? (
                 )}
               </div>
 
-              {cvOgrencisi && (
+              {cvOgrencisi && guncelProfil.durum === 'yukleniyor' && cvKaynagi === 'guncel' && (
+                <p className="rounded-2xl p-4 text-sm" style={{ background: '#E9EEF4', color: SIRKET_METIN_IKINCIL }}>
+                  CV yükleniyor…
+                </p>
+              )}
+              {cvOgrencisi && !(guncelProfil.durum === 'yukleniyor' && cvKaynagi === 'guncel') && (
                 <div className="space-y-3">
                   <div className="rounded-2xl p-3 sm:p-4" style={{ background: '#E9EEF4' }}>
                     <CvOnizleme
@@ -1459,7 +1529,7 @@ saltOkunur ? (
                     bunu söylemeden eksik bir CV'yi "adayın CV'si" diye sunmak
                     yanlış olurdu.
                   */}
-                  {!kart.cvKopya && (
+                  {!cvGuncelden && !kart.cvKopya && (
                     <p className="text-[11px] leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
                       Bu başvuru CV alanları eklenmeden önce yapıldı; önizleme başvuru anındaki kopyada olan
                       bilgilerle sınırlı.
@@ -1470,7 +1540,7 @@ saltOkunur ? (
                     tamamlıyor. O liste "başvuru anı" değil; bunu söylemeden
                     göstermek yanlış bir iddia olurdu.
                   */}
-                  {!kart.cvKopya && kart.yetenekKopyadan === false && yetenekler.length > 0 && (
+                  {!cvGuncelden && !kart.cvKopya && kart.yetenekKopyadan === false && yetenekler.length > 0 && (
                     <p className="text-[11px]" style={{ color: SIRKET_METIN_IKINCIL }}>
                       Bu başvurunun kopyasında yetenek yok; CV’deki yetenekler adayın güncel yeteneklerinden.
                     </p>
