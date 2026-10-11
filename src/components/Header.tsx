@@ -1212,16 +1212,12 @@ export const Header: React.FC<HeaderProps> = ({
                   <Users className={masaustuSekmeIkonu(sirketBasvuranlarindaMi)} />
                   <span>Başvurular</span>
                 </a>
-                <a
-                  id="nav-tab-sirket-agim"
-                  href="/agim"
-                  aria-current={agimdaMi ? 'page' : undefined}
-                  onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/agim')) : undefined}
-                  className={masaustuSekme(agimdaMi)}
-                >
-                  <Heart className={masaustuSekmeIkonu(agimdaMi)} />
-                  <span>Takipçiler</span>
-                </a>
+                {/*
+                  TAKİPÇİLER SEKMESİ KALKTI (11 Ekim 2026, kullanıcı kararı):
+                  masaüstü menüsünde yalnız İlanlar, Başvurular ve Rehber.
+                  /agim sayfası, takipçi sayacı ve altyapı duruyor; telefon
+                  menüsüne dokunulmadı.
+                */}
                 <a
                   id="nav-tab-sirket-rehber"
                   href="/rehber"

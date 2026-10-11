@@ -31,10 +31,11 @@ const ISVEREN = blok('MASAÜSTÜ ŞİRKET GEZİNMESİ');
 const say = (metin, parca) => metin.split(parca).length - 1;
 
 test('iki menü de ortak sabitleri kullanıyor', () => {
-  for (const [ad, kaynak] of [['öğrenci', OGRENCI], ['işveren', ISVEREN]]) {
+  /* İşveren menüsü 11 Ekim 2026'dan beri üç sekme: İlanlar, Başvurular, Rehber. */
+  for (const [ad, kaynak, adet] of [['öğrenci', OGRENCI, 4], ['işveren', ISVEREN, 3]]) {
     assert.equal(say(kaynak, 'className={MASAUSTU_MENU}'), 1, `${ad}: menü kabı`);
-    assert.equal(say(kaynak, 'className={masaustuSekme('), 4, `${ad}: dört sekme`);
-    assert.equal(say(kaynak, 'className={masaustuSekmeIkonu('), 4, `${ad}: dört simge`);
+    assert.equal(say(kaynak, 'className={masaustuSekme('), adet, `${ad}: sekme sayısı`);
+    assert.equal(say(kaynak, 'className={masaustuSekmeIkonu('), adet, `${ad}: simge sayısı`);
   }
 });
 
@@ -56,7 +57,6 @@ test('işveren seçenekleri ve etkin sayfa mantığı korunuyor', () => {
   for (const [kimlik, kosul] of [
     ['nav-tab-sirket-ilanlar', 'sirketIlanlarindaMi'],
     ['nav-tab-sirket-basvuranlar', 'sirketBasvuranlarindaMi'],
-    ['nav-tab-sirket-agim', 'agimdaMi'],
     ['nav-tab-sirket-rehber', 'rehberdeMi && !isverendeMi'],
   ]) {
     const bas = ISVEREN.indexOf(`id="${kimlik}"`);

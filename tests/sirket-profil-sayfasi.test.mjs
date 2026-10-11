@@ -392,7 +392,10 @@ test('ALT MENÜ DÖRT SEKME; takipçi listesi kaybolmadı', () => {
   const header = oku('src/components/Header.tsx');
   const altCubuk = header.slice(header.indexOf('aria-label="Mobil Alt Şirket Navigasyon"'));
   assert.doesNotMatch(altCubuk.slice(0, 4000), /Takipçiler/);
-  /* Adres ve geniş ekran sekmesi yerinde. */
-  assert.match(header, /href="\/agim"/);
-  assert.match(header, /<span>Takipçiler<\/span>/);
+  /*
+    11 Ekim 2026 (kullanıcı kararı): geniş ekran menüsünden de kalktı.
+    Liste yine erişilebilir: `/agim` adresi ve Şirketim'deki takipçi sayacı.
+  */
+  assert.doesNotMatch(header, /<span>Takipçiler<\/span>/);
+  assert.match(oku('src/App.tsx'), /if \(temizYol === '\/agim'\) \{/);
 });

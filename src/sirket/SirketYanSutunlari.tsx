@@ -1,9 +1,9 @@
 import React from 'react';
-import { ArrowRight, Briefcase, ChevronRight, Heart, Plus, Users } from 'lucide-react';
+import { ArrowRight, Briefcase, ChevronRight, Plus, User, Users } from 'lucide-react';
+import { RehberKapagi } from '../components/RehberKartlari';
 import { ODAK_HALKASI } from '../lib/renk-token';
 import { durumAdi } from './basvuru-durumu';
 import type { AdayOzeti } from './IlanKarti';
-import type { SayacDurumu } from './SirketProfilGorunumu';
 
 /**
  * ŞİRKETİM'İN MASAÜSTÜ SÜTUNLARI (kullanıcı isteği, 27 Eylül 2026)
@@ -14,10 +14,12 @@ import type { SayacDurumu } from './SirketProfilGorunumu';
  * eşikler (sol 1440, sağ 1280 piksel üstünde) ve aynı kart dili; içerik
  * şirketin işine göre:
  *
- *   SOL  "Şirket paneli" — İlanlarım, Başvurular, Takipçiler satırları ve
- *        "İlan oluştur". Öğrencideki Kampüsüm'ün karşılığı: günlük iş.
- *   SAĞ  "Son başvurular" (yalnız kart görebilen kademede ve varsa) ve
- *        "İşveren rehberi" (gerçek yazılar).
+ *   SOL  "Şirket paneli" — İlanlarım ve Başvurular satırları ve "İlan
+ *        oluştur". Öğrencideki Kampüsüm'ün karşılığı: günlük iş.
+ *        (Takipçiler satırı 11 Ekim 2026'da kalktı; /agim ve sayaç duruyor.)
+ *   SAĞ  "Son başvurular" (yalnız kart görebilen kademede ve varsa;
+ *        başvuranın fotoğrafıyla) ve "İşveren rehberi" (gerçek yazılar,
+ *        rehber merkeziyle aynı kapak fotoğraflarıyla yatay kartlar).
  *
  * HER SAYI GERÇEK VERİDEN: ilan sayıları panelin `listings` satırlarından,
  * başvurular `applications` kart verisinden (kademe izin vermiyorsa sayı
@@ -67,9 +69,8 @@ export const SirketSolSutun: React.FC<{
   basvurular: AdayOzeti[];
   /** Kademe başvuru kartlarını açıyor mu (`adayGorebilir`). Kapalıysa sayı yazılmıyor. */
   kartAcik: boolean;
-  takipci: SayacDurumu;
   onNavigate: (yol: string) => void;
-}> = ({ ilanlar, basvurular, kartAcik, takipci, onNavigate }) => {
+}> = ({ ilanlar, basvurular, kartAcik, onNavigate }) => {
   const aktif = ilanlar.filter((i) => i.status === 'published').length;
   const taslak = ilanlar.filter((i) => i.status === 'draft').length;
   const yeni = basvurular.filter((b) => b.durum === 'submitted').length;
@@ -82,7 +83,6 @@ export const SirketSolSutun: React.FC<{
     : basvurular.length === 0
       ? 'Henüz başvuru yok'
       : `${basvurular.length} başvuru${yeni > 0 ? ` · ${yeni} yeni` : ''}`;
-  const takipciBilgisi = takipci.durum === 'hazir' ? `${takipci.deger} takipçi` : null;
 
   return (
     <section className={KART} aria-labelledby="sirket-paneli">
@@ -92,7 +92,6 @@ export const SirketSolSutun: React.FC<{
       <ul className="-mx-2 mt-2 space-y-0.5">
         <PanelSatiri yol="/sirket/ilanlar" ikon={<Briefcase className="h-4 w-4" />} etiket="İlanlarım" bilgi={ilanBilgisi} onNavigate={onNavigate} />
         <PanelSatiri yol="/sirket/basvuranlar" ikon={<Users className="h-4 w-4" />} etiket="Başvurular" bilgi={basvuruBilgisi} onNavigate={onNavigate} />
-        <PanelSatiri yol="/agim" ikon={<Heart className="h-4 w-4" />} etiket="Takipçiler" bilgi={takipciBilgisi} onNavigate={onNavigate} />
       </ul>
       <a
         href="/sirket/ilan/yeni"
@@ -106,7 +105,45 @@ export const SirketSolSutun: React.FC<{
   );
 };
 
-type YaziOzeti = { slug: string; baslik: string; konu: string };
+type YaziOzeti = { slug: string; baslik: string; ozet: string };
+
+/*
+  BAŞVURANIN FOTOĞRAFI (11 Ekim 2026)
+
+  Şirket öğrencinin profil tablolarını doğrudan okuyamıyor; elindeki tek
+  fotoğraf başvuru kopyasındaki (rıza varsa) adres. Aynı öğrenci farklı
+  zamanlarda başvurduysa kopyalar farklı fotoğraf taşıyabilir; bu yüzden
+  öğrenci başına EN YENİ başvurudaki fotoğraf seçiliyor ve o kişinin bütün
+  satırlarında o kullanılıyor. Fotoğraf yoksa nötr avatar; uydurma görsel yok.
+*/
+type BasvuruOzeti = AdayOzeti & { ogrenciId?: string | null; tarih?: string | null };
+
+function ogrenciFotograflari(basvurular: BasvuruOzeti[]): Map<string, string> {
+  const fotograflar = new Map<string, string>();
+  const sirali = [...basvurular].sort((a, b) => String(b.tarih ?? '').localeCompare(String(a.tarih ?? '')));
+  for (const b of sirali) {
+    if (b.ogrenciId && b.fotoUrl && !fotograflar.has(b.ogrenciId)) fotograflar.set(b.ogrenciId, b.fotoUrl);
+  }
+  return fotograflar;
+}
+
+const BasvuranAvatari: React.FC<{ adres: string | null }> = ({ adres }) => {
+  const [hata, setHata] = React.useState(false);
+  return adres && !hata ? (
+    <img
+      src={adres}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      onError={() => setHata(true)}
+      className="h-10 w-10 shrink-0 rounded-full object-cover"
+    />
+  ) : (
+    <span aria-hidden className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-400">
+      <User className="h-5 w-5" />
+    </span>
+  );
+};
 
 export const SirketYanSutun: React.FC<{
   basvurular: AdayOzeti[];
@@ -129,12 +166,12 @@ export const SirketYanSutun: React.FC<{
   React.useEffect(() => {
     let iptal = false;
     import('../data/rehberler')
-      .then(({ REHBERLER, konuEtiketi }) => {
+      .then(({ REHBERLER }) => {
         if (iptal) return;
         setYazilar(
           REHBERLER.filter((r) => r.kategori === 'isveren')
             .slice(0, 4)
-            .map((r) => ({ slug: r.slug, baslik: r.baslik, konu: konuEtiketi(r.konu) })),
+            .map((r) => ({ slug: r.slug, baslik: r.baslik, ozet: r.ozet })),
         );
       })
       .catch(() => !iptal && setYazilar([]));
@@ -143,6 +180,7 @@ export const SirketYanSutun: React.FC<{
     };
   }, []);
   const son = kartAcik ? basvurular.slice(0, 4) : [];
+  const fotograflar = ogrenciFotograflari(basvurular as BasvuruOzeti[]);
   return (
     <>
       {son.length > 0 && (
@@ -155,12 +193,17 @@ export const SirketYanSutun: React.FC<{
               const yol = b.ilanId ? `/sirket/basvuranlar?ilan=${encodeURIComponent(b.ilanId)}` : '/sirket/basvuranlar';
               return (
                 <li key={b.id}>
-                  <a href={yol} onClick={git(onNavigate, yol)} className="group block">
-                    <span className="block truncate text-sm font-semibold text-gray-900 group-hover:text-blue-700">
-                      {b.ad ?? 'Aday'}
-                    </span>
-                    <span className="block truncate text-xs text-gray-500">
-                      {[b.ilanId ? basliklar.get(b.ilanId) : null, durumAdi(b.durum)].filter(Boolean).join(' · ')}
+                  <a href={yol} onClick={git(onNavigate, yol)} className={`group flex items-center gap-3 rounded-xl ${ODAK_HALKASI}`}>
+                    <BasvuranAvatari
+                      adres={((b as BasvuruOzeti).ogrenciId && fotograflar.get(String((b as BasvuruOzeti).ogrenciId))) || b.fotoUrl}
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold text-gray-900 group-hover:text-blue-700">
+                        {b.ad ?? 'Aday'}
+                      </span>
+                      <span className="block truncate text-xs text-gray-500">
+                        {[b.ilanId ? basliklar.get(b.ilanId) : null, durumAdi(b.durum)].filter(Boolean).join(' · ')}
+                      </span>
                     </span>
                   </a>
                 </li>
@@ -182,30 +225,42 @@ export const SirketYanSutun: React.FC<{
         <h2 id="sirket-yan-rehber" className={KART_BASLIGI}>
           İşveren rehberi
         </h2>
-        <ul className="mt-3 space-y-3">
-          <li>
-            <a href="/stajyer-nasil-alinir" onClick={git(onNavigate, '/stajyer-nasil-alinir')} className="group block">
-              <span className="block text-[11px] font-bold uppercase tracking-wide text-gray-500">Yol haritası</span>
-              <span className="block text-sm font-semibold leading-snug text-gray-900 group-hover:text-blue-700">
-                İlk stajyeriniz için yol haritası
-              </span>
-            </a>
-          </li>
-          {yazilar.map((r) => {
-            const yol = `/rehber/${r.slug}`;
-            return (
-              <li key={r.slug}>
-                <a href={yol} onClick={git(onNavigate, yol)} className="group block">
-                  <span className="block text-[11px] font-bold uppercase tracking-wide text-gray-500">
-                    {r.konu}
+        {/*
+          YATAY KAPAKLI KARTLAR (11 Ekim 2026): solda rehberin sitede zaten
+          kullanılan kapak fotoğrafı (RehberKapagi — rehber merkeziyle aynı
+          dosya ve sürüm; yol haritası işveren rehberindeki öne çıkan kartla
+          aynı kapak), ortada başlık ve kısa açıklama, sağda ok. İkon yok.
+          Başlık iki, açıklama bir satırla sınırlı: kart boyu hizalı kalıyor.
+        */}
+        <ul className="mt-3 space-y-2">
+          {[
+            {
+              yol: '/stajyer-nasil-alinir',
+              kapak: 'stajyerin-gorev-ve-sorumluluklari',
+              baslik: 'İlk stajyeriniz için yol haritası',
+              ozet: 'Ne yapacağınızı dört adımda görün: iş, belge, sigorta ve ücret.',
+            },
+            ...yazilar.map((r) => ({ yol: `/rehber/${r.slug}`, kapak: r.slug, baslik: r.baslik, ozet: r.ozet })),
+          ].map((k) => (
+            <li key={k.yol}>
+              <a
+                href={k.yol}
+                onClick={git(onNavigate, k.yol)}
+                className={`group flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-2 pr-2.5 transition-colors hover:border-gray-300 hover:bg-gray-50 ${ODAK_HALKASI}`}
+              >
+                <span aria-hidden className="relative h-14 w-20 shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                  <RehberKapagi slug={k.kapak} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="line-clamp-2 break-words text-[13px] font-bold leading-snug text-gray-900 group-hover:text-blue-700">
+                    {k.baslik}
                   </span>
-                  <span className="block text-sm font-semibold leading-snug text-gray-900 group-hover:text-blue-700">
-                    {r.baslik}
-                  </span>
-                </a>
-              </li>
-            );
-          })}
+                  <span className="mt-0.5 line-clamp-1 text-xs text-gray-500">{k.ozet}</span>
+                </span>
+                <ChevronRight aria-hidden className="h-4 w-4 shrink-0 text-gray-400 group-hover:text-blue-700" />
+              </a>
+            </li>
+          ))}
         </ul>
         <a
           href="/rehber"

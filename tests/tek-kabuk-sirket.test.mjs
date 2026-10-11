@@ -55,9 +55,14 @@ test('şirket ekranları ortak kabukta; eski kabuk ve eski portal sekmeleri yok'
   const altCubuk = HEADER.slice(HEADER.indexOf('aria-label="Mobil Alt Şirket Navigasyon"'));
   const hrefler = [...altCubuk.matchAll(/href="([^"]+)"/g)].map((e) => e[1]);
   assert.deepEqual(hrefler, ['/sirket/ilanlar', '/sirket/basvuranlar', '/rehber', '/sirket/profil']);
-  /* Masaüstü şirket sekmeleri de aynı dört adres (Profil sağdaki hesap bağlantısında). */
+  /*
+    Masaüstü şirket sekmeleri: İlanlar, Başvurular, Rehber (11 Ekim 2026'da
+    Takipçiler kalktı; Profil sağdaki hesap bağlantısında). `/agim` adresi
+    yerinde, paylaşılmış bağlantılar kırılmıyor.
+  */
   const masaustu = HEADER.slice(HEADER.indexOf('id="nav-tab-sirket-ilanlar"'), HEADER.indexOf('id="nav-tab-sirket-rehber"'));
-  assert.deepEqual([...masaustu.matchAll(/href="([^"]+)"/g)].map((e) => e[1]), ['/sirket/ilanlar', '/sirket/basvuranlar', '/agim']);
+  assert.deepEqual([...masaustu.matchAll(/href="([^"]+)"/g)].map((e) => e[1]), ['/sirket/ilanlar', '/sirket/basvuranlar']);
+  assert.doesNotMatch(HEADER, /id="nav-tab-sirket-agim"/);
   assert.doesNotMatch(HEADER, /nav-tab-sirket-firsatlar/);
   /* Aktiflik: Başvuranlar kendi kümesinde, İlanlar kümesinden çıktı — iki sekme birden yanmasın. */
   assert.ok(HEADER.includes("const sirketIlanlarindaMi = \/^\\/sirket\\/(ilanlar|ilan)(\\/|$)\/.test(bulunulanYol);"), 'İlanlar kümesi basvuranlar içermemeli');
