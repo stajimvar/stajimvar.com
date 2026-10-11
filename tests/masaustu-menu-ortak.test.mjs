@@ -66,3 +66,15 @@ test('işveren seçenekleri ve etkin sayfa mantığı korunuyor', () => {
     assert.ok(sekme.includes(`aria-current={${kosul} ? 'page' : undefined}`), `${kimlik}: aria-current`);
   }
 });
+
+test('şirket üst çubuğunda aday araması: yalnız geniş ekranda, Başvurular süzgeciyle aynı terim', () => {
+  /* 11 Ekim 2026, kullanıcı isteği: menü ile simgeler arasındaki boşlukta arama kutusu. */
+  const HEADER = fs.readFileSync('src/components/Header.tsx', 'utf8');
+  assert.match(HEADER, /\{sirketKabugu && !rehberSayfasindaMi && onSirketAramaDegis && \(\s*<div className="hidden lg:block flex-1/);
+  assert.match(HEADER, /if \(e\.target\.value && !sirketBasvuranlarindaMi\) onNavigate\?\.\('\/sirket\/basvuranlar'\);/);
+  const izgara = fs.readFileSync('src/sirket/AdayIzgarasi.tsx', 'utf8');
+  assert.match(izgara, /const arama = adayAramasi \? adayAramasi\.terim : yerelArama;/);
+  /* Geniş ekranda sayfa kutusu yok (iki kutu olmasın); telefonda aynen duruyor. */
+  assert.match(izgara, /className=\{`relative min-w-0 flex-1 \$\{adayAramasi \? 'lg:hidden' : ''\}`\}/);
+  assert.match(fs.readFileSync('src/App.tsx', 'utf8'), /adayAramasi=\{\{ terim: sirketAramasi, degis: setSirketAramasi \}\}/);
+});

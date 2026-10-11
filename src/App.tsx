@@ -531,6 +531,8 @@ export default function App() {
    * `replaceState` kullanılıyor — her harf için geçmişe kayıt düşmesi geri
    * tuşunu kullanılamaz hale getirirdi.
    */
+  /* Şirket kabuğunun üst çubuk araması: Başvurular sayfasındaki aday süzgeciyle aynı terim. */
+  const [sirketAramasi, setSirketAramasi] = React.useState('');
   const [aramaTerimi, setAramaTerimi] = React.useState(() =>
     typeof window === 'undefined' ? '' : aramaTeriminiOku(window.location.search)
   );
@@ -2400,6 +2402,8 @@ export default function App() {
       sirketAdi={sirketAdi}
       sirketLogosu={sirketLogosu}
       bulunulanYol={temizYol}
+      sirketAramasi={sirketAramasi}
+      onSirketAramaDegis={setSirketAramasi}
       searchQuery={aramaTerimi}
       onSearchChange={(q) => {
         setAramaTerimi(q);
@@ -3934,6 +3938,7 @@ export default function App() {
               yoneticiMi={isAdmin}
               onNavigate={navigate}
               acilacakAday={acilacakAday}
+              adayAramasi={{ terim: sirketAramasi, degis: setSirketAramasi }}
               onAdayAcildi={() => setAcilacakAday(null)}
               onCikis={() => void handleLogout()}
             />

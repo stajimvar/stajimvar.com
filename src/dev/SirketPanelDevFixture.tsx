@@ -1101,6 +1101,8 @@ export const SirketPanelDevFixture: React.FC = () => {
     (?ilan=…) atılıyor: fikstürde window.location değişmiyor.
   */
   const [yol, setYol] = React.useState('/sirket/ilanlar');
+  /* Üst çubuktaki şirket araması — App'teki durumla aynı rol. */
+  const [sirketAramasi, setSirketAramasi] = React.useState('');
   const git = React.useCallback((y: string) => {
     setYol(y.split('?')[0] || '/sirket/ilanlar');
     window.scrollTo(0, 0);
@@ -1359,6 +1361,7 @@ export const SirketPanelDevFixture: React.FC = () => {
       />
     ) : (
       <SirketIlanlarSekmesi
+        adayAramasi={{ terim: sirketAramasi, degis: setSirketAramasi }}
         baglam={baglam}
         /*
           Aday profili (`/sirket/aday/<id>`) bu fikstürde denenmiyor:
@@ -1661,6 +1664,8 @@ export const SirketPanelDevFixture: React.FC = () => {
           okunmamisBildirim={null}
           sirketUyesiMi={!sirketYok}
           sirketAdi={sirketYok ? null : 'Örnek Teknoloji A.Ş.'}
+          sirketAramasi={sirketAramasi}
+          onSirketAramaDegis={setSirketAramasi}
           onLogout={() => undefined}
         />
         <main className={`flex-1 ${SAYFA_GENISLIGI} w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-0 sm:pt-3 pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-8`}>

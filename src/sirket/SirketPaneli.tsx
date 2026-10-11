@@ -20,7 +20,7 @@ import {
 import { SirketAdayProfili } from './SirketAdayProfili';
 import { SirketAdaylar } from './SirketAdaylar';
 import { IlanFormu } from './IlanFormu';
-import { AdayIzgarasi } from './AdayIzgarasi';
+import { AdayIzgarasi, type AdayAramasi } from './AdayIzgarasi';
 import type { GuncelProfilYukleyici, Iletisim, PaylasimYukleyici } from './AdayCekmecesi';
 import { GenelBakis } from './GenelBakis';
 import { IlanSiralamasi } from './IlanSiralamasi';
@@ -167,9 +167,11 @@ export const SirketPaneli: React.FC<{
   onNavigate: (yol: string) => void;
   /* Bildirimden gelindiyse açılacak aday. */
   acilacakAday?: string | null;
+  /** Üst çubuktaki aday araması (App → AdayIzgarasi). */
+  adayAramasi?: AdayAramasi;
   onAdayAcildi?: () => void;
   onCikis?: () => void;
-}> = ({ yol, userId, yoneticiMi, onNavigate, acilacakAday, onAdayAcildi, onCikis }) => {
+}> = ({ yol, userId, yoneticiMi, onNavigate, acilacakAday, adayAramasi, onAdayAcildi, onCikis }) => {
   useNoindex();
 
   const [baglam, setBaglam] = React.useState<SirketBaglami | null>(null);
@@ -621,6 +623,7 @@ export const SirketPaneli: React.FC<{
         await yukle();
       }}
       acilacakAday={acilacakAday}
+      adayAramasi={adayAramasi}
       onAdayAcildi={onAdayAcildi}
     />
     </>
@@ -709,6 +712,8 @@ export const SirketIlanlarSekmesi: React.FC<{
   onGoruntulendi?: (id: string) => void;
   onNot: (id: string, metin: string) => Promise<void>;
   acilacakAday?: string | null;
+  /** Üst çubuktaki aday araması (App → AdayIzgarasi). */
+  adayAramasi?: AdayAramasi;
   onAdayAcildi?: () => void;
   /** Fikstürün sabit "bugün"ü; üretimde verilmiyor. */
   simdi?: Date;
@@ -738,6 +743,7 @@ export const SirketIlanlarSekmesi: React.FC<{
   onGoruntulendi = basvuruGoruntulendi,
   onNot,
   acilacakAday,
+  adayAramasi,
   onAdayAcildi,
   simdi,
 }) => {
@@ -782,6 +788,7 @@ export const SirketIlanlarSekmesi: React.FC<{
         yerelGorselAdresi={yerelGorselAdresi}
         onNot={onNot}
         acilacakAday={acilacakAday}
+        adayAramasi={adayAramasi}
         onAdayAcildi={onAdayAcildi}
       />
     );
@@ -895,6 +902,8 @@ const Basvuranlar: React.FC<{
   onGoruntulendi: (id: string) => void;
   yerelGorselAdresi?: (yol: string) => string | null;
   acilacakAday?: string | null;
+  /** Üst çubuktaki aday araması (App → AdayIzgarasi). */
+  adayAramasi?: AdayAramasi;
   onAdayAcildi?: () => void;
   onNot: (id: string, metin: string) => Promise<void>;
 }> = ({
@@ -912,6 +921,7 @@ const Basvuranlar: React.FC<{
   onPaylasimlar,
   yerelGorselAdresi,
   acilacakAday,
+  adayAramasi,
   onAdayAcildi,
   onNot,
 }) => {
@@ -1085,6 +1095,7 @@ const Basvuranlar: React.FC<{
           onPaylasimlar={onPaylasimlar}
           yerelGorselAdresi={yerelGorselAdresi}
           acilacakAday={acilacakAday}
+          adayAramasi={adayAramasi}
           onAdayAcildi={onAdayAcildi}
           onGoruntulendi={onGoruntulendi}
         />
@@ -1110,6 +1121,7 @@ const Basvuranlar: React.FC<{
         onPaylasimlar={onPaylasimlar}
         yerelGorselAdresi={yerelGorselAdresi}
         acilacakAday={acilacakAday}
+        adayAramasi={adayAramasi}
         onAdayAcildi={onAdayAcildi}
         onGoruntulendi={onGoruntulendi}
         onNot={onNot}
