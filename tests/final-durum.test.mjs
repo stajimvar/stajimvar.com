@@ -159,10 +159,11 @@ test('final blok gövdenin başında', () => {
     da VAR olmalı — bulunamayan bir konum (-1) sırayı yanlışlıkla
     doğrulamasın.
   */
-  const yetenekler = cekmece.search(/<Baslik(?:\s[^>]*)?>Yetenekler<\/Baslik>/);
-  assert.ok(govdeBas > -1 && finalBlok > -1 && yetenekler > -1, 'gövde, final blok ya da yetenek başlığı bulunamadı');
+  /* 11 Ekim 2026: profil ayrıntısı CV önizlemesinde (`aday-kopya-basligi`). */
+  const cvBolumu = cekmece.indexOf('id="aday-kopya-basligi"');
+  assert.ok(govdeBas > -1 && finalBlok > -1 && cvBolumu > -1, 'gövde, final blok ya da CV bölümü bulunamadı');
   assert.ok(finalBlok > govdeBas, 'final blok gövdenin dışında');
-  assert.ok(finalBlok < yetenekler, 'iletişim yetenek listesinin arkasında kalıyor');
+  assert.ok(finalBlok < cvBolumu, 'final blok CV önizlemesinin arkasında kalıyor');
 });
 
 test('final durum cümlesi ekranda bir kez', () => {

@@ -1,19 +1,27 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import {
+  CalendarDays,
   CheckCircle2,
   ChevronDown,
   CircleSlash,
+  Download,
   ExternalLink,
   FileText,
   Github,
   Linkedin,
   Loader2,
   Mail,
+  Maximize2,
+  Minus,
   Phone,
+  Plus,
   ShieldOff,
   X,
 } from 'lucide-react';
+import { CvOnizleme, CvYazdirmaAlani } from '../components/CvPage';
+import type { StudentProfile } from '../types';
+import { adayCvOgrencisi } from '../lib/aday-cv.mjs';
 import {
   ALAN,
   BIRINCIL_DUGME,
@@ -32,8 +40,6 @@ import {
 } from './renk';
 import { kimlikSatiri, monogram } from '../lib/aday-kart.mjs';
 import { adayBaglantilari, adayProfilFarki, rozetEtiketi } from '../lib/aday-profil-farki.mjs';
-import { guvenliDisAdres } from '../lib/guvenli-url.mjs';
-import { tarihAraligi } from '../lib/deneyim.mjs';
 import { tarihMetni as ortakTarihMetni } from '../lib/tarih.mjs';
 import { telefonBaglantisi, telefonYaz } from '../lib/telefon.mjs';
 import {
@@ -71,8 +77,10 @@ import { AdayPaylasimlari, type PaylasimYukleyici } from './AdayPaylasimlari';
  * yazı, projeler ve eylemler aynı dar sütunda alt alta diziliyordu ve
  * masaüstünde ekranın dörtte üçü karartılmış arka plan olarak boş
  * kalıyordu. Şimdi:
- *   - lg ve üstü: ortada en çok 1200 piksellik panel, iki sütun — solda
- *     durum ve işlemler (kendi içinde kayıyor), sağda adayın profili
+ *   - lg ve üstü: ortada en çok 1320 piksellik panel, iki sütun — solda
+ *     durum, işlemler, iletişim ve başvuru bilgileri (kendi içinde
+ *     kayıyor), sağda adayın CV'si: öğrencinin `/cv/yazdir`daki AYNI A4
+ *     şablonu, başvuru anındaki kopyadan (11 Ekim 2026)
  *   - lg altı: tam ekran, tek sütun; sıra üst şerit → işlemler → profil
  * DOM sırası görsel sırayla aynı (şerit, işlemler, profil): klavye ve
  * ekran okuyucu ekranda gördüğü sırayla geziyor.
@@ -272,6 +280,32 @@ export const AdayCekmecesi: React.FC<{
 
   const [ikinciAcik, setIkinciAcik] = React.useState(false);
   const [not, setNot] = React.useState('');
+
+  /*
+    CV ÖNİZLEMESİ (11 Ekim 2026) — öğrencinin `/cv/yazdir`daki AYNI
+    şablon (CvBelgesi), başvuru anındaki kopyadan (lib/aday-cv.mjs).
+    İletişim CV'ye yalnız sunucunun verdiği satırdan giriyor; salt okunur
+    üyede hiç yok. Yakınlaştırma `null` = kâğıt sütuna sığıyor.
+  */
+  const [yakinlik, setYakinlik] = React.useState<number | null>(null);
+  const [olcek, setOlcek] = React.useState(1);
+  const [tamEkran, setTamEkran] = React.useState(false);
+  const [tamYakinlik, setTamYakinlik] = React.useState<number | null>(null);
+  const [tamOlcek, setTamOlcek] = React.useState(1);
+  const [yazdiriliyor, setYazdiriliyor] = React.useState(false);
+  const tamEkranRef = React.useRef<HTMLDivElement | null>(null);
+  const cvOgrencisi = React.useMemo(
+    () =>
+      kart?.paylasildi
+        ? (adayCvOgrencisi(kart, {
+            iletisim:
+              saltOkunur || !iletisim
+                ? null
+                : { eposta: iletisim.eposta, telefon: iletisim.telefon ? telefonYaz(iletisim.telefon) : null },
+          }) as unknown as StudentProfile)
+        : null,
+    [kart, iletisim, saltOkunur],
+  );
   const govde = React.useRef<HTMLDivElement | null>(null);
   const kapatRef = React.useRef(onKapat);
   kapatRef.current = onKapat;
@@ -302,7 +336,37 @@ export const AdayCekmecesi: React.FC<{
     setOlumsuzSoruldu(false);
     setDurumHatasi(null);
     setMulakatTarihi(kart?.mulakatTarihi ?? '');
+    setYakinlik(null);
+    setTamEkran(false);
+    setTamYakinlik(null);
   }, [kart?.id, kart?.mulakatTarihi]);
+
+  /*
+    TAM EKRAN: önizleme pencerenin tamamını kaplıyor; tarayıcı destekliyorsa
+    gerçek tam ekran. Escape YALNIZ önizlemeyi kapatıyor (yakalama evresinde
+    durduruluyor) — başvuru penceresi açık kalıyor.
+  */
+  React.useEffect(() => {
+    if (!tamEkran) return undefined;
+    const tus = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.stopPropagation();
+      setTamEkran(false);
+    };
+    const cikis = () => {
+      if (!document.fullscreenElement) setTamEkran(false);
+    };
+    window.addEventListener('keydown', tus, true);
+    document.addEventListener('fullscreenchange', cikis);
+    const oge = tamEkranRef.current;
+    if (oge?.requestFullscreen) oge.requestFullscreen().catch(() => undefined);
+    oge?.focus();
+    return () => {
+      window.removeEventListener('keydown', tus, true);
+      document.removeEventListener('fullscreenchange', cikis);
+      if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+    };
+  }, [tamEkran]);
 
   /*
     İLETİŞİM: TEKLİF KABULÜ ARTIK ŞART DEĞİL (sade akış)
@@ -498,12 +562,14 @@ export const AdayCekmecesi: React.FC<{
       ? deger.filter((x): x is string => typeof x === 'string' && x.trim().length > 0)
       : [];
 
+  /*
+    Eğitim, yetenek, dil, deneyim ve projeler artık ayrı listeler olarak
+    değil, CV önizlemesinde çiziliyor (lib/aday-cv.mjs alanları tek tek
+    doğruluyor). Burada kalanlar CV'de olmayanlar: rozetler ve eski
+    kopyalardaki yetenek kaynağı notu.
+  */
   const yetenekler = dizeListesi(kart.yetenekler);
-  const diller = dizeListesi(kart.diller);
   const rozetler = dizeListesi(kart.rozetler);
-  const projeler = Array.isArray(kart.projeler) ? kart.projeler : [];
-  /* Başvuru anındaki deneyimler (kartVerisi doğruladı); boşsa bölüm hiç çizilmiyor. */
-  const deneyimler = Array.isArray(kart.deneyimler) ? kart.deneyimler : [];
   /*
     Dış bağlantılar yalnız güvenli HTTPS adrese çevrilebiliyorsa.
 
@@ -516,11 +582,6 @@ export const AdayCekmecesi: React.FC<{
   */
   const baglantilar = kart.gizli ? [] : adayBaglantilari(kart);
   const baglantiGizlendi = Boolean(kart.gizli) && adayBaglantilari(kart).length > 0;
-  const egitim = [
-    { etiket: 'Üniversite', deger: kart.universite },
-    { etiket: 'Bölüm', deger: kart.bolum },
-    { etiket: 'Sınıf', deger: kart.sinif },
-  ].filter((s) => typeof s.deger === 'string' && s.deger.trim());
   const bolumDegisti = (b: string) => Boolean(fark?.bolumler?.[b as keyof typeof fark.bolumler]);
 
   const durum = durumRozeti(kart.durum);
@@ -529,6 +590,158 @@ export const AdayCekmecesi: React.FC<{
   /* Yalnız StajımVar üzerinden yapılan başvuruda paylaşım izni var. */
   const paylasimBolumu = kart.yontem === 'internal' && Boolean(onPaylasimlar);
 
+  /*
+    İLETİŞİM — HER DURUMDA (sade akış), ÖĞRENCİNİN ONAYINA BAĞLI
+
+    Eskiden bu blok yalnız süreç bittiğinde (teklif kabulü) çiziliyordu;
+    yeni ve incelenen başvurularda HİÇ görünmüyordu. 11 Ekim 2026'dan beri
+    sol sütunda, başvuru işlemlerinin altında: sağ sütun adayın CV'sine
+    ayrıldı, e-posta ve arama işlemlerin yanında.
+
+    Kapı veritabanında: `basvuru_iletisimi` doğrulanmış şirketin
+    Owner/Recruiter üyesine ve yalnız onay bu akışı kapsıyorsa satır
+    döndürüyor. Buradaki koşul gösterim için; kuralın kendisi değil.
+    Sohbet yok: e-posta ve varsa telefon, ikisi de doğrudan aksiyon.
+  */
+  const iletisimBlogu = (
+saltOkunur ? (
+            <div
+              className="rounded-2xl border p-3.5"
+              style={{ borderColor: SIRKET_KENAR, background: SIRKET_YUZEY }}
+            >
+              <p className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: SIRKET_METIN_IKINCIL }}>
+                İletişim
+              </p>
+              <p className="mt-1.5 text-xs leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
+                Telefon ve e-posta şirket sahibinde ve işe alım yetkililerinde;
+                görüntüleme yetkisiyle burada gösterilmiyor.
+              </p>
+              {/*
+                DÜRÜST UYARI: ÖĞRENCİNİN YÜKLEDİĞİ CV DOSYASININ
+                İÇİNDE İLETİŞİM BİLGİSİ OLABİLİR ve CV bu role
+                açık. "İletişim tamamen gizli" demek doğru olmazdı;
+                gizlenen şey bu alandaki kayıt.
+              */}
+              <p className="mt-1 text-[11px] leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
+                Adayın CV dosyasında iletişim bilgisi yazıyor olabilir; CV bu
+                yetkiyle de açılabiliyor.
+              </p>
+            </div>
+          ) : !adayIletisimiAcik(kart) ? (
+            <div
+              className="rounded-2xl border p-3.5"
+              style={{ borderColor: SIRKET_KENAR, background: SIRKET_YUZEY }}
+            >
+              <p className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: SIRKET_METIN_IKINCIL }}>
+                İletişim
+              </p>
+              {/*
+                NEDEN KAPALI OLDUĞU YAZIYOR. "Bilgi yok" demek,
+                öğrencinin bir kararını sistem eksikliği gibi
+                gösterirdi.
+              */}
+              <p className="mt-1.5 text-xs leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
+                {kart.paylasimOnayi
+                  ? 'Bu başvuru site dışından geldi; aday iletişim paylaşımını bu ekran için açmadı.'
+                  : 'Aday telefon ve e-postasını bu başvuru için paylaşmıyor.'}
+              </p>
+            </div>
+          ) : (
+            <div
+              className="rounded-2xl border p-3.5"
+              style={{ borderColor: SIRKET_KENAR, background: SIRKET_YUZEY }}
+            >
+              <p className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: SIRKET_METIN_IKINCIL }}>
+                İletişim
+              </p>
+              {iletisimHatasi ? (
+                <p role="alert" className="mt-1.5 text-xs font-semibold" style={{ color: '#991B1B' }}>
+                  İletişim bilgileri şu anda yüklenemedi.
+                </p>
+              ) : iletisim ? (
+                <>
+                  <p className="mt-1.5 text-base font-extrabold" style={{ color: SIRKET_METIN }}>
+                    {iletisim.ad ?? 'Aday'}
+                  </p>
+                  {iletisim.eposta && (
+                    <p className="mt-0.5 break-all text-xs" style={{ color: SIRKET_METIN }}>
+                      {iletisim.eposta}
+                    </p>
+                  )}
+                  {/*
+                    Numara okunur biçimde ama VERİTABANINDAKİ değer
+                    değişmiyor; `tel:` bağlantısı ham rakamları
+                    kullanıyor.
+                  */}
+                  {iletisim.telefon && (
+                    <p className="text-xs" style={{ color: SIRKET_METIN }}>
+                      {telefonYaz(iletisim.telefon)}
+                    </p>
+                  )}
+                  <div className="mt-2.5 flex flex-wrap gap-2">
+                    {iletisim.eposta && (
+                      <a
+                        href={`mailto:${iletisim.eposta}`}
+                        aria-label={`${iletisim.ad ?? 'Adaya'} e-posta gönder`}
+                        className={BIRINCIL_DUGME}
+                        style={birincilStil}
+                      >
+                        <Mail className="h-4 w-4" />
+                        E-posta gönder
+                      </a>
+                    )}
+                    {/* Telefon yoksa düğme HİÇ çıkmıyor. */}
+                    {telefonBaglantisi(iletisim.telefon) && (
+                      <a
+                        href={`tel:${telefonBaglantisi(iletisim.telefon)}`}
+                        aria-label={`${iletisim.ad ?? 'Adayı'} ara — ${telefonYaz(iletisim.telefon)}`}
+                        className={IKINCIL_DUGME}
+                        style={ikincilStil}
+                      >
+                        <Phone className="h-4 w-4" />
+                        Ara
+                      </a>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <p className="mt-1.5 text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+                  İletişim bilgileri yükleniyor…
+                </p>
+              )}
+            </div>
+          )
+  );
+
+  /* Başvurunun kendisine dair iki gerçek bilgi: tarih ve geldiği yer. */
+  const digerBilgiler = (
+    <div className="mt-5 border-t pt-4" style={{ borderColor: SIRKET_KENAR }}>
+      <h3 className="text-sm font-extrabold" style={{ color: SIRKET_METIN }}>
+        Diğer bilgiler
+      </h3>
+      <dl className="mt-2 space-y-2 text-sm">
+        {basvuruTarihi && (
+          <div className="flex items-start gap-2.5">
+            <CalendarDays className="mt-0.5 h-4 w-4 shrink-0" style={{ color: SIRKET_METIN_IKINCIL }} aria-hidden />
+            <div>
+              <dt className="text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>Başvuru tarihi</dt>
+              <dd className="font-semibold" style={{ color: SIRKET_METIN }}>{basvuruTarihi}</dd>
+            </div>
+          </div>
+        )}
+        <div className="flex items-start gap-2.5">
+          <FileText className="mt-0.5 h-4 w-4 shrink-0" style={{ color: SIRKET_METIN_IKINCIL }} aria-hidden />
+          <div>
+            <dt className="text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>Başvuru kaynağı</dt>
+            <dd className="font-semibold" style={{ color: SIRKET_METIN }}>
+              {kart.yontem === 'internal' ? 'stajimvar.com' : 'Şirketin kendi sitesi'}
+            </dd>
+          </div>
+        </div>
+      </dl>
+    </div>
+  );
+
   const panel = (
     <div
       ref={govde}
@@ -536,7 +749,7 @@ export const AdayCekmecesi: React.FC<{
       aria-modal
       aria-labelledby="aday-inceleme-basligi"
       tabIndex={-1}
-      className="absolute inset-0 flex flex-col overflow-hidden outline-none lg:inset-y-6 lg:left-1/2 lg:right-auto lg:w-[calc(100%-3rem)] lg:max-w-[1200px] lg:-translate-x-1/2 lg:rounded-2xl lg:border lg:shadow-xl"
+      className="absolute inset-0 flex flex-col overflow-hidden outline-none lg:inset-y-6 lg:left-1/2 lg:right-auto lg:w-[calc(100%-3rem)] lg:max-w-[1320px] lg:-translate-x-1/2 lg:rounded-2xl lg:border lg:shadow-xl"
       style={{ background: SIRKET_ZEMIN, borderColor: SIRKET_KENAR }}
     >
       {/* ------------------------------------------------ üst şerit */}
@@ -646,7 +859,7 @@ export const AdayCekmecesi: React.FC<{
         {saltOkunur ? (
           <section
             aria-labelledby="aday-islemler-basligi"
-            className="border-b p-4 lg:w-[22rem] lg:shrink-0 lg:overflow-y-auto lg:border-b-0 lg:border-r"
+            className="border-b p-4 lg:w-[24rem] lg:shrink-0 lg:overflow-y-auto lg:border-b-0 lg:border-r"
             style={{ background: SIRKET_YUZEY, borderColor: SIRKET_KENAR }}
           >
             <div className="mb-3">
@@ -660,11 +873,13 @@ export const AdayCekmecesi: React.FC<{
               inceleyebilirsin. Durum değiştirme, not yazma, görüşme daveti ve
               teklif şirket sahibinde ve işe alım yetkililerinde.
             </p>
+            <div className="mt-5">{iletisimBlogu}</div>
+            {digerBilgiler}
           </section>
         ) : (
         <section
           aria-labelledby="aday-islemler-basligi"
-          className="border-b p-4 lg:w-[22rem] lg:shrink-0 lg:overflow-y-auto lg:border-b-0 lg:border-r"
+          className="border-b p-4 lg:w-[24rem] lg:shrink-0 lg:overflow-y-auto lg:border-b-0 lg:border-r"
           style={{ background: SIRKET_YUZEY, borderColor: SIRKET_KENAR }}
         >
           <div className="mb-3">
@@ -1002,6 +1217,8 @@ export const AdayCekmecesi: React.FC<{
               </button>
             </div>
           )}
+          <div className="mt-5">{iletisimBlogu}</div>
+          {digerBilgiler}
         </section>
         )}
 
@@ -1057,135 +1274,6 @@ export const AdayCekmecesi: React.FC<{
 
             </section>
           )}
-
-          {/*
-            İLETİŞİM — HER DURUMDA, GÖVDENİN BAŞINDA (sade akış)
-
-            Eskiden bu blok yalnız süreç bittiğinde (teklif kabulü) çizilen
-            bölümün içindeydi; yeni ve incelenen başvurularda HİÇ
-            görünmüyordu. Sade akışta şirketin temel işi adayı incelemek
-            ve kendisi aramak/yazmak, bu yüzden iletişim her durumda
-            profil ayrıntılarının ÜSTÜNDE.
-          */}
-          {/*
-            İLETİŞİM — ÖĞRENCİNİN ONAYINA BAĞLI
-
-            Kapı veritabanında: `basvuru_iletisimi` doğrulanmış
-            şirketin Owner/Recruiter üyesine ve yalnız onay bu akışı
-            kapsıyorsa satır döndürüyor. Buradaki koşul gösterim
-            için; kuralın kendisi değil.
-
-            Sohbet yok: e-posta ve varsa telefon, ikisi de doğrudan
-            aksiyon.
-          */}
-          {saltOkunur ? (
-            <div
-              className="rounded-2xl border p-3.5"
-              style={{ borderColor: SIRKET_KENAR, background: SIRKET_YUZEY }}
-            >
-              <p className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: SIRKET_METIN_IKINCIL }}>
-                İletişim
-              </p>
-              <p className="mt-1.5 text-xs leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
-                Telefon ve e-posta şirket sahibinde ve işe alım yetkililerinde;
-                görüntüleme yetkisiyle burada gösterilmiyor.
-              </p>
-              {/*
-                DÜRÜST UYARI: ÖĞRENCİNİN YÜKLEDİĞİ CV DOSYASININ
-                İÇİNDE İLETİŞİM BİLGİSİ OLABİLİR ve CV bu role
-                açık. "İletişim tamamen gizli" demek doğru olmazdı;
-                gizlenen şey bu alandaki kayıt.
-              */}
-              <p className="mt-1 text-[11px] leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
-                Adayın CV dosyasında iletişim bilgisi yazıyor olabilir; CV bu
-                yetkiyle de açılabiliyor.
-              </p>
-            </div>
-          ) : !adayIletisimiAcik(kart) ? (
-            <div
-              className="rounded-2xl border p-3.5"
-              style={{ borderColor: SIRKET_KENAR, background: SIRKET_YUZEY }}
-            >
-              <p className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: SIRKET_METIN_IKINCIL }}>
-                İletişim
-              </p>
-              {/*
-                NEDEN KAPALI OLDUĞU YAZIYOR. "Bilgi yok" demek,
-                öğrencinin bir kararını sistem eksikliği gibi
-                gösterirdi.
-              */}
-              <p className="mt-1.5 text-xs leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
-                {kart.paylasimOnayi
-                  ? 'Bu başvuru site dışından geldi; aday iletişim paylaşımını bu ekran için açmadı.'
-                  : 'Aday telefon ve e-postasını bu başvuru için paylaşmıyor.'}
-              </p>
-            </div>
-          ) : (
-            <div
-              className="rounded-2xl border p-3.5"
-              style={{ borderColor: SIRKET_KENAR, background: SIRKET_YUZEY }}
-            >
-              <p className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: SIRKET_METIN_IKINCIL }}>
-                İletişim
-              </p>
-              {iletisimHatasi ? (
-                <p role="alert" className="mt-1.5 text-xs font-semibold" style={{ color: '#991B1B' }}>
-                  İletişim bilgileri şu anda yüklenemedi.
-                </p>
-              ) : iletisim ? (
-                <>
-                  <p className="mt-1.5 text-base font-extrabold" style={{ color: SIRKET_METIN }}>
-                    {iletisim.ad ?? 'Aday'}
-                  </p>
-                  {iletisim.eposta && (
-                    <p className="mt-0.5 break-all text-xs" style={{ color: SIRKET_METIN }}>
-                      {iletisim.eposta}
-                    </p>
-                  )}
-                  {/*
-                    Numara okunur biçimde ama VERİTABANINDAKİ değer
-                    değişmiyor; `tel:` bağlantısı ham rakamları
-                    kullanıyor.
-                  */}
-                  {iletisim.telefon && (
-                    <p className="text-xs" style={{ color: SIRKET_METIN }}>
-                      {telefonYaz(iletisim.telefon)}
-                    </p>
-                  )}
-                  <div className="mt-2.5 flex flex-wrap gap-2">
-                    {iletisim.eposta && (
-                      <a
-                        href={`mailto:${iletisim.eposta}`}
-                        aria-label={`${iletisim.ad ?? 'Adaya'} e-posta gönder`}
-                        className={BIRINCIL_DUGME}
-                        style={birincilStil}
-                      >
-                        <Mail className="h-4 w-4" />
-                        E-posta gönder
-                      </a>
-                    )}
-                    {/* Telefon yoksa düğme HİÇ çıkmıyor. */}
-                    {telefonBaglantisi(iletisim.telefon) && (
-                      <a
-                        href={`tel:${telefonBaglantisi(iletisim.telefon)}`}
-                        aria-label={`${iletisim.ad ?? 'Adayı'} ara — ${telefonYaz(iletisim.telefon)}`}
-                        className={IKINCIL_DUGME}
-                        style={ikincilStil}
-                      >
-                        <Phone className="h-4 w-4" />
-                        Ara
-                      </a>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <p className="mt-1.5 text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
-                  İletişim bilgileri yükleniyor…
-                </p>
-              )}
-            </div>
-          )}
-
 
           {/*
             ESKİ TEKLİF — GEÇMİŞ OLARAK
@@ -1274,25 +1362,13 @@ export const AdayCekmecesi: React.FC<{
             </div>
           )}
 
-          {kart.onYazi && (
-            <section aria-labelledby="aday-on-yazi" className="space-y-2">
-              <BolumBasligi id="aday-on-yazi">Ön yazı</BolumBasligi>
-              <p
-                className="whitespace-pre-line break-words rounded-2xl border p-3 text-sm leading-relaxed"
-                style={{ borderColor: SIRKET_KENAR, background: SIRKET_YUZEY, color: SIRKET_METIN }}
-              >
-                {kart.onYazi}
-              </p>
-            </section>
-          )}
-
           {/*
-            BAŞVURU ANINDAKİ PROFİL — KOPYA
+            BAŞVURU ANINDAKİ PROFİL — CV ÖNİZLEMESİ (11 Ekim 2026)
 
             Şirketin değerlendirdiği şey başvurunun yapıldığı andaki hâl;
             öğrenci profilini sonradan değiştirse bile burası değişmiyor.
-            Yalnız gerçekten dolu alanlar çiziliyor. "Deneyim" diye ayrı bir
-            veri kopyada YOK; o başlık açılmıyor.
+            Profil, öğrencinin `/cv/yazdir`da gördüğü AYNI A4 şablonla
+            (CvOnizleme → CvBelgesi) çiziliyor; yalnız dolu bölümler.
 
             Değişen bölümün başlığında "Başvurudan sonra değişti" işareti
             var; neyin değiştiği aşağıdaki "Başvurudan sonra değişenler"
@@ -1300,77 +1376,106 @@ export const AdayCekmecesi: React.FC<{
           */}
           {kart.paylasildi && (
             <section aria-labelledby="aday-kopya-basligi" className="space-y-4">
-              <div>
-                <BolumBasligi id="aday-kopya-basligi">Başvuru anındaki profil</BolumBasligi>
-                <p className="mt-0.5 text-xs leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
-                  Aday başvururken paylaşılan kopya
-                  {basvuruTarihi ? ` (${basvuruTarihi})` : ''}. Profil sonradan değişse de burası
-                  değişmiyor.
-                </p>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0 flex-1 basis-64">
+                  <BolumBasligi id="aday-kopya-basligi">Özgeçmiş önizleme</BolumBasligi>
+                  <p className="mt-0.5 text-xs leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
+                    Adayın StajımVar profilinden oluşturulan CV — başvuru anındaki paylaşılan kopya
+                    {basvuruTarihi ? ` (${basvuruTarihi})` : ''}. Profil sonradan değişse de burası
+                    değişmiyor.{kart.cvYolu ? ' Adayın yüklediği PDF aşağıda.' : ''}
+                  </p>
+                </div>
+                {/*
+                  ARAÇ ÇUBUĞU: yakınlaştır/uzaklaştır (yüzdeye basınca sığdırır),
+                  PDF olarak indir (tarayıcının yazdırma penceresi, yalnız kâğıt),
+                  tam ekran. Telefonda düğmeler alt satıra kırılıyor.
+                */}
+                {cvOgrencisi && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="inline-flex items-center rounded-xl border" style={{ borderColor: SIRKET_KENAR, background: SIRKET_YUZEY }}>
+                    <button
+                      type="button"
+                      onClick={() => setYakinlik(Math.max(0.4, Math.round(((yakinlik ?? olcek) - 0.1) * 10) / 10))}
+                      aria-label="Uzaklaştır"
+                      className={`inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-l-xl hover:bg-gray-50 ${SIRKET_ODAK}`}
+                      style={{ color: SIRKET_METIN }}
+                    >
+                      <Minus className="h-4 w-4" aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setYakinlik(null)}
+                      aria-label="Sayfaya sığdır"
+                      title="Sayfaya sığdır"
+                      className={`min-h-11 min-w-[4rem] cursor-pointer border-x px-2 text-sm font-bold tabular-nums hover:bg-gray-50 ${SIRKET_ODAK}`}
+                      style={{ borderColor: SIRKET_KENAR, color: SIRKET_METIN }}
+                    >
+                      %{Math.round((yakinlik ?? olcek) * 100)}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setYakinlik(Math.min(2, Math.round(((yakinlik ?? olcek) + 0.1) * 10) / 10))}
+                      aria-label="Yakınlaştır"
+                      className={`inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-r-xl hover:bg-gray-50 ${SIRKET_ODAK}`}
+                      style={{ color: SIRKET_METIN }}
+                    >
+                      <Plus className="h-4 w-4" aria-hidden />
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setYazdiriliyor(true)}
+                    disabled={yazdiriliyor}
+                    title="Açılan pencerede “PDF olarak kaydet”i seç"
+                    className={IKINCIL_DUGME}
+                    style={ikincilStil}
+                  >
+                    <Download className="h-4 w-4" aria-hidden />
+                    İndir
+                  </button>
+                  <button type="button" onClick={() => setTamEkran(true)} className={IKINCIL_DUGME} style={ikincilStil}>
+                    <Maximize2 className="h-4 w-4" aria-hidden />
+                    Tam ekran
+                  </button>
+                </div>
+                )}
               </div>
 
-              {(egitim.length > 0 || kart.sehir) && (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {egitim.length > 0 && (
-                    <div>
-                      <Baslik degisti={bolumDegisti('egitim')}>Eğitim</Baslik>
-                      <dl className="space-y-1">
-                        {egitim.map((s) => (
-                          <div key={s.etiket} className="flex flex-wrap gap-x-1.5 text-sm">
-                            <dt style={{ color: SIRKET_METIN_IKINCIL }}>{s.etiket}:</dt>
-                            <dd className="min-w-0 break-words font-semibold" style={{ color: SIRKET_METIN }}>
-                              {s.deger}
-                            </dd>
-                          </div>
-                        ))}
-                      </dl>
-                    </div>
-                  )}
-                  {kart.sehir && (
-                    <div>
-                      <Baslik degisti={bolumDegisti('sehir')}>Şehir</Baslik>
-                      <p className="text-sm font-semibold" style={{ color: SIRKET_METIN }}>
-                        {kart.sehir}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {yetenekler.length > 0 && (
-                <section>
-                  <Baslik degisti={bolumDegisti('yetenekler')}>Yetenekler</Baslik>
-                  <div className="flex flex-wrap gap-1.5">
-                    {yetenekler.map((y: string) => (
-                      <span
-                        key={y}
-                        className="rounded-lg px-2 py-1 text-[11px] font-bold"
-                        style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
-                      >
-                        {y}
-                      </span>
-                    ))}
+              {cvOgrencisi && (
+                <div className="space-y-3">
+                  <div className="rounded-2xl p-3 sm:p-4" style={{ background: '#E9EEF4' }}>
+                    <CvOnizleme
+                      student={cvOgrencisi}
+                      etiket="Adayın CV'si"
+                      etkilesimsiz
+                      yakinlastirma={yakinlik}
+                      onOlcek={setOlcek}
+                    />
                   </div>
+
+                  {/*
+                    ESKİ BAŞVURULAR: CV alanları kopyaya 11 Ekim 2026'da girdi.
+                    Öncesinde yapılan başvurunun CV'si kopyadaki bilgiyle sınırlı;
+                    bunu söylemeden eksik bir CV'yi "adayın CV'si" diye sunmak
+                    yanlış olurdu.
+                  */}
+                  {!kart.cvKopya && (
+                    <p className="text-[11px] leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
+                      Bu başvuru CV alanları eklenmeden önce yapıldı; önizleme başvuru anındaki kopyada olan
+                      bilgilerle sınırlı.
+                    </p>
+                  )}
                   {/*
                     Eski kopyalarda yetenek listesi yok ve kart canlı tablodan
                     tamamlıyor. O liste "başvuru anı" değil; bunu söylemeden
-                    bu başlığın altında göstermek yanlış bir iddia olurdu.
+                    göstermek yanlış bir iddia olurdu.
                   */}
-                  {kart.yetenekKopyadan === false && (
-                    <p className="mt-1 text-[11px]" style={{ color: SIRKET_METIN_IKINCIL }}>
-                      Bu başvurunun kopyasında yetenek yok; liste adayın güncel yeteneklerinden.
+                  {!kart.cvKopya && kart.yetenekKopyadan === false && yetenekler.length > 0 && (
+                    <p className="text-[11px]" style={{ color: SIRKET_METIN_IKINCIL }}>
+                      Bu başvurunun kopyasında yetenek yok; CV’deki yetenekler adayın güncel yeteneklerinden.
                     </p>
                   )}
-                </section>
-              )}
-
-              {diller.length > 0 && (
-                <section>
-                  <Baslik degisti={bolumDegisti('diller')}>Diller</Baslik>
-                  <p className="text-sm" style={{ color: SIRKET_METIN }}>
-                    {diller.join(', ')}
-                  </p>
-                </section>
+                </div>
               )}
 
               {rozetler.length > 0 && (
@@ -1391,91 +1496,9 @@ export const AdayCekmecesi: React.FC<{
                 </section>
               )}
 
-              {deneyimler.length > 0 && (
-                <section>
-                  <Baslik degisti={bolumDegisti('deneyimler')}>Deneyim</Baslik>
-                  <ul className="space-y-2">
-                    {deneyimler.map((d: any, i: number) => (
-                      <li
-                        key={`${d?.pozisyon ?? ''}-${d?.kurum ?? ''}-${i}`}
-                        className="min-w-0 rounded-2xl border p-3"
-                        style={{ borderColor: SIRKET_KENAR, background: SIRKET_YUZEY }}
-                      >
-                        <p className="break-words text-sm font-bold" style={{ color: SIRKET_METIN }}>
-                          {d?.pozisyon}
-                        </p>
-                        <p className="break-words text-xs font-semibold" style={{ color: SIRKET_METIN }}>
-                          {d?.kurum}
-                          {tarihAraligi(d) && (
-                            <span className="font-normal" style={{ color: SIRKET_METIN_IKINCIL }}>
-                              {' · '}
-                              {tarihAraligi(d)}
-                            </span>
-                          )}
-                        </p>
-                        {d?.aciklama && (
-                          <p className="mt-1 whitespace-pre-line break-words text-xs leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
-                            {d.aciklama}
-                          </p>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )}
-
-              {projeler.length > 0 && (
-                <section>
-                  <Baslik degisti={bolumDegisti('projeler')}>Projeler</Baslik>
-                  <ul className="grid gap-2 sm:grid-cols-2">
-                    {projeler.map((p: any, i: number) => {
-                      /*
-                        Proje adresi öğrencinin yazdığı serbest metin ve `href`e
-                        denetimsiz yazılıyordu. `javascript:` bir değer tıklayan
-                        şirket çalışanının oturumunda kod çalıştırırdı; artık
-                        güvenli adres denetiminden geçiyor.
-
-                        Önyargısız incelemede "Projeyi aç" yok: proje adresi
-                        çoğunlukla github.com/<kullanıcı-adı> ve kullanıcı adı
-                        adı taşıyor. Başlık ve açıklama kalıyor.
-                      */
-                      const adres = kart.gizli ? null : guvenliDisAdres(p?.adres);
-                      return (
-                        <li
-                          key={p?.baslik ?? i}
-                          className="min-w-0 rounded-2xl border p-3"
-                          style={{ borderColor: SIRKET_KENAR, background: SIRKET_YUZEY }}
-                        >
-                          <p className="break-words text-sm font-bold" style={{ color: SIRKET_METIN }}>
-                            {p?.baslik}
-                          </p>
-                          {p?.aciklama && (
-                            <p className="mt-0.5 break-words text-xs leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
-                              {p.aciklama}
-                            </p>
-                          )}
-                          {adres && (
-                            <a
-                              href={adres}
-                              target="_blank"
-                              rel="noreferrer noopener"
-                              className="mt-1 inline-flex min-h-11 items-center gap-1 text-xs font-bold"
-                              style={{ color: SIRKET_VURGU_KOYU }}
-                            >
-                              Projeyi aç
-                              <ExternalLink className="h-3 w-3" aria-hidden />
-                            </a>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </section>
-              )}
-
               {(baglantilar.length > 0 || baglantiGizlendi || kart.cvYolu) && (
                 <section>
-                  <Baslik degisti={bolumDegisti('baglantilar')}>Bağlantılar ve CV</Baslik>
+                  <Baslik degisti={bolumDegisti('baglantilar')}>Bağlantılar ve yüklenen CV</Baslik>
                   <div className="flex flex-wrap gap-2">
                     {baglantilar.map((b: { tur: string; etiket: string; adres: string }) => (
                       <a
@@ -1528,7 +1551,7 @@ export const AdayCekmecesi: React.FC<{
                         ) : (
                           <FileText className="h-4 w-4" aria-hidden />
                         )}
-                        CV'yi görüntüle
+                        Yüklediği PDF CV'yi aç
                       </button>
                     )}
                   </div>
@@ -1588,6 +1611,18 @@ export const AdayCekmecesi: React.FC<{
             </section>
           )}
 
+          {kart.onYazi && (
+            <section aria-labelledby="aday-on-yazi" className="space-y-2">
+              <BolumBasligi id="aday-on-yazi">Ön yazı</BolumBasligi>
+              <p
+                className="whitespace-pre-line break-words rounded-2xl border p-3 text-sm leading-relaxed"
+                style={{ borderColor: SIRKET_KENAR, background: SIRKET_YUZEY, color: SIRKET_METIN }}
+              >
+                {kart.onYazi}
+              </p>
+            </section>
+          )}
+
           {kart.paylasildi && (
             <AdayGuncelProfil
               durum={guncelProfil.durum}
@@ -1596,6 +1631,74 @@ export const AdayCekmecesi: React.FC<{
               profilYok={guncelProfil.durum === 'hazir' && !guncelProfil.sonuc?.guncel}
               onYenidenDene={guncelProfil.yenidenDene}
               kimlikGizli={Boolean(kart.gizli)}
+            />
+          )}
+
+          {cvOgrencisi && tamEkran && (
+            <div
+              ref={tamEkranRef}
+              role="dialog"
+              aria-modal
+              aria-label="CV tam ekran"
+              tabIndex={-1}
+              className="absolute inset-0 z-20 flex flex-col outline-none"
+              style={{ background: '#1F2937' }}
+            >
+              <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-white/10 px-3 py-2 sm:px-5">
+                <p className="mr-auto text-sm font-bold text-white">{kart.gizli ? 'Aday' : (kart.ad ?? 'Aday')} — CV</p>
+                <div className="inline-flex items-center rounded-xl border border-white/20">
+                  <button
+                    type="button"
+                    onClick={() => setTamYakinlik(Math.max(0.4, Math.round(((tamYakinlik ?? tamOlcek) - 0.1) * 10) / 10))}
+                    aria-label="Uzaklaştır"
+                    className="inline-flex h-11 w-11 cursor-pointer items-center justify-center text-white hover:bg-white/10"
+                  >
+                    <Minus className="h-4 w-4" aria-hidden />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTamYakinlik(null)}
+                    aria-label="Ekrana sığdır"
+                    className="min-h-11 min-w-[4rem] cursor-pointer border-x border-white/20 px-2 text-sm font-bold tabular-nums text-white hover:bg-white/10"
+                  >
+                    %{Math.round((tamYakinlik ?? tamOlcek) * 100)}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTamYakinlik(Math.min(2, Math.round(((tamYakinlik ?? tamOlcek) + 0.1) * 10) / 10))}
+                    aria-label="Yakınlaştır"
+                    className="inline-flex h-11 w-11 cursor-pointer items-center justify-center text-white hover:bg-white/10"
+                  >
+                    <Plus className="h-4 w-4" aria-hidden />
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setTamEkran(false)}
+                  className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-xl border border-white/20 px-3 text-sm font-bold text-white hover:bg-white/10"
+                >
+                  <X className="h-4 w-4" aria-hidden />
+                  Kapat
+                </button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-auto p-3 sm:p-6">
+                <div className="mx-auto max-w-[1000px]">
+                  <CvOnizleme
+                    student={cvOgrencisi}
+                    etiket="Adayın CV'si"
+                    etkilesimsiz
+                    yakinlastirma={tamYakinlik}
+                    onOlcek={setTamOlcek}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          {cvOgrencisi && yazdiriliyor && (
+            <CvYazdirmaAlani
+              student={cvOgrencisi}
+              belgeAdi={`${kart.gizli ? 'Aday' : (kart.ad ?? 'Aday')} — CV`}
+              onBitti={() => setYazdiriliyor(false)}
             />
           )}
 

@@ -7,6 +7,8 @@ import { SirketAgimBos, SirketProfilSekmesi } from '../sirket/SirketKimlikKarti'
 import { IlanFormu } from '../sirket/IlanFormu';
 import { OnaySayfasi } from '../components/yonetim/OnaySayfasi';
 import type { OnayKuyrugu } from '../lib/queries';
+import { basvuruKopyasi } from '../lib/basvuru-kopyasi.mjs';
+import { ORNEK_OGRENCI } from './ornek-ogrenci';
 
 /*
   YÖNETİCİ ONAY KUYRUĞU — /yonetim/onay (fikstür adresi)
@@ -278,6 +280,13 @@ const ADAY_A_KOPYASI = {
   diller: ['İngilizce (B1)'],
   rozetler: ['quiz-react'],
   projeler: [{ baslik: 'Örnek proje', aciklama: 'Test açıklaması', adres: 'https://ornek.test/proje' }],
+  /*
+    CV KOPYASI (11 Ekim 2026): başvuru anında yazılan CV alanları — gerçek
+    kopya üreticisiyle, uydurma örnek öğrenciden. İşveren ekranındaki CV
+    önizlemesi bundan çiziliyor. Öteki adayların kopyasında yok: eski
+    başvuru hâli de görülebilsin.
+  */
+  cv: basvuruKopyasi(ORNEK_OGRENCI)?.cv,
 };
 
 /*

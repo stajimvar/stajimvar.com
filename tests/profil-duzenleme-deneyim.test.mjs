@@ -203,8 +203,11 @@ test('fark: eklenen, güncellenen, çıkan; eski kopyada "eklendi" denmiyor', ()
 test('şirket ekranı ve CV deneyimleri kesmiyor', () => {
   const CEKMECE = oku('src/sirket/AdayCekmecesi.tsx');
   const GUNCEL = oku('src/sirket/AdayGuncelProfil.tsx');
-  assert.match(CEKMECE, /\{deneyimler\.map\(\(d: any, i: number\) => \(/);
-  assert.doesNotMatch(CEKMECE, /deneyimler\.slice/);
+  /* 11 Ekim 2026: şirket ekranında deneyimler CV önizlemesinde; hepsi giriyor. */
+  const ADAY_CV = oku('src/lib/aday-cv.mjs');
+  assert.match(ADAY_CV, /\.map\(deneyim\)\.filter\(Boolean\)/);
+  assert.doesNotMatch(ADAY_CV + CEKMECE, /deneyimler\.slice/);
+  assert.match(CEKMECE, /<CvOnizleme\s+student=\{cvOgrencisi\}/);
   assert.doesNotMatch(GUNCEL, /en çok on deneyim|Başvuru kopyasında yer almayan' : 'Yeni deneyim'/);
   /* Mavi şablon (10 Ekim 2026): okunamayan kayıt önce süzülüyor ki çalışma türü aynı sırada eşleşsin. */
   assert.match(CV, /const siraliDeneyim = \[\.\.\.\(student\.experiences \?\? \[\]\)\]\.sort\(deneyimSirasi\)\.filter\(\(e\) => deneyimKaydi\(e\)\);/);
