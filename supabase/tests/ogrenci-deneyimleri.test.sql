@@ -234,6 +234,15 @@ begin
                  and (j -> 'guncel' -> 'deneyimler' -> 1 ->> 'devam')::boolean
                  and (j -> 'guncel' -> 'deneyimler' -> 1 -> 'bitis') = 'null'::jsonb,
                  right(u::text, 2) || ': tarih bicimi ve devam eden deneyim');
+    /* CV alanı (20261208010000): aynı kapı, not ortalaması ve iletişim yok. */
+    perform d.ok(jsonb_typeof(j -> 'guncel' -> 'cv') = 'object'
+                 and jsonb_array_length(j -> 'guncel' -> 'cv' -> 'deneyimler') = 2
+                 and (j -> 'guncel' -> 'cv' -> 'deneyimler' -> 0 ->> 'devam')::boolean
+                 and (j -> 'guncel' -> 'cv') ? 'egitim'
+                 and (j -> 'guncel' -> 'cv') ? 'gizli',
+                 right(u::text, 2) || ': guncel profilde cv alani, en yeni deneyim ustte');
+    perform d.ok((j -> 'guncel' -> 'cv')::text !~* '"(gpa|not|telefon|eposta|phone|email)"',
+                 right(u::text, 2) || ': cv alaninda not ortalamasi ve iletisim yok');
 
     j := public.basvuru_aday_guncel_profili('de00a002-0000-4000-8000-00000000a002');
     perform d.ok(not (j ->> 'riza')::boolean and not (j ? 'guncel'),
