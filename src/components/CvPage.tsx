@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -589,7 +590,23 @@ export const CvOnizleme: React.FC<{
   etiket?: string;
   /** Önizleme bir resim gibi: içindeki bağlantılar odak ve tıklama almıyor. */
   etkilesimsiz?: boolean;
-}> = ({ student, fotografYolu = null, anaIcerik = false, kapSinifi = '', etiket, etkilesimsiz = false }) => {
+  /**
+   * Yakınlaştırma (11 Ekim 2026, işveren önizlemesi): kâğıdın gerçek
+   * boyutuna oranı. Verilmezse kâğıt kaba sığıyor (öğrenci ekranları).
+   */
+  yakinlastirma?: number | null;
+  /** Uygulanan ölçek (sığdırma ya da yakınlaştırma) — yüzde göstergesi için. */
+  onOlcek?: (olcek: number) => void;
+}> = ({
+  student,
+  fotografYolu = null,
+  anaIcerik = false,
+  kapSinifi = '',
+  etiket,
+  etkilesimsiz = false,
+  yakinlastirma = null,
+  onOlcek,
+}) => {
   /*
     EKRANDA DA A4 (17 Eylül 2026)
 
@@ -602,7 +619,11 @@ export const CvOnizleme: React.FC<{
   */
   const kapRef = useRef<HTMLDivElement>(null);
   const kagitRef = useRef<HTMLElement>(null);
-  const [olcu, setOlcu] = useState<{ olcek: number; yukseklik: number | null }>({ olcek: 1, yukseklik: null });
+  const [olcu, setOlcu] = useState<{ olcek: number; yukseklik: number | null; genislik: number }>({
+    olcek: 1,
+    yukseklik: null,
+    genislik: A4_GENISLIK,
+  });
   useLayoutEffect(() => {
     const kap = kapRef.current;
     const kagit = kagitRef.current;
@@ -612,7 +633,8 @@ export const CvOnizleme: React.FC<{
       const stil = getComputedStyle(kap);
       const genislik = kap.clientWidth - parseFloat(stil.paddingLeft) - parseFloat(stil.paddingRight);
       const olcek = Math.min(1, genislik / A4_GENISLIK);
-      setOlcu({ olcek, yukseklik: kagit.offsetHeight * olcek });
+      /* Yükseklik ölçeksiz; ölçek çizimde uygulanıyor (yakınlaştırma da aynı yoldan). */
+      setOlcu({ olcek, yukseklik: kagit.offsetHeight, genislik });
     };
     hesapla();
     const gozlemci = new ResizeObserver(hesapla);
@@ -621,19 +643,113 @@ export const CvOnizleme: React.FC<{
     return () => gozlemci.disconnect();
   }, []);
 
+  const olcek = yakinlastirma ?? olcu.olcek;
+  useEffect(() => {
+    onOlcek?.(olcek);
+  }, [olcek, onOlcek]);
+  const yakin = yakinlastirma !== null;
+
   return (
     <div ref={kapRef} className={`cv-kap w-full ${kapSinifi}`} inert={etkilesimsiz || undefined}>
-      <div className="overflow-hidden" style={{ height: olcu.yukseklik ?? undefined }}>
-        <CvBelgesi
-          ref={kagitRef}
-          student={student}
-          fotografYolu={fotografYolu}
-          anaIcerik={anaIcerik}
-          etiket={etiket}
-          stil={{ transform: olcu.olcek < 1 ? `scale(${olcu.olcek})` : undefined, transformOrigin: 'top left' }}
-        />
+      {/* Yakınlaştırılmış kâğıt kaptan genişse yatay kaydırma kabın içinde; sayfa taşmıyor. */}
+      <div className={yakin ? 'overflow-x-auto' : undefined}>
+        <div
+          className="overflow-hidden"
+          style={{
+            height: olcu.yukseklik !== null ? olcu.yukseklik * olcek : undefined,
+            width: yakin ? A4_GENISLIK * olcek : undefined,
+            margin: yakin && A4_GENISLIK * olcek < olcu.genislik ? '0 auto' : undefined,
+          }}
+        >
+          <CvBelgesi
+            ref={kagitRef}
+            student={student}
+            fotografYolu={fotografYolu}
+            anaIcerik={anaIcerik}
+            etiket={etiket}
+            stil={{ transform: olcek !== 1 ? `scale(${olcek})` : undefined, transformOrigin: 'top left' }}
+          />
+        </div>
       </div>
     </div>
+  );
+};
+
+/**
+ * CV'Yİ YALNIZ BAŞINA YAZDIR (11 Ekim 2026, işveren başvuru ekranı)
+ *
+ * Başvuru ekranı bir pencerenin içinde; `window.print()` bütün sayfayı
+ * basardı. Bu bileşen yazdırma süresince `body`ye kâğıdın ölçeksiz bir
+ * kopyasını koyuyor ve yazdırma kuralları başka her şeyi gizliyor. Tasarım
+ * aynı (CvBelgesi); `/cv/yazdir`daki A4 kuralları burada da geçerli: kenar
+ * boşluğu yok, renkler basılıyor, kayıtlar bölünmüyor, ikinci sayfada sol
+ * sütun zemini sürüyor. Yazdırma bitince (`afterprint`) kaldırılıyor.
+ * Tarayıcının penceresinde "PDF olarak kaydet" seçilince dosya iniyor.
+ */
+export const CvYazdirmaAlani: React.FC<{
+  student: StudentProfile;
+  /** PDF'in önerilen adı (belge başlığı). */
+  belgeAdi: string;
+  onBitti: () => void;
+}> = ({ student, belgeAdi, onBitti }) => {
+  const bittiRef = useRef(onBitti);
+  bittiRef.current = onBitti;
+  useEffect(() => {
+    const kok = document.documentElement;
+    const oncekiBaslik = document.title;
+    kok.setAttribute('data-cv-yazdir', '');
+    document.title = belgeAdi;
+    let bitti = false;
+    const bitir = () => {
+      if (bitti) return;
+      bitti = true;
+      kok.removeAttribute('data-cv-yazdir');
+      document.title = oncekiBaslik;
+      bittiRef.current();
+    };
+    window.addEventListener('afterprint', bitir);
+    /* Fotoğraf yüklenmeden basılmasın: kâğıt bir kare sonra ağaçta, görseller ondan sonra. */
+    const zaman = window.setTimeout(async () => {
+      const gorseller = Array.from(document.querySelectorAll<HTMLImageElement>('.cv-yazdirma-alani img'));
+      await Promise.all(gorseller.map((g) => (g.complete ? null : g.decode().catch(() => null))));
+      window.print();
+      /* Bazı tarayıcılar `afterprint` göndermiyor; pencere kapandığında print() dönmüş oluyor. */
+      window.setTimeout(bitir, 0);
+    }, 150);
+    return () => {
+      window.clearTimeout(zaman);
+      window.removeEventListener('afterprint', bitir);
+      kok.removeAttribute('data-cv-yazdir');
+      document.title = oncekiBaslik;
+    };
+  }, [belgeAdi]);
+
+  return createPortal(
+    <div className="cv-yazdirma-alani" aria-hidden>
+      <style>{`
+        .cv-yazdirma-alani { display: none; }
+        @media print {
+          html[data-cv-yazdir] body > *:not(.cv-yazdirma-alani) { display: none !important; }
+          html[data-cv-yazdir] body { overflow: visible !important; padding: 0 !important; background: transparent !important; }
+          html[data-cv-yazdir] {
+            background: linear-gradient(to right, ${YAN_ZEMIN} ${SOL_SUTUN}px, #fff ${SOL_SUTUN}px) !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          html[data-cv-yazdir] .cv-yazdirma-alani { display: block !important; }
+          .cv-yazdirma-alani .cv-kagit { box-shadow: none !important; width: auto !important; transform: none !important; }
+          .cv-yazdirma-alani .cv-kagit, .cv-yazdirma-alani .cv-kagit * {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .cv-yazdirma-alani .cv-sutun { -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+          .cv-yazdirma-alani .cv-bolum, .cv-yazdirma-alani .cv-oge { break-inside: avoid; }
+          @page { size: A4; margin: 0; }
+        }
+      `}</style>
+      <CvBelgesi student={student} />
+    </div>,
+    document.body,
   );
 };
 

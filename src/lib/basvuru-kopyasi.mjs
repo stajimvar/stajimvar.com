@@ -31,13 +31,99 @@
  * alıyor; kopyadaki adres zaten eskimiş olabilirdi.
  */
 
-import { deneyimKopyasi } from './deneyim.mjs';
+import { deneyimKaydi, deneyimKopyasi, deneyimSirasi } from './deneyim.mjs';
 
 const dizi = (x) => (Array.isArray(x) ? x : []);
 const metin = (x) => {
   const t = String(x ?? '').trim();
   return t || null;
 };
+const yil = (x) => (Number.isInteger(x) && x > 1900 && x < 2200 ? x : null);
+const ay = (x) => (Number.isInteger(x) && x >= 1 && x <= 12 ? x : null);
+const CV_GIZLI = ['telefon', 'eposta', 'konum', 'linkedin', 'portfoy', 'foto', 'not', 'ilgi'];
+
+/**
+ * CV KOPYASI (11 Ekim 2026)
+ *
+ * İşveren başvuru ekranı adayın CV'sini `/cv/yazdir`daki AYNI şablonla
+ * (CvBelgesi) çiziyor ve BAŞVURU ANINDAKİ bilgiyle. Kartın üst düzey
+ * alanları kart ve fark hesabı için (ilk beş yetenek, tercih şehri…);
+ * CV'nin ihtiyacı ayrı bir alt nesnede tutuluyor ki o hesaplar
+ * etkilenmesin.
+ *
+ * GİRMEYENLER aynı: not ortalaması, telefon, e-posta. İletişim CV'ye
+ * yalnız öğrencinin iletişim onayı varsa ve sunucunun verdiği satırdan
+ * ekleniyor (AdayCekmecesi). Öğrencinin "CV'de neler görünsün"
+ * tercihi (`gizli`) de kopyada; işveren ekranındaki CV ona uyuyor.
+ */
+function cvKopyasi(o) {
+  const tekil = new Set();
+  const yetenekler = [...dizi(o.skills).map((y) => y?.name), ...dizi(o.softSkills)]
+    .map(metin)
+    .filter((y) => {
+      if (!y) return false;
+      const k = y.toLocaleLowerCase('tr-TR');
+      if (tekil.has(k)) return false;
+      tekil.add(k);
+      return true;
+    })
+    .slice(0, 60);
+  /* Deneyimler en yeniden eskiye; çalışma türü aynı sırada eşleşsin diye okunamayan önce düşüyor. */
+  const sirali = [...dizi(o.experiences)].sort(deneyimSirasi).filter((d) => deneyimKaydi(d));
+  const deneyimler = deneyimKopyasi(sirali).map((d, i) => ({ ...d, tur: metin(sirali[i]?.employmentType) }));
+  return {
+    surum: 1,
+    hakkimda: metin(o.bio),
+    sehir: metin(o.city),
+    yetenekler,
+    diller: dizi(o.languages)
+      .map((d) => ({ ad: metin(d?.language), seviye: metin(d?.level) }))
+      .filter((d) => d.ad),
+    ilgiler: dizi(o.interests).map(metin).filter(Boolean).slice(0, 20),
+    deneyimler,
+    egitim: {
+      duzey: metin(o.educationLevel),
+      baslangic: yil(o.educationStartYear),
+      /* Boşsa boş: "devam ediyor" uydurulmuyor. Mezuniyet yalnız öğrenci "bitti" dediyse. */
+      suruyor: typeof o.educationOngoing === 'boolean' ? o.educationOngoing : null,
+      mezuniyet: o.educationOngoing === false ? yil(o.graduationYear) : null,
+    },
+    ekEgitimler: dizi(o.educations)
+      .map((e) => ({
+        okul: metin(e?.school),
+        bolum: metin(e?.department),
+        duzey: metin(e?.level),
+        baslangic: yil(e?.startYear),
+        bitis: e?.ongoing ? null : yil(e?.endYear),
+        suruyor: Boolean(e?.ongoing),
+      }))
+      .filter((e) => e.okul)
+      .slice(0, 30),
+    projeler: dizi(o.projects)
+      .map((p) => ({
+        baslik: metin(p?.title),
+        aciklama: metin(p?.description),
+        araclar: dizi(p?.techStack).map(metin).filter(Boolean).slice(0, 20),
+        adres: metin(p?.liveUrl) ?? metin(p?.githubUrl),
+        baslangic: yil(p?.startYear),
+        bitis: p?.ongoing ? null : yil(p?.endYear),
+        suruyor: Boolean(p?.ongoing),
+      }))
+      .filter((p) => p.baslik)
+      .slice(0, 30),
+    sertifikalar: dizi(o.certificates)
+      .map((c) => ({
+        ad: metin(c?.name),
+        kurum: metin(c?.issuer),
+        yil: yil(c?.issueYear),
+        ay: c?.issueYear ? ay(c?.issueMonth) : null,
+        adres: metin(c?.url),
+      }))
+      .filter((c) => c.ad)
+      .slice(0, 30),
+    gizli: dizi(o.cvGizli).filter((g) => CV_GIZLI.includes(g)),
+  };
+}
 
 export function basvuruKopyasi(ogrenci) {
   if (!ogrenci) return null;
@@ -105,6 +191,9 @@ export function basvuruKopyasi(ogrenci) {
       alanından önce yazıldı" (eski başvuru) ayrı tutulsun.
     */
     deneyimler: deneyimKopyasi(ogrenci.experiences),
+
+    /* CV'nin başvuru anındaki hâli (yukarıda, `cvKopyasi`). */
+    cv: cvKopyasi(ogrenci),
   };
 
   /*

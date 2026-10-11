@@ -246,6 +246,13 @@ export function kartVerisi(satir, ek = {}) {
     */
     deneyimler: paylasildi ? (deneyimListesi(anlik.deneyimler) ?? []) : [],
     deneyimKopyadan: paylasildi && Array.isArray(anlik.deneyimler),
+    /*
+      CV KOPYASI (11 Ekim 2026). Başvuru anındaki CV bilgisi; işveren
+      ekranındaki CV önizlemesi bundan çiziliyor (lib/aday-cv.mjs alanları
+      tek tek doğruluyor). Eski kopyalarda yok: önizleme üst düzey
+      alanlarla yetiniyor.
+    */
+    cvKopya: paylasildi && anlik.cv && typeof anlik.cv === 'object' && !Array.isArray(anlik.cv) ? anlik.cv : null,
     yetenekler,
     /*
       Yetenekler kopyadan mı geldi? Eski kopyalarda liste yok ve kart

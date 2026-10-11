@@ -139,7 +139,8 @@ test('ekran geniş, erişilebilir bir diyalog', () => {
   assert.match(cekmece, /role="dialog"/);
   assert.match(cekmece, /aria-modal/);
   assert.match(cekmece, /aria-labelledby="aday-inceleme-basligi"/);
-  assert.match(cekmece, /lg:max-w-\[1200px\]/);
+  /* 11 Ekim 2026: sağ sütunda A4 CV önizlemesi — panel ona yer açıyor. */
+  assert.match(cekmece, /lg:max-w-\[1320px\]/);
   /* lg altında tam ekran: köşe yuvarlaması ve kenar boşluğu yalnız lg'de. */
   assert.match(cekmece, /className="absolute inset-0 flex flex-col overflow-hidden outline-none lg:inset-y-6/);
 });
@@ -256,7 +257,8 @@ test('ekran açıkken liste kısayolları kapalı', () => {
 
 test('dış bağlantılar güvenli adresle; ham href yok', () => {
   assert.match(cekmece, /adayBaglantilari\(kart\)/);
-  assert.match(cekmece, /guvenliDisAdres\(p\?\.adres\)/);
+  /* Proje adresleri CV önizlemesine güvenli adresten geçerek giriyor. */
+  assert.match(oku('src/lib/aday-cv.mjs'), /guvenliDisAdres\(p\?\.adres\)/);
   assert.doesNotMatch(cekmece, /href=\{p\.adres\}/);
   assert.doesNotMatch(cekmece, /href=\{kart\.portfolyo\}/);
   assert.doesNotMatch(cekmece, /github\.com\/\$\{kart\.github\}/);
@@ -267,17 +269,21 @@ test('deneyim başlığı yalnız deneyim varken açılıyor', () => {
     6 Ekim 2026: deneyim verisi geldi (20261205010000). Başlık artık var ama
     yalnız liste doluyken; boş bölüm başlığı çizilmiyor.
   */
-  assert.match(cekmece, /\{deneyimler\.length > 0 && \(\s*<section>\s*<Baslik degisti=\{bolumDegisti\('deneyimler'\)\}>Deneyim<\/Baslik>/);
+  /* 11 Ekim 2026: deneyimler CV önizlemesinde (CvBelgesi yalnız doluyken çiziyor; tests/cv-mavi-sablon). */
+  assert.match(oku('src/lib/aday-cv.mjs'), /experiences: \(cv \? dizi\(cv\.deneyimler\) : dizi\(k\.deneyimler\)\)\.map\(deneyim\)\.filter\(Boolean\),/);
   assert.match(guncel, /\{\(deneyimler\.eklenen\.length > 0 \|\| deneyimler\.guncellenen\.length > 0 \|\| deneyimler\.cikan\.length > 0\) && \(/);
   /* Kaynak yalnız başvuru kopyası; ham kart alanı doğrulanmış listeden. */
-  assert.match(cekmece, /const deneyimler = Array\.isArray\(kart\.deneyimler\) \? kart\.deneyimler : \[\];/);
+  /* CV başvuru kartından; iletişim yalnız sunucunun verdiği satırdan, salt okunur üyede hiç. */
+  assert.match(cekmece, /adayCvOgrencisi\(kart, \{\s*iletisim:\s*saltOkunur \|\| !iletisim\s*\? null/);
 });
 
 test('başvuru anı ile güncel arasındaki fark işaretleniyor', () => {
   assert.match(cekmece, /adayProfilFarki\(kart, guncelProfil\.sonuc\.guncel, \{ kimlikGizli: Boolean\(kart\.gizli\) \}\)/);
   assert.match(guncel, /Başvurudan sonra değişti/);
   assert.match(guncel, /Başvurudan sonra değişenler/);
-  assert.match(cekmece, /<Baslik degisti=\{bolumDegisti\('yetenekler'\)\}>Yetenekler<\/Baslik>/);
+  /* 11 Ekim 2026: profil ayrıntısı CV önizlemesinde; ne değiştiği "Başvurudan sonra değişenler"de. */
+  assert.match(cekmece, /<Baslik degisti=\{bolumDegisti\('baglantilar'\)\}>/);
+  assert.match(cekmece, /<Baslik degisti=\{bolumDegisti\('rozetler'\)\}>Rozetler<\/Baslik>/);
 });
 
 /* ------------------------------------------------- 3. önyargısız kip */
@@ -301,11 +307,11 @@ test('önyargısız kipte GitHub/LinkedIn/portfolyo ve proje bağlantıları giz
   /* CV düğmesi koşulsuz: yalnız `kart.cvYolu`na bağlı. */
   assert.match(cekmece, /\{kart\.cvYolu && \(\s*<button/);
   /* Projeyi aç: kopyada da farkta da önyargısız kipte adres yok; başlık ve açıklama duruyor. */
-  assert.match(cekmece, /const adres = kart\.gizli \? null : guvenliDisAdres\(p\?\.adres\);/);
+  /* Proje bağlantısı CV'de; önyargısız kipte orada da yok. */
+  assert.match(oku('src/lib/aday-cv.mjs'), /const adres = gizli \? null : guvenliDisAdres\(p\?\.adres\);/);
   assert.match(guncel, /const adres = kimlikGizli \? null : guvenliDisAdres\(p\.adres\);/);
   assert.match(cekmece, /kimlikGizli=\{Boolean\(kart\.gizli\)\}/);
-  assert.match(cekmece, /\{p\?\.baslik\}/);
-  assert.match(cekmece, /\{p\.aciklama\}/);
+  assert.match(oku('src/lib/aday-cv.mjs'), /title: metin\(p\.baslik\),/);
 });
 
 test('önyargısız kipte paylaşım görselleri ve açıklamaları gizli, inmiyor', () => {

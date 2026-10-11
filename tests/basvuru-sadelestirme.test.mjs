@@ -91,14 +91,17 @@ test('iletişim bloğu HER durumda çiziliyor, süreç bitti bölümünün için
     içindeydi: yeni ve incelenen başvurularda iletişim HİÇ görünmüyordu
     (tarayıcıda yakalandı). Artık o bölüm iletişimden ÖNCE kapanıyor.
   */
+  /*
+    11 Ekim 2026: blok bir değişken (`iletisimBlogu`) ve HER İKİ sol
+    sütunun (işlemler ve salt okunur) sonunda koşulsuz çiziliyor; hiçbir
+    `{terminal && (` dalının içinde değil.
+  */
   const iletisim = CEKMECE.indexOf('İLETİŞİM — HER DURUMDA');
   assert.ok(iletisim > 0, 'iletişim bloğu bulunmalı');
-  const oncesi = CEKMECE.slice(0, iletisim);
-  const terminalBas = oncesi.lastIndexOf('{terminal && (');
-  const terminalSon = oncesi.lastIndexOf('</section>\n          )}');
-  assert.ok(terminalBas > 0 && terminalSon > terminalBas, 'son durum bölümü iletişimden önce kapanmalı');
+  assert.equal((CEKMECE.match(/<div className="mt-5">\{iletisimBlogu\}<\/div>/g) ?? []).length, 2);
+  assert.ok(CEKMECE.indexOf('const iletisimBlogu = (') < CEKMECE.indexOf('const panel = ('));
   /* Yetenekler iletişimin ARKASINDA. */
-  assert.ok(CEKMECE.indexOf('>Yetenekler</Baslik>') > iletisim);
+  assert.ok(CEKMECE.indexOf('id="aday-kopya-basligi"') > iletisim);
 });
 
 test('Viewer iletişim almıyor ve CV uyarısı dürüst', () => {
