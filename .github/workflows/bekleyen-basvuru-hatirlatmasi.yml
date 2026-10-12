@@ -43,6 +43,9 @@ concurrency:
 jobs:
   hatirlat:
     runs-on: ubuntu-latest
+    # Üretim anahtarları yalnız `production` ortamında (yalnız main dalı).
+    # Ayrıntı: docs/seo/dagitim-akisi.md
+    environment: production
     timeout-minutes: 5
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

@@ -27,6 +27,9 @@ concurrency:
 jobs:
   kampus:
     runs-on: ubuntu-latest
+    # Üretim anahtarları yalnız `production` ortamında (yalnız main dalı).
+    # Ayrıntı: docs/seo/dagitim-akisi.md
+    environment: production
     timeout-minutes: 45
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

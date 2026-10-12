@@ -215,3 +215,74 @@ test('yerel yayın betiği yok: package.json hiçbir betikte wrangler pages depl
   const yayinlayan = Object.entries(paket.scripts || {}).filter(([, k]) => /wrangler\s+pages\s+deploy/.test(k));
   assert.deepEqual(yayinlayan, []);
 });
+
+/*
+  ÜRETİM ANAHTARLARI YALNIZ `production` ORTAMINDA (12 Ekim 2026)
+
+  Cloudflare yayın anahtarı, Supabase yönetim anahtarı, veritabanı parolası
+  ve servis anahtarı GitHub'da `production` ortamının sırlarına taşınıyor;
+  ortam yalnız `main` dalına açık. Bir iş bu sırları ancak
+  `environment: production` bildirirse alabiliyor. Bu test:
+    · korunan bir sırrı okuyan her işin bu ortamı bildirdiğini,
+    · hiçbir iş akışının bu sırları üst düzey `env:` ile bütün işlere
+      dağıtmadığını,
+    · PR doğrulamasının bu ortamı kullanmadığını
+  sınıyor. Yeni bir iş korunan sırrı ortamsız okursa — ya da depo düzeyi
+  kopyalar silindikten sonra boş değer alıp sessizce bozulacaksa — test düşüyor.
+*/
+const KORUNAN_SIRLAR = [
+  'CLOUDFLARE_API_TOKEN',
+  'CLOUDFLARE_ACCOUNT_ID',
+  'SUPABASE_ACCESS_TOKEN',
+  'SUPABASE_DB_PASSWORD',
+  'SUPABASE_SERVICE_ROLE_KEY',
+  'SUPABASE_SECRET_KEY',
+];
+
+/** İş akışının işlerini ham metin dilimleri olarak döndürür (yorumsuz). */
+function isDilimleri(ham) {
+  const satirlar = ham.split('\n');
+  const jobsBas = satirlar.findIndex((s) => /^jobs:\s*$/.test(s));
+  const baslar = [];
+  for (let i = jobsBas + 1; i < satirlar.length; i++) if (/^  [\w-]+:\s*$/.test(satirlar[i])) baslar.push(i);
+  return {
+    ust: satirlar.slice(0, jobsBas).join('\n'),
+    isler: baslar.map((b, n) => ({
+      ad: satirlar[b].trim().replace(/:$/, ''),
+      metin: satirlar.slice(b, baslar[n + 1] ?? satirlar.length).join('\n'),
+    })),
+  };
+}
+
+test('korunan üretim sırlarını okuyan her iş `environment: production` bildiriyor', () => {
+  const ihlal = [];
+  const ortamli = [];
+  for (const { ad, veri } of akislar) {
+    const { ust, isler } = isDilimleri(veri.ham);
+    for (const sir of KORUNAN_SIRLAR) {
+      if (ust.includes(`secrets.${sir}`)) ihlal.push(`${ad}: üst düzey env ${sir} taşıyor`);
+    }
+    for (const is of isler) {
+      const okunan = KORUNAN_SIRLAR.filter((sir) => is.metin.includes(`secrets.${sir}`));
+      const ortam = /^    environment:\s*production\s*$/m.test(is.metin);
+      if (okunan.length && !ortam) ihlal.push(`${ad}:${is.ad} ortamsız okuyor: ${okunan.join(', ')}`);
+      if (ortam) ortamli.push(`${ad}:${is.ad}`);
+    }
+  }
+  assert.deepEqual(ihlal, []);
+  /* Yayın ve göç işleri kesinlikle ortamda. */
+  for (const is of ['migrate_and_functions', 'goc_durumu', 'cloudflare_production']) {
+    assert.ok(ortamli.includes(`supabase-production.yml:${is}`), `${is} production ortamında değil`);
+  }
+});
+
+test('ortamsız işler korunan sırra erişemiyor: doğrulama, güvenlik ve PR işleri ortam bildirmiyor', () => {
+  const uretim = isDilimleri(akislar.find((a) => a.ad === 'supabase-production.yml').veri.ham);
+  for (const is of uretim.isler.filter((x) => ['changes', 'validate_app', 'security_regression'].includes(x.ad))) {
+    assert.doesNotMatch(is.metin, /^    environment:/m, `${is.ad} ortam bildirmemeli`);
+    for (const sir of KORUNAN_SIRLAR) assert.ok(!is.metin.includes(sir), `${is.ad} ${sir} görmemeli`);
+  }
+  const pr = akislar.find((a) => a.ad === 'pr-dogrulama.yml').veri.ham;
+  assert.doesNotMatch(pr, /environment:/);
+  for (const sir of KORUNAN_SIRLAR) assert.ok(!pr.includes(`secrets.${sir}`), `PR doğrulaması ${sir} okumamalı`);
+});

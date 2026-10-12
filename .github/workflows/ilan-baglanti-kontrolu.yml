@@ -44,6 +44,9 @@ concurrency:
 jobs:
   baglanti:
     runs-on: ubuntu-latest
+    # Üretim anahtarları yalnız `production` ortamında (yalnız main dalı).
+    # Ayrıntı: docs/seo/dagitim-akisi.md
+    environment: production
     # Sıralı istek + 20 sn zaman aşımı: bugünkü envanterde dakikalar
     # sürüyor. Sınır, asılı kalan bir koşuyu kesmek için.
     timeout-minutes: 30
