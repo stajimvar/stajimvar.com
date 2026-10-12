@@ -2,138 +2,173 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
+import { ilanJobPosting, ilanGorunurGovde, ilanSayfasi, ilanKonumu } from '../src/lib/seo/ilan-sayfasi.mjs';
 
 /*
-  İLAN DETAYI — JobPosting DENETİMİ
+  İLAN DETAYI — JobPosting DENETİMİ (12 Ekim 2026'da yeniden yazıldı)
 
-  JobPosting zaten vardı ve düzgün kurulmuştu (159/159 sayfada). Denetim
-  iki kusur buldu; bu testler ikisini de geri gelmekten koruyor.
+  JobPosting artık ortak modülde (src/lib/seo/ilan-sayfasi.mjs); derleme ve
+  kenar çizimi aynı fonksiyonu kullanıyor. Bu testler kaynak metni değil,
+  modülün ürettiği veriyi ve dist/ çıktısını sınıyor.
 
-  ALAN KAPSAMI (159 yayında ilan, gerçek sayım — 14 Eylül 2026):
-    title 159 · description 159 (en kısa 140 karakter) · datePosted 159
-    hiringOrganization 159 · jobLocation(şehir) 151 · validThrough 9
-    is_paid=true 6 · stipend_text 3
-  Ücret alanı EKLENEMEZ: veri yok, uydurulamaz.
+  Esas: Google Search Central "Job posting" belgesi (son güncelleme
+  2026-09-08): jobLocation'da addressCountry ZORUNLU; açıklama işin TAM
+  tanımı (sorumluluk ve nitelik dahil) ve HTML; süresi dolan ilanda
+  işaretleme kaldırılır ya da validThrough geçmişte olur.
 */
 
 const KOK = path.resolve(import.meta.dirname, '..');
-const oku = (p) => readFileSync(path.join(KOK, p), 'utf8').replace(/\r\n/g, '\n');
+const etiket = (s) => s; // konumEtiketi yerine: test girdisi zaten düzgün yazılı
 
-const jobPostinglar = () => {
+const TEMEL = {
+  id: 'abcdef12-0000-4000-8000-000000000001',
+  title: 'Kalite Mühendisliği Stajyeri',
+  description: 'Kalite ekibinde süreç iyileştirme çalışmalarına katılım.',
+  responsibilities: ['Ölçüm raporlarını hazırlamak', 'Saha denetimlerine katılmak'],
+  required_skills: ['Excel', 'Temel istatistik'],
+  posted_at: '2026-10-01T09:00:00Z',
+  created_at: '2026-09-30T09:00:00Z',
+  updated_at: '2026-10-05T09:00:00Z',
+  city: 'İstanbul',
+  country_code: 'TR',
+  work_type: 'On-site',
+  application_method: 'external',
+  apply_url: 'https://ornek.com/kariyer/ilan/42',
+  companies: { name: 'Örnek A.Ş.', slug: 'ornek' },
+};
+const SIMDI = Date.parse('2026-10-12T12:00:00Z');
+
+test('jobLocation her zaman addressCountry taşıyor; şehir alanındaki ülke adı yerleşim yeri sayılmıyor', () => {
+  const { veri } = ilanJobPosting(TEMEL, etiket, SIMDI);
+  assert.deepEqual(veri.jobLocation.address, { '@type': 'PostalAddress', addressLocality: 'İstanbul', addressCountry: 'TR' });
+
+  /* Otis vakası: şehir yok, ülke var → yalnız ülke (Search Console "jobLocation eksik" hatası kapanıyor). */
+  const otis = ilanJobPosting({ ...TEMEL, city: null, country_code: 'TR' }, etiket, SIMDI).veri;
+  assert.deepEqual(otis.jobLocation.address, { '@type': 'PostalAddress', addressCountry: 'TR' });
+
+  /* "Turkey" yazan şehir alanı: yerleşim yeri değil. */
+  const turkey = ilanJobPosting({ ...TEMEL, city: 'Turkey', country_code: 'TR' }, etiket, SIMDI).veri;
+  assert.equal(turkey.jobLocation.address.addressLocality, undefined);
+});
+
+test('konum kaynakta yoksa JobPosting YAZILMIYOR ve nedeni raporlanıyor (uydurma yok)', () => {
+  const r = ilanJobPosting({ ...TEMEL, city: null, country_code: null }, etiket, SIMDI);
+  assert.equal(r.veri, null);
+  assert.match(r.eksik.join(' '), /jobLocation/);
+
+  /* Tanınmayan şehir + ülke kodu yok: ülke uydurulmuyor, her ilan TR sayılmıyor. */
+  const berlin = ilanKonumu({ city: 'Berlin', country_code: null }, etiket);
+  assert.equal(berlin.ulke, null);
+  /*
+    12 Ekim 2026 incelemesi: şehirden ülke ÇIKARILMIYOR. "Çankaya" Türkiye'de
+    olsa bile kaynakta ülke kodu yoksa yapısal veriye ülke yazılmıyor.
+  */
+  assert.equal(ilanKonumu({ city: 'Çankaya', country_code: null }, etiket).ulke, null);
+  const cankaya = ilanJobPosting({ ...TEMEL, city: 'Çankaya', country_code: null }, etiket, SIMDI);
+  assert.equal(cankaya.veri, null);
+  assert.match(cankaya.eksik.join(' '), /addressCountry/);
+
+  /* Şirket adı yoksa "Bilinmiyor" yazılmıyor; işaretleme hiç üretilmiyor. */
+  const sirketsiz = ilanJobPosting({ ...TEMEL, companies: null }, etiket, SIMDI);
+  assert.equal(sirketsiz.veri, null);
+});
+
+test('uzaktan ilan: başvuru coğrafyası kaynakta yoksa JobPosting YAZILMIYOR (ülke kodu başvuru şartı sayılmıyor)', () => {
+  /*
+    Google: TELECOMMUTE işte en az bir ülke gerekli — applicantLocationRequirements
+    ya da fiziksel bir seçenek de varsa jobLocation ülkesi. Kaynakta ikisi de
+    yok; ilanın ülke kodunu başvuru şartına çevirmek tahmin olurdu.
+  */
+  for (const ek of [{ city: null, country_code: 'DE' }, { city: 'Berlin', country_code: 'DE' }, { city: null, country_code: null }]) {
+    const r = ilanJobPosting({ ...TEMEL, work_type: 'Remote', ...ek }, etiket, SIMDI);
+    assert.equal(r.veri, null, JSON.stringify(ek));
+    assert.match(r.eksik.join(' '), /applicantLocationRequirements/);
+  }
+  /* Sayfa yine görünür ve uzaktan olduğu yazıyor. */
+  const govde = ilanGorunurGovde({ ...TEMEL, work_type: 'Remote' }, etiket, SIMDI);
+  assert.match(govde, /Çalışma şekli: Uzaktan/);
+  /* Hibrit: fiziksel seçenek var, kaynaktaki ülke ve şehirle jobLocation yazılıyor. */
+  const hibrit = ilanJobPosting({ ...TEMEL, work_type: 'Hybrid' }, etiket, SIMDI).veri;
+  assert.equal(hibrit.jobLocation.address.addressCountry, 'TR');
+  assert.equal(hibrit.jobLocationType, undefined);
+});
+
+test('açıklama KESİLMİYOR: uzun metin, sorumluluklar ve nitelikler yapısal veride ve görünür sayfada tam', () => {
+  const uzun = 'Bu ilanın açıklaması oldukça uzun bir metin. '.repeat(80).trim(); // ~3600 karakter
+  const ilan = { ...TEMEL, description: `${uzun}\nİkinci paragraf burada.` };
+  const { veri } = ilanJobPosting(ilan, etiket, SIMDI);
+  assert.ok(veri.description.length > 3600, 'açıklama 1200 karakterde kesilmemeli');
+  assert.match(veri.description, /<p>İkinci paragraf burada\.<\/p>/);
+  assert.match(veri.description, /<li>Ölçüm raporlarını hazırlamak<\/li>/);
+  assert.match(veri.description, /<li>Temel istatistik<\/li>/);
+  const govde = ilanGorunurGovde(ilan, etiket, SIMDI);
+  assert.ok(govde.includes(uzun.slice(-60)), 'görünür metin de tam olmalı');
+  assert.match(govde, /<h2>Sorumluluklar<\/h2>/);
+  assert.equal((govde.match(/<h1>/g) || []).length, 1);
+});
+
+test('HTML varlıkları çözülüp güvenle kaçırılıyor', () => {
+  const ilan = { ...TEMEL, description: 'Berlin&nbsp;ve&nbsp;Stuttgart <script>alert(1)</script> &amp; uzaktan' };
+  const govde = ilanGorunurGovde(ilan, etiket, SIMDI);
+  assert.ok(!govde.includes('&nbsp;'), 'varlık metin olarak görünmemeli');
+  assert.ok(!govde.includes('<script>'), 'etiket sayfaya girmemeli');
+  assert.match(govde, /Berlin ve Stuttgart/);
+});
+
+test('SÜRESİ DOLAN İLAN: sayfa kalıyor, kapandığı yazıyor, JobPosting kaldırılıyor, haritada yok', () => {
+  const ilan = { ...TEMEL, application_deadline: '2026-10-11' };
+  const s = ilanSayfasi(ilan, etiket, SIMDI);
+  assert.equal(s.suresiGecti, true);
+  assert.match(s.s.gorunurGovde, /Başvuru dönemi kapandı\. Son başvuru: 11 Ekim 2026\./);
+  assert.ok(!s.s.gorunurGovde.includes('sv-eylem'), 'kapanmış ilanda başvuru düğmesi olmamalı');
+  const tipler = s.s.jsonLd['@graph'].map((d) => d['@type']);
+  assert.deepEqual(tipler, ['BreadcrumbList']);
+
+  /* Son gün DAHİL: 12 Ekim'de son başvurusu 12 Ekim olan ilan açık. */
+  const bugun = ilanSayfasi({ ...TEMEL, application_deadline: '2026-10-12' }, etiket, SIMDI);
+  assert.equal(bugun.suresiGecti, false);
+  assert.equal(bugun.s.jsonLd['@graph'][0].validThrough, '2026-10-12');
+});
+
+/* ------------------------------------------------------- dist çıktısı */
+
+const ilanSayfalari = () => {
   const klasor = path.join(KOK, 'dist', 'ilan');
   if (!existsSync(klasor)) return null;
-  const cikti = [];
-  for (const ad of readdirSync(klasor).filter((f) => f.endsWith('.html'))) {
-    const h = readFileSync(path.join(klasor, ad), 'utf8');
-    const m = h.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
-    if (!m) continue;
-    let g;
-    try {
-      g = JSON.parse(m[1]);
-    } catch {
-      continue;
-    }
-    for (const n of g['@graph'] || [g]) {
-      if (n['@type'] === 'JobPosting') cikti.push({ ad, jp: n, html: h });
-    }
-  }
-  return cikti;
+  return readdirSync(klasor)
+    .filter((f) => f.endsWith('.html'))
+    .map((ad) => {
+      const html = readFileSync(path.join(klasor, ad), 'utf8');
+      const m = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+      const graf = m ? JSON.parse(m[1]) : { '@graph': [] };
+      return { ad, html, dugumler: graf['@graph'] || [graf] };
+    });
 };
 
-test('İÇİ BOŞ jobLocation basılmıyor', () => {
-  /*
-    Şehri olmayan ilanlarda şu blok çıkıyordu (159 sayfanın 7'sinde):
-      {"@type":"Place","address":{"@type":"PostalAddress","addressCountry":"TR"}}
-    "Bir yer var" diyor ama yerin kendisini söylemiyor. Şehir uydurmak
-    yerine alan hiç yazılmıyor.
-
-    TAKAS AÇIK: o ilanlar iş zengin sonucuna giremeyebilir. Eksik alanla
-    da giremiyorlardı; fark, söylemediğimiz şeyi söylüyormuş gibi
-    yapmamak.
-  */
-  const liste = jobPostinglar();
-  if (!liste) return;
-
-  for (const { ad, jp } of liste) {
-    const jl = jp.jobLocation;
-    if (!jl) continue;
-    const yerel = (jl.address || {}).addressLocality;
-    assert.ok(yerel, `${ad}: jobLocation var ama addressLocality yok`);
+test('dist: her JobPosting zorunlu alanlarla; kırıntı üst adresi gerçek merkez', () => {
+  const sayfalar = ilanSayfalari();
+  if (!sayfalar) return;
+  for (const { ad, dugumler } of sayfalar) {
+    const jp = dugumler.find((d) => d['@type'] === 'JobPosting');
+    const kirinti = dugumler.find((d) => d['@type'] === 'BreadcrumbList');
+    assert.ok(kirinti, `${ad}: kırıntı yok`);
+    assert.equal(kirinti.itemListElement[1].item, 'https://stajimvar.com/staj-ilanlari', `${ad}: kırıntı /ilan'a gidiyor`);
+    if (!jp) continue;
+    assert.ok(jp.jobLocation?.address?.addressCountry, `${ad}: addressCountry yok`);
+    assert.ok(String(jp.hiringOrganization?.name || '').trim(), `${ad}: şirket adı yok`);
+    assert.notEqual(jp.hiringOrganization.name, 'Bilinmiyor');
   }
-
-  const betik = oku('scripts/onrender.mjs');
-  assert.match(betik, /\.\.\.\(i\.city\s*\n?\s*\?\s*\{\s*\n?\s*jobLocation:/);
 });
 
-test('SÜRESİ GEÇMİŞ İLAN: sayfa kalıyor, kapandığı YAZIYOR, haritada yok', () => {
-  /*
-    Ölçüldü: "KEY+ Uzun Dönem Staj Programı" son başvurusu 2026-09-06,
-    sekiz gün geçmiş, hâlâ published. Yapısal veri `validThrough` ile
-    Google'a "kapandı" diyordu ama GÖRÜNÜR sayfada kapanışa dair tek
-    kelime yoktu ve adres site haritasında bildiriliyordu. İşaretleme
-    "kapandı", sayfa ve harita "açık" diyordu.
-
-    Sayfa 404 YAPILMIYOR: Google kapanmış ilanın sayfasının kalmasını
-    istiyor ve kullanıcıya da yararlı. Eksik olan, kapandığının
-    söylenmesiydi.
-  */
-  const betik = oku('scripts/onrender.mjs');
-  assert.match(betik, /const suresiGecti = Boolean\(/);
-  assert.match(betik, /Başvuru dönemi kapandı\. Son başvuru: \$\{/);
-  assert.match(betik, /'Durum: başvuru dönemi kapandı'/);
-  /* Haritadan dışlanıyor ama sayfası yazılıyor. */
-  assert.match(betik, /if \(suresiGecti\) HARITADAN_DISLANAN\.add\(yol\);/);
-  assert.match(betik, /const HARITADAN_DISLANAN = new Set\(\);/);
-  assert.match(
-    betik,
-    /aileninMi\(y\) && !HARITADAN_DISLANAN\.has\(y\)/,
-  );
-
-  /*
-    Üretici de aynı kuralı uyguluyor. SEÇİM `application_deadline`
-    TAŞIMAK ZORUNDA: taşımadığında süzgeç her kaydı "açık" sayıyor.
-    Aynı sınıfta hata bu işte ÜÇ KEZ yaşandı (opportunity_type,
-    countries, application_deadline).
-  */
-  const uretici = oku('automation/sitemap.py');
-  assert.match(uretici, /def ilan_acik\(kayit: dict\) -> bool:/);
-
-  /*
-    SEÇİM DİZESİ TAM OLARAK SABİTLENMİYOR, TAŞIDIĞI ALANLAR SABİTLENİYOR.
-
-    Burada `"id,title,updated_at,application_deadline,companies(slug)"`
-    dizesi birebir aranıyordu ve `lastmod` kaynağı `updated_at`'ten
-    `content_updated_at`'e taşınınca kırmızı döndü — oysa testin
-    koruduğu şey seçimin YAZILIŞI değil, süzgecin ve lastmod'un
-    okuduğu alanların seçimde BULUNMASI. Alan alan aranıyor: seçim
-    yeniden düzenlenebilir, eksilemez.
-  */
-  const secim = uretici.slice(uretici.indexOf('db.table("listings")'));
-  const govde = secim.slice(0, secim.indexOf('.execute()'));
-  for (const alan of ['id', 'title', 'application_deadline', 'content_updated_at', 'created_at']) {
-    assert.ok(govde.includes(alan), `sitemap seçimi ${alan} taşımalı`);
-  }
-  assert.ok(govde.includes('companies(slug)'), 'şirket slugı seçimde olmalı');
-});
-
-test('kapanmış ilanın canlı çıktısı tutarlı', () => {
-  const liste = jobPostinglar();
-  if (!liste) return;
-  const harita = path.join(KOK, 'dist', 'sitemap.xml');
-  if (!existsSync(harita)) return;
-  const xml = readFileSync(harita, 'utf8');
-  const bugun = Date.now();
-
-  for (const { ad, jp, html } of liste) {
-    if (!jp.validThrough) continue;
-    const bitis = new Date(`${String(jp.validThrough).slice(0, 10)}T23:59:59Z`).getTime();
-    if (bitis >= bugun) continue;
-
-    /* Görünür metinde kapandığı yazıyor. */
-    const govde = html.slice(html.indexOf('<div id="root">'), html.indexOf('</body>'));
-    assert.match(govde, /Başvuru dönemi kapandı/, `${ad}: kapanış görünür metinde yok`);
-    /* Haritada bildirilmiyor. */
-    const yol = `/ilan/${ad.replace(/\.html$/, '')}`;
-    assert.ok(!xml.includes(`${yol}<`), `${ad}: süresi geçmiş ama haritada`);
+test('dist: kapanmış ilan görünür metinde kapalı, JobPosting yok, ilan haritasında yok', () => {
+  const sayfalar = ilanSayfalari();
+  if (!sayfalar) return;
+  const haritaYolu = path.join(KOK, 'dist', 'sitemap-ilanlar.xml');
+  if (!existsSync(haritaYolu)) return;
+  const xml = readFileSync(haritaYolu, 'utf8');
+  for (const { ad, html, dugumler } of sayfalar) {
+    if (!html.includes('Başvuru dönemi kapandı')) continue;
+    assert.ok(!dugumler.some((d) => d['@type'] === 'JobPosting'), `${ad}: kapanmış ama JobPosting var`);
+    assert.ok(!xml.includes(`/ilan/${ad.replace(/\.html$/, '')}<`), `${ad}: kapanmış ama haritada`);
   }
 });

@@ -39,9 +39,20 @@ import url from 'node:url';
 import { kartYaz } from './og-kartlari.mjs';
 import { guvenliDisAdres } from '../src/lib/guvenli-url.mjs';
 import { kunye, YAZAR } from '../src/lib/rehber-kunye.mjs';
+/*
+  ORTAK MODÜLLER (12 Ekim 2026): metin araçları, ilan sayfası ve sayfa HTML
+  dönüşümü kenar çizimiyle (functions/_middleware.ts) paylaşılıyor. Aynı ilan
+  derlemede de kenarda da aynı çıktıyı üretsin diye kural tek yerde.
+*/
+import { kacir, duzMetin, ozetle, ilanYolu as ortakIlanYolu } from '../src/lib/seo/metin.mjs';
+import { ilanSayfasi, ILAN_SECIMI, istanbulBugun } from '../src/lib/seo/ilan-sayfasi.mjs';
+import { sayfaHtml } from '../src/lib/seo/sayfa-html.mjs';
+import { ARSIV_SAYFA_BOYU, acikIlanMi, arsivSirasi, arsivYolu, arsivSayfaBasligi } from '../src/lib/seo/ilan-arsivi.mjs';
+import { zorunluVeriGetir, VeriKaynagiHatasi, azalmaKapisi } from '../src/lib/seo/veri-kaynagi.mjs';
 
 const kok = path.dirname(path.dirname(url.fileURLToPath(import.meta.url)));
-const dist = path.join(kok, 'dist');
+/* Testler gerçek dist'e dokunmadan koşabilsin diye çıktı kökü ortamdan değiştirilebiliyor. */
+const dist = process.env.ONRENDER_DIST || path.join(kok, 'dist');
 const SITE = 'https://stajimvar.com';
 
 /* ------------------------------------------------------------------ yardımcı */
@@ -59,12 +70,6 @@ function envOku(anahtar) {
   return undefined;
 }
 
-const kacir = (s) =>
-  String(s ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 
 /*
   MARKDOWN BAĞLANTISI STATİK HTML'DE DE GERÇEK BAĞLANTI
@@ -104,36 +109,7 @@ const kacirBagla = (metin) =>
     return `<a href="${adres}"${ek}>${yazi}</a>`;
   });
 
-/** Etiketleri ve fazla boşluğu atar; kısaltmaz. */
-function duzMetin(metin) {
-  return String(metin ?? '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
 
-/** Uzun metni arama sonucunda görünecek uzunluğa indirir. */
-function ozetle(metin, uzunluk = 155) {
-  const duz = String(metin ?? '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  if (duz.length <= uzunluk) return duz;
-  return duz.slice(0, uzunluk).replace(/\s+\S*$/, '') + '…';
-}
-
-/** src/lib/slug.ts ve automation/sitemap.py ile aynı kural. */
-function slugla(metin) {
-  const tablo = { İ: 'i', I: 'i', ı: 'i', Ğ: 'g', ğ: 'g', Ü: 'u', ü: 'u', Ş: 's', ş: 's', Ö: 'o', ö: 'o', Ç: 'c', ç: 'c' };
-  return String(metin)
-    .replace(/[İIıĞğÜüŞşÖöÇç]/g, (c) => tablo[c])
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-zA-Z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .toLowerCase()
-    .replace(/-{2,}/g, '-');
-}
 
 /* ------------------------------------------------- kayıtlardan veri çıkarma */
 
@@ -606,33 +582,24 @@ async function rehberleriCiz() {
  * `status=eq.published` süzüyor, yani anon aynı satırları görüyor.
  */
 async function ilanlariGetir() {
-  const urlAdres = envOku('SUPABASE_URL') || envOku('VITE_SUPABASE_URL');
-  const anahtar = envOku('VITE_SUPABASE_ANON_KEY');
-  if (!urlAdres || !anahtar) {
-    console.log('  ilanlar atlandı (anonim anahtar yok)');
-    return [];
-  }
   /*
     `responsibilities`, `required_skills`, `duration` ve `min_grade_level`
-    BU LİSTEYE 19 EYLÜL 2026'DA GİRDİ. Ölçülen durum: ön render edilen
-    ilan sayfasının görünür metni 52 kelimeydi ve açıklama 155 karakterde
-    üç noktayla kesiliyordu — oysa yayındaki 194 ilanın %70'inde
-    sorumluluk, %61'inde aranan nitelik YAZILI olarak duruyordu. React
-    ekranda gösteriyor, statik HTML göstermiyordu; yani arama motorunun
-    ve JavaScript'siz ziyaretçinin gördüğü sayfa, kullanıcının gördüğünden
-    çok daha yoksuldu. Veri zaten vardı, sorgu istemiyordu.
+    19 Eylül 2026'da seçime girdi (statik HTML açıklamanın yalnız 155
+    karakterini taşıyordu). Seçim artık kenar çizimiyle ORTAK
+    (`ILAN_SECIMI`, src/lib/seo/ilan-sayfasi.mjs): iki yer aynı alanları
+    okumazsa aynı ilan iki farklı sayfa üretirdi.
+
+    ZORUNLU OKUMA (12 Ekim 2026): anahtar yoksa ya da sorgu başarısızsa
+    eskiden `[]` dönüyordu ve derleme "yayında ilan yok" diye devam
+    ediyordu. Artık `VeriKaynagiHatasi` fırlatılıyor ve derleme duruyor;
+    yalnız gerçekten boş bir yanıt (`200` + `[]`) boş sayılıyor.
   */
-  const secim =
-    'id,title,description,responsibilities,required_skills,duration,min_grade_level,city,country_code,work_type,apply_url,application_method,posted_at,created_at,application_deadline,is_paid,stipend_text,companies(name,slug,website_url,logo_url,industry,location,description)';
-  const istek = `${urlAdres}/rest/v1/listings?status=eq.published&select=${encodeURIComponent(secim)}`;
-  const yanit = await fetch(istek, {
-    headers: { apikey: anahtar, Authorization: `Bearer ${anahtar}` },
+  return zorunluVeriGetir({
+    kaynak: 'yayındaki ilanlar',
+    taban: envOku('SUPABASE_URL') || envOku('VITE_SUPABASE_URL'),
+    anahtar: envOku('VITE_SUPABASE_ANON_KEY'),
+    yol: `/rest/v1/listings?status=eq.published&order=posted_at.desc.nullslast,id.asc&select=${encodeURIComponent(ILAN_SECIMI)}`,
   });
-  if (!yanit.ok) {
-    console.log(`  ilanlar alınamadı: HTTP ${yanit.status}`);
-    return [];
-  }
-  return yanit.json();
 }
 
 /**
@@ -725,18 +692,12 @@ async function katalogTohumuGetir(ulke) {
   yani anon bütün şirketleri zaten görüyor.
 */
 async function sirketSluglariniGetir() {
-  const urlAdres = envOku('SUPABASE_URL') || envOku('VITE_SUPABASE_URL');
-  const anahtar = envOku('VITE_SUPABASE_ANON_KEY');
-  if (!urlAdres || !anahtar) return [];
-  const istek = `${urlAdres}/rest/v1/companies?select=slug`;
-  const yanit = await fetch(istek, {
-    headers: { apikey: anahtar, Authorization: `Bearer ${anahtar}` },
+  const veri = await zorunluVeriGetir({
+    kaynak: 'şirket adresleri',
+    taban: envOku('SUPABASE_URL') || envOku('VITE_SUPABASE_URL'),
+    anahtar: envOku('VITE_SUPABASE_ANON_KEY'),
+    yol: '/rest/v1/companies?select=slug',
   });
-  if (!yanit.ok) {
-    console.log(`  şirket slugları alınamadı: HTTP ${yanit.status}`);
-    return [];
-  }
-  const veri = await yanit.json();
   return veri.map((x) => x.slug).filter(Boolean);
 }
 
@@ -762,12 +723,6 @@ async function sirketSluglariniGetir() {
  * herhangi birinin görebileceği yanıtın aynısı olmalı.
  */
 async function firsatlariGetir() {
-  const urlAdres = envOku('SUPABASE_URL') || envOku('VITE_SUPABASE_URL');
-  const anahtar = envOku('VITE_SUPABASE_ANON_KEY');
-  if (!urlAdres || !anahtar) {
-    console.log('  fırsatlar atlandı (anonim anahtar yok)');
-    return [];
-  }
   /*
     KATEGORİ VE TUTAR ALANLARI DA GEREKİYOR
 
@@ -812,10 +767,13 @@ async function firsatlariGetir() {
     küme, tarayıcının da okuyabildiği kümeyle örtüşüyor; statik HTML'de
     olup hidrasyonda kaybolan sayfa üretmiyoruz.
   */
-  const istek = `${urlAdres}/rest/v1/opportunities?status=in.(published,expired)&select=${encodeURIComponent(secim)}`;
-  const yanit = await fetch(istek, { headers: { apikey: anahtar, Authorization: `Bearer ${anahtar}` } });
-  if (!yanit.ok) { console.log(`  fırsatlar alınamadı: HTTP ${yanit.status}`); return []; }
-  return yanit.json();
+  /* ZORUNLU OKUMA — bkz. `ilanlariGetir`. */
+  return zorunluVeriGetir({
+    kaynak: 'fırsatlar',
+    taban: envOku('SUPABASE_URL') || envOku('VITE_SUPABASE_URL'),
+    anahtar: envOku('VITE_SUPABASE_ANON_KEY'),
+    yol: `/rest/v1/opportunities?status=in.(published,expired)&select=${encodeURIComponent(secim)}`,
+  });
 }
 
 /* --------------------------------------------------------------- HTML üretimi */
@@ -899,225 +857,33 @@ if (!/<div id="root">\s*<\/div>/.test(kabuk)) {
  * @param {object} s         { baslik, aciklama, govde, jsonLd }
  */
 /*
-  KIRINTI YOLU (BreadcrumbList)
+  KABUK DOSYASI — KENAR ÇİZİMİ İÇİN (12 Ekim 2026)
 
-  Adresten üretiliyor: /rehber/kyk-burs-ve-kredi -> Ana sayfa > Öğrenci
-  rehberi > sayfanın başlığı. Google arama sonucunda çıplak adres yerine bu
-  yolu gösteriyor ve sayfanın sitedeki yeri makineye anlaşılır oluyor.
-
-  Elle yazılmıyor: 215 sayfa var ve elle yazılan bir kırıntı, adres
-  değiştiğinde sessizce yanlış kalır.
+  Kenar (functions/_middleware.ts) yeni bir ilanı çizerken bu betiğin
+  kullandığı kökü BOŞ kabuğa ihtiyaç duyuyor; `dist/index.html` artık
+  anasayfanın dolu hâli. Kabuk ve açılış iskeleti `_onrender/` altına
+  yazılıyor (`_headers`: noindex). İki yer aynı kabuğu kullanıyor.
 */
-const KIRINTI_ADLARI = {
-  rehber: 'Öğrenci rehberi',
-  bolum: 'Bölümler',
-  bolumler: 'Bölümler',
-  ilan: 'Staj ilanları',
-  firsatlar: 'Öğrenci fırsatları',
-  sirket: 'Şirketler',
-  araclar: 'Staj hesaplama araçları',
-  isveren: 'İşverenler',
-};
-
-function kirintiYolu(yol, baslik) {
-  const parcalar = yol.split('/').filter(Boolean);
-  if (!parcalar.length) return null;
-
-  const ogeler = [{ '@type': 'ListItem', position: 1, name: 'Ana sayfa', item: SITE }];
-  let birikim = '';
-  parcalar.forEach((parca, i) => {
-    birikim += '/' + parca;
-    const sonuncu = i === parcalar.length - 1;
-    ogeler.push({
-      '@type': 'ListItem',
-      position: i + 2,
-      /* Son öğe sayfanın kendi başlığı; aradakiler bölüm adı. */
-      name: sonuncu ? baslik.split('|')[0].trim() : KIRINTI_ADLARI[parca] || parca,
-      item: SITE + birikim,
-    });
-  });
-  return { '@type': 'BreadcrumbList', itemListElement: ogeler };
-}
-
-/*
-  Var olan @graph'a kırıntı ekleniyor. Ayrı bir script bloğu açmak yerine
-  tek grafikte durması, Google'ın ikisini aynı sayfanın verisi olarak
-  okumasını kolaylaştırıyor.
-*/
-function yapisalVeri(yol, s) {
-  const kirinti = kirintiYolu(yol, s.baslik);
-  if (!kirinti) return s.jsonLd || null;
-  const mevcut = s.jsonLd;
-  if (mevcut && Array.isArray(mevcut['@graph'])) {
-    return { ...mevcut, '@graph': [...mevcut['@graph'], kirinti] };
-  }
-  if (mevcut) return { '@context': 'https://schema.org', '@graph': [mevcut, kirinti] };
-  return { '@context': 'https://schema.org', '@graph': [kirinti] };
-}
+fs.mkdirSync(path.join(dist, '_onrender'), { recursive: true });
+fs.writeFileSync(path.join(dist, '_onrender', 'kabuk.html'), kabuk, 'utf8');
 
 /**
- * YAZILAN HER ADRES — site haritası uzlaştırması için.
+ * YAZILAN HER ADRES — site haritası için.
  *
- * Bu betik hangi sayfaların GERÇEKTEN var olduğunu bilen tek yer; her
- * dağıtımda çalışıyor. Site haritası ayrı bir saatlik işten (automation/
- * sitemap.py) üretiliyor ve ölçüldü (12 Eylül 2026): canlı sitemap.xml
- * 5 Eylül'de donmuştu — 159 ilan sayfası varken haritada 62, 160 şirket
- * sayfası varken 93 adres yazıyordu.
- *
- * Liste aşağıda `siteHaritasiniUzlastir` tarafından kullanılıyor.
+ * Bu betik hangi sayfaların GERÇEKTEN yazıldığını bilen tek yer. Değer:
+ * `{ dizinDisi, lastmod }`. `lastmod` yalnız içeriğin kaynağından gelen
+ * gerçek bir değişiklik tarihi varsa doluyor (derleme günü YAZILMIYOR).
  */
-const YAZILAN_ADRESLER = new Set();
+const YAZILAN_ADRESLER = new Map();
 
 function sayfaYaz(yol, s) {
-  let html = kabuk;
-  const tamAdres = SITE + yol;
-  if (!s.dizinDisi) YAZILAN_ADRESLER.add(yol);
+  YAZILAN_ADRESLER.set(yol, { dizinDisi: Boolean(s.dizinDisi), lastmod: s.lastmod || null });
+  const html = sayfaHtml(kabuk, yol, s, { iskelet: ACILIS_ISKELETI });
 
   /*
-    Dizine girmemesi gereken sayfalar (404 gibi) için robots etiketi.
-    Sunucu doğru kodu döndürse bile bir tarayıcı sayfayı içeriğiyle
-    değerlendirebiliyor; ikisi birden söylenince tereddüt kalmıyor.
-  */
-  if (s.dizinDisi) {
-    html = html.replace(
-      '</head>',
-      '  <meta name="robots" content="noindex, follow" />\n  </head>'
-    );
-  }
-
-  // <title>
-  html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${kacir(s.baslik)}</title>`);
-
-  // description + Open Graph
-  html = html.replace(
-    /<meta name="description"[^>]*>/,
-    `<meta name="description" content="${kacir(s.aciklama)}" />`
-  );
-  html = html.replace(
-    /<meta property="og:title"[^>]*>/,
-    `<meta property="og:title" content="${kacir(s.baslik)}" />`
-  );
-  html = html.replace(
-    /<meta property="og:description"[^>]*>/,
-    `<meta property="og:description" content="${kacir(s.aciklama)}" />`
-  );
-
-  /*
-    SAYFAYA ÖZEL PAYLAŞIM GÖRSELİ
-
-    Bütün site tek bir genel kartı paylaşıyordu: bir rehber, bir ilan ya da
-    bir burs paylaşıldığında WhatsApp ve Twitter'da hep aynı görsel
-    çıkıyordu ve paylaşılan şeyin ne olduğu karttan anlaşılmıyordu.
-
-    Görsel yoksa index.html'deki genel kart yerinde kalıyor — yani bu blok
-    yalnızca ekliyor, hiçbir şeyi bozmuyor.
-  */
-  if (s.gorsel) {
-    const tamGorsel = SITE + s.gorsel;
-    html = html
-      .replace(/<meta property="og:image"[^>]*>/, `<meta property="og:image" content="${tamGorsel}" />`)
-      .replace(
-        /<meta property="og:image:alt"[^>]*>/,
-        `<meta property="og:image:alt" content="${kacir(s.baslik)}" />`
-      );
-  }
-
-  /*
-    CANONICAL VARSA DEĞİŞTİRİLİYOR, EKLENMİYOR.
-
-    Bu blok "canonical hiç yoktu" varsayımıyla yazılmıştı ve yalnızca
-    ekliyordu. Kabuğa (index.html) sonradan bir canonical girince her ön
-    render edilmiş sayfada İKİ canonical oluştu: biri kök adresi, biri
-    sayfanın kendisi. Ölçüldü — ilan, burs ve içerik sayfalarının hepsinde
-    ikisi birden vardı. Çelişen iki canonical arama motoruna hangi adresin
-    asıl olduğunu söylemiyor; bu bir SEO kazancı değil, kayıp.
-  */
-  const canonicalEtiketi = `<link rel="canonical" href="${tamAdres}" />`;
-  const ogUrlEtiketi = `<meta property="og:url" content="${tamAdres}" />`;
-  html = /<link[^>]+rel="canonical"[^>]*>/.test(html)
-    ? html.replace(/<link[^>]+rel="canonical"[^>]*>/, canonicalEtiketi)
-    : html.replace('</head>', `  ${canonicalEtiketi}\n  </head>`);
-  html = /<meta[^>]+property="og:url"[^>]*>/.test(html)
-    ? html.replace(/<meta[^>]+property="og:url"[^>]*>/, ogUrlEtiketi)
-    : html.replace('</head>', `  ${ogUrlEtiketi}\n  </head>`);
-
-  html = html.replace(
-    '</head>',
-    (() => {
-        const veri = yapisalVeri(yol, s);
-        return veri
-          ? `    <script type="application/ld+json">${JSON.stringify(veri)}</script>\n`
-          : '';
-      })() +
-      '  </head>'
-  );
-
-  /*
-    #root İÇİNE: AÇILIŞ İSKELETİ + ÖN RENDER METNİ
-
-    Sıra önemli. İskelet ÖNCE geliyor ve görünür olan o: tarayıcı CSS
-    beklemeden onu çiziyor, beyaz ekran oluşmuyor.
-
-    Ön render metni SONRA ve `data-seo-prerender` ile işaretli;
-    index.html'deki satır içi stil onu JS açıkken gizliyor. Sebebi FOUC:
-    tarayıcı bu metni dış CSS gelmeden çiziyordu ve soğuk yenilemede çıplak
-    yazı bir an ekranda kalıyordu.
-
-    Arama motoru için hiçbir şey değişmiyor: metin HTML'de duruyor,
-    `display:none` içeriği kaldırmıyor ve JS kapalıyken noscript onu geri
-    açıyor.
-
-    İkisi de #root'un içinde; React ilk çizimde ikisini birden değiştiriyor.
-  */
-  /*
-    İSKELET YALNIZ VERİ YOKKEN.
-
-    `gorunurGovde` verilmişse ekranda gösterilecek gerçek içerik zaten
-    var; üstüne bir de nabız atan gri kutular koymak, kullanıcıya önce
-    "yükleniyor" deyip sonra aynı yere içeriği basmak olurdu.
-  */
-  const gorunur = s.gorunurGovde
-    ? `<div data-onrender-govde>${s.gorunurGovde}</div>`
-    : ACILIS_ISKELETI;
-
-  /*
-    Gizli blok BOŞSA hiç yazılmıyor. Anasayfada artık gizli ilan listesi
-    yok (hepsi görünür kartlarda ve site haritasında); boş bir
-    `display:none` kabı bırakmak, okuyan birine hâlâ saklanan bir şey
-    olduğunu düşündürürdü.
-  */
-  const gizli = s.govde ? `<div data-seo-prerender>${s.govde}</div>` : '';
-
-  html = html.replace('<div id="root"></div>', `<div id="root">${gorunur}${gizli}</div>`);
-
-  /*
-    AÇILIŞ TOHUMU.
-
-    İlk ilan sayfası HTML'in içinde geliyor; istemci aynı veriyi bir
-    daha beklemeden ekrana basıyor (bkz. src/lib/ilk-katalog.ts).
-    `</script>` dizisi kaçırılıyor: veri içinde geçerse etiketi erken
-    kapatıp sayfayı kırardı.
-  */
-  if (s.tohum) {
-    const govde = JSON.stringify(s.tohum).replace(/<\/(script)/gi, '<\\/$1');
-    html = html.replace(
-      '</body>',
-      `  <script type="application/json" id="ilk-katalog">${govde}</script>
-  </body>`
-    );
-  }
-
-  /*
-    DOSYA ADI: <yol>.html — <yol>/index.html DEĞİL.
-
-    Önce dizin + index.html olarak yazılıyordu. Cloudflare Pages bu durumda
-    "/bolum/mimarlik" isteğini "/bolum/mimarlik/" adresine 308 ile
-    yönlendiriyor (ölçüldü). Ama site haritamız ve canonical etiketimiz
-    eğik çizgisiz sürümü gösteriyor; yani tarayıcıya "asıl adres bu" deyip
-    o adreste yönlendirme veriyorduk. Bu çelişki taramayı zayıflatıyor.
-
-    Uzantılı dosya yazılınca Pages "/bolum/mimarlik" isteğine doğrudan 200
-    dönüyor, yönlendirme olmuyor. Kök sayfa istisna: o index.html kalmalı.
+    DOSYA ADI: <yol>.html — <yol>/index.html DEĞİL. Dizin + index.html
+    yazılınca Pages "/bolum/mimarlik" isteğini "/bolum/mimarlik/" adresine
+    308 ile yönlendiriyordu; canonical ise eğik çizgisiz. Kök sayfa istisna.
   */
   if (s.dosya) {
     fs.writeFileSync(path.join(dist, s.dosya), html, 'utf8');
@@ -1202,6 +968,25 @@ async function main() {
 
   paketiDogrula();
 
+  /*
+    HERKESE AÇIK SUPABASE AYARI — KENAR ÇİZİMİ İÇİN
+
+    Adres ve ANONİM anahtar zaten her ziyaretçiye giden JavaScript
+    paketinde duruyor (paketiDogrula bunu sınıyor); gizli değiller. Kenar
+    çizimi Pages ortam değişkenleri tanımlı değilse bunu okuyor. Servis
+    anahtarı buraya ASLA yazılmıyor: okunan tek değişken VITE_SUPABASE_ANON_KEY.
+  */
+  {
+    const genelUrl = envOku('VITE_SUPABASE_URL') || envOku('SUPABASE_URL');
+    const genelAnahtar = envOku('VITE_SUPABASE_ANON_KEY');
+    if (genelUrl && genelAnahtar) {
+      fs.writeFileSync(
+        path.join(dist, '_onrender', 'supabase-genel.json'),
+        JSON.stringify({ url: genelUrl, anonKey: genelAnahtar }),
+      );
+    }
+  }
+
   let sayac = 0;
 
   /* ---- bölümler ---- */
@@ -1238,6 +1023,7 @@ async function main() {
     }
 
     sayfaYaz(`/bolum/${b.slug}`, {
+      lastmod: b.guncelleme ? String(b.guncelleme).slice(0, 10) : null,
       baslik: `${b.ad} stajı | StajımVar`,
       aciklama: ozetle(b.aciklama || b.ozet),
       // Gövde = başlık + BolumIcerik'in çizilmiş hâli (kullanıcının gördüğünün aynısı).
@@ -1315,6 +1101,7 @@ async function main() {
     });
 
     sayfaYaz(`/rehber/${r.slug}`, {
+      lastmod: r.guncelleme ? String(r.guncelleme).slice(0, 10) : null,
       gorsel: `/og/rehber-${r.slug}.png`,
       /*
         <title> H1'DEN AYRILABİLİYOR
@@ -1742,7 +1529,7 @@ async function main() {
     metin yanlış yazımdaydı. Aynı modül burada da derlenip kullanılıyor;
     ikinci bir şehir sözlüğü tutmak ikisinin ayrışmasına davetiye olurdu.
   */
-  const { konumEtiketi } = await icerikDerle(path.join(kok, 'src', 'lib', 'sehir.ts'), 'sehir');
+  const { konumEtiketi, calismaEtiketi } = await icerikDerle(path.join(kok, 'src', 'lib', 'sehir.ts'), 'sehir');
 
   /* ---------------------------------------------- /staj-ilanlari ---- */
   /*
@@ -1791,12 +1578,18 @@ async function main() {
 
     /* En yeni ilanlar: `posted_at` yoksa `created_at`. İkisi de yoksa sona. */
     const zaman = (i) => new Date(i.posted_at || i.created_at || 0).getTime() || 0;
-    const enYeniler = turkiyeIlanlari
-      .slice()
-      .sort((a, b) => zaman(b) - zaman(a))
+    /*
+      LİSTE KATALOG TOHUMUNDAN (12 Ekim 2026): istemci ilk çizimde aynı
+      tohumu kullanıyor (aşağıda `tohum`), yani ön render ile React'in ilk
+      listesi aynı sırada. Tohum alınamadıysa yerel sıralama yedek.
+    */
+    const kaynakListe = Array.isArray(katalogSayaclari?.listings) && katalogSayaclari.listings.length
+      ? katalogSayaclari.listings
+      : turkiyeIlanlari.slice().sort((a, b) => zaman(b) - zaman(a));
+    const enYeniler = kaynakListe
       .slice(0, 12)
       .map((ilan) => ({
-        yol: `/ilan/${slugla(ilan.title)}-${String(ilan.id).replace(/-/g, '').slice(0, 8)}`,
+        yol: ortakIlanYolu(ilan),
         baslik: ilan.title,
         sirket: ilan.companies?.name || '',
         sehir: ilan.city ? konumEtiketi(ilan.city) : null,
@@ -1839,8 +1632,65 @@ async function main() {
     aciklama:
       'Türkiye genelindeki güncel staj ilanlarını şehir, bölüm ve staj türüne göre filtrele. Şirketlerin resmî başvuru sayfalarına doğrudan ulaş.',
     govde: merkezListeleri.stajIlanlari(stajIlanlariVerisi),
+    /*
+      KATALOG TOHUMU BU SAYFADA DA (12 Ekim 2026)
+
+      React bu sayfayı ilk çizdiğinde katalog henüz gelmemişti: sayılar
+      kutusu ve ilan listesi yoktu, veri gelince ekleniyor ve alttaki
+      kutuları ~215 piksel itiyordu (ölçüldü: CLS 0,56 telefonda, 0,33
+      masaüstünde — canlıda da aynı). Anasayfadaki tohumun aynısı burada da
+      gömülüyor; kanca (useGlobalListingPreferences) onu ağ beklemeden
+      kullanıyor.
+    */
+    tohum: katalogSayaclari ? { country: 'TR', page: katalogSayaclari } : null,
+    lastmod: ilanlar.map((i) => String(i.updated_at || '').slice(0, 10)).filter(Boolean).sort().pop() || null,
   });
   sayac++;
+
+  /*
+    TÜM AÇIK İLANLAR — /staj-ilanlari/sayfa/<n> (12 Ekim 2026)
+
+    Sunucudan gelen HTML'de yalnız en yeni 12 ilan bağlıydı; geri kalanına
+    giden yol JavaScript'li liste ya da site haritasıydı. Sayfalı tam liste
+    her ilana gerçek bir <a href> veriyor. Sıra ve süzgeç istemciyle ortak
+    (src/lib/seo/ilan-arsivi.mjs). Her sayfa kendine canonical; şehir ya da
+    bölüm için ayrı (birbirinin kopyası) sayfa üretilmiyor.
+  */
+  {
+    const aciklar = ilanlar.filter((i) => acikIlanMi(i)).sort(arsivSirasi);
+    const toplamSayfa = Math.max(1, Math.ceil(aciklar.length / ARSIV_SAYFA_BOYU));
+    for (let n = 1; n <= toplamSayfa; n++) {
+      const dilim = aciklar.slice((n - 1) * ARSIV_SAYFA_BOYU, n * ARSIV_SAYFA_BOYU);
+      const satirlar = dilim
+        .map((i) => {
+          const alt = [i.companies?.name, i.city ? konumEtiketi(i.city) : '', i.work_type ? calismaEtiketi(i.work_type) : '']
+            .filter(Boolean)
+            .join(' · ');
+          return `<li><a href="${ortakIlanYolu(i)}">${kacir(i.title)}</a>${alt ? ` — ${kacir(alt)}` : ''}</li>`;
+        })
+        .join('');
+      const gezinme = [
+        n > 1 ? `<a href="${arsivYolu(n - 1)}">← Önceki sayfa</a>` : '',
+        n < toplamSayfa ? `<a href="${arsivYolu(n + 1)}">Sonraki sayfa →</a>` : '',
+      ]
+        .filter(Boolean)
+        .join(' · ');
+      sayfaYaz(arsivYolu(n), {
+        baslik: arsivSayfaBasligi(n, toplamSayfa),
+        aciklama: `Açık staj ilanlarının tamamı, en yeniden eskiye: sayfa ${n}/${toplamSayfa}.`,
+        lastmod: dilim.map((i) => String(i.updated_at || '').slice(0, 10)).filter(Boolean).sort().pop() || null,
+        govde:
+          '<main><nav aria-label="Sayfa yolu"><a href="/staj-ilanlari">Staj ilanları</a> › Tüm açık ilanlar</nav>' +
+          '<h1>Tüm staj ilanları</h1>' +
+          `<p>${aciklar.length} açık ilan, en yeniden eskiye · sayfa ${n}/${toplamSayfa}</p>` +
+          `<ul>${satirlar}</ul>` +
+          (gezinme ? `<nav aria-label="Sayfalar"><p>${gezinme}</p></nav>` : '') +
+          '</main>',
+      });
+      sayac++;
+    }
+    console.log(`  tüm açık ilanlar: ${aciklar.length} ilan, ${toplamSayfa} sayfa`);
+  }
 
   /*
     ESKİ ADRESLER İÇİN KALICI YÖNLENDİRME
@@ -1856,223 +1706,58 @@ async function main() {
   */
   const eskiAdresler = [];
 
+  /*
+    İLAN SAYFALARI — ORTAK MODÜLDEN (12 Ekim 2026)
+
+    Başlık, meta açıklama, GÖRÜNÜR gövde, JobPosting ve kırıntı yolu
+    `src/lib/seo/ilan-sayfasi.mjs` içinde; kenar çizimi (functions/
+    _middleware.ts) aynı fonksiyonu çağırıyor. Bu dosyalar artık kenar
+    çizimi düşerse kullanılan YEDEK: canlı istek yayındaki veriden
+    çiziliyor, yani yeni ilan bir sonraki dağıtımı beklemiyor.
+
+    Kurallar (ayrıntısı modülde):
+      · açıklama, sorumluluklar ve nitelikler KESİLMEDEN, görünür metinde
+        ve yapısal veride aynı
+      · konum yalnız kaynaktaki şehir/ülkeden; ülke kodu yoksa JobPosting
+        yazılmıyor (eksik alanla yazmak Search Console hatası)
+      · süresi dolan ilanın sayfası kalıyor, kapandığı yazıyor, JobPosting
+        kaldırılıyor ve site haritasına girmiyor
+  */
+  const ilanVeriEksikleri = [];
+  const bugunTR = istanbulBugun();
   for (const i of ilanlar) {
-    const sirket = i.companies || {};
     const onek = String(i.id).split('-')[0];
-    const yol = `/ilan/${slugla(i.title)}-${onek}`;
-    /* Tam kimlik ve yalnızca önek: ikisi de kanonik adrese gidiyor. */
+    const { yol, s, eksik, suresiGecti } = ilanSayfasi(i, konumEtiketi);
+    /* Tam kimlik ve yalnızca önek: ikisi de kanonik adrese gidiyor (kenar düşerse). */
     eskiAdresler.push(`/ilan/${i.id}   ${yol}   301`);
     eskiAdresler.push(`/ilan/${onek}   ${yol}   301`);
-    /*
-      AYNI PROGRAMIN FARKLI ŞEHİRLERİ AYRIŞSIN
-
-      Alumil'in üç ilanı aynı başlığı ve aynı açıklamayı taşıyordu:
-      "Alumil NextGen Staj Programı…" × Çorlu, İstanbul, İzmir. Arama
-      motoru için üç sayfa da birbirinin kopyasıydı.
-
-      Ayrım BAŞLIK METNİNDE değil META BAŞLIKTA yapılıyor. Veritabanındaki
-      `title` adresin bir parçası (/ilan/<slug>-<önek>); onu değiştirmek
-      üç adresi birden kırardı — bu turda düzelttiğimiz 404'lerin sebebi
-      tam olarak buydu.
-
-      Şehir hem <title>'a hem açıklamanın başına giriyor: ikisi de arama
-      sonucunda görünen alanlar.
-    */
-    const sehirEki = i.city ? konumEtiketi(i.city) : '';
-    const ozetGovde = ozetle(i.description, sehirEki ? 140 : 155);
-    const ozet = sehirEki ? `${sehirEki}. ${ozetGovde}` : ozetGovde;
-
-    /*
-      META AÇIKLAMA KISA, GÖVDE TAM (19 Eylül 2026)
-
-      `ozet` 155 karaktere kısaltılmış hâl; yeri <meta name="description">
-      ve arama sonucu. Ta ki bugüne kadar GÖVDEYE de o giriyordu, yani
-      sayfanın tek paragrafı üç noktayla bitiyordu. Ölçüldü: KPMG ilanının
-      açıklaması 49 kelime, sayfada görünen 30 kelime + "…". Kısaltma
-      arama sonucunun sınırı; sayfanın değil.
-    */
-    const tamAciklama = String(i.description ?? '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-    const govdeAciklamasi = sehirEki
-      ? `${sehirEki}. ${tamAciklama}`
-      : tamAciklama || ozet;
-    const dizi = (d) => (Array.isArray(d) ? d.map((x) => String(x ?? '').trim()).filter(Boolean) : []);
-
-    /*
-      SÜRESİ GEÇMİŞ İLAN GÖRÜNÜR SAYFADA DA KAPANMIŞ
-
-      Ölçüldü (14 Eylül 2026): "KEY+ Uzun Dönem Staj Programı" son
-      başvurusu 2026-09-06, sekiz gün geçmiş, hâlâ `status = published`.
-      Yapısal veri `validThrough` ile Google'a "kapandı" diyordu ama
-      GÖRÜNÜR sayfada kapanışa dair tek kelime yoktu ve adres site
-      haritasında bildiriliyordu. İşaretleme "kapandı", sayfa ve harita
-      "açık" diyordu.
-
-      Sayfa 404 YAPILMIYOR: kapanmış bir ilanın sayfasının kalması hem
-      Google'ın istediği hem de kullanıcıya yararlı (programın varlığı,
-      şirket, tarih). Eksik olan şey, kapandığının SÖYLENMESİYDİ.
-
-      Tarih ham dizeden biçimlendiriliyor; gerekçesi fırsat
-      listelerindeki aynı kararla bir (saatsiz tarih + UTC batısı).
-    */
-    const sonBasvuruHam = String(i.application_deadline || '').slice(0, 10);
-    const sonBasvuruParca = sonBasvuruHam.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    const suresiGecti = Boolean(
-      sonBasvuruParca && new Date(`${sonBasvuruHam}T23:59:59Z`).getTime() < Date.now()
-    );
-    const AYLAR_ILAN = [
-      'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-      'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
-    ];
-    const kapanisNotu =
-      suresiGecti && sonBasvuruParca
-        ? `Başvuru dönemi kapandı. Son başvuru: ${Number(sonBasvuruParca[3])} ` +
-          `${AYLAR_ILAN[Number(sonBasvuruParca[2]) - 1]} ${sonBasvuruParca[1]}.`
-        : '';
-
-    /*
-      JobPosting — Google for Jobs uygunluğu.
-
-      DİKKAT: uydurma alan yazılmıyor. `validThrough` ancak veritabanında
-      gerçek bir son başvuru tarihi varsa ekleniyor; Google süresi geçmiş
-      veya yanlış tarihli ilanları cezalandırıyor.
-
-      `directApply` İLANA GÖRE DEĞİŞİYOR.
-
-      Sabit `false` yazılıyordu ve bu, ürünün eski hâlinden kalmıştı:
-      o sırada bütün başvurular şirketin kendi sayfasında tamamlanıyordu.
-      Artık iki model var. Şirketin StajımVar'da açtığı ilanda başvuru
-      siteden çıkmadan tamamlanıyor — orada `false` yazmak, arama
-      sonucundan gelen öğrenciye yanlış bilgi vermek olur. Dış kaynaktan
-      derlenen ilanlarda ise `false` doğru: başvuru resmî sayfada.
-
-      Alanı hiç yazmamak "bilmiyoruz" demek; ikisi de yanlış olurdu.
-
-      Şirket adresi veritabanına şemasız giriliyor ("alumil.com"); yapısal
-      veri mutlak adres istiyor, göreli değer geçersiz sayılıyor.
-    */
-    const jsonLd = {
-      '@context': 'https://schema.org',
-      '@type': 'JobPosting',
-      title: i.title,
-      description: `<p>${kacir(ozetle(i.description, 1200))}</p>`,
-      datePosted: (i.posted_at || i.created_at || '').slice(0, 10),
-      /*
-        SON BAŞVURU TARİHİ (`validThrough`)
-
-        Search Console 22 Eylül 2026'da uyardı: "validThrough alanı
-        eksik". Alan veritabanında ZATEN VARDI (`application_deadline`,
-        ilan sorgusunda çekiliyor) ama yapısal veriye yazılmıyordu.
-
-        Tarihi OLAN ilana yazılıyor, olmayana YAZILMIYOR. Google'ın
-        kendi kılavuzu da böyle diyor: bitiş tarihi yoksa alanı koyma,
-        ilan bir süre sonra kendiliğinden düşürülür. Uydurma bir tarih
-        (ör. "ilan + 30 gün") yazmak, kapanmış bir ilanı açık ya da açık
-        bir ilanı kapalı göstermek demekti.
-
-        Saat kısmı atılıyor: kaynak bazen "2026-09-14", bazen tam zaman
-        damgası veriyor; ikisi de geçerli ama tek biçim tutmak
-        çıktıdaki farkı okunur kılıyor.
-      */
-      ...(String(i.application_deadline || '').slice(0, 10).match(/^\d{4}-\d{2}-\d{2}$/)
-        ? { validThrough: String(i.application_deadline).slice(0, 10) }
-        : {}),
-      employmentType: 'INTERN',
-      url: SITE + yol,
-      directApply: i.application_method !== 'external',
-      hiringOrganization: {
-        '@type': 'Organization',
-        name: sirket.name || 'Bilinmiyor',
-        ...(guvenliDisAdres(sirket.website_url) ? { sameAs: guvenliDisAdres(sirket.website_url) } : {}),
-        ...(guvenliDisAdres(sirket.logo_url) ? { logo: guvenliDisAdres(sirket.logo_url) } : {}),
-      },
-      /*
-        İÇİ BOŞ `jobLocation` BASILMIYOR
-
-        Şehri olmayan ilanlarda şöyle bir blok çıkıyordu (ölçüldü,
-        159 sayfanın 7'si):
-
-          {"@type":"Place","address":{"@type":"PostalAddress","addressCountry":"TR"}}
-
-        Yani "bir yer var" diyor ama yerin kendisini söylemiyor: yerel
-        bilgi yok, uzaktan işareti de yok. Şehir uydurmak yerine alan
-        hiç yazılmıyor.
-
-        Üç hâl, üçü ayrı:
-          şehir var                  Place + addressLocality
-          şehir yok, çalışma uzaktan TELECOMMUTE (aşağıda) — yer
-                                     gerekmiyor, Google bunu kabul ediyor
-          şehir yok, yerinde/hibrit  alan HİÇ YAZILMIYOR
-
-        TAKAS AÇIK: üçüncü hâldeki ilanlar iş zengin sonucuna
-        giremeyebilir. Eksik alanla da giremiyorlardı; fark, artık
-        söylemediğimiz bir şeyi söylüyormuş gibi yapmıyoruz.
-      */
-      ...(i.city
-        ? {
-            jobLocation: {
-              '@type': 'Place',
-              address: {
-                '@type': 'PostalAddress',
-                addressLocality: i.city,
-                /*
-                  Ülke GERÇEK VERİDEN: sabit 'TR' Paris ve Berlin ilanlarını
-                  da Türkiye'de gösteriyordu. Kod yoksa alan yazılmıyor.
-                */
-                ...(i.country_code ? { addressCountry: i.country_code } : {}),
-              },
-            },
-          }
-        : {}),
-      ...(i.application_deadline ? { validThrough: i.application_deadline } : {}),
-      ...(i.work_type === 'Remote' ? { jobLocationType: 'TELECOMMUTE' } : {}),
-    };
+    if (eksik.length && !suresiGecti) {
+      ilanVeriEksikleri.push({ yol, sirket: i.companies?.name || null, eksik });
+    }
 
     await kartYaz(`ilan-${onek}`, {
       tur: 'ilan',
       etiket: 'STAJ İLANI',
       baslik: i.title,
-      altMetin: [sirket.name, i.city ? konumEtiketi(i.city) : ''].filter(Boolean).join(' · '),
+      altMetin: [i.companies?.name, i.city ? konumEtiketi(i.city) : ''].filter(Boolean).join(' · '),
     });
 
-    /*
-      Süresi geçmiş ilan haritaya girmiyor; sayfası duruyor ve görünür
-      metninde kapandığı yazıyor. `sitemap.py` de aynı kuralı uyguluyor,
-      burası dağıtılan kopyayı tutarlı tutuyor.
-    */
     if (suresiGecti) HARITADAN_DISLANAN.add(yol);
-
-    sayfaYaz(yol, {
-      gorsel: `/og/ilan-${onek}.png`,
-      baslik: `${i.title}${sehirEki ? ` (${sehirEki})` : ''}${sirket.name ? ' — ' + sirket.name : ''} | StajımVar`,
-      aciklama: ozet,
-      govde: govde(
-        i.title,
-        /*
-          Kapanış notu açıklamanın BAŞINA giriyor: arama sonucundan
-          gelen kişi ilk cümlede durumu görüyor, sayfayı okuyup en
-          sonda öğrenmiyor.
-        */
-        kapanisNotu ? `${kapanisNotu} ${govdeAciklamasi}` : govdeAciklamasi,
-        [
-          sirket.name && `Şirket: ${sirket.name}`,
-          i.city && `Şehir: ${konumEtiketi(i.city)}`,
-          i.work_type && `Çalışma şekli: ${i.work_type}`,
-          i.duration && `Süre: ${i.duration}`,
-          i.min_grade_level && `En az sınıf: ${i.min_grade_level}`,
-          kapanisNotu && 'Durum: başvuru dönemi kapandı',
-        ].filter(Boolean),
-        [
-          { baslik: 'Sorumluluklar', maddeler: dizi(i.responsibilities) },
-          { baslik: 'Aranan nitelikler', maddeler: dizi(i.required_skills) },
-        ]
-      ),
-      jsonLd,
-    });
+    sayfaYaz(yol, { ...s, lastmod: String(i.updated_at || i.posted_at || i.created_at || '').slice(0, 10) || null });
     sayac++;
   }
+  /*
+    KAYNAK VERİSİ EKSİK İLANLAR — RAPOR
+
+    Uydurulmadan çözülemeyen alanlar (şehri ve ülke kodu olmayan iş yerinde
+    ilan gibi) burada listeleniyor. Dosya `_onrender/` altında: noindex,
+    yönetim incelemesi için. Veri düzeltmesi bu betiğin işi değil.
+  */
+  fs.writeFileSync(
+    path.join(dist, '_onrender', 'ilan-veri-eksikleri.json'),
+    JSON.stringify({ tarih: bugunTR, adet: ilanVeriEksikleri.length, ilanlar: ilanVeriEksikleri }, null, 2),
+  );
+  console.log(`  JobPosting yazılamayan açık ilan (kaynak verisi eksik): ${ilanVeriEksikleri.length}`);
 
   /*
     Yönlendirmeler `_redirects` dosyasının BAŞINA yazılıyor: dosyadaki
@@ -2144,6 +1829,7 @@ async function main() {
     if (firsatInce) HARITADAN_DISLANAN.add(firsatYolu);
 
     sayfaYaz(firsatYolu, {
+      lastmod: f.updated_at ? String(f.updated_at).slice(0, 10) : null,
       dizinDisi: firsatInce,
       gorsel: `/og/firsat-${f.slug}.png`,
       baslik: `${firsatBasligi(f)} | StajımVar`,
@@ -2253,7 +1939,7 @@ async function main() {
       '<ul>' +
       s.ilanlar
         .map((i) => {
-          const yol = `/ilan/${slugla(i.title)}-${String(i.id).split('-')[0]}`;
+          const yol = ortakIlanYolu(i);
           const yer = i.city ? konumEtiketi(i.city) : '';
           return `<li><a href="${yol}">${kacir(i.title)}</a>${yer ? ` — ${kacir(yer)}` : ''}</li>`;
         })
@@ -2284,6 +1970,8 @@ async function main() {
 
     sayfaYaz(`/sirket/${slug}`, {
       dizinDisi: sirketInce,
+      /* İçerik = ilan listesi: en son değişen ilanın tarihi. */
+      lastmod: s.ilanlar.map((x) => String(x.updated_at || '').slice(0, 10)).filter(Boolean).sort().pop() || null,
       baslik,
       aciklama,
       /*
@@ -2307,7 +1995,7 @@ async function main() {
         '<p>Şirketin kendi kariyer sayfasını takip edebilir ya da doğrudan yazabilirsin. ' +
         '<a href="/rehber/staj-basvuru-epostasi">Staj başvuru e-postası nasıl yazılır</a> ve ' +
         '<a href="/rehber/staj-nasil-bulunur">staj nasıl bulunur</a> sayfalarında anlattık.</p>' +
-        `<p><a href="/">Tüm staj ilanları</a></p></main>`,
+        `<p><a href="/staj-ilanlari">Tüm staj ilanları</a></p></main>`,
       jsonLd: {
         '@context': 'https://schema.org',
         '@type': 'Organization',
@@ -2469,6 +2157,9 @@ async function main() {
     gerçekten duran ilanlar; her biri kendi sayfasına bağlanıyor.
   */
   const anaSayfaBaglantilari = [
+    /* İlan merkezi ve sayfalı tam liste: ilk 12 kartın ötesine giden taranabilir yol. */
+    ['/staj-ilanlari', 'Tüm staj ilanları'],
+    ['/staj-ilanlari/sayfa/1', 'Açık ilanların tamamı'],
     ['/rehber', 'Öğrenci rehberi'],
     ['/bolumler', 'Bölüme göre staj'],
     ['/araclar', 'Staj hesaplama araçları'],
@@ -2510,7 +2201,7 @@ async function main() {
   const tohumIlanlari = Array.isArray(katalogTohumu?.listings) ? katalogTohumu.listings : [];
 
   const GORUNUR_KART = 12;
-  const ilanYolu = (i) => `/ilan/${slugla(i.title)}-${String(i.id).split('-')[0]}`;
+  const ilanYolu = ortakIlanYolu;
   /*
     Şehir adı ham geliyor ve kaynaklar "Istanbul" yazıyor. Arayüzde
     konumEtiketi ile düzeltiliyor; ön render edilen metin de aynı
@@ -2743,7 +2434,41 @@ async function main() {
   );
   console.log(`  geçerli adres listesi: ${gecerliSirketler.length} şirket`);
 
-  siteHaritasiniUzlastir();
+  const haritaSayilari = siteHaritalariniYaz();
+
+  /*
+    ÖZET VE AZALMA KAPISI
+
+    Bu derlemenin saydıkları `_onrender/ozet.json`a yazılıyor; bir sonraki
+    derleme canlıdaki kopyayla karşılaştırıyor. Hem oranca hem adetçe
+    büyük bir düşüş "veri eksik okunmuş olabilir" demek: derleme duruyor.
+    Gerçek toplu kapanışta ONRENDER_AZALMA_ONAYI=1 ile geçiriliyor.
+  */
+  const ozet = {
+    ilan: ilanlar.length,
+    firsat: firsatlar.length,
+    sirket: gecerliSirketler.length,
+    haritaSayfa: haritaSayilari.sayfa,
+    haritaIlan: haritaSayilari.ilan,
+  };
+  fs.writeFileSync(path.join(dist, '_onrender', 'ozet.json'), JSON.stringify(ozet));
+  const onceki = await oncekiOzetiGetir();
+  if (!onceki) {
+    console.log('  azalma kapısı: önceki yayının özeti okunamadı, karşılaştırma atlandı');
+  } else {
+    for (const alan of ['ilan', 'firsat', 'haritaSayfa']) {
+      const k = azalmaKapisi({
+        onceki: Number(onceki[alan]),
+        simdi: ozet[alan],
+        onay: process.env.ONRENDER_AZALMA_ONAYI === '1',
+      });
+      console.log(`  azalma kapısı (${alan}): ${k.mesaj}`);
+      if (!k.gecti) {
+        console.error(`ön render DURDU — eksik yayın engellendi: ${alan}: ${k.mesaj}`);
+        process.exit(1);
+      }
+    }
+  }
 
   console.log(
     `ön render: ${sayac} sayfa yazıldı (+404) ` +
@@ -2751,157 +2476,102 @@ async function main() {
   );
 }
 
-/**
- * SİTE HARİTASINI GERÇEKLE UZLAŞTIR.
- *
- * SORUN
- * -----
- * `sitemap.xml` ayrı bir saatlik işten (automation/sitemap.py) üretiliyor
- * ve depoya `public/sitemap.xml` olarak işleniyor. Ölçüldü
- * (12 Eylül 2026, canlı):
- *
- *   /ilan/    haritada  62   üretilen sayfa 159   → 97 sayfa haritada yok
- *   /sirket/  haritada  93   üretilen sayfa 160   → 67 sayfa haritada yok
- *   en yeni lastmod: 5 Eylül 2026 (yani harita yedi gündür donmuş)
- *
- * Bu, anasayfadaki gizli bağlantı listesi kaldırılınca gerçek bir kayba
- * dönüşürdü: o 97 ilan sayfasına giden hiçbir taranabilir yol kalmazdı.
- *
- * ÇÖZÜM
- * -----
- * Bu betik hangi sayfaların GERÇEKTEN yazıldığını bilen tek yer ve her
- * dağıtımda çalışıyor. Burada `dist/sitemap.xml` düzeltiliyor: yazılan
- * ama haritada olmayan adresler ekleniyor, sayfası olmadığı hâlde
- * haritada duran adresler çıkarılıyor.
- *
- * KAPSAM DAR: yalnızca bu betiğin ÜRETTİĞİ adres aileleri. `/firsatlar/`,
- * `/kesfet/` ve durağan sayfalar sitemap.py'ın bileceği işler; onlara
- * dokunulmuyor, yoksa iki üretici birbirinin işini silerdi.
- *
- * `public/sitemap.xml` DEĞİŞTİRİLMİYOR — o dosya saatlik işin çıktısı.
- * Düzeltme yalnızca dağıtılan kopyada.
- */
 /*
   SAYFASI VAR AMA HARİTADA OLMAMASI GEREKEN ADRESLER
 
-  Süresi geçmiş ilanın sayfası KALIYOR (Google kapanmış ilanın sayfasının
-  durmasını istiyor ve kullanıcıya da yararlı) ama arama motoruna "bunu
-  tara" demenin anlamı yok. Uzlaştırma yazılan her `/ilan/` adresini
-  haritaya eklediği için, `sitemap.py` onu çıkarsa bile geri koyardı —
-  iki üretici birbirinin işini bozardı.
-*/
-/*
-  HARİTADAN ÇIKARMAK YETMİYOR, `noindex` GEREKİYOR (20 Eylül 2026)
-
-  19 Eylül'de ince sayfalar site haritasından çıkarıldı. Search Console
-  ertesi gün şunu gösterdi: "Keşfedildi — şu anda dizine eklenmiş değil"
-  214 sayfa, "Tarandı — dizine eklenmemiş" 25 sayfa. Yani haritadan
-  çıkmak Google'ın o sayfaları BİLMESİNİ engellemiyor; sayfa hâlâ 200
-  dönüyor ve iç bağlantılardan erişiliyor, dolayısıyla sitenin içerik
-  kalitesi değerlendirmesine giriyor. AdSense de siteyi "düşük değere
-  sahip içerik" gerekçesiyle geri çevirmişti.
-
-  `dizinDisi` ikisini birden yapıyor: adres haritaya girmiyor VE sayfaya
-  `noindex, follow` basılıyor. `follow` kasıtlı: şirket sayfası dizine
-  girmesin ama üzerindeki ilan bağlantıları taranmaya devam etsin.
-
-  SÜRESİ GEÇMİŞ İLAN BU KURALIN DIŞINDA: onun sayfası kasıtlı olarak
-  dizinde kalıyor (14 Eylül kararı), çünkü arama sonucunda hâlâ gösterim
-  alıyor ve metninde kapandığı yazıyor.
+  Süresi geçmiş ilan ve fırsatın sayfası KALIYOR (kapandığı yazıyor) ama
+  arama motoruna "bunu tara" denmiyor. İnce sayfalar (`dizinDisi`) hem
+  haritadan çıkıyor hem `noindex, follow` alıyor.
 */
 const HARITADAN_DISLANAN = new Set();
 
-function siteHaritasiniUzlastir() {
-  const harita = path.join(dist, 'sitemap.xml');
-  if (!fs.existsSync(harita)) {
-    console.log('  site haritası uzlaştırma atlandı (dist/sitemap.xml yok)');
-    return;
+/**
+ * SİTE HARİTALARI — TEK ÜRETİCİ BU BETİK (12 Ekim 2026)
+ *
+ * ESKİ DURUM: harita `automation/sitemap.py` ile SERVİS ANAHTARIYLA
+ * üretiliyor, üretim iş akışında `continue-on-error` ile koşuyor, sonra
+ * burada "uzlaştırılıyordu". Python adımı düştüğünde depodaki bayat
+ * `public/sitemap.xml` yayına giriyordu (17 Ağustos ve 5 Eylül'de donduğu
+ * ölçülmüştü). İki üretici birbirinin işini düzeltmeye çalışıyordu.
+ *
+ * YENİ DURUM: hangi sayfanın GERÇEKTEN yazıldığını bilen tek yer bu betik;
+ * harita da burada üretiliyor:
+ *
+ *   /sitemap.xml          dizin (index) — iki alt haritayı gösteriyor
+ *   /sitemap-sayfalar.xml rehber, bölüm, fırsat, şirket ve sabit sayfalar
+ *   /sitemap-ilanlar.xml  ilanlar. Kenar (functions/_middleware.ts) bu
+ *                         adresi CANLI veriden üretiyor; buradaki dosya
+ *                         kenar düşerse kullanılan yedek.
+ *
+ * Haritaya yalnız yayında, `noindex` taşımayan, kendi canonical'ı olan ve
+ * 200 dönen adresler giriyor. `lastmod` yalnız içeriğin kaynağındaki gerçek
+ * değişiklik tarihinden (ilan/fırsat `updated_at`, rehber/bölüm
+ * `guncelleme`); derleme günü hiçbir adrese damgalanmıyor.
+ */
+function haritaXml(kayitlar) {
+  const satirlar = kayitlar
+    .sort((a, b) => a.yol.localeCompare(b.yol))
+    .map(({ yol, lastmod }) =>
+      `  <url><loc>${kacir(SITE + yol)}</loc>${lastmod ? `<lastmod>${kacir(lastmod)}</lastmod>` : ''}</url>`,
+    )
+    .join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${satirlar}\n</urlset>\n`;
+}
+
+function siteHaritalariniYaz() {
+  const sayfalar = [];
+  const ilanlar = [];
+  for (const [yol, bilgi] of YAZILAN_ADRESLER) {
+    if (bilgi.dizinDisi || HARITADAN_DISLANAN.has(yol) || yol === '/404') continue;
+    (yol.startsWith('/ilan/') ? ilanlar : sayfalar).push({ yol, lastmod: bilgi.lastmod });
   }
+  fs.writeFileSync(path.join(dist, 'sitemap-sayfalar.xml'), haritaXml(sayfalar), 'utf8');
+  fs.writeFileSync(path.join(dist, 'sitemap-ilanlar.xml'), haritaXml(ilanlar), 'utf8');
 
-  /*
-    Yalnız bu betiğin ürettiği aileler.
-
-    `/firsatlar/` ve `/kesfet/` EKLENDİ. Önce dışarıda bırakılmışlardı
-    ("sitemap.py'ın bileceği işler") ama ölçüm başka şey gösterdi
-    (canlı, 14 Eylül 2026):
-
-      /kesfet/     haritada 99 adres, hepsi 301 alıyor — bölüm 11
-                   Eylül'de kapandı
-      /firsatlar/  haritada 116 adres, üretilen sayfa 110; aradaki
-                   kayıtların bir kısmı HTTP 404 veriyor
-
-    Bu iki aileyi de bu betik üretiyor (`YAZILAN_ADRESLER` içinde), yani
-    hangisinin sayfası olduğunu burada KESİN biliyoruz. Kaynaktaki
-    üretici de düzeltildi (automation/sitemap.py); buradaki uzlaştırma,
-    saatlik iş koşana kadar dağıtılan kopyayı doğru tutuyor.
-  */
-  const AILELER = ['/ilan/', '/sirket/', '/bolum/', '/rehber/', '/firsatlar/', '/kesfet/'];
-  const aileninMi = (yol) => AILELER.some((a) => yol.startsWith(a));
-
-  const bizim = new Set(
-    [...YAZILAN_ADRESLER].filter((y) => aileninMi(y) && !HARITADAN_DISLANAN.has(y))
+  const enYeni = (liste) => liste.map((x) => x.lastmod).filter(Boolean).sort().pop() || null;
+  const dizin = [
+    ['/sitemap-sayfalar.xml', enYeni(sayfalar)],
+    ['/sitemap-ilanlar.xml', enYeni(ilanlar)],
+  ]
+    .map(([y, l]) => `  <sitemap><loc>${SITE}${y}</loc>${l ? `<lastmod>${l}</lastmod>` : ''}</sitemap>`)
+    .join('\n');
+  fs.writeFileSync(
+    path.join(dist, 'sitemap.xml'),
+    `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${dizin}\n</sitemapindex>\n`,
+    'utf8',
   );
+  console.log(`  site haritaları: ${sayfalar.length} sayfa + ${ilanlar.length} ilan (dizin: /sitemap.xml)`);
+  return { sayfa: sayfalar.length, ilan: ilanlar.length };
+}
 
-  let xml = fs.readFileSync(harita, 'utf8');
-
-  /* Haritada duran, bize ait adresler. */
-  const mevcut = new Map();
-  const blokDeseni = /<url>[\s\S]*?<\/url>/g;
-  const bloklar = xml.match(blokDeseni) || [];
-  for (const blok of bloklar) {
-    const loc = (blok.match(/<loc>([^<]*)<\/loc>/) || [])[1];
-    if (!loc || !loc.startsWith(SITE)) continue;
-    const yol = loc.slice(SITE.length);
-    if (aileninMi(yol)) mevcut.set(yol, blok);
+/**
+ * ÖNCEKİ BAŞARILI YAYININ SAYILARI — azalma kapısı için.
+ *
+ * Canlıdaki `/_onrender/ozet.json` okunuyor. Erişilemezse (ilk dağıtım,
+ * ağ yok) kapı atlanıyor ve bu açıkça yazılıyor; derlemeyi ağa bağımlı
+ * kılmak istemiyoruz.
+ */
+async function oncekiOzetiGetir() {
+  if (process.env.ONRENDER_ONCEKI_OZET === 'yok') return null;
+  try {
+    const kesici = new AbortController();
+    const sayac = setTimeout(() => kesici.abort(), 8000);
+    const yanit = await fetch(`${SITE}/_onrender/ozet.json`, { signal: kesici.signal });
+    clearTimeout(sayac);
+    if (!yanit.ok) return null;
+    const veri = await yanit.json();
+    return veri && typeof veri === 'object' ? veri : null;
+  } catch {
+    return null;
   }
-
-  /*
-    Sayfası olmayan adresler çıkıyor. Ölçüldü: haritada duran ama
-    üretilmeyen adres, ara katmanın "dosya yoksa 404" kuralına takılıyor —
-    yani arama motoruna 404 veren bir adres bildiriyorduk.
-  */
-  const fazla = [...mevcut.keys()].filter((y) => !bizim.has(y));
-  for (const y of fazla) xml = xml.replace(mevcut.get(y), '');
-
-  /*
-    Yazılmış ama haritada olmayan adresler giriyor.
-
-    LASTMOD YAZILMIYOR — BİLEREK
-
-    Önce `bugun` damgalanıyordu. Ama bu tarih sayfanın İÇERİĞİNİN
-    değiştiği gün değil, DERLEMENİN koştuğu gün: her dağıtımda aynı
-    adresler yeniden eklenip yeniden damgalanıyordu (ölçüldü: her
-    derlemede "+169 eklendi" ve canlı haritada 169 adres o günün
-    tarihiyle). Arama motoruna "bu sayfa bugün değişti" demek, değişmediği
-    hâlde tekrar taranmasını istemek ve sinyali değersizleştirmek.
-
-    Eksik alan, YANLIŞ alandan iyidir: `lastmod` yoksa arama motoru
-    kendi ölçümünü kullanıyor. Gerçek tarih ancak içeriğin kaynağından
-    (`updated_at`) gelebilir ve onu üretici biliyor — bu uzlaştırma
-    değil.
-  */
-  const eksik = [...bizim].filter((y) => !mevcut.has(y));
-  if (eksik.length) {
-    const oncelik = (yol) => (yol.startsWith('/ilan/') ? '0.8' : '0.6');
-    const yeni = eksik
-      .map(
-        (yol) =>
-          `<url><loc>${SITE}${yol}</loc>` +
-          `<changefreq>weekly</changefreq><priority>${oncelik(yol)}</priority></url>`
-      )
-      .join('');
-    xml = xml.replace('</urlset>', `${yeni}</urlset>`);
-  }
-
-  fs.writeFileSync(harita, xml, 'utf8');
-  const toplam = (xml.match(/<url>/g) || []).length;
-  console.log(
-    `  site haritası uzlaştırıldı: +${eksik.length} eklendi, ` +
-      `-${fazla.length} çıkarıldı, toplam ${toplam} adres`
-  );
 }
 
 main().catch((e) => {
-  console.error('ön render başarısız:', e);
+  if (e instanceof VeriKaynagiHatasi) {
+    /* Anahtar, adres ve yanıt gövdesi yazdırılmıyor; yalnız kaynak, tür ve durum. */
+    console.error(`ön render DURDU — eksik yayın engellendi: ${e.message}`);
+  } else {
+    console.error('ön render başarısız:', e);
+  }
   process.exit(1);
 });

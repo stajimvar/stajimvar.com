@@ -153,49 +153,55 @@ test('F2: işveren SSS ön render ile aynı kaynaktan besleniyor', () => {
 
 /* --------------------------- G: yapısal veri başvuru modelini yansıtır */
 
-test('G: JobPosting directApply ilana göre belirleniyor', () => {
-  const onrender = readFileSync(path.join(KOK, 'scripts/onrender.mjs'), 'utf8');
-  assert.doesNotMatch(
-    onrender,
-    /directApply:\s*false\s*,/,
-    'Sabit false, StajımVar ilanlarında yanlış: başvuru sitede tamamlanıyor'
-  );
-  assert.match(onrender, /directApply:\s*i\.application_method/);
+test('G: JobPosting directApply ilana göre belirleniyor', async () => {
+  /*
+    12 Ekim 2026: JobPosting ortak modülde (src/lib/seo/ilan-sayfasi.mjs);
+    kaynak metne değil, ÜRETİLEN veriye bakılıyor. directApply başvurunun
+    gerçek yolundan (lib/basvuru-yolu.mjs): sitede tamamlanan başvuru true,
+    şirketin sayfasına giden başvuru false.
+  */
+  const { ilanJobPosting } = await import('../src/lib/seo/ilan-sayfasi.mjs');
+  const temel = {
+    id: '11111111-2222-3333-4444-555555555555',
+    title: 'Yazılım Stajyeri',
+    description: 'Ekiple birlikte web uygulaması geliştirme.',
+    posted_at: '2026-10-01',
+    city: 'İstanbul',
+    country_code: 'TR',
+    work_type: 'On-site',
+    companies: { name: 'Örnek A.Ş.' },
+  };
+  const ic = ilanJobPosting({ ...temel, application_method: 'internal' }, (s) => s).veri;
+  const dis = ilanJobPosting({ ...temel, application_method: 'external', apply_url: 'https://ornek.com/kariyer/123' }, (s) => s).veri;
+  assert.equal(ic.directApply, true);
+  assert.equal(dis.directApply, false);
 });
 
 /* ------------------------------- H: dağıtım taze site haritası basıyor */
 
-test('H: üretim dağıtımı sitemap üretiyor', () => {
-  const dagitim = readFileSync(
-    path.join(KOK, '.github/workflows/supabase-production.yml'),
-    'utf8'
-  );
-  const sitemapIndex = dagitim.indexOf('sitemap.py');
-  const buildIndex = dagitim.indexOf('npm run build', sitemapIndex);
-  assert.ok(sitemapIndex > 0, 'dağıtım iş akışı site haritasını üretmeli');
-  assert.ok(
-    buildIndex > sitemapIndex,
-    'harita derlemeden ÖNCE üretilmeli; sonra üretilirse dist içine girmez'
-  );
+test('H: üretim dağıtımı site haritasını derlemenin içinde, anonim anahtarla üretiyor', () => {
+  /*
+    12 Ekim 2026: harita artık `automation/sitemap.py` (servis anahtarı,
+    continue-on-error) ile değil, derlemenin kendisinde üretiliyor; bayat
+    bir depo kopyasının sessizce yayına girmesi mümkün değil.
+  */
+  const dagitim = readFileSync(path.join(KOK, '.github/workflows/supabase-production.yml'), 'utf8');
+  const is = dagitim.slice(dagitim.indexOf('cloudflare_production:'));
+  assert.doesNotMatch(is, /run:\s*\|?\s*\n?\s*(pip install[^\n]*\n\s*)?python sitemap\.py/, 'üretim işi sitemap.py koşmamalı');
+  assert.doesNotMatch(is, /SUPABASE_SERVICE_ROLE_KEY/, 'üretim dağıtımı servis anahtarı taşımamalı');
+  assert.doesNotMatch(is, /^\s*continue-on-error:/m, 'dağıtım adımları sessizce düşmemeli');
+  const paket = JSON.parse(readFileSync(path.join(KOK, 'package.json'), 'utf8'));
+  assert.match(paket.scripts.build, /onrender\.mjs && node scripts\/seo-kapisi\.mjs/);
+  const onrender = readFileSync(path.join(KOK, 'scripts/onrender.mjs'), 'utf8');
+  assert.match(onrender, /function siteHaritalariniYaz\(/);
 });
 
-test('H2: sitemap adımı gerçekten kurulabilen bir bağımlılık listesi kullanıyor', () => {
-  /*
-    İlk denemede `pip install requests` yazılmıştı ve betik
-    `ModuleNotFoundError: dotenv` ile düştü. Adım continue-on-error
-    olduğu için koşu yeşil göründü, bayat harita yeniden yayına girdi.
-  */
-  const dagitim = readFileSync(
-    path.join(KOK, '.github/workflows/supabase-production.yml'),
-    'utf8'
-  );
-  const blok = dagitim.slice(dagitim.indexOf('Sitemap üret'), dagitim.indexOf('npm run build', dagitim.indexOf('Sitemap üret')));
-  const m = blok.match(/pip install -r ([\w.-]+)/);
-  assert.ok(m, 'sitemap adımı bir gereksinim dosyası kurmalı');
-  const gereksinim = readFileSync(path.join(KOK, 'automation', m[1]), 'utf8');
-  for (const paket of ['python-dotenv', 'requests']) {
-    assert.match(gereksinim, new RegExp(paket), `${m[1]} içinde ${paket} yok`);
-  }
+test('H2: harita üretimi yalnız gerçekten yazılan sayfalardan', () => {
+  const onrender = readFileSync(path.join(KOK, 'scripts/onrender.mjs'), 'utf8');
+  const g = onrender.slice(onrender.indexOf('function siteHaritalariniYaz('));
+  assert.match(g, /YAZILAN_ADRESLER/);
+  assert.match(g, /bilgi\.dizinDisi \|\| HARITADAN_DISLANAN\.has\(yol\)/);
+  assert.doesNotMatch(g, /new Date\(\)/, 'derleme günü lastmod olarak damgalanmamalı');
 });
 
 test("H3: keşfet kapandı — /kesfet ön renderda ve haritada yok, adresi /firsatlar'a 301", () => {
@@ -247,13 +253,14 @@ test("H3: keşfet kapandı — /kesfet ön renderda ve haritada yok, adresi /fir
   );
 });
 
-test('H4: her sayfada tek canonical üretiliyor', () => {
-  const onrender = readFileSync(path.join(KOK, 'scripts/onrender.mjs'), 'utf8');
-  assert.match(onrender, /canonicalEtiketi/, 'canonical varsa değiştirilmeli, eklenmemeli');
-  assert.ok(
-    onrender.includes('rel="canonical"') && onrender.includes('.replace('),
-    'mevcut canonical değiştirilerek yazılmalı'
-  );
+test('H4: her sayfada tek canonical üretiliyor', async () => {
+  const { sayfaHtml } = await import('../src/lib/seo/sayfa-html.mjs');
+  const kabuk =
+    '<html><head><title>x</title><meta name="description" content="" />' +
+    '<link rel="canonical" href="https://stajimvar.com/" /></head><body><div id="root"></div></body></html>';
+  const html = sayfaHtml(kabuk, '/rehber/ornek', { baslik: 'Örnek | StajımVar', aciklama: 'a', govde: '<main><h1>Örnek</h1></main>' });
+  assert.equal((html.match(/rel="canonical"/g) || []).length, 1);
+  assert.match(html, /<link rel="canonical" href="https:\/\/stajimvar\.com\/rehber\/ornek" \/>/);
 });
 
 /* --------------------------------------- I: onay sürümü işlemeyle uyumlu */

@@ -1,3 +1,4 @@
+import { ilanYolu } from './seo/metin.mjs';
 /**
  * Adres dostu kimlikler.
  *
@@ -28,10 +29,17 @@ export function slugify(value: string): string {
 }
 
 /** İlanın adres parçası. */
+/*
+  İLAN ADRESİ SUNUCUYLA AYNI KURALDAN (12 Ekim 2026)
+
+  Burada başlık `slugify` ile 70 karaktere kısaltılıyordu; ön render ve
+  site haritası kısaltmıyordu. Ölçüldü: başlığı uzun 3 ilanda uygulama
+  içindeki bağlantı (paylaş, yeni sekmede aç) canlıda HTTP 404 dönüyordu.
+  Kural artık `lib/seo/metin.mjs` içinde tek; kısaltılmış eski bağlantılar
+  kenarda kimlik önekinden çözülüp kanonik adrese 301 alıyor.
+*/
 export function listingSlug(listing: { id: string; title: string }): string {
-  const kisaId = listing.id.replace(/-/g, '').slice(0, 8);
-  const baslik = slugify(listing.title);
-  return baslik ? `${baslik}-${kisaId}` : kisaId;
+  return ilanYolu(listing).slice('/ilan/'.length);
 }
 
 /**

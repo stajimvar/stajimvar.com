@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/ads-txt.mjs && vite build && node scripts/onrender.mjs",
+    "build": "node scripts/ads-txt.mjs && vite build && node scripts/onrender.mjs && node scripts/seo-kapisi.mjs",
+    "seo-kapisi": "node scripts/seo-kapisi.mjs",
     "preview": "wrangler pages dev dist --compatibility-date=2026-08-18",
     "paylasim-temizle": "node scripts/paylasim-temizle.mjs",
     "deploy": "wrangler pages deploy dist",

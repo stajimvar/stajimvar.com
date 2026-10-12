@@ -9,6 +9,13 @@ import {
   onbellekAnahtariAdresi,
   onbellekBasligi,
 } from '../src/lib/onbellek-politikasi.mjs';
+/*
+  KENARDA İLAN ÇİZİMİ (12 Ekim 2026) — ayrıntı src/lib/seo/kenar-ilan.mjs.
+  Sayfa derlemeyle aynı modüllerden çiziliyor; şehir sözlüğü TypeScript'te,
+  Pages paketleyicisi onu doğrudan derliyor.
+*/
+import { ilanIsteginiCoz, ilanHaritasiUret } from '../src/lib/seo/kenar-ilan.mjs';
+import { konumEtiketi } from '../src/lib/sehir';
 
 /**
  * Bilinmeyen adreslere gerçek 404, uygulama adreslerine kabuk döndürür.
@@ -225,6 +232,82 @@ function uygulamaninMi(yol: string): boolean {
 
 interface Ortam {
   ASSETS: { fetch: (istek: Request) => Promise<Response> };
+  SUPABASE_URL?: string;
+  VITE_SUPABASE_URL?: string;
+  SUPABASE_ANON_KEY?: string;
+  VITE_SUPABASE_ANON_KEY?: string;
+}
+
+/*
+  HERKESE AÇIK SUPABASE AYARI
+
+  Kenar çizimi YALNIZ anonim anahtarla okuyor (servis anahtarı satır
+  politikasını atlar; herkese açık HTML'e asla girmemeli). Önce Pages
+  ortam değişkenlerine bakılıyor; tanımlı değillerse derlemenin yazdığı
+  `/_onrender/supabase-genel.json` okunuyor. O dosyadaki iki değer zaten
+  her ziyaretçiye giden JavaScript paketinde duruyor — gizli değil — ve
+  dosya `noindex`. Böylece kenar çizimi bir panel ayarına bağımlı kalmıyor.
+*/
+let genelAyar: { taban?: string; anahtar?: string } | null = null;
+let kabukOnbellegi: string | null = null;
+
+async function supabaseAyari(env: Ortam, istekAdresi: string): Promise<{ taban?: string; anahtar?: string }> {
+  const taban = env.SUPABASE_URL || env.VITE_SUPABASE_URL;
+  const anahtar = env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY;
+  if (taban && anahtar) return { taban, anahtar };
+  if (genelAyar) return genelAyar;
+  try {
+    const cevap = await env.ASSETS.fetch(new Request(new URL('/_onrender/supabase-genel.json', istekAdresi).toString()));
+    if (cevap.ok) {
+      const veri = (await cevap.json()) as { url?: string; anonKey?: string };
+      genelAyar = { taban: veri.url, anahtar: veri.anonKey };
+      return genelAyar;
+    }
+  } catch {
+    /* Ayar okunamadı: ilan isteği yedek dosyaya düşecek. */
+  }
+  return {};
+}
+
+let gecerliSirketler: Set<string> | null = null;
+
+/** Derlemenin yazdığı şirket adresleri (gecerli-adresler.json); okunamazsa null. */
+async function sirketAdresleri(env: Ortam, istekAdresi: string): Promise<Set<string> | null> {
+  if (gecerliSirketler) return gecerliSirketler;
+  try {
+    const cevap = await env.ASSETS.fetch(new Request(new URL('/gecerli-adresler.json', istekAdresi).toString()));
+    if (!cevap.ok) return null;
+    const veri = (await cevap.json()) as { sirket?: string[] };
+    gecerliSirketler = new Set(veri.sirket || []);
+    return gecerliSirketler;
+  } catch {
+    return null;
+  }
+}
+
+async function kabukGetir(env: Ortam, istekAdresi: string): Promise<string | null> {
+  if (kabukOnbellegi) return kabukOnbellegi;
+  try {
+    const cevap = await env.ASSETS.fetch(new Request(new URL('/_onrender/kabuk', istekAdresi).toString()));
+    if (!cevap.ok) return null;
+    kabukOnbellegi = await cevap.text();
+    return kabukOnbellegi;
+  } catch {
+    return null;
+  }
+}
+
+/** Derlemenin yazdığı 404 sayfası — gerçek 404 kodu ve noindex ile. */
+async function bulunamadi(env: Ortam, istekAdresi: string): Promise<Response> {
+  const sayfa = await env.ASSETS.fetch(new Request(new URL('/404.html', istekAdresi).toString()));
+  return new Response(await sayfa.text(), {
+    status: 404,
+    headers: {
+      'content-type': 'text/html; charset=utf-8',
+      'cache-control': 'no-store',
+      'x-robots-tag': 'noindex',
+    },
+  });
 }
 
 /**
@@ -278,7 +361,19 @@ async function tazele(
 ): Promise<void> {
   try {
     const taze = onbellegiIsaretle(await next(), request);
+    /*
+      KAYIT ARTIK YOKSA KOPYA DA SİLİNİYOR (12 Ekim 2026)
+
+      Eskiden 200 dışı tazelemede yalnız `return` vardı: kapatılan bir
+      ilanın bayat 200 kopyası bayatlık penceresi bitene kadar sunulmaya
+      devam ediyordu. 404/410 gelince kopya hemen siliniyor.
+    */
+    if (taze.status === 404 || taze.status === 410) {
+      await onbellek.delete(anahtar);
+      return;
+    }
     if (taze.status !== 200) return;
+    if (taze.headers.get('x-ilan-kaynagi') === 'statik-yedek') return;
     if (!(taze.headers.get('content-type') || '').includes('text/html')) return;
     if (taze.headers.has('set-cookie')) return;
     const saklanacak = new Response(taze.body, taze);
@@ -345,10 +440,16 @@ async function kenardanSun(
   const cevap = await next();
   const isaretli = onbellegiIsaretle(cevap, request);
 
+  /*
+    STATİK YEDEK ÖNBELLEĞE GİRMİYOR: veritabanı okunamadığında sunulan
+    derleme dosyası (bkz. ilan dalı) bayat olabilir. Önbelleğe girseydi
+    veritabanı düzeldikten sonra da dakikalarca o kopya sunulurdu.
+  */
   const saklanabilir =
     isaretli.status === 200 &&
     (isaretli.headers.get('content-type') || '').includes('text/html') &&
-    !isaretli.headers.has('set-cookie');
+    !isaretli.headers.has('set-cookie') &&
+    isaretli.headers.get('x-ilan-kaynagi') !== 'statik-yedek';
 
   const yeni = new Response(isaretli.body, isaretli);
   yeni.headers.set('x-onbellek', saklanabilir ? 'MISS' : 'ATLANDI');
@@ -371,6 +472,131 @@ async function kenardanSun(
 
 export const onRequest: PagesFunction<Ortam> = async (baglam) => {
   const { request, next, env } = baglam;
+  const istekAdresi = new URL(request.url);
+  const istekYolu = istekAdresi.pathname;
+
+  /*
+    www → ÇIPLAK ALAN ADI, YOL VE SORGU KORUNARAK (12 Ekim 2026)
+
+    Canlıda www yönlendirmesi Cloudflare panelindeki bir kuraldan geliyor
+    ve hedefi sabit "https://stajimvar.com": /rehber/x?utm=… isteği ana
+    sayfaya düşüyor (ölçüldü). Asıl düzeltme panelde (docs/seo/www-yonlendirmesi.md).
+    Bu dal, www isteği bir gün Pages'e ulaşırsa (kural kaldırılır ve www
+    Pages'e özel alan adı olarak bağlanırsa) doğru davranışı garanti ediyor.
+  */
+  if (istekAdresi.hostname === 'www.stajimvar.com') {
+    return new Response(null, {
+      status: 301,
+      headers: {
+        location: `https://stajimvar.com${istekYolu}${istekAdresi.search}`,
+        'cache-control': 'public, max-age=86400',
+      },
+    });
+  }
+  const okuma = request.method === 'GET' || request.method === 'HEAD';
+
+  /*
+    İLAN SİTE HARİTASI — CANLI (12 Ekim 2026)
+
+    Yayındaki ilan listesi her birleştirmede değil, her yayımlamada
+    değişiyor. Harita canlı veriden üretiliyor ve 10 dakika kenarda
+    tutuluyor. Okuma başarısızsa derlemenin yazdığı dosya sunuluyor:
+    boş bir harita asla dönmüyor.
+  */
+  if (okuma && istekYolu === '/sitemap-ilanlar.xml') {
+    const onbellek = (caches as unknown as { default: Cache }).default;
+    const anahtar = new Request(new URL('/sitemap-ilanlar.xml', request.url).toString(), { method: 'GET' });
+    const bulunan = await onbellek.match(anahtar);
+    if (bulunan) return bulunan;
+    const xml = await ilanHaritasiUret({ ayar: await supabaseAyari(env, request.url), getir: fetch });
+    if (!xml) {
+      const yedek = await next();
+      const yeni = new Response(yedek.body, yedek);
+      yeni.headers.set('x-harita-kaynagi', 'statik-yedek');
+      return yeni;
+    }
+    const cevap = new Response(xml, {
+      status: 200,
+      headers: {
+        'content-type': 'application/xml; charset=utf-8',
+        'cache-control': 'public, max-age=600',
+        'x-harita-kaynagi': 'canli',
+      },
+    });
+    baglam.waitUntil(onbellek.put(anahtar, cevap.clone()));
+    return cevap;
+  }
+
+  /*
+    İLAN SAYFASI — KENARDA CANLI VERİDEN (12 Ekim 2026)
+
+    Ayrıntı ve karar tablosu src/lib/seo/kenar-ilan.mjs. Kısaca: yayındaki
+    ilan 200, adresi eski/kısaltılmış olan 301, yayında olmayan 404 +
+    noindex; veri okunamazsa derlemedeki dosya, o da yoksa 503.
+    Kenar önbelleği (`kenardanSun`) yalnız 200 HTML'i tutuyor.
+  */
+  if (okuma && istekYolu.startsWith('/ilan/') && istekYolu.length > '/ilan/'.length) {
+    const uret = async (): Promise<Response> => {
+      const sonuc = await ilanIsteginiCoz({
+        yol: istekYolu,
+        ayar: await supabaseAyari(env, request.url),
+        getir: fetch,
+        kabukGetir: () => kabukGetir(env, request.url),
+        gorselVarMi: async (gorsel: string) => {
+          try {
+            const c = await env.ASSETS.fetch(new Request(new URL(gorsel, request.url).toString(), { method: 'HEAD' }));
+            return c.ok;
+          } catch {
+            return false;
+          }
+        },
+        konumEtiketi,
+        /*
+          Şirket bağlantısı yalnız sayfası olan şirkete: dağıtımdan sonra
+          eklenen bir şirketin adresi bir sonraki derlemeye kadar 404 döner,
+          ilan sayfası kırık bağlantı vermesin.
+        */
+        sirketSayfasiVarMi: async (slug: string) => (await sirketAdresleri(env, request.url))?.has(slug) ?? false,
+      });
+      if (sonuc.tur === 200) {
+        return new Response(sonuc.html, {
+          status: 200,
+          headers: { 'content-type': 'text/html; charset=utf-8', 'x-ilan-kaynagi': 'kenar' },
+        });
+      }
+      if (sonuc.tur === 301) {
+        return new Response(null, {
+          status: 301,
+          headers: { location: new URL(sonuc.konum, request.url).toString(), 'cache-control': 'public, max-age=3600' },
+        });
+      }
+      if (sonuc.tur === 404) return bulunamadi(env, request.url);
+      /* Yedek: derlemede yazılan dosya (ve _redirects'teki eski kimlik kuralları). */
+      const statik = await next();
+      if (statik.status !== 404) {
+        const yeni = new Response(statik.body, statik);
+        yeni.headers.set('x-ilan-kaynagi', 'statik-yedek');
+        return yeni;
+      }
+      return new Response('İlan şu anda yüklenemiyor. Birkaç dakika sonra yeniden dene.', {
+        status: 503,
+        headers: {
+          'content-type': 'text/plain; charset=utf-8',
+          'retry-after': '120',
+          'cache-control': 'no-store',
+          'x-robots-tag': 'noindex',
+        },
+      });
+    };
+    const ilanCevabi = await kenardanSun(request, uret, (is) => baglam.waitUntil(is));
+    /* Yalnız 200 kenarda tutuluyor; 404 ve 503 paylaşılan önbelleğe girmesin. */
+    if (ilanCevabi.status === 404 || ilanCevabi.status === 503) {
+      const yeni = new Response(ilanCevabi.body, ilanCevabi);
+      yeni.headers.set('cache-control', 'no-store');
+      return yeni;
+    }
+    return ilanCevabi;
+  }
 
   /*
     Önbellek kapısı EN ÖNDE: isabet varsa `next()` hiç çağrılmıyor, yani
@@ -398,11 +624,12 @@ export const onRequest: PagesFunction<Ortam> = async (baglam) => {
     da yok demektir: 404.html gerçek 404 koduyla dönüyor. O sayfada
     "Sayfa bulunamadı" gövdesi ve `noindex` zaten var.
 
-    KABUL EDİLEN ÖDÜNÇ: son dağıtımdan SONRA yayına alınmış bir ilan, bir
-    sonraki dağıtıma kadar doğrudan açıldığında 404 alır. Uygulama içinden
-    tıklayan etkilenmiyor (istemci tarafı gezinme, sunucuya uğramıyor) ve
-    otomasyon saat başı yeniden dağıtıyor. Var olmayan yüzlerce adresi
-    indekslenebilir kılmaktansa bu pencere kabul edildi.
+    /ilan/ ARTIK BURAYA DÜŞMÜYOR (12 Ekim 2026): yukarıda kenarda canlı
+    veriden çiziliyor. Eskiden burada "son dağıtımdan sonra yayımlanan ilan
+    bir sonraki dağıtıma kadar 404 alır; otomasyon saat başı yeniden
+    dağıtıyor" yazıyordu — ikinci yarısı doğru değildi: saatlik
+    otomasyonun dağıtım adımı `if: false`, yayın yalnız `main`e
+    birleştirmede oluyor. Pencere günlerce sürebiliyordu.
   */
   const veriyeDayali =
     !sirketPaneliMi(yol) &&

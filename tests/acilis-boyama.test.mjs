@@ -32,7 +32,8 @@ function sayfalar() {
   const gez = (dizin) => {
     for (const oge of fs.readdirSync(dizin, { withFileTypes: true })) {
       const tam = path.join(dizin, oge.name);
-      if (oge.isDirectory()) gez(tam);
+      /* _onrender/: kenar çiziminin BOŞ kabuğu ve raporlar — sayfa değil. */
+      if (oge.isDirectory()) { if (oge.name !== '_onrender') gez(tam); }
       else if (oge.name.endsWith('.html')) bulunan.push(tam);
     }
   };

@@ -19,6 +19,17 @@
 /kurum-logolari/*
   Cache-Control: public, max-age=86400
 
+# Ön render yardımcı dosyaları (kenar çiziminin kabuğu, herkese açık
+# Supabase ayarı, özet ve veri eksikleri raporu) — arama motoru için içerik
+# değil. 12 Ekim 2026.
+/_onrender/*
+  X-Robots-Tag: noindex
+
+# Site haritaları: dizin + sayfalar statik, ilanlar kenarda canlı.
+/sitemap*.xml
+  Content-Type: application/xml; charset=utf-8
+  Cache-Control: public, max-age=600
+
 # HTML her istekte tazeleniyor: ilan ve rehber içeriği değişiyor.
 /*.html
   Cache-Control: public, max-age=0, must-revalidate

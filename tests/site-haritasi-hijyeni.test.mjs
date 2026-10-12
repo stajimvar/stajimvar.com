@@ -46,29 +46,36 @@ test('LASTMOD DERLEME TARİHİYLE DAMGALANMIYOR', () => {
     Eksik alan yanlış alandan iyidir: `lastmod` yoksa arama motoru kendi
     ölçümünü kullanıyor.
   */
+  /*
+    12 Ekim 2026: harita artık tek üreticide (`siteHaritalariniYaz`) ve
+    `lastmod` yalnız sayfanın kaynağındaki değişiklik tarihinden geliyor
+    (`sayfaYaz(..., { lastmod })`). Üretici derleme anına hiç bakmıyor.
+  */
   const betik = oku('scripts/onrender.mjs');
-  const blok = betik.slice(betik.indexOf('const eksik = [...bizim]'), betik.indexOf('</urlset>', betik.indexOf('const eksik')));
-  assert.doesNotMatch(blok, /<lastmod>/);
-  /* Kullanılmayan değişken de kalmadı. */
   const kod = betik.replace(/\/\*[\s\S]*?\*\//g, ' ');
-  assert.doesNotMatch(kod, /const bugun =/);
+  const uretici = kod.slice(kod.indexOf('function haritaXml('), kod.indexOf('async function oncekiOzetiGetir('));
+  assert.ok(uretici.length > 100, 'harita üreticisi bulunamadı');
+  assert.doesNotMatch(uretici, /new Date\(|Date\.now\(|bugun/);
+  assert.match(uretici, /lastmod: bilgi\.lastmod/);
 });
 
-test('uzlaştırma /firsatlar/ ve /kesfet/ ailelerini de kapsıyor', () => {
+test('harita yalnız bu betiğin GERÇEKTEN yazdığı, dizine açık sayfalardan üretiliyor', () => {
   const betik = oku('scripts/onrender.mjs');
-  assert.match(
-    betik,
-    /const AILELER = \['\/ilan\/', '\/sirket\/', '\/bolum\/', '\/rehber\/', '\/firsatlar\/', '\/kesfet\/'\];/,
-  );
+  assert.match(betik, /if \(bilgi\.dizinDisi \|\| HARITADAN_DISLANAN\.has\(yol\) \|\| yol === '\/404'\) continue;/);
+  /* Depodaki bayat public/sitemap.xml artık temel alınmıyor. */
+  assert.doesNotMatch(betik.replace(/\/\*[\s\S]*?\*\//g, ' '), /readFileSync\(harita/);
 });
 
 test('dağıtılan harita ile üretilen sayfalar birebir örtüşüyor', () => {
-  const harita = path.join(KOK, 'dist', 'sitemap.xml');
+  const dizin = path.join(KOK, 'dist', 'sitemap.xml');
   const klasor = path.join(KOK, 'dist', 'firsatlar');
   /* Derleme yapılmadan koşan testte bu dosyalar yok; sessizce geçiliyor. */
-  if (!existsSync(harita) || !existsSync(klasor)) return;
+  if (!existsSync(dizin) || !existsSync(klasor)) return;
 
-  const xml = readFileSync(harita, 'utf8');
+  /* /sitemap.xml bir dizin: gösterdiği alt haritalar birlikte okunuyor. */
+  const xml = [...readFileSync(dizin, 'utf8').matchAll(/<loc>https:\/\/stajimvar\.com\/([^<]+)<\/loc>/g)]
+    .map((m) => readFileSync(path.join(KOK, 'dist', m[1]), 'utf8'))
+    .join('\n');
   const haritada = new Set(
     [...xml.matchAll(/<loc>https:\/\/stajimvar\.com\/firsatlar\/([^<]+)<\/loc>/g)].map((m) => m[1]),
   );

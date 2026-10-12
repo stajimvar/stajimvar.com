@@ -159,14 +159,13 @@ jobs:
         run: python promote.py
         working-directory: automation
 
-      # İlan listesi her turda değişiyor; sitemap de değişmeli. Elle
-      # yazılan bir sitemap bir gün sonra kapanan ilana yönlendirir ve yeni
-      # ilanı hiç tanıtmaz. Çıktı bir sonraki dağıtımda yayına giriyor.
-      - name: Sitemap üret
-        if: ${{ !inputs.dry_run }}
-        run: python sitemap.py
-        working-directory: automation
-        continue-on-error: true
+      # SİTE HARİTASI BURADA ÜRETİLMİYOR (12 Ekim 2026)
+      #
+      # Burada `sitemap.py` koşuyordu ve çıktısı "bir sonraki dağıtımda
+      # yayına giriyor" deniyordu. Doğru değildi: çıktı bu koşucuda kalıyor,
+      # depoya yazılmıyor ve bu iş dağıtım yapmıyor. İlan haritası artık
+      # kenarda canlı veriden (/sitemap-ilanlar.xml, functions/_middleware.ts),
+      # geri kalanı derlemede (scripts/onrender.mjs) üretiliyor.
 
       # Yeni şirketlerin logosunu kendi sitelerinden çeker. Logosu olanları
       # atlar, yani her çalıştırmada yalnızca yeni gelenler işlenir.
@@ -176,52 +175,19 @@ jobs:
         working-directory: automation
         continue-on-error: true
 
-      # --- Siteyi yayına al ------------------------------------------------
+      # --- Siteyi yayına almak bu işin görevi DEĞİL (12 Ekim 2026) ---------
       #
-      # NEDEN GEREKLİ
-      # Site artık ön render ediliyor: ilan sayfalarının HTML'i, JobPosting
-      # yapısal verisi ve site haritası DERLEME anında üretiliyor. Tarama
-      # yeni bir ilan bulup veritabanına yazsa bile, dağıtım olmadan o ilanın
-      # arama motorunun göreceği sayfası oluşmuyor.
+      # Burada Node kurulumu, `npm run build` ve `if: false` ile kapatılmış
+      # bir Pages yüklemesi duruyordu: her saat derleniyor, hiçbir şey
+      # yayına çıkmıyordu. Yorum ise "Google for Jobs'ta tazelik için her
+      # tarama sonrası dağıtılıyor" diyordu.
       #
-      # Google for Jobs'ta tazelik her şey; bir ilanı elle dağıtım
-      # bekletmek onu değersizleştiriyor.
-      #
-      # SIR YOKSA SESSİZCE ATLANIR
-      # `if` koşulu token'ın varlığına bakıyor. Sırlar tanımlanmadan bu adım
-      # hiç çalışmıyor — çalışmayacak bir işi kırmızı bildirimle her saat
-      # tekrarlatmak, bu dosyada zaten bilerek kaçınılan bir şey.
-      - name: Node kur
-        if: ${{ !inputs.dry_run && env.CLOUDFLARE_API_TOKEN != '' && env.VITE_SUPABASE_ANON_KEY != '' }}
-        uses: actions/setup-node@v4
-        with:
-          # Wrangler 4 en az Node 22 istiyor; 20 ile 'requires at least
-          # Node.js v22' diyip cikiyor (olculdu, dagitim adimi bu yuzden
-          # dustu). Derleme 20 ile de calisiyordu, kiran yalnizca yukleme.
-          node-version: '22'
-          cache: npm
-
-      - name: Bağımlılıklar
-        if: ${{ !inputs.dry_run && env.CLOUDFLARE_API_TOKEN != '' && env.VITE_SUPABASE_ANON_KEY != '' }}
-        run: npm ci
-
-      # Derleme ön render betiğini de çalıştırıyor; o betik ilanları
-      # Supabase'ten okuyor, bu yüzden VITE_* değişkenleri gerekiyor.
-      - name: Derle
-        if: ${{ !inputs.dry_run && env.CLOUDFLARE_API_TOKEN != '' && env.VITE_SUPABASE_ANON_KEY != '' }}
-        run: npm run build
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ env.VITE_SUPABASE_ANON_KEY }}
-
-      - name: Cloudflare Pages'e yükle
-        # Production yayın sırası Supabase migration/function başarılı olduktan
-        # sonra yalnızca supabase-production.yml tarafından yönetilir.
-        if: ${{ false }}
-        run: npx wrangler pages deploy dist --project-name stajimvar --commit-dirty=true
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ env.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+      # Yeni ilanın sayfası artık dağıtım beklemiyor: /ilan/<adres> kenarda
+      # canlı veriden çiziliyor ve ilan haritası canlı üretiliyor (ayrıntı
+      # src/lib/seo/kenar-ilan.mjs). Üretim dağıtımının TEK yolu
+      # supabase-production.yml: güvenlik regresyonu ve göç kapılarından
+      # geçmeden yayın yok. Bu yüzden ikinci bir dağıtım yolu açılmadı,
+      # ölü derleme adımları kaldırıldı.
 
 # --- Devre dışı: başvuru e-postası gönderimi ---------------------------------
 # Eski repodaki `notify` işi, henüz kurmadığımız bir e-posta sağlayıcısına ve
