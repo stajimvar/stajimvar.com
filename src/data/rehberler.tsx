@@ -17,6 +17,7 @@ import {
   RehberFigur,
   RehberOrnek,
 } from '../components/RehberGorseller';
+import { OgrenciBolumGorseli } from '../components/RehberBolum';
 
 /**
  * Rehber içerikleri.
@@ -254,7 +255,7 @@ export const konuEtiketi = (id: KonuId): string =>
 const METIN_OLMAYAN_PROPLAR = new Set([
   'className', 'style', 'href', 'src', 'id', 'key', 'ref', 'target', 'rel',
   'type', 'width', 'height', 'viewBox', 'd', 'fill', 'stroke', 'xmlns',
-  'loading', 'role', 'aria-hidden', 'alt', 'onError', 'onClick',
+  'loading', 'role', 'aria-hidden', 'alt', 'onError', 'onClick', 'dosya',
 ]);
 
 /*
@@ -263,7 +264,13 @@ const METIN_OLMAYAN_PROPLAR = new Set([
   değil. Yalnız bu adlar atlanıyor; düz nesnelerdeki diğer alanlar eskisi gibi sayılıyor ki başka
   rehberlerin okuma süresi değişmesin.
 */
-const METIN_OLMAYAN_ALANLAR = new Set(['dosya', 'depoAnahtari', 'ikon', 'kisaAd']);
+/*
+  Öğrenci bölüm fotoğrafı (12 Ekim 2026): `gorselAlt` alt metin, `konum`
+  yerleşim. İkisi de yeni ve yalnız bu alanda geçiyor; başka rehberlerin
+  süresi değişmiyor. JSX'teki `<OgrenciBolumGorseli dosya=…>` için `dosya`
+  prop listesinde (hiçbir başka öğe bu prop'u taşımıyor).
+*/
+const METIN_OLMAYAN_ALANLAR = new Set(['dosya', 'depoAnahtari', 'ikon', 'kisaAd', 'gorselAlt', 'konum']);
 
 function metniTopla(dugum: unknown, kova: string[] = []): string[] {
   if (dugum == null || typeof dugum === 'boolean' || typeof dugum === 'function') return kova;
@@ -445,6 +452,12 @@ export const REHBERLER: Rehber[] = [
         </P>
 
         <B>1. Okulunun staj birimiyle başla, şirketle değil</B>
+        <OgrenciBolumGorseli
+          dosya="001-zorunlu-staj-rehberi-1"
+          baslik="Okulun kurallarını öğren"
+          ozet="Staj dönemini, kabul edilen iş yeri türünü ve gereken belgeleri şirketle anlaşmadan önce staj biriminden öğren."
+          alt="Danışman masadaki açık dosyada boş bir kontrol listesini gösteriyor; karşısında yanağını eline dayamış bir öğrenci dinliyor."
+        />
         <P>
           En sık yapılan hata, önce şirket bulup sonra okula gitmek. Oysa okul her yıl staj
           dönemini, kabul edilen iş yeri türünü ve gereken belgeleri belirliyor. Şirketle
@@ -457,6 +470,12 @@ export const REHBERLER: Rehber[] = [
         </L>
 
         <B>2. Zorunlu staj belgesini al</B>
+        <OgrenciBolumGorseli
+          dosya="002-zorunlu-staj-rehberi-2"
+          baslik="Formu şirkete imzalat"
+          ozet="Okulun staj formu stajın müfredat kapsamında olduğunu gösteriyor; şirket bu belgeyi görmeden seni başlatmamalı."
+          alt="Öğrenci, masanın karşısında oturan gözlüklü işyeri temsilcisine bir form uzatıyor."
+        />
         <P>
           Okulun hazırladığı staj formu, stajın müfredat kapsamında olduğunu ve okulun süreçte
           taraf olduğunu gösteriyor. Şirket bu belgeyi görmeden seni başlatmamalı — belge, hem
@@ -464,6 +483,12 @@ export const REHBERLER: Rehber[] = [
         </P>
 
         <B>3. Sigorta kimde?</B>
+        <OgrenciBolumGorseli
+          dosya="003-zorunlu-staj-rehberi-3"
+          baslik="Sigorta girişini teyit et"
+          ozet="Sigorta genellikle okulda, ama program türüne göre değişebiliyor; başlamadan önce okulundan yazılı teyit al."
+          alt="Sırt çantalı bir öğrenci, masada açık bir dosyayı inceleyen ofis görevlisine eğilmiş soru soruyor."
+        />
         <P>
           İşverenlerin en çok tereddüt ettiği ve staj bulmayı zorlaştıran nokta bu.{' '}
           <strong className="text-gray-900">
@@ -494,6 +519,12 @@ export const REHBERLER: Rehber[] = [
         </P>
 
         <B>Sık yapılan hatalar</B>
+        <OgrenciBolumGorseli
+          dosya="004-zorunlu-staj-rehberi-4"
+          baslik="Defter ve belgeleri teslim et"
+          ozet="Staj defterini son haftaya bırakma; bitişte şirketten onaylı belgeyi almadan ayrılma."
+          alt="Öğrenci, ofis masasındaki görevliye bir defter ve dosya teslim ediyor; arkada başka öğrenciler var."
+        />
         <L>
           <li>Belgeyi almadan staja başlamak — sonradan sayılmama riski var.</li>
           <li>Devamsızlık takibini ciddiye almamak; staj iş günü üzerinden sayılıyor.</li>
@@ -610,6 +641,12 @@ export const REHBERLER: Rehber[] = [
         />
 
         <B>Deneyim yerine ne yazılır</B>
+        <OgrenciBolumGorseli
+          dosya="005-staj-cv-nasil-yazilir-1"
+          baslik="Deneyim yerine projeleri göster"
+          ozet="İş deneyimin yoksa okul projelerini, kişisel çalışmalarını, kulüp ve gönüllü işlerini yaz."
+          alt="Öğrenci masadaki küçük bir robot prototipine ve çizim defterine bakarak CV’sine yazacağı projeleri seçiyor."
+        />
         <L>
           <li>
             <strong>Okul projeleri.</strong> Bitirme projesi, dönem ödevi, atölye çalışması.
@@ -732,6 +769,12 @@ export const REHBERLER: Rehber[] = [
         </P>
 
         <B>Beceri yazarken seviye belirt</B>
+        <OgrenciBolumGorseli
+          dosya="007-staj-cv-nasil-yazilir-3"
+          baslik="Becerileri gerçek seviyesiyle yaz"
+          ozet="Becerinin yanına ne yapabildiğini yaz; mülakatta yapamayacağın bir şeyi yazma."
+          alt="Öğrenci masada ahşap bir maket, küçük bir robot ve dizüstü bilgisayarın önünde kalemi çenesinde düşünüyor."
+        />
         <P>
           "Excel biliyorum" bir şey söylemiyor. "Excel — PIVOT tablo ve DÜŞEYARA seviyesinde"
           söylüyor. Abartma: mülakatta sorulduğunda yapamadığın bir şeyi yazmak, hiç yazmamaktan
@@ -770,12 +813,24 @@ export const REHBERLER: Rehber[] = [
         />
 
         <B>Bir sayfa yeter</B>
+        <OgrenciBolumGorseli
+          dosya="006-staj-cv-nasil-yazilir-2"
+          baslik="Bir sayfa yeter"
+          ozet="Staj başvurusunda tek sayfa yeterli; en güçlü şeyin ilk yarım sayfada olsun."
+          alt="Öğrenci masadaki uzun CV taslağı yığınının yanında tek sayfalık bir taslağı kalemle işaretliyor."
+        />
         <P>
           Staj başvurusunda iki sayfalık CV, doldurmak için uzatıldığı izlenimi veriyor.
           Okuyan kişi ortalama birkaç saniye bakıyor; en güçlü şeyin ilk yarım sayfada olsun.
         </P>
 
         <B>Her başvuruya aynı CV'yi gönderme</B>
+        <OgrenciBolumGorseli
+          dosya="008-staj-cv-nasil-yazilir-4"
+          baslik="Başvuruya göre düzenle"
+          ozet="İlanda geçen kelimeleri CV’nde kullan; aynı işi farklı adla anlatınca eşleşme kurulamıyor."
+          alt="Kütüphane masasında öğrenci elindeki tek sayfalık kâğıdı okuyor; önünde bir dizüstü bilgisayar var."
+        />
         <P>
           İlanda geçen kelimeleri CV'nde kullan. "Üretim planlama" arayan bir ilana, aynı işi
           "operasyon takibi" diye anlatan bir CV gönderirsen eşleşme kurulamıyor.
@@ -871,6 +926,12 @@ export const REHBERLER: Rehber[] = [
         />
 
         <B>Proje anlatırken dört adım</B>
+        <OgrenciBolumGorseli
+          dosya="009-staj-mulakati-1"
+          baslik="Projeni anlatmaya hazırlan"
+          ozet="Durumu, kendi payını ve sonucu sırayla anlat; sayı veremiyorsan uydurma."
+          alt="Öğrenci masadaki küçük bir ev maketini gösterip karşısındaki arkadaşına projesini anlatıyor."
+        />
         <Akis
           adimlar={[
             { baslik: 'Soru', aciklama: 'Karşındaki genelde "bize bir projenden bahset" diyor.' },
@@ -969,6 +1030,12 @@ export const REHBERLER: Rehber[] = [
         />
 
         <B>Ücret ve günler nasıl konuşulur</B>
+        <OgrenciBolumGorseli
+          dosya="010-staj-mulakati-2"
+          baslik="Görüşmede karşılıklı konuş"
+          ozet="Sonda doğal bir sırayla sor: hangi günler gelmen gerekiyor, çalışma saatleri ne, ödeme yapılıyor mu."
+          alt="Öğrenci ve gözlüklü görüşmeci bir ofis masasında yüz yüze, rahat bir şekilde konuşuyor."
+        />
         <P>
           Öğrencilerin en çekindiği kısım bu, oysa işveren de aynı bilgiyi netleştirmek
           istiyor. Sen sormazsan konu havada kalıyor ve staj başladıktan sonra sorun oluyor.
@@ -978,6 +1045,12 @@ export const REHBERLER: Rehber[] = [
         </P>
 
         <B>Hazırlık: üç şey yeter</B>
+        <OgrenciBolumGorseli
+          dosya="011-staj-mulakati-3"
+          baslik="Şirketi önceden araştır"
+          ozet="Şirketin ne ürettiğine, kaç kişi olduğuna ve hangi şehirde çalıştığına beş dakika bakmak bile fark ediliyor."
+          alt="Öğrenci kütüphanede elindeki notları okuyor, kalemini çenesine dayamış düşünüyor."
+        />
         <L>
           <li>
             <strong>Şirketi tanı.</strong> Ne üretiyor, kaç kişiler, hangi şehirde. Beş dakikalık
@@ -1001,6 +1074,12 @@ export const REHBERLER: Rehber[] = [
         </L>
 
         <B>Sonrasında</B>
+        <OgrenciBolumGorseli
+          dosya="012-staj-mulakati-4"
+          baslik="Görüşme sonrası teşekkür"
+          ozet="Kısa bir teşekkür mesajı gönder; cevap gelmezse bir hafta sonra bir kez daha yaz."
+          alt="Ceketli öğrenci bir binanın lobisinde oturmuş, defterine kısa bir not yazıyor."
+        />
         <P>
           Kısa bir <a href="/rehber/staj-basvuru-epostasi" className="text-blue-600 hover:underline font-semibold">teşekkür mesajı</a> gönder. Cevap gelmezse bir hafta sonra bir kez daha yaz;
           ikiden fazla ısrar ters etki yapıyor.
@@ -1099,6 +1178,12 @@ export const REHBERLER: Rehber[] = [
         </P>
 
         <B>Zayıf e-posta ile daha iyisi</B>
+        <OgrenciBolumGorseli
+          dosya="015-staj-basvuru-epostasi-3"
+          baslik="Şirkete özel bir cümle yaz"
+          ozet="Neden o şirkete yazdığını tek cümleyle söyle; aynı metin herkese gitmiş gibi durmasın."
+          alt="Öğrenci, dizüstü bilgisayarının önünde bir şirketin proje broşürünü inceliyor."
+        />
         <Karsilastirma
           kotuBaslik="Zayıf"
           iyiBaslik="Daha iyi"
@@ -1117,6 +1202,12 @@ export const REHBERLER: Rehber[] = [
         />
 
         <B>Örnek e-posta</B>
+        <OgrenciBolumGorseli
+          dosya="013-staj-basvuru-epostasi-1"
+          baslik="Kısa e-posta taslağı hazırla"
+          ozet="Kim olduğunu, hangi tarihlerde staj yapacağını ve neden o şirketi seçtiğini kısa tut."
+          alt="Öğrenci dizüstü bilgisayarın yanında defterine kısa bir metin taslağı yazıyor."
+        />
         <EpostaOrnegi
           kime="ik@ornek-sirket.com"
           konu="Staj Başvurusu — Makine Mühendisliği — Temmuz/Ağustos"
@@ -1154,6 +1245,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </P>
 
         <B>Sık yapılan altı hata</B>
+        <OgrenciBolumGorseli
+          dosya="016-staj-basvuru-epostasi-4"
+          baslik="CV ekini kontrol et"
+          ozet="CV’yi PDF olarak, adını taşıyan bir dosya adıyla gönder ve ekin gerçekten iliştirildiğine bak."
+          alt="Öğrenci tek sayfalık bir kâğıdı lacivert bir dosyanın içine yerleştiriyor."
+        />
         <L>
           <li>
             <strong>Toplu gönderim.</strong> Otuz kişiyi "Kime" satırına yazmak. Herkes
@@ -1188,6 +1285,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </P>
 
         <B>Göndermeden önce</B>
+        <OgrenciBolumGorseli
+          dosya="014-staj-basvuru-epostasi-2"
+          baslik="Göndermeden önce kontrol"
+          ozet="Konu satırını, şirket adını, ekteki dosyayı ve alıcıyı göndermeden bir kez daha kontrol et."
+          alt="Öğrenci kapalı dizüstü bilgisayarın ve masa saatinin yanında defterindeki kontrol listesini işaretliyor."
+        />
         <KontrolListesi
           baslik="Son kontrol"
           maddeler={[
@@ -1271,6 +1374,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </Uyari>
 
         <B>Her gün ne yazılır</B>
+        <OgrenciBolumGorseli
+          dosya="017-staj-defteri-nasil-doldurulur-1"
+          baslik="Her gün not tut"
+          ozet="Bir günün kaydı üç parça: ne yapıldı, nasıl yapıldı, ne öğrenildi."
+          alt="Atölyede iş tulumlu bir öğrenci defterine not alıyor; yanında bir usta metal bir parçayı inceliyor."
+        />
         <P>
           Bir günün kaydı üç parçadan oluşuyor: ne yapıldı, nasıl yapıldı, ne öğrenildi.
           "Gözlem yaptım" cümlesi hiçbir şey anlatmıyor. Karşılaştır:
@@ -1323,6 +1432,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         />
 
         <B>Yazma düzeni</B>
+        <OgrenciBolumGorseli
+          dosya="018-staj-defteri-nasil-doldurulur-2"
+          baslik="Yaptığın işi somut anlat"
+          ozet="Her gün akşam yaz ve teknik terimleri kullan; defteri okuyan hoca işi gerçekten görüp görmediğini oradan anlıyor."
+          alt="Atölye tezgâhında stajyer elindeki metal parçayı defterine çiziyor; yanında bir kumpas duruyor."
+        />
         <L>
           <li>
             <strong>Her gün akşam yaz.</strong> Haftanın sonunda beş günü birden yazmaya
@@ -1370,6 +1485,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </P>
 
         <B>İmza ve kaşe süreci</B>
+        <OgrenciBolumGorseli
+          dosya="019-staj-defteri-nasil-doldurulur-3"
+          baslik="Sorumluyla defteri gözden geçir"
+          ozet="İlk gün defteri kimin imzalayacağını öğren; imzaları haftalık olarak al."
+          alt="Öğrenci ve işyeri sorumlusu masadaki açık staj defterini birlikte inceliyor; sorumlu kalemle bir satırı gösteriyor."
+        />
         <P>
           Genelde her sayfanın ya da her haftanın sonunda işletmedeki sorumlunun imzası ve
           şirket kaşesi isteniyor. Sıra şöyle işliyor:
@@ -1410,6 +1531,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </Uyari>
 
         <B>Teslimden önce kontrol et</B>
+        <OgrenciBolumGorseli
+          dosya="020-staj-defteri-nasil-doldurulur-4"
+          baslik="Teslimden önce kontrol et"
+          ozet="Atlanan gün, eksik imza ya da kaşe var mı; değerlendirme formu ve kapak bilgileri tamam mı, bak."
+          alt="Kampüs masasında öğrenci defteri lacivert bir dosyaya yerleştiriyor; yanında boş bir kontrol listesi var."
+        />
         <L>
           <li>Tüm günler dolu mu, atlanan tarih var mı?</li>
           <li>Her gerekli sayfada imza ve kaşe var mı?</li>
@@ -1485,6 +1612,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         />
 
         <B>Burs ve kredi aynı şey değil</B>
+        <OgrenciBolumGorseli
+          dosya="021-kyk-burs-ve-kredi-1"
+          baslik="Burs ile krediyi ayır"
+          ozet="Bursun geri ödemesi yok; öğrenim kredisi mezuniyetten sonra geri ödeniyor."
+          alt="Öğrenci iki elinde iki farklı renkte dosya tutup karşılaştırıyor."
+        />
         <L>
           <li>
             <strong>Burs:</strong> geri ödemesi yok. Kontenjanı sınırlı ve belirli
@@ -1512,6 +1645,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </P>
 
         <B>Başvuru zamanı</B>
+        <OgrenciBolumGorseli
+          dosya="022-kyk-burs-ve-kredi-2"
+          baslik="Güncel duyuruyu takip et"
+          ozet="Başvuru süresi kısa oluyor; yerleştirme sonuçlarının açıklandığı hafta duyuruları takip etmeye başla."
+          alt="Sırt çantalı öğrenci, üniversitenin öğrenci işleri bankosundaki görevliyle konuşuyor."
+        />
         <P>
           Başvurular genellikle üniversite yerleştirme sonuçları açıklandıktan sonra, güz
           dönemi başlamadan alınıyor ve süre kısa oluyor. Takvimi kaçırmak en sık yaşanan
@@ -1519,6 +1658,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </P>
 
         <B>Kesilme sebepleri</B>
+        <OgrenciBolumGorseli
+          dosya="023-kyk-burs-ve-kredi-3"
+          baslik="Başvuru bilgilerini doğru hazırla"
+          ozet="Beyan edilen bilgilerin gerçeğe aykırı çıkması desteğin kesilme sebeplerinden biri."
+          alt="Öğrenci masada bir kâğıdı lacivert bir dosyaya koyuyor; kâğıtta okunabilir yazı ya da mühür yok."
+        />
         <L>
           <li>Kayıt dondurmak veya okuldan ilişik kesmek</li>
           <li>Öğrenim süresini aşmak</li>
@@ -1527,6 +1672,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </L>
 
         <B>Geri ödeme nasıl işliyor</B>
+        <OgrenciBolumGorseli
+          dosya="024-kyk-burs-ve-kredi-4"
+          baslik="Koşulları not al"
+          ozet="Oran ve süre mevzuatla değişiyor; kendi durumunu güncel resmî duyurudan kontrol et."
+          alt="Öğrenci kapalı dizüstü bilgisayarının yanında defterine bir liste yazıyor."
+        />
         <P>
           Öğrenim kredisinde geri ödeme mezuniyetin ardından belirli bir süre sonra
           başlıyor ve taksitlendiriliyor. Ödenecek tutar, alınan tutara kanunda tanımlı bir
@@ -1616,6 +1767,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         />
 
         <B>Beş kanal</B>
+        <OgrenciBolumGorseli
+          dosya="025-staj-nasil-bulunur-1"
+          baslik="Okulun staj birimine sor"
+          ozet="Geçmiş yıllarda öğrenci alan firmaların listesi genelde bölüm sekreterliğinde ya da kariyer merkezinde duruyor."
+          alt="Kariyer danışmanı panodaki notları gösteriyor; karşısındaki öğrenci dinliyor."
+        />
         <Akis
           adimlar={[
             {
@@ -1647,6 +1804,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         />
 
         <B>Hangi kanal ne zaman işe yarıyor</B>
+        <OgrenciBolumGorseli
+          dosya="027-staj-nasil-bulunur-3"
+          baslik="Hocalar ve mezunlarla konuş"
+          ozet="Belirli bir alanda staj arıyorsan bir hocanın ya da mezunun verdiği isim çoğu zaman on ilana bedel."
+          alt="Öğrenci kampüsteki bir oturma alanında daha deneyimli bir mezunla sohbet ediyor."
+        />
         <P>
           Beşi de aynı işi yapmıyor. Kanalları birbirinin alternatifi değil, farklı
           durumlarda devreye giren araçlar olarak düşün:
@@ -1692,6 +1855,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </P>
 
         <B>İlk hafta: somut plan</B>
+        <OgrenciBolumGorseli
+          dosya="028-staj-nasil-bulunur-4"
+          baslik="İlk haftayı planla"
+          ozet="Aramayı beş güne böl: listeyi kur, okulu devreye sok, CV’yi bitir, e-postaları gönder."
+          alt="Öğrenci masaya boş kartları sıralayarak haftalık bir plan kuruyor."
+        />
         <P>
           "Staj aramaya başladım" cümlesi çoğu zaman bir hafta boyunca ilan sitelerine
           bakmak anlamına geliyor. Bunun yerine beş güne bölünmüş bir plan:
@@ -1742,6 +1911,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </P>
 
         <B>Bugün yapabileceğin altı şey</B>
+        <OgrenciBolumGorseli
+          dosya="026-staj-nasil-bulunur-2"
+          baslik="Uygun yerleri kısa listele"
+          ozet="Şehrinde staj alan beş şirketin adını yaz ve kariyer sayfalarındaki başvuru adreslerini not et."
+          alt="Kütüphane masasında öğrenci boş not kartlarını yan yana dizip bir listeye not alıyor."
+        />
         <KontrolListesi
           baslik="Bir saatte bitiyor"
           maddeler={[
@@ -1849,6 +2024,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </P>
 
         <B>Temel fark</B>
+        <OgrenciBolumGorseli
+          dosya="029-gonullu-staj-rehberi-1"
+          baslik="Staj türünü netleştir"
+          ozet="Zorunlu staj müfredatın parçası; gönüllü stajda belge, sigorta ve ücret farklı işliyor."
+          alt="Öğrenci ve gözlüklü danışman ellerindeki iki ayrı dosyayı karşılaştırıyor."
+        />
         <Karsilastirma
           kotuBaslik="Zorunlu staj"
           iyiBaslik="Gönüllü staj"
@@ -1869,6 +2050,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         />
 
         <B>En kritik nokta: sigorta</B>
+        <OgrenciBolumGorseli
+          dosya="030-gonullu-staj-rehberi-2"
+          baslik="Okulun staj birimine sor"
+          ozet="Okulun yaptığı sigorta gönüllü stajda otomatik devreye girmiyor; kimde olduğunu önce okuluna sor."
+          alt="Öğrenci, bölüm masasında oturan danışmana gülümseyerek soru soruyor."
+        />
         <P>
           Zorunlu stajda okulun yaptığı{' '}
           <a href="/rehber/staj-sigortasi-kim-yapar" className="text-blue-600 hover:underline font-semibold">iş kazası ve meslek hastalığı sigortası</a>, gönüllü
@@ -1883,6 +2070,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
           <Kaynak href="https://www.sgk.gov.tr">SGK</Kaynak>'ya danış — burada yazanlar
           bilgilendirme amaçlı, hukuki danışmanlık değil.
         </Uyari>
+        <OgrenciBolumGorseli
+          dosya="031-gonullu-staj-rehberi-3"
+          baslik="İşletmeyle yazılı netleştir"
+          ozet="Sigortanın kimde olduğunu işletmeye de sor ve cevabı yazılı al."
+          alt="Öğrenci dinlerken işyeri temsilcisi masadaki imzasız kâğıtları gösteriyor."
+        />
 
         <B>Ücret</B>
         <P>
@@ -1898,6 +2091,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
           alanı denemek ya da mezuniyet öncesi bağlantı kurmak için gönüllü staj iyi bir
           yol. Kritik olan tek şey sigortanın çözülmüş olması.
         </P>
+        <OgrenciBolumGorseli
+          dosya="032-gonullu-staj-rehberi-4"
+          baslik="Görev ve süreyi belirle"
+          ozet="Başlamadan tarihleri, haftalık gün sayısını ve sana bakacak sorumluyu konuş."
+          alt="Öğrenci ve sorumlusu masadaki boş kartlar üzerinde görevleri planlıyor."
+        />
 
         <KontrolListesi
           baslik="Gönüllü staja başlamadan"
@@ -1971,6 +2170,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </P>
 
         <B>Kime gidilir</B>
+        <OgrenciBolumGorseli
+          dosya="033-universite-staj-birimi-1"
+          baslik="Staj birimini bul"
+          ozet="Bölüm staj komisyonu stajın içeriğini onaylıyor, bölüm sekreterliği belgeyi hazırlıyor."
+          alt="Sırt çantalı öğrenci, üniversitenin staj birimi bankosundaki görevliyle konuşuyor."
+        />
         <L>
           <li>
             <strong>Bölüm staj komisyonu / staj sorumlusu hocası</strong> — stajın
@@ -1986,6 +2191,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </L>
 
         <B>Sıra</B>
+        <OgrenciBolumGorseli
+          dosya="034-universite-staj-birimi-2"
+          baslik="Önce yönergeyi oku"
+          ozet="Kaç iş günü, hangi dönem, hangi işletmeler kabul ediliyor; hepsi bölümün staj yönergesinde yazıyor."
+          alt="Danışman öğrenciye düz bir dosya uzatıyor ve masadaki kontrol listesini gösteriyor."
+        />
         <Akis
           adimlar={[
             {
@@ -2021,8 +2232,20 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
           kaşe ve sigorta girişi toplamda iki haftayı bulabiliyor; ara tatil ya da bayram
           denk gelirse daha da uzuyor.
         </Uyari>
+        <OgrenciBolumGorseli
+          dosya="035-universite-staj-birimi-3"
+          baslik="Belgeleri birlikte kontrol et"
+          ozet="Formdaki tarih aralığını ve işletme bilgilerini teslimden önce kontrol et; yanlış tarih en sık yapılan hata."
+          alt="Öğrenci ve danışman kampüs masasında birkaç sayfalık belgeyi birlikte kontrol ediyor."
+        />
 
         <B>Sık karşılaşılan sorunlar</B>
+        <OgrenciBolumGorseli
+          dosya="036-universite-staj-birimi-4"
+          baslik="Tarihleri not et"
+          ozet="Yönergedeki staj dönemini ve gerçekçi başlangıç tarihini not et; dönem dışındaki staj çoğu bölümde sayılmıyor."
+          alt="Danışmanla konuştuktan sonra öğrenci ajandasına bir tarih not ediyor."
+        />
         <L>
           <li>
             <strong>"Bu işletme uygun değil" cevabı.</strong> Genelde faaliyet alanı
@@ -2098,6 +2321,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </P>
 
         <B>Son iki hafta</B>
+        <OgrenciBolumGorseli
+          dosya="037-stajdan-ise-gecis-1"
+          baslik="Yaptıklarını kaydet"
+          ozet="Hangi işlere dokunduğunu, ne öğrendiğini ve hangi araçları kullandığını kısa bir listeye yaz."
+          alt="Ekip toplantısının ardından stajyer masasında defterine not yazıyor; arkada ekip konuşuyor."
+        />
         <Akis
           adimlar={[
             {
@@ -2122,8 +2351,20 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
             },
           ]}
         />
+        <OgrenciBolumGorseli
+          dosya="039-stajdan-ise-gecis-3"
+          baslik="Niyetini açıkça söyle"
+          ozet="Sorumluna burada çalışmak istediğini söyle; söylememek fırsat kaybettiriyor."
+          alt="Öğrenci ofiste yöneticisiyle rahat bir ortamda geleceğe dair konuşuyor."
+        />
 
         <B>Staj bittikten sonra</B>
+        <OgrenciBolumGorseli
+          dosya="038-stajdan-ise-gecis-2"
+          baslik="Teşekkür et ve bağlantıda kal"
+          ozet="Son gün kısa bir teşekkür mesajı gönder; sorumlunla ve birlikte çalıştığın kişilerle bağlantı kur."
+          alt="Stajyer ve sorumlusu küçük bir ofis masasında bir proje üzerine konuşuyor; öğrenci not alıyor."
+        />
         <L>
           <li>
             <strong>Teşekkür mesajı gönder.</strong> Kısa, samimi ve son gün. Bir cümle
@@ -2140,6 +2381,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </L>
 
         <B>İşe dönüşmezse</B>
+        <OgrenciBolumGorseli
+          dosya="040-stajdan-ise-gecis-4"
+          baslik="Sonraki adımı planla"
+          ozet="CV’deki deneyim satırı, anlatabileceğin proje ve referans bir sonraki başvuruda işine yarıyor."
+          alt="Öğrenci masadaki proje çıktılarını ve CV’sini düzenliyor."
+        />
         <P>
           Çoğu staj işe dönüşmüyor ve bu bir başarısızlık değil. Elinde kalanlar şunlar:
           CV'de gerçek bir deneyim satırı, anlatabileceğin bir proje, <a href="/rehber/referans-nasil-istenir" className="text-blue-600 hover:underline font-semibold">bir referans</a>s ve
@@ -2229,6 +2476,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         />
 
         <B>Tek başına başvuru neden çoğu zaman tıkanıyor</B>
+        <OgrenciBolumGorseli
+          dosya="043-yurtdisinda-staj-3"
+          baslik="Evrak sürecini erken düşün"
+          ozet="Vize için ev sahibi iş yerinin staj sözleşmesi düzenlemesi gerekiyor; şirketin evrak sürecine taraf olması şart."
+          alt="Öğrenci kapalı bir pasaportu ve masadaki evrakları düzenliyor; belgelerde okunabilir bilgi yok."
+        />
         <P>
           İki duvar var. Birincisi vize: Türk vatandaşı bir öğrencinin çoğu ülkede staj
           için vize alması gerekiyor ve bu vize için ev sahibi iş yerinin staj sözleşmesi
@@ -2252,6 +2505,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         />
 
         <B>1. Erasmus+ staj hareketliliği</B>
+        <OgrenciBolumGorseli
+          dosya="042-yurtdisinda-staj-2"
+          baslik="Program yollarını karşılaştır"
+          ozet="Erasmus+, IAESTE ve kendi başına bulmak; her yolun başvurusu ve evrak tarafı farklı işliyor."
+          alt="Öğrenci iki ayrı değişim programı dosyasını yan yana tutup karşılaştırıyor."
+        />
         <P>
           Yurt dışı stajının Türkiye'deki asıl kanalı bu. Öğrenciyi başka bir ülkedeki iş
           yerine gönderiyor, süre boyunca hibe ödeniyor ve en önemlisi evrak tarafı
@@ -2292,6 +2551,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </P>
 
         <B>3. Kendi başına bulmak</B>
+        <OgrenciBolumGorseli
+          dosya="044-yurtdisinda-staj-4"
+          baslik="Ev sahibi kurumla bağlantı kur"
+          ozet="Büyük şirketlerin programlarında başvurular aylar önce açılıyor ve kapanıyor; takvimi erken öğren."
+          alt="Öğrenci kampüsteki sessiz bir çalışma odasında dizüstü bilgisayardan çevrim içi bir toplantıya katılıyor."
+        />
         <P>
           Büyük şirketlerin yapılandırılmış staj programları vize sürecini destekleyebiliyor.
           Ama iki şeyi bilerek gir: başvurular staj döneminden aylar önce açılıyor ve
@@ -2330,6 +2595,12 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         </P>
 
         <B>Nereden başlanır</B>
+        <OgrenciBolumGorseli
+          dosya="041-yurtdisinda-staj-1"
+          baslik="Uluslararası ofisle görüş"
+          ozet="Okulunun Erasmus ya da uluslararası ilişkiler ofisinin duyurularından başvuru dönemini ve istenen belgeleri not et."
+          alt="Öğrenci, duvarında dünya haritası olan uluslararası ofiste danışmanla görüşüyor."
+        />
         <L>
           <li>Okulunun Erasmus / Uluslararası İlişkiler ofisinin duyuru sayfasını aç.</li>
           <li>Başvuru döneminin ne zaman açıldığını ve hangi belgelerin istendiğini not et.</li>

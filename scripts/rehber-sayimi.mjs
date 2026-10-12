@@ -49,6 +49,20 @@ function metin(jsx) {
     .trim();
 }
 
+/*
+  ÖĞRENCİ REHBERİ BÖLÜM FOTOĞRAFLARI (12 Ekim 2026) — `OgrenciBolumGorseli`
+  (JSX) ve `bolumFotografi`/`bolumFotografi2` (veri) kelime sayımına
+  girmiyor. Altyazı, bölümün mevcut metnini tek cümleyle özetliyor; yeni
+  içerik değil. Sayılsaydı yalnız fotoğraf eklemek iki rehberi 600 kelime
+  eşiğinin üstüne itip reklam kapısını açıyordu (ölçüldü: ats-uyumlu-cv,
+  ilan-acmayan-sirkete-nasil-yazilir).
+*/
+export function fotografAltyazisiz(govde) {
+  return govde
+    .replace(/<OgrenciBolumGorseli\b[\s\S]*?\/>/g, ' ')
+    .replace(/\n\s*bolumFotografi2?: \{[\s\S]*?\n\s*\},/g, '\n');
+}
+
 export function kelimeSay(s) {
   return metin(s).split(' ').filter((x) => x.length > 1).length;
 }
@@ -144,7 +158,7 @@ export function rehberleriOlc() {
   for (const dosya of dosyalar) {
     const kaynak = fs.readFileSync(dosya, 'utf8');
     for (const { slug, govde } of rehberBloklari(kaynak)) {
-      const kelime = kelimeSay(govde);
+      const kelime = kelimeSay(fotografAltyazisiz(govde));
       const sinyal = {
         slug,
         dosya: path.basename(dosya),
