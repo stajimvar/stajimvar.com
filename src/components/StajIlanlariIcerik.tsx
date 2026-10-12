@@ -278,6 +278,23 @@ export const StajIlanlariIcerik: React.FC<
               );
             })}
           </ul>
+          {/*
+            TÜM AÇIK İLANLAR — GERÇEK BAĞLANTI (12 Ekim 2026)
+
+            Burada yalnız en yeni 12 ilan var; geri kalanına giden yol
+            JavaScript'le çalışan listeydi. Sayfalı tam liste
+            (`/staj-ilanlari/sayfa/1`) tarayıcının da izleyebildiği bir
+            <a href>. Bkz. src/lib/seo/ilan-arsivi.mjs.
+          */}
+          <p className="pt-1">
+            <Bag
+              href="/staj-ilanlari/sayfa/1"
+              onNavigate={onNavigate}
+              className="text-sm font-bold text-blue-700 hover:underline"
+            >
+              Tüm açık ilanları sayfa sayfa gör
+            </Bag>
+          </p>
         </section>
       )}
 

@@ -16,6 +16,8 @@ import { ilanHedefi } from '../lib/ilan-hedefi.mjs';
 import { IlanDurumEtiketleri, ilanDurumuSorunlu } from './IlanDurumEtiketleri';
 import { tarihMetni } from '../lib/tarih.mjs';
 import { sayfaMetaAyarla } from '../lib/sayfa-meta';
+import { ilanSayfaBasligi, ilanMetaAciklamasi } from '../lib/seo/ilan-sayfasi.mjs';
+import { ilanYolu } from '../lib/seo/metin.mjs';
 import { sonKontrolMetni } from '../lib/zaman';
 /*
   Ücret, staj türü ve sigorta kararları kartla AYNI dosyadan geliyor.
@@ -190,9 +192,24 @@ export const ListingPage: React.FC<ListingPageProps> = ({
   */
   useEffect(() => {
     if (!listing) return;
+    /*
+      BAŞLIK VE AÇIKLAMA SUNUCUYLA AYNI FONKSİYONDAN (12 Ekim 2026)
+
+      İlk yanıt (ön render / kenar çizimi) şehri başlığa ekliyordu, istemci
+      eklemiyordu: aynı sayfanın iki başlığı vardı. Artık ikisi de
+      `lib/seo/ilan-sayfasi.mjs`teki kuralı kullanıyor; canonical adres de
+      sunucuyla aynı (`ilanYolu`).
+    */
+    const kaynak = {
+      title: listing.title,
+      city: listing.city ?? null,
+      description: listing.description ?? '',
+      companies: { name: listing.companyName },
+    };
     return sayfaMetaAyarla({
-      baslik: `${listing.title} — ${listing.companyName} | StajımVar`,
-      aciklama: (listing.description || '').replace(/\s+/g, ' ').trim().slice(0, 155) || undefined,
+      baslik: ilanSayfaBasligi(kaynak, konumEtiketi),
+      aciklama: ilanMetaAciklamasi(kaynak, konumEtiketi) || undefined,
+      yol: ilanYolu({ id: listing.id, title: listing.title }),
     });
   }, [listing]);
 

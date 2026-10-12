@@ -121,6 +121,7 @@ import { CheckCircle2 } from 'lucide-react';
 import { SAYFA_GENISLIGI } from './lib/duzen';
 import { cikisiDinle, sayfaBildir } from './lib/izleme.mjs';
 import { PAYLASIM_SURUMU } from './lib/basvuru-durumu.mjs';
+import { konumEtiketi } from './lib/sehir';
 
 /*
   GECİKMELİ YÜKLEME
@@ -202,6 +203,10 @@ const ProfilTamamla = React.lazy(() =>
 */
 const StajIlanlariSayfasi = React.lazy(() =>
   import('./components/StajIlanlariSayfasi').then((m) => ({ default: m.StajIlanlariSayfasi }))
+);
+/* Açık ilanların sayfalı tam listesi (/staj-ilanlari/sayfa/<n>) — bkz. lib/seo/ilan-arsivi.mjs. */
+const StajIlanlariArsivi = React.lazy(() =>
+  import('./components/StajIlanlariArsivi').then((m) => ({ default: m.StajIlanlariArsivi }))
 );
 
 const SosyalProfilSayfasi = React.lazy(() =>
@@ -3633,6 +3638,19 @@ export default function App() {
     (scripts/onrender.mjs), yani arama motoru boş bir kabuk değil
     sayfanın kendisini görüyor.
   */
+  /*
+    TÜM AÇIK İLANLAR — SAYFALI LİSTE (12 Ekim 2026)
+
+    Ön render her sayfayı dosya olarak yazıyor; olmayan sayfa numarası ara
+    katmanda 404 alıyor (dosya yok, uygulama önekinde değil).
+  */
+  const arsivEslesmesi = temizYol.match(/^\/staj-ilanlari\/sayfa\/([1-9]\d{0,3})$/);
+  if (arsivEslesmesi) {
+    return icerikSayfasi(
+      <StajIlanlariArsivi sayfa={Number(arsivEslesmesi[1])} onBack={goHome} onNavigate={navigate} />,
+    );
+  }
+
   if (temizYol === '/staj-ilanlari') {
     const sayfa = globalListings.page;
     /*
@@ -3672,7 +3690,8 @@ export default function App() {
             yol: `/ilan/${listingSlug(ilan)}`,
             baslik: ilan.title,
             sirket: ilan.companyName,
-            sehir: ilan.city || null,
+            /* Ön render ile aynı yazım ("Istanbul" → "İstanbul"). */
+            sehir: ilan.city ? konumEtiketi(ilan.city) : null,
             calismaSekli: ilan.workType || null,
           })),
         }}

@@ -2197,4 +2197,35 @@ select pg_temp.bekle(
   'anonim ziyaretci yayindaki ilanlari okuyabiliyor');
 
 reset role;
+
+-- GÖRÜNÜMLER RLS'İ ATLAMIYOR (12 Ekim 2026)
+-- Anonim ya da oturumlu rolün okuyabildiği her public görünüm
+-- `security_invoker` taşımalı; taşımayan görünüm sahibinin (postgres)
+-- yetkisiyle çalışır ve alttaki satır güvenliğini atlar. Üretimde
+-- discover_event_occurrence_rows bu yolla 226 arşiv kaydını anonime
+-- açıyordu (göç 20261212010000).
+do $$
+declare
+  acik text;
+begin
+  select string_agg(c.relname, ', ' order by c.relname) into acik
+  from pg_class c
+  join pg_namespace n on n.oid = c.relnamespace
+  where n.nspname = 'public'
+    and c.relkind = 'v'
+    and (has_table_privilege('anon', c.oid, 'select') or has_table_privilege('authenticated', c.oid, 'select'))
+    and not coalesce(
+      (select bool_or(o in ('security_invoker=on', 'security_invoker=true', 'security_invoker=1'))
+         from unnest(c.reloptions) o),
+      false);
+
+  if acik is not null then
+    raise exception
+      'GUVENLIK REGRESYONU BASARISIZ: security_invoker olmayan okunabilir gorunum: %',
+      acik using errcode = 'check_violation';
+  end if;
+  raise notice 'gecti: okunabilir public gorunumlerin hepsi security_invoker';
+end;
+$$;
+
 rollback;

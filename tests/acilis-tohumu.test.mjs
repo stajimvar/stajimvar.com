@@ -103,11 +103,19 @@ test('görünür her ilan site haritasında', () => {
   if (!html) return;
   // Gizli liste kaldırıldığına göre tek tarama kanalı harita; boş ya da
   // eksik bir harita bu sayfaları görünmez yapar.
+  /*
+    12 Ekim 2026: /sitemap.xml bir DİZİN; ilanlar /sitemap-ilanlar.xml'de
+    (derlemedeki kopya kenar düşerse kullanılan yedek). Dizindeki bütün
+    alt haritalar birlikte okunuyor.
+  */
   const harita = path.join(DIST, 'sitemap.xml');
   if (!fs.existsSync(harita)) {
     assert.fail('dist/sitemap.xml yok — ilan sayfalarına taranabilir yol kalmadı');
   }
-  const xml = fs.readFileSync(harita, 'utf8');
+  const dizin = fs.readFileSync(harita, 'utf8');
+  const xml = [...dizin.matchAll(/<loc>https:\/\/stajimvar\.com\/([^<]+)<\/loc>/g)]
+    .map((m) => fs.readFileSync(path.join(DIST, m[1]), 'utf8'))
+    .join('\n');
   const sayfalar = fs
     .readdirSync(path.join(DIST, 'ilan'))
     .filter((ad) => ad.endsWith('.html'))

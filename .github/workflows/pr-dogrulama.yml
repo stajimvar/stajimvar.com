@@ -1,0 +1,103 @@
+name: PR doğrulaması
+
+# NEDEN VAR (12 Ekim 2026)
+# ------------------------
+# Depoda pull request açıldığında hiçbir kontrol koşmuyordu: lint, test,
+# derleme ve RLS güvenlik regresyonu yalnız `main`e birleştirildikten SONRA,
+# üretim akışında (supabase-production.yml) çalışıyordu. Hata ancak yayın
+# kapısında yakalanıyordu.
+#
+# Bu iş akışı üretim akışının doğrulama işlerinin AYNISINI birleştirmeden
+# önce koşuyor. YAYIN YAPMIYOR: Cloudflare anahtarı yok, `wrangler pages
+# deploy` yok, üretim veritabanına bağlanmıyor. Güvenlik regresyonu tek
+# kullanımlık yerel bir Supabase kabında koşuyor.
+#
+# Fork'tan gelen PR'larda gizli değişkenler verilmez; derleme o durumda
+# "yapılandırma" hatasıyla açıkça düşer (sessizce boş site üretmez).
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-dogrulama-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dogrulama:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      # Yalnız ANONİM anahtar: ön render ve SEO kapısı herkese açık veriyi okuyor.
+      VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run lint:functions
+      - name: JS testleri
+        run: npm test
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Python testleri (crawler güvenliği)
+        run: |
+          pip install -r automation/requirements-dev.txt
+          python -m pytest automation/tests -q
+      # Derleme = vite + ön render (zorunlu veri okuması, azalma kapısı) +
+      # SEO kapısı (scripts/seo-kapisi.mjs). Biri düşerse PR kırmızı.
+      - name: Derleme ve SEO kapısı
+        run: npm run build
+      - name: SEO kapısı özeti
+        if: always()
+        run: |
+          if [ -f dist/_onrender/seo-kapisi.json ]; then
+            node -e "const o=require('./dist/_onrender/seo-kapisi.json');console.log(JSON.stringify({haritaAdresi:o.haritaAdresi,jobPosting:o.jobPosting,icBaglanti:o.icBaglanti,kirikBaglanti:o.kirikBaglanti,hata:o.hata}))"
+          fi
+          if [ -f dist/_onrender/ilan-veri-eksikleri.json ]; then
+            node -e "const o=require('./dist/_onrender/ilan-veri-eksikleri.json');console.log('JobPosting yazılamayan açık ilan: '+o.adet)"
+          fi
+
+  guvenlik_regresyonu:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: supabase/setup-cli@v1
+        with:
+          # Üretim akışıyla aynı sabit sürüm (gerekçesi supabase-production.yml'de).
+          version: 2.117.0
+      - run: supabase start
+      - name: Göçleri sıfırdan uygula (temiz kurulum duman testi)
+        run: supabase db reset --local --no-seed
+      - name: RLS güvenlik regresyonu
+        run: |
+          local_db_url="$(supabase status -o env | node scripts/assert-disposable-db-url.mjs)"
+          psql -v ON_ERROR_STOP=1 -f scripts/sql/disposable-security-tests.sql "$local_db_url"
+          psql -v ON_ERROR_STOP=1 -f scripts/sql/rls-regresyon-testleri.sql "$local_db_url"
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/ise-alim-merkezi.test.sql "$local_db_url"
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/basvuru-sadelestirme.test.sql "$local_db_url"
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/ogrenci-deneyimleri.test.sql "$local_db_url"
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/ogrenci-profili-toplu-kayit.test.sql "$local_db_url"
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/gorunum-yetkileri.test.sql "$local_db_url"
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/kapali-ilana-basvuru.test.sql "$local_db_url"
+      - name: Tek kullanımlık kapları temizle
+        if: always()
+        run: supabase stop --no-backup

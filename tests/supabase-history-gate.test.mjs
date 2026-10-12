@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseMigrationList, splitLocalOnly } from '../scripts/supabase-history-gate.mjs';
+import { parseMigrationList, splitLocalOnly, kapiKarari } from '../scripts/supabase-history-gate.mjs';
 
 /*
   Bu kapı `db push`'un önünde duruyor: yanlış davranışının iki ayrı ve
@@ -67,4 +67,31 @@ test('numaralı taban ile damgalı sürüm karışıkken sıra doğru', () => {
   );
   const { eksik } = splitLocalOnly(r);
   assert.deepEqual(eksik, ['0022'], 'eski numaralı taban dosyası eksik sayılmalı');
+});
+
+test('YAYIN ÖNCESİ KİP: bekleyen göç yayını durduruyor; göç öncesi kip durdurmuyor', () => {
+  /*
+    Göç işi atlandığında (supabase/ değişmedi ya da zamanlanmış koşu)
+    yayın işi canlı deftere bakıyor. Uygulanmamış bir göç kalmışsa yayın
+    çıkmamalı: o şemayı bekleyen kod yayına girerdi.
+  */
+  const r = parseMigrationList(
+    satir('20261208010000', '20261208010000') + '\n' + satir('20261212010000', '')
+  );
+  assert.deepEqual(kapiKarari(r), { engel: false, nedenler: [], bekleyen: ['20261212010000'], eksik: [] });
+  const yayin = kapiKarari(r, { bekleyenYok: true });
+  assert.equal(yayin.engel, true);
+  assert.deepEqual(yayin.nedenler, ['bekleyen']);
+});
+
+test('YAYIN ÖNCESİ KİP: defter uzlaşmışsa yayın açık; ayrışma her iki kipte engel', () => {
+  const tam = parseMigrationList(
+    satir('20261208010000', '20261208010000') + '\n' + satir('20261212010000', '20261212010000')
+  );
+  assert.equal(kapiKarari(tam, { bekleyenYok: true }).engel, false);
+  const ayrik = parseMigrationList(
+    satir('20261208010000', '20261208010000') + '\n' + satir('', '20261209010000')
+  );
+  assert.equal(kapiKarari(ayrik).engel, true);
+  assert.equal(kapiKarari(ayrik, { bekleyenYok: true }).engel, true);
 });

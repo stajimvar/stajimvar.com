@@ -4,6 +4,17 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  # GÜNLÜK YENİDEN DERLEME (12 Ekim 2026)
+  #
+  # İlan sayfaları ve ilan haritası kenarda canlı; ama şirket sayfaları,
+  # /staj-ilanlari merkezi, sayfalı tam liste ve sayfa haritası derlemede
+  # üretiliyor ve kod değişmeyen günlerde bayatlıyordu. Günde bir kez AYNI
+  # kapılardan (tip, test, derleme + SEO kapısı, RLS güvenlik regresyonu)
+  # geçen bir yayın yapılıyor. Zamanlanmış koşu GÖÇ UYGULAMAZ:
+  # `migrate_and_functions` yalnız push/elle tetiklemede çalışıyor.
+  # 03:23 UTC = 06:23 TSİ.
+  schedule:
+    - cron: '23 3 * * *'
 
 permissions:
   contents: read
@@ -14,7 +25,6 @@ concurrency:
 
 env:
   SUPABASE_PROJECT_REF: gdumgdgwlfnohkaucfow
-  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
 jobs:
   changes:
@@ -37,7 +47,7 @@ jobs:
 
   validate_app:
     needs: changes
-    if: github.repository == 'stajimvar/stajimvar.com' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    if: github.repository == 'stajimvar/stajimvar.com' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -56,6 +66,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
+      # PAGES FUNCTIONS TİP KAPISI (12 Ekim 2026)
+      # Bu kontrol yalnız kaldırılan dagit.yml'de koşuyordu; üretim akışı
+      # functions/ (kenar ilan çizimi dahil) tip kontrolünden geçirmiyordu.
+      - run: npm run lint:functions
       # TEK DOSYA DEGIL, TUM PAKET
       #
       # Burada yalnizca tests/opportunity-domain.test.mjs kosuyordu; geri
@@ -83,7 +97,7 @@ jobs:
   # duman testi.
   security_regression:
     needs: changes
-    if: github.repository == 'stajimvar/stajimvar.com' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    if: github.repository == 'stajimvar/stajimvar.com' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -122,16 +136,24 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/tests/basvuru-sadelestirme.test.sql "$local_db_url"
           psql -v ON_ERROR_STOP=1 -f supabase/tests/ogrenci-deneyimleri.test.sql "$local_db_url"
           psql -v ON_ERROR_STOP=1 -f supabase/tests/ogrenci-profili-toplu-kayit.test.sql "$local_db_url"
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/gorunum-yetkileri.test.sql "$local_db_url"
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/kapali-ilana-basvuru.test.sql "$local_db_url"
       - name: Tek kullanimlik kaplari temizle
         if: always()
         run: supabase stop --no-backup
 
   migrate_and_functions:
     needs: [changes, validate_app, security_regression]
-    if: github.repository == 'stajimvar/stajimvar.com' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && needs.changes.outputs.supabase_changed == 'true'
+    # Yalnız main: elle tetikleme başka bir dalda da başlatılabiliyor; o
+    # dalın göçü üretime uygulanmamalı.
+    if: github.repository == 'stajimvar/stajimvar.com' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && needs.changes.outputs.supabase_changed == 'true'
     runs-on: ubuntu-latest
+    # Üretim anahtarları yalnız `production` ortamında (yalnız main dalı).
+    # Ayrıntı: docs/seo/dagitim-akisi.md
+    environment: production
     timeout-minutes: 20
     env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
@@ -268,19 +290,72 @@ jobs:
   # supabase/ altında değişiklik yoksa migrate_and_functions hiç çalışmıyor
   # ve sonucu 'skipped' oluyor. Sıradan bir arayüz değişikliğinin dağıtımını
   # bu yüzden durdurmak, kapıyı yeniden kalıcı kırmızıya çevirirdi.
-  cloudflare_production:
-    needs: [changes, validate_app, security_regression, migrate_and_functions]
+  #
+  # AMA ATLANMIŞ İŞ "GÖÇ YOK" DEMEK DEĞİL (12 Ekim 2026)
+  # Bir göç düştükten sonra gelen arayüz push'unda ya da günlük zamanlanmış
+  # derlemede göç işi atlanıyor ve yayın, üretimde uygulanmamış göç varken
+  # çıkabiliyordu. `goc_durumu` canlı defteri okuyup HİÇ bekleyen ya da
+  # ayrışan göç olmadığını doğruluyor; yayın bu işin başarısını şart koşuyor.
+  goc_durumu:
+    needs: [validate_app, security_regression, migrate_and_functions]
     if: >-
       ${{
         always() &&
         github.repository == 'stajimvar/stajimvar.com' &&
-        (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+        github.ref == 'refs/heads/main' &&
+        (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') &&
         needs.validate_app.result == 'success' &&
         needs.security_regression.result == 'success' &&
         (needs.migrate_and_functions.result == 'success' ||
          needs.migrate_and_functions.result == 'skipped')
       }}
     runs-on: ubuntu-latest
+    # Üretim anahtarları yalnız `production` ortamında (yalnız main dalı).
+    # Ayrıntı: docs/seo/dagitim-akisi.md
+    environment: production
+    timeout-minutes: 10
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.117.0
+      - name: Üretim veritabanına bağlan
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_DB_PASSWORD" ]; then
+            echo "::error::SUPABASE_ACCESS_TOKEN veya SUPABASE_DB_PASSWORD GitHub Actions secret'i eksik."
+            exit 1
+          fi
+          supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+      - name: Uygulanmamış göç yok
+        run: |
+          supabase migration list --project-ref "$SUPABASE_PROJECT_REF" | tee /tmp/goc-listesi.txt
+          node scripts/supabase-history-gate.mjs /tmp/goc-listesi.txt --bekleyen-yok
+
+  cloudflare_production:
+    needs: [changes, validate_app, security_regression, migrate_and_functions, goc_durumu]
+    # Yalnız main: elle tetikleme başka bir dalda da başlatılabiliyor; o
+    # dalın kodu üretime yayınlanmamalı.
+    if: >-
+      ${{
+        always() &&
+        github.repository == 'stajimvar/stajimvar.com' &&
+        github.ref == 'refs/heads/main' &&
+        (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') &&
+        needs.validate_app.result == 'success' &&
+        needs.security_regression.result == 'success' &&
+        (needs.migrate_and_functions.result == 'success' ||
+         needs.migrate_and_functions.result == 'skipped') &&
+        needs.goc_durumu.result == 'success'
+      }}
+    runs-on: ubuntu-latest
+    # Üretim anahtarları yalnız `production` ortamında (yalnız main dalı).
+    # Ayrıntı: docs/seo/dagitim-akisi.md
+    environment: production
     timeout-minutes: 20
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -303,59 +378,24 @@ jobs:
       - run: npm ci
       - run: npm run lint
 
-      # SİTE HARİTASI DAĞITIMDAN ÖNCE ÜRETİLİYOR
+      # SİTE HARİTASI VE SEO KAPISI DERLEMENİN İÇİNDE (12 Ekim 2026)
       #
-      # ÖLÇÜLDÜ: canlı sitemap 17 Ağustos'ta donmuştu. Sebep, iki iş
-      # akışının arasındaki boşluktu. Saatlik tarama taze haritayı
-      # üretiyor ama onun dağıtım adımı kapalı; dağıtan tek iş akışı da
-      # burasıydı ve haritayı hiç üretmiyordu. Sonuç: depoda duran bayat
-      # dosya her dağıtımda yeniden yayına giriyordu.
+      # Burada `automation/sitemap.py` SERVİS ANAHTARIYLA ve
+      # `continue-on-error` ile koşuyordu; düştüğünde depodaki bayat
+      # public/sitemap.xml yayına giriyordu (17 Ağustos ve 5 Eylül'de
+      # donduğu ölçülmüştü). Artık:
       #
-      # Bu, kozmetik bir gecikme değil: harita arşivlenmiş ilanları
-      # (kaldırdığımız Insider One MT dahil) Google'a göstermeye devam
-      # ediyor ve o tarihten sonra eklenen hiçbir ilanı tanıtmıyordu.
+      #   · harita `scripts/onrender.mjs` içinde, yalnız ANONİM anahtarla
+      #     ve yalnız gerçekten yazılan, dizine açık sayfalardan üretiliyor;
+      #     ilan haritası kenarda canlı (functions/_middleware.ts);
+      #   · zorunlu veri okunamazsa (anahtar yok, 401/403, 5xx, zaman aşımı,
+      #     bozuk yanıt) ön render DURUYOR — "ilan yok" sayılmıyor;
+      #   · canlıdaki son yayına göre beklenmeyen büyük düşüşte DURUYOR
+      #     (gerçek toplu kapanışta ONRENDER_AZALMA_ONAYI=1);
+      #   · `scripts/seo-kapisi.mjs` üretilen HTML'i sınıyor: harita ↔
+      #     dosya, noindex/canonical, tek H1, JSON-LD, kırık iç bağlantı.
       #
-      # continue-on-error: harita üretilemezse dağıtımı durdurmuyoruz —
-      # eksik harita, hiç yayınlanmamış bir siteden iyi.
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      # `if:` içinde adım seviyesindeki env görünmüyor; anahtar yoksa
-      # betik kendisi düşüyor ve continue-on-error dağıtımı sürdürüyor.
-      - name: Sitemap üret
-        run: |
-          pip install -r requirements.txt
-          python sitemap.py
-        working-directory: automation
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        continue-on-error: true
-
-      # SESSİZ DÜŞMEYİ GÖRÜNÜR YAP
-      #
-      # continue-on-error adımı yeşil gösteriyor. İlk denemede tam bu
-      # oldu: betik eksik bir bağımlılıkla düştü, adım "success" göründü
-      # ve bayat harita yeniden yayına girdi. Harita değişmediyse artık
-      # koşu özetinde uyarı çıkıyor.
-      # DEĞİŞİKLİK DEĞİL, TAZELİK ÖLÇÜLÜYOR
-      #
-      # İlk sürüm `git diff` ile bakıyordu ve depodaki dosya zaten
-      # güncelken yanlış alarm veriyordu (ölçüldü). Doğru soru "dosya
-      # değişti mi" değil, "üretim çalıştı mı": dosyanın bu koşuda
-      # yazılmış olması ve beklenen bölümleri taşıması.
-      - name: Site haritası üretildi mi
-        run: |
-          if [ ! -f public/sitemap.xml ]; then
-            echo "::warning::public/sitemap.xml yok — harita üretimi düşmüş"
-            exit 0
-          fi
-          adres=$(grep -c '<url>' public/sitemap.xml)
-          if [ "$adres" -lt 100 ]; then
-            echo "::warning::site haritasında yalnız $adres adres var — üretim düşmüş olabilir"
-          else
-            echo "site haritası: $adres adres, $(grep -c '/ilan/' public/sitemap.xml) ilan, $(grep -c '/kesfet/' public/sitemap.xml) etkinlik"
-          fi
-
+      # Hepsi `npm run build` zincirinde; biri düşerse dağıtım yapılmıyor.
+      # Servis anahtarı bu işte artık hiç kullanılmıyor.
       - run: npm run build
       - run: npx wrangler pages deploy dist --project-name stajimvar --branch main --commit-dirty=true

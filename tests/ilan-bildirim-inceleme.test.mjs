@@ -216,7 +216,12 @@ test('Pages Functions tip kontrolü gerçek ve CI kapısında', () => {
   assert.equal(pkg.scripts['lint:functions'], 'tsc -p functions/tsconfig.json');
   assert.ok(pkg.devDependencies['@cloudflare/workers-types'], 'tip bağımlılığı tanımlı olmalı');
 
-  assert.match(oku('.github/workflows/dagit.yml'), /run: npm run lint:functions/);
+  /*
+    12 Ekim 2026: dagit.yml (kapıları atlayan elle yayın) kaldırıldı. Functions
+    tip kapısı artık üretim akışında ve PR doğrulamasında.
+  */
+  assert.match(oku('.github/workflows/supabase-production.yml'), /run: npm run lint:functions/);
+  assert.match(oku('.github/workflows/pr-dogrulama.yml'), /run: npm run lint:functions/);
 });
 
 test('kuyruk görünümü RLS atlamıyor', () => {

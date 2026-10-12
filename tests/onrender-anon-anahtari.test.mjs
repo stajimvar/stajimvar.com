@@ -69,17 +69,23 @@ test('katalog tohumu da anonim kalıyor (mevcut kural korunuyor)', () => {
   assert.match(g, /envOku\('VITE_SUPABASE_ANON_KEY'\)/);
 });
 
-test('anahtar yoksa sessizce boş dönülüyor, servis anahtarına düşülmüyor', () => {
+test('anahtar yoksa DERLEME DURUYOR, servis anahtarına düşülmüyor', async () => {
   /*
-    Yedek zincir (`|| envOku('SUPABASE_SERVICE_ROLE_KEY')`) kuralı geri
-    getirirdi: ortamda anon anahtarı yokken servis anahtarı devreye
-    girerdi ve fark yine sessiz olurdu.
+    12 Ekim 2026: eksik anahtarda eskiden sessizce `[]` dönülüyordu ve
+    derleme "yayında ilan yok" diye devam ediyordu. Artık ortak okuyucu
+    (src/lib/seo/veri-kaynagi.mjs) `yapilandirma` hatası fırlatıyor.
+    Yedek zincir (`|| envOku('SUPABASE_SERVICE_ROLE_KEY')`) hâlâ yasak.
   */
   for (const ad of ['ilanlariGetir', 'sirketSluglariniGetir', 'firsatlariGetir']) {
     const g = govde(ad);
     assert.doesNotMatch(g, /\|\|\s*envOku\('SUPABASE_SERVICE_ROLE_KEY'\)/, `${ad}: yedek zincir kalmamalı`);
-    assert.match(g, /if \(!urlAdres \|\| !anahtar\)/, `${ad}: eksik anahtarda erken çıkmalı`);
+    assert.match(g, /zorunluVeriGetir\(/, `${ad}: zorunlu okuyucuyu kullanmalı`);
   }
+  const { zorunluVeriGetir, VeriKaynagiHatasi } = await import('../src/lib/seo/veri-kaynagi.mjs');
+  await assert.rejects(
+    zorunluVeriGetir({ kaynak: 'test', taban: 'https://x.supabase.co', anahtar: undefined, yol: '/rest/v1/x' }),
+    (e) => e instanceof VeriKaynagiHatasi && e.tur === 'yapilandirma',
+  );
 });
 
 test('bakım betikleri kapsam dışı: servis anahtarını kullanmaya devam ediyor', () => {

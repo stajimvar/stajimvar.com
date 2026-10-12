@@ -67,26 +67,53 @@ export function splitLocalOnly(report) {
   return { bekleyen, eksik };
 }
 
+/**
+ * Kapının kararı. İki kip:
+ *
+ *   göç öncesi (varsayılan)  — bekleyen göç NORMAL: db push uygulayacak.
+ *                              Yalnız ayrışma engel.
+ *   yayın öncesi (bekleyenYok) — bekleyen göç de ENGEL.
+ *
+ * YAYIN ÖNCESİ KİP NEDEN VAR (12 Ekim 2026)
+ * Site yayını göç işine bağlı ama göç işi yalnız `supabase/` değiştiğinde
+ * ve yalnız push/elle tetiklemede koşuyor; öbür durumlarda "atlandı"
+ * sayılıp yayın devam ediyordu. Bir göç düştükten sonra gelen sıradan bir
+ * arayüz push'u ya da günlük zamanlanmış derleme, uygulanmamış şemayı
+ * bekleyen kodu yayına çıkarabiliyordu. Yayın işi artık bu kipte, canlı
+ * deftere bakıp HİÇ bekleyen göç kalmadığını görmeden çalışmıyor.
+ */
+export function kapiKarari(report, { bekleyenYok = false } = {}) {
+  const { bekleyen, eksik } = splitLocalOnly(report);
+  const nedenler = [];
+  if (report.remoteOnly.length || eksik.length || report.divergent.length) nedenler.push('ayrisma');
+  if (bekleyenYok && bekleyen.length) nedenler.push('bekleyen');
+  return { engel: nedenler.length > 0, nedenler, bekleyen, eksik };
+}
+
 function main() {
   const inputPath = process.argv[2];
+  const bekleyenYok = process.argv.includes('--bekleyen-yok');
   if (!inputPath) {
-    console.error('Usage: node scripts/supabase-history-gate.mjs <migration-list-output>');
+    console.error('Usage: node scripts/supabase-history-gate.mjs <migration-list-output> [--bekleyen-yok]');
     process.exitCode = 2;
     return;
   }
 
   const report = parseMigrationList(fs.readFileSync(inputPath, 'utf8'));
-  const { bekleyen, eksik } = splitLocalOnly(report);
-  console.log(JSON.stringify({ ...report, pending: bekleyen, missing: eksik }, null, 2));
+  const karar = kapiKarari(report, { bekleyenYok });
+  console.log(JSON.stringify({ ...report, pending: karar.bekleyen, missing: karar.eksik }, null, 2));
 
-  if (bekleyen.length) {
-    console.log(`${bekleyen.length} migration uygulanmayı bekliyor; db push devam edecek.`);
+  if (karar.bekleyen.length && !bekleyenYok) {
+    console.log(`${karar.bekleyen.length} migration uygulanmayı bekliyor; db push devam edecek.`);
   }
 
-  if (report.remoteOnly.length || eksik.length || report.divergent.length) {
+  if (karar.nedenler.includes('ayrisma')) {
     console.error('::error::Supabase migration history divergence detected. db push is blocked; reconcile verified migration files before retrying.');
-    process.exitCode = 1;
   }
+  if (karar.nedenler.includes('bekleyen')) {
+    console.error(`::error::Üretimde uygulanmamış göç var (${karar.bekleyen.join(', ')}). Site yayını durduruldu; önce göç işi başarıyla koşmalı.`);
+  }
+  if (karar.engel) process.exitCode = 1;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();
