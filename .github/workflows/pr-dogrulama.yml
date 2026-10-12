@@ -96,6 +96,8 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/tests/basvuru-sadelestirme.test.sql "$local_db_url"
           psql -v ON_ERROR_STOP=1 -f supabase/tests/ogrenci-deneyimleri.test.sql "$local_db_url"
           psql -v ON_ERROR_STOP=1 -f supabase/tests/ogrenci-profili-toplu-kayit.test.sql "$local_db_url"
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/gorunum-yetkileri.test.sql "$local_db_url"
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/kapali-ilana-basvuru.test.sql "$local_db_url"
       - name: Tek kullanımlık kapları temizle
         if: always()
         run: supabase stop --no-backup

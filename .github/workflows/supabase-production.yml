@@ -137,13 +137,17 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/tests/basvuru-sadelestirme.test.sql "$local_db_url"
           psql -v ON_ERROR_STOP=1 -f supabase/tests/ogrenci-deneyimleri.test.sql "$local_db_url"
           psql -v ON_ERROR_STOP=1 -f supabase/tests/ogrenci-profili-toplu-kayit.test.sql "$local_db_url"
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/gorunum-yetkileri.test.sql "$local_db_url"
+          psql -v ON_ERROR_STOP=1 -f supabase/tests/kapali-ilana-basvuru.test.sql "$local_db_url"
       - name: Tek kullanimlik kaplari temizle
         if: always()
         run: supabase stop --no-backup
 
   migrate_and_functions:
     needs: [changes, validate_app, security_regression]
-    if: github.repository == 'stajimvar/stajimvar.com' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && needs.changes.outputs.supabase_changed == 'true'
+    # Yalnız main: elle tetikleme başka bir dalda da başlatılabiliyor; o
+    # dalın göçü üretime uygulanmamalı.
+    if: github.repository == 'stajimvar/stajimvar.com' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && needs.changes.outputs.supabase_changed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -283,17 +287,63 @@ jobs:
   # supabase/ altında değişiklik yoksa migrate_and_functions hiç çalışmıyor
   # ve sonucu 'skipped' oluyor. Sıradan bir arayüz değişikliğinin dağıtımını
   # bu yüzden durdurmak, kapıyı yeniden kalıcı kırmızıya çevirirdi.
-  cloudflare_production:
-    needs: [changes, validate_app, security_regression, migrate_and_functions]
+  #
+  # AMA ATLANMIŞ İŞ "GÖÇ YOK" DEMEK DEĞİL (12 Ekim 2026)
+  # Bir göç düştükten sonra gelen arayüz push'unda ya da günlük zamanlanmış
+  # derlemede göç işi atlanıyor ve yayın, üretimde uygulanmamış göç varken
+  # çıkabiliyordu. `goc_durumu` canlı defteri okuyup HİÇ bekleyen ya da
+  # ayrışan göç olmadığını doğruluyor; yayın bu işin başarısını şart koşuyor.
+  goc_durumu:
+    needs: [validate_app, security_regression, migrate_and_functions]
     if: >-
       ${{
         always() &&
         github.repository == 'stajimvar/stajimvar.com' &&
+        github.ref == 'refs/heads/main' &&
         (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') &&
         needs.validate_app.result == 'success' &&
         needs.security_regression.result == 'success' &&
         (needs.migrate_and_functions.result == 'success' ||
          needs.migrate_and_functions.result == 'skipped')
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.117.0
+      - name: Üretim veritabanına bağlan
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_DB_PASSWORD" ]; then
+            echo "::error::SUPABASE_ACCESS_TOKEN veya SUPABASE_DB_PASSWORD GitHub Actions secret'i eksik."
+            exit 1
+          fi
+          supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+      - name: Uygulanmamış göç yok
+        run: |
+          supabase migration list --project-ref "$SUPABASE_PROJECT_REF" | tee /tmp/goc-listesi.txt
+          node scripts/supabase-history-gate.mjs /tmp/goc-listesi.txt --bekleyen-yok
+
+  cloudflare_production:
+    needs: [changes, validate_app, security_regression, migrate_and_functions, goc_durumu]
+    # Yalnız main: elle tetikleme başka bir dalda da başlatılabiliyor; o
+    # dalın kodu üretime yayınlanmamalı.
+    if: >-
+      ${{
+        always() &&
+        github.repository == 'stajimvar/stajimvar.com' &&
+        github.ref == 'refs/heads/main' &&
+        (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') &&
+        needs.validate_app.result == 'success' &&
+        needs.security_regression.result == 'success' &&
+        (needs.migrate_and_functions.result == 'success' ||
+         needs.migrate_and_functions.result == 'skipped') &&
+        needs.goc_durumu.result == 'success'
       }}
     runs-on: ubuntu-latest
     timeout-minutes: 20

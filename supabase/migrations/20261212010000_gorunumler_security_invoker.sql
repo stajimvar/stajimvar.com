@@ -28,8 +28,13 @@
       kayıtları açıyor (bugün 0) → görünüm de 0 dönüyor.
     · servis anahtarı (otomasyon, scripts/firsat-tutar-kontrol.mjs):
       RLS'i zaten atlıyor; davranışı değişmiyor.
-    · `list_active_discover_events` görünümü yalnız dönüş TÜRÜ olarak
-      kullanıyor; tür değişmiyor.
+    · `list_active_discover_events` (SECURITY INVOKER) görünümü
+      sorguluyor: artık RLS altında okuyor. İşlev zaten yalnız yayındaki
+      etkinliğin gelecek seansını süzüyor; politika da tam olarak bunları
+      açıyor — sonuç aynı.
+    · `get_discover_event_by_slug` (SECURITY DEFINER, sahibi postgres)
+      sahibinin yetkisiyle çalışıyor; davranışı değişmiyor.
+    Dört rolle ölçüm: supabase/tests/gorunum-yetkileri.test.sql.
 
   Veri değişmiyor; yalnız görünüm seçeneği.
 */

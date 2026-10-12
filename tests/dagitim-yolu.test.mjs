@@ -125,7 +125,7 @@ test('Cloudflare Pages yayını yalnız supabase-production.yml / cloudflare_pro
 test('üretim yayını doğrulama, güvenlik regresyonu ve göç kapılarına bağlı', () => {
   const uretim = akislar.find((a) => a.ad === 'supabase-production.yml').veri;
   const is = uretim.jobs.cloudflare_production;
-  assert.deepEqual([...is.needs].sort(), ['changes', 'migrate_and_functions', 'security_regression', 'validate_app'].sort());
+  assert.deepEqual([...is.needs].sort(), ['changes', 'goc_durumu', 'migrate_and_functions', 'security_regression', 'validate_app'].sort());
   const kosul = String(is.if).replace(/\s+/g, ' ');
   assert.match(kosul, /needs\.validate_app\.result == 'success'/);
   assert.match(kosul, /needs\.security_regression\.result == 'success'/);
@@ -156,4 +156,62 @@ test('PR doğrulaması yayın yapmıyor ve aynı kapıları koşuyor', () => {
   for (const komut of ['npm run lint', 'npm run lint:functions', 'npm test', 'npm run build', 'rls-regresyon-testleri.sql']) {
     assert.ok(komutlar.includes(komut), `PR doğrulaması: ${komut} yok`);
   }
+});
+
+/*
+  HİÇBİR YOL KAPILARI ATLAYAMIYOR (12 Ekim 2026, birleştirme öncesi denetim)
+
+  Acil yayın dahil bütün yollar sayıldı:
+    · elle tetikleme (workflow_dispatch) — aynı iş akışı, aynı kapılar;
+      ama başka bir dalda da başlatılabiliyor: göç ve yayın işleri yalnız
+      refs/heads/main'de koşuyor;
+    · günlük zamanlanmış derleme ve supabase/ değişmeyen push — göç işi
+      atlanıyor; yayın `goc_durumu` ile canlı defterde bekleyen göç
+      olmadığını görmeden çıkmıyor;
+    · yerel `npm run deploy` — kaldırıldı;
+    · başka iş akışlarında Cloudflare anahtarı — yok;
+    · pull_request_target — hiçbir iş akışında yok (sır taşıyan PR koşusu).
+*/
+test('göç ve yayın işleri yalnız main dalında koşuyor', () => {
+  const uretim = akislar.find((a) => a.ad === 'supabase-production.yml').veri;
+  for (const isAdi of ['migrate_and_functions', 'goc_durumu', 'cloudflare_production']) {
+    const kosul = String(uretim.jobs[isAdi]?.if || '');
+    assert.match(kosul, /github\.ref == 'refs\/heads\/main'/, `${isAdi}: main koşulu yok`);
+  }
+});
+
+test('yayın, canlı defterde bekleyen göç olmadığını doğrulayan işe bağlı', () => {
+  const uretim = akislar.find((a) => a.ad === 'supabase-production.yml').veri;
+  const yayin = uretim.jobs.cloudflare_production;
+  assert.ok(yayin.needs.includes('goc_durumu'), 'cloudflare_production goc_durumu beklemiyor');
+  assert.match(String(yayin.if).replace(/\s+/g, ' '), /needs\.goc_durumu\.result == 'success'/);
+  const goc = uretim.jobs.goc_durumu;
+  assert.ok(goc, 'goc_durumu işi yok');
+  assert.ok(goc.needs.includes('migrate_and_functions'), 'goc_durumu göç işinden sonra koşmalı');
+  const komutlar = calisanKomutlar(goc).join('\n');
+  assert.match(komutlar, /supabase migration list/);
+  assert.match(komutlar, /supabase-history-gate\.mjs \S+ --bekleyen-yok/);
+  /* Göç denetimi yayın anahtarı taşımıyor. */
+  const isMetni = uretim.ham.slice(uretim.ham.indexOf('  goc_durumu:'), uretim.ham.indexOf('  cloudflare_production:'));
+  assert.ok(!isMetni.includes('CLOUDFLARE_API_TOKEN'));
+});
+
+test('Cloudflare anahtarı yalnız yayın işinde; pull_request_target yok', () => {
+  const tasiyanlar = [];
+  for (const { ad, veri } of akislar) {
+    if (/pull_request_target/.test(veri.ham)) assert.fail(`${ad}: pull_request_target kullanıyor`);
+    if (!veri.ham.includes('CLOUDFLARE_API_TOKEN')) continue;
+    if (ad !== 'supabase-production.yml') tasiyanlar.push(ad);
+    else {
+      const yayinOncesi = veri.ham.slice(0, veri.ham.indexOf('  cloudflare_production:'));
+      if (yayinOncesi.includes('CLOUDFLARE_API_TOKEN')) tasiyanlar.push(`${ad} (yayın işi dışında)`);
+    }
+  }
+  assert.deepEqual(tasiyanlar, []);
+});
+
+test('yerel yayın betiği yok: package.json hiçbir betikte wrangler pages deploy çalıştırmıyor', () => {
+  const paket = JSON.parse(readFileSync(path.join(KOK, 'package.json'), 'utf8'));
+  const yayinlayan = Object.entries(paket.scripts || {}).filter(([, k]) => /wrangler\s+pages\s+deploy/.test(k));
+  assert.deepEqual(yayinlayan, []);
 });
