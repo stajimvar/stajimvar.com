@@ -57,6 +57,73 @@ export const SadeFotograf: React.FC<{ dosya: string; alt: string }> = ({ dosya, 
   </figure>
 );
 
+/* ------------------------------------------- öğrenci bölüm fotoğrafı */
+
+/** Öğrenci rehberi bölüm görsellerinin önbellek eki; dosya değişirse bu da değişmeli. */
+const OGRENCI_SURUMU = 'ogrenci-20261011';
+
+/*
+  Öğrenci rehberinin gövdesi tek sütunlu kart: masaüstünde en çok ~760 px,
+  telefonda sayfa ve kart boşlukları düşülmüş tam genişlik.
+*/
+const OGRENCI_BOYUTLARI = '(min-width: 1024px) 760px, calc(100vw - 72px)';
+
+/**
+ * ÖĞRENCİ REHBERİ BÖLÜM FOTOĞRAFI (12 Ekim 2026)
+ *
+ * İşveren rehberlerindeki adım düzeninin öğrenci yazılarına uyarlanmışı:
+ * temsili fotoğraf → kısa adım başlığı → tek cümlelik özet. Öğrenci
+ * yazılarının metni, listeleri ve şemaları AÇIK kalıyor (işverendeki gibi
+ * "Ayrıntıyı aç" içine alınmıyor); fotoğraf ilgili bölümün başına ya da
+ * sonuna ekleniyor, hiçbir şeyin yerini almıyor.
+ *
+ * Dosyalar `public/rehber-gorselleri/ogrenci/<dosya>.avif|webp`
+ * (1280×720, kaynak kaydı aynı klasörün `kaynak.json`'unda). 16:9 oran
+ * korunuyor, kırpma yok; gecikmeli iniyor. Görseller yapay zekâyla
+ * üretilmiş temsili sahneler: "Temsili görsel" etiketi her zaman görünür,
+ * fotoğraftaki kişi ya da kâğıt gerçek bir kayıt değil.
+ */
+export const OgrenciBolumGorseli: React.FC<{
+  dosya: string;
+  /** Sahneyi tarif eden Türkçe alt metin. */
+  alt: string;
+  /** Kısa adım başlığı. */
+  baslik: string;
+  /** Bölümün tek cümlelik özeti (yazının kendi metninden). */
+  ozet: string;
+}> = ({ dosya, alt, baslik, ozet }) => (
+  <figure className="ogrenci-bolum-gorseli m-0 overflow-hidden rounded-2xl border border-gray-200 bg-white" data-bolum-gorseli={dosya}>
+    <div className="relative">
+      <picture className="block overflow-hidden bg-gray-100">
+        <source
+          srcSet={`/rehber-gorselleri/ogrenci/${dosya}.avif?v=${OGRENCI_SURUMU} 1280w`}
+          sizes={OGRENCI_BOYUTLARI}
+          type="image/avif"
+        />
+        {/* `loading` `src`'den önce: bkz. SadeFotograf. */}
+        <img
+          loading="lazy"
+          decoding="async"
+          width={1280}
+          height={720}
+          sizes={OGRENCI_BOYUTLARI}
+          srcSet={`/rehber-gorselleri/ogrenci/${dosya}.webp?v=${OGRENCI_SURUMU} 1280w`}
+          src={`/rehber-gorselleri/ogrenci/${dosya}.webp?v=${OGRENCI_SURUMU}`}
+          alt={alt}
+          className="aspect-video h-auto w-full object-cover"
+        />
+      </picture>
+      <span className="absolute bottom-2 right-2 rounded-full bg-white/90 px-2.5 py-0.5 text-xs font-semibold text-gray-700">
+        Temsili görsel
+      </span>
+    </div>
+    <figcaption className="space-y-1 px-4 py-3 sm:px-5">
+      <span className="block text-[15px] font-extrabold leading-snug text-gray-900">{baslik}</span>
+      <span className="block text-[15px] leading-relaxed text-gray-600">{ozet}</span>
+    </figcaption>
+  </figure>
+);
+
 /** Düz ayrıntı satırı: çerçeve yok, yalnız mavi yazı ve ok. Yerel `<details>`. */
 export const SadeAyrinti: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <details className="group">

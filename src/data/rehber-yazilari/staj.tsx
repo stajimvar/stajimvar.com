@@ -57,6 +57,18 @@ export const STAJ_REHBERLERI: Rehber[] = [
         },
       },
       {
+        bolumFotografi: {
+          dosya: '045-staj-sigortasi-kim-yapar-1',
+          baslik: 'Staj türünü doğrula',
+          ozet: 'Okul zorunlu staj formu veriyorsa staj müfredatın parçası; sigorta girişini genellikle okul yapıyor.',
+          gorselAlt: 'Öğrenci ve danışman masadaki iki ayrı dosyayı inceleyerek staj türünü konuşuyor.',
+        },
+        bolumFotografi2: {
+          dosya: '046-staj-sigortasi-kim-yapar-2',
+          baslik: 'Okuldan teyit al',
+          ozet: 'Uygulama üniversiteden üniversiteye değişebiliyor; başlamadan önce okulunun staj birimine sor ve yönergeyi oku.',
+          gorselAlt: 'Danışman kalemle bir kontrol listesini gösteriyor; sırt çantalı öğrenci dikkatle bakıyor.',
+        },
         baslik: 'Zorunlu stajda yükümlülük kimde',
         paragraflar: [
           'Zorunlu staj, müfredatın parçası olan stajdır: okul senden belirli sayıda iş günü staj yapmanı ister ve ' +
@@ -101,6 +113,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        bolumFotografi: {
+          dosya: '047-staj-sigortasi-kim-yapar-3',
+          baslik: 'İşyerine doğru bilgiyi ilet',
+          ozet: 'Başvuru e-postana tek net cümle ekle: işverenin sorduğu şey, ona ne yükümlülük çıktığı.',
+          gorselAlt: 'Öğrenci, masada oturan işyeri temsilcisine düz bir dosya uzatıyor.',
+        },
         baslik: 'İşverene nasıl anlatmalı',
         paragraflar: [
           'Başvuru e-postana tek cümle eklemek çoğu tereddüdü kaldırıyor. Rakam vermeye, mevzuat maddesi saymaya gerek yok; ' +
@@ -122,6 +140,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
         },
       },
       {
+        bolumFotografi: {
+          dosya: '048-staj-sigortasi-kim-yapar-4',
+          baslik: 'Başlamadan önce kontrol et',
+          ozet: 'Sigorta girişi stajın ilk gününden önce yapılmalı; işe başladıktan sonra sorma.',
+          gorselAlt: 'Öğrenci ve danışman masada bir kâğıdı birlikte inceliyor.',
+        },
         baslik: 'Sık yapılan hatalar',
         liste: [
           'Sigortayı işe başladıktan sonra sormak. Giriş stajın ilk gününden önce yapılmalı; sonradan tarih geriye çekmek çoğu zaman mümkün olmuyor.',
@@ -197,6 +221,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        bolumFotografi: {
+          dosya: '049-staj-ucreti-nasil-hesaplanir-1',
+          baslik: 'Stajın kapsamını belirle',
+          ozet: 'Zorunlu stajda alt sınır yürürlükteki asgari ücrete ve işletmedeki çalışan sayısına bağlı.',
+          gorselAlt: 'Öğrenci ve danışman masada defter ve dizüstü bilgisayarla staj planını konuşuyor.',
+        },
         baslik: 'Ücret neye göre belirleniyor',
         paragraflar: [
           'Zorunlu stajda ödenecek asgari tutar iki şeye bağlı: yürürlükteki asgari ücret ve işletmenin büyüklüğü. ' +
@@ -215,6 +245,13 @@ export const STAJ_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        bolumFotografi: {
+          dosya: '050-staj-ucreti-nasil-hesaplanir-2',
+          baslik: 'Güncel koşulları sor',
+          ozet: 'Oranlar, üst sınırlar ve başvuru koşulları her yıl güncelleniyor; güncel tutar için resmî kaynağa bak.',
+          gorselAlt: 'Sırt çantalı öğrenci, ofisteki danışmanla konuşuyor.',
+          konum: 'son',
+        },
         baslik: 'Devlet katkısı nasıl işliyor',
         paragraflar: [
           'Ödenen staj ücretinin bir kısmı, koşullar sağlandığında devlet tarafından karşılanabiliyor. Mekanizma şu: ' +
@@ -229,6 +266,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
           'güncel tutar için resmî kaynağa bak.',
       },
       {
+        bolumFotografi: {
+          dosya: '052-staj-ucreti-nasil-hesaplanir-4',
+          baslik: 'Belirsizliği netleştir',
+          ozet: 'Ücreti görüşmeye çağrıldığında, pazarlık gibi değil bilgi sorusu gibi sor.',
+          gorselAlt: 'Öğrenci toplantı masasında sorumlusuna nazikçe bir soru soruyor.',
+        },
         baslik: 'Ücreti nasıl sorarsın',
         paragraflar: [
           'Ücreti ilk e-postada sormak gerekmiyor; görüşmeye çağrıldığında sormak hem doğal hem de zamanı. ' +
@@ -250,6 +293,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
         },
       },
       {
+        bolumFotografi: {
+          dosya: '051-staj-ucreti-nasil-hesaplanir-3',
+          baslik: 'Teklifin ayrıntılarını sor',
+          ozet: 'Yol ve yemek desteğini, ödeme gününü ve devamsız günün nasıl işlendiğini de öğren.',
+          gorselAlt: 'Öğrenci ve işyeri temsilcisi masada bir sayfayı birlikte okuyor; sayfada tutar görünmüyor.',
+        },
         baslik: 'Ücret dışında sorulacaklar',
         liste: [
           'Yol ve yemek desteği var mı, ayrı mı ödeniyor.',
@@ -341,6 +390,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
         },
       },
       {
+        bolumFotografi: {
+          dosya: '053-staj-basvurusu-gerekli-belgeler-1',
+          baslik: 'Okulun belge listesini al',
+          ozet: 'Hangi belgenin nereden alındığını ve ne kadar sürdüğünü baştan öğren.',
+          gorselAlt: 'Öğrenci staj birimindeki görevliden bir kontrol listesi alıyor.',
+        },
         baslik: 'Temel belgeler',
         tablo: {
           sutunlar: ['Belge', 'Nereden alınır', 'Ne kadar sürer'],
@@ -354,6 +409,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
         },
       },
       {
+        bolumFotografi: {
+          dosya: '054-staj-basvurusu-gerekli-belgeler-2',
+          baslik: 'Öğrenci belgesini hazırla',
+          ozet: 'Öğrenci belgesi ve transkript anında alınabiliyor; form beklerken bunları hazır tut.',
+          gorselAlt: 'Öğrenci imzasız bir belgeyi lacivert bir dosyaya yerleştiriyor; belgede kişisel bilgi görünmüyor.',
+        },
         baslik: 'Doğru sıra',
         sirali: [
           'Bölümünün staj yönergesini oku: kaç iş günü, hangi tarih aralığı, hangi form.',
@@ -368,6 +429,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
           'Bu tarihi kaçırırsan staj yerin hazır olsa bile o dönem staj yapamayabilirsin.',
       },
       {
+        bolumFotografi: {
+          dosya: '055-staj-basvurusu-gerekli-belgeler-3',
+          baslik: 'Şirket formunu tamamla',
+          ozet: 'Formun işyeri bölümü için gereken bilgileri tek seferde sor.',
+          gorselAlt: 'Öğrenci ve işyeri temsilcisi masada boş bir staj formunu birlikte dolduruyor.',
+        },
         baslik: 'İşyerinden isteyeceğin bilgiler',
         paragraflar: [
           'Zorunlu staj formunun işyeri bölümü çoğu zaman öğrencinin bilmediği bilgileri istiyor. Bunları tek seferde ' +
@@ -386,6 +453,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
         },
       },
       {
+        bolumFotografi: {
+          dosya: '056-staj-basvurusu-gerekli-belgeler-4',
+          baslik: 'Teslim paketini kontrol et',
+          ozet: 'Belgeleri PDF olarak ve adını taşıyan dosya adlarıyla gönder.',
+          gorselAlt: 'Kampüs masasında öğrenci düzenlediği başvuru dosyasını kontrol ediyor.',
+        },
         baslik: 'Sık yapılan hatalar',
         liste: [
           'Transkripti "not ortalamam düşük" diye göndermemek. İstenmişse göndermemek, düşük ortalamadan daha kötü görünüyor.',
@@ -445,6 +518,13 @@ export const STAJ_REHBERLERI: Rehber[] = [
       'Cevap gelmezse bir hafta sonra bir kez hatırlatmak normal.',
     bloklar: [
       {
+        bolumFotografi: {
+          dosya: '057-ilan-acmayan-sirkete-nasil-yazilir-1',
+          baslik: 'Uygun şirketleri seç',
+          ozet: 'İlan açmayan şirketlere yazmak en az denenen kanal; rekabet farkı buradan çıkıyor.',
+          gorselAlt: 'Öğrenci masaya yayılmış iş yeri fotoğrafları arasından uygun olanları seçiyor.',
+          konum: 'son',
+        },
         paragraflar: [
           'İlan sitelerinde bir staj ilanına yüzlerce başvuru geliyor. İlan açmayan bir şirkete gelen staj ' +
             'e-postası sayısı ise çoğu zaman ayda birkaç. Rekabet farkı buradan çıkıyor — ve bu kanal en az ' +
@@ -452,6 +532,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        bolumFotografi: {
+          dosya: '058-ilan-acmayan-sirkete-nasil-yazilir-2',
+          baslik: 'Doğru kişiyi bul',
+          ozet: 'Orta ve büyük şirketlerde insan kaynakları adresini ya da ilgili birimdeki bir kişiyi bul.',
+          gorselAlt: 'Öğrenci, dizüstü bilgisayarın başındaki bir mezunla şirkette kime yazacağını konuşuyor.',
+        },
         baslik: 'Doğru adresi bulmak',
         paragraflar: [
           'Genel "info@" adresine giden e-postaların çoğu okunmadan geçiyor. Küçük işletmelerde bu adres yeterli olabiliyor ' +
@@ -479,6 +565,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
         },
       },
       {
+        bolumFotografi: {
+          dosya: '059-ilan-acmayan-sirkete-nasil-yazilir-3',
+          baslik: 'Kişisel mesaj hazırla',
+          ozet: 'Kim olduğun, ne istediğin, neden o şirket, ne yapabildiğin; beş bilgi yeterli.',
+          gorselAlt: 'Öğrenci sessiz bir masada kısa bir başvuru notu yazıyor.',
+        },
         baslik: 'Metnin iskeleti',
         paragraflar: [
           'Uzun yazmak işe yaramıyor; okunma süresi otuz saniye. Beş bilgi yeterli.',
@@ -495,6 +587,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
           'yazmak, aynı e-postayı yirmi şirkete göndermekten daha çok sonuç veriyor.',
       },
       {
+        bolumFotografi: {
+          dosya: '060-ilan-acmayan-sirkete-nasil-yazilir-4',
+          baslik: 'Tek hatırlatma yap',
+          ozet: 'Bir hafta sonra aynı zincire iki cümlelik bir hatırlatma yaz; ikinciden sonra bırak.',
+          gorselAlt: 'Öğrenci dizüstü bilgisayarının yanında ajandasına bakarak düşünüyor.',
+        },
         baslik: 'Takip e-postası',
         paragraflar: [
           'Cevap gelmemesi çoğu zaman ret değil, e-postanın kaybolması. Bir hafta sonra aynı konu başlığına yanıt ' +
@@ -566,6 +664,18 @@ export const STAJ_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        bolumFotografi: {
+          dosya: '061-stajda-izin-ve-devamsizlik-1',
+          baslik: 'Okul kuralını öğren',
+          ozet: 'Hangi günlerin sayıldığını okulunun yönergesinden öğren; cumartesi gibi istisnaları önceden sor.',
+          gorselAlt: 'Öğrenci ve danışman masadaki ajanda üzerinden devam kurallarını konuşuyor.',
+        },
+        bolumFotografi2: {
+          dosya: '063-stajda-izin-ve-devamsizlik-3',
+          baslik: 'Günleri düzenli takip et',
+          ozet: 'Resmî tatiller ve devamsız günler sayılmıyor; staj bunlar kadar uzuyor.',
+          gorselAlt: 'Öğrenci odasındaki masada haftalık takvime işaret koyuyor.',
+        },
         baslik: 'İş günü nasıl sayılıyor',
         liste: [
           'Hafta içi günler sayılır; cumartesi ve pazar genellikle sayılmaz.',
@@ -578,6 +688,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
           'Tarih hesabı için [staj günü hesaplama aracını](/araclar/staj-gunu-hesaplama) kullanabilirsin.',
       },
       {
+        bolumFotografi: {
+          dosya: '062-stajda-izin-ve-devamsizlik-2',
+          baslik: 'Sorumluna haber ver',
+          ozet: 'İzni önceden, yazılı ve gerekçeli iste; sorun olan şey haber vermemek.',
+          gorselAlt: 'Stajyer, masasında oturan sorumlusuna ayakta durumunu anlatıyor.',
+        },
         baslik: 'İzin almak',
         paragraflar: [
           'Staj bir ders değil, bir işyerinde bulunma. İzin isteme biçimi de işyerindeki gibi olmalı: önceden, ' +
@@ -604,6 +720,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        bolumFotografi: {
+          dosya: '064-stajda-izin-ve-devamsizlik-4',
+          baslik: 'Eksik günü teyit et',
+          ozet: 'Sınır okulun yönergesinde yazıyor; bir gün bile kaçırdıysan ilgili maddeyi oku.',
+          gorselAlt: 'Öğrenci ve danışman masada devam notlarını birlikte gözden geçiriyor.',
+        },
         baslik: 'Devamsızlık ne kadar olursa staj geçersiz olur',
         paragraflar: [
           'Bunun tek bir cevabı yok: sınır okulun yönergesinde yazıyor. Bazı okullar belirli bir gün sayısının ' +
@@ -673,6 +795,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
           'staj komisyonundan yazılı olarak alınan onaydır.',
       },
       {
+        bolumFotografi: {
+          dosya: '065-uzaktan-staj-kabul-edilir-mi-1',
+          baslik: 'Okulun koşullarını öğren',
+          ozet: 'Okul yapılan işin gösterilebildiğine, denetime ve bölümün doğasına bakıyor.',
+          gorselAlt: 'Öğrenci bölüm danışmanına uzaktan staj kurallarını soruyor.',
+        },
         baslik: 'Okullar neye bakıyor',
         liste: [
           'Stajın öğrenme çıktısı ölçülebiliyor mu: yapılan iş defterde ve raporda gösterilebiliyor mu.',
@@ -682,6 +810,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        bolumFotografi: {
+          dosya: '066-uzaktan-staj-kabul-edilir-mi-2',
+          baslik: 'Görevleri yazılı netleştir',
+          ozet: 'Staj komisyonuna yazdığın e-postada işyerinin adını, yapılacak işi ve gün/saat düzenini belirt.',
+          gorselAlt: 'Öğrenci evdeki masasında görüntülü görüşmede sorumlusuyla konuşurken not alıyor.',
+        },
         baslik: 'Onayı nasıl alırsın',
         sirali: [
           'Bölümünün staj yönergesinde "uzaktan", "çevrim içi" ya da "işyeri dışında" ifadelerini ara.',
@@ -691,6 +825,18 @@ export const STAJ_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        bolumFotografi: {
+          dosya: '067-uzaktan-staj-kabul-edilir-mi-3',
+          baslik: 'Çalışma kayıtlarını tut',
+          ozet: 'Yaptığın işleri günlük kaydet; staj defteri sonunda bu kayıttan yazılıyor.',
+          gorselAlt: 'Öğrenci ev masasında dizüstü bilgisayarın yanında defterine çalışma kaydı yazıyor.',
+        },
+        bolumFotografi2: {
+          dosya: '068-uzaktan-staj-kabul-edilir-mi-4',
+          baslik: 'Geri bildirimi planla',
+          ozet: 'Haftada bir yarım saatlik geri bildirim görüşmesi iste; işi teslim ederken bağlantı ya da ekran görüntüsü ekle.',
+          gorselAlt: 'Öğrenci, dizüstü bilgisayardaki çalışmasını danışmanıyla birlikte değerlendiriyor.',
+        },
         baslik: 'Uzaktan stajda işe yarayan alışkanlıklar',
         paragraflar: [
           'Uzaktan stajda en büyük risk görünmez olmak. Ofiste bulunmanın kendiliğinden sağladığı şeyi ' +
@@ -761,6 +907,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        bolumFotografi: {
+          dosya: '069-stajyerin-gorev-ve-sorumluluklari-1',
+          baslik: 'Görevleri öğren',
+          ozet: 'Zamanında gel, anlamadığını sor, işin ne zaman biteceğini söyle.',
+          gorselAlt: 'Sorumlu dizüstü bilgisayardaki küçük bir görevi gösteriyor; yeni stajyer not alıyor.',
+        },
         baslik: 'Senden beklenenler',
         liste: [
           'Zamanında gelmek ve geç kalacaksan önceden haber vermek.',
@@ -772,6 +924,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        bolumFotografi: {
+          dosya: '072-stajyerin-gorev-ve-sorumluluklari-4',
+          baslik: 'Sınırları konuş',
+          ozet: 'Stajın amacına aykırı durumlar sürekli hâle geldiğinde konuşulması gerekiyor.',
+          gorselAlt: 'Stajyer ve sorumlusu ofis masasında sorumlulukları konuşuyor.',
+        },
         baslik: 'Senden beklenmeyenler',
         paragraflar: [
           'Staj bir öğrenme dönemi. Aşağıdakiler stajın amacına aykırı ve sürekli hale geldiğinde konuşulması gereken şeyler.',
@@ -787,6 +945,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
           'Stajı sessizce tamamlayıp sonra şikâyet etmek, defterin onaylanmasını da zorlaştırıyor.',
       },
       {
+        bolumFotografi: {
+          dosya: '070-stajyerin-gorev-ve-sorumluluklari-2',
+          baslik: 'Soru sor ve not al',
+          ozet: 'Kime bağlı çalıştığını, çalışma saatlerini ve bu hafta senden ne beklendiğini ilk gün sor.',
+          gorselAlt: 'Stajyer sorumlusunun anlattıklarını defterine not ediyor.',
+        },
         baslik: 'İlk gün sorulacak beş soru',
         kontrol: {
           baslik: 'İlk gün',
@@ -800,6 +964,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
         },
       },
       {
+        bolumFotografi: {
+          dosya: '071-stajyerin-gorev-ve-sorumluluklari-3',
+          baslik: 'Yaptığın işi göster',
+          ozet: 'Haftada bir üç maddelik özet gönder: ne yaptın, ne öğrendin, gelecek hafta ne yapacaksın.',
+          gorselAlt: 'Stajyer elindeki bitmiş maket parçasını sorumlusuna gösteriyor.',
+        },
         baslik: 'Görünür olmak',
         paragraflar: [
           'Stajyerlerin çoğu iyi iş çıkarıyor ama kimse fark etmiyor, çünkü yapılan iş anlatılmıyor. ' +
@@ -879,6 +1049,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
         },
       },
       {
+        bolumFotografi: {
+          dosya: '073-kotu-gecen-stajda-ne-yapilir-1',
+          baslik: 'Sorunu adlandır',
+          ozet: 'İş mi verilmiyor, iş bölümünle mi ilgisiz, güvenlik riski mi var; ilk adım buna göre değişiyor.',
+          gorselAlt: 'Öğrenci akşam odasındaki masada defterine olanları not ediyor.',
+        },
         baslik: 'Önce sorunu ayır',
         tablo: {
           sutunlar: ['Durum', 'İlk adım'],
@@ -892,6 +1068,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
         },
       },
       {
+        bolumFotografi: {
+          dosya: '074-kotu-gecen-stajda-ne-yapilir-2',
+          baslik: 'Sorumlunla açık konuş',
+          ozet: 'Aynı şeyi şikâyet yerine talep olarak söylemek çoğu zaman işe yarıyor.',
+          gorselAlt: 'Stajyer, ofiste sorumlusuna öğrenme hedeflerini sakin bir şekilde anlatıyor.',
+        },
         baslik: 'Konuşmayı nasıl kurarsın',
         paragraflar: [
           'Şikâyet gibi başlayan konuşmalar savunmaya yol açıyor. Aynı şeyi talep olarak söylemek çoğu zaman işe yarıyor.',
@@ -912,6 +1094,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
         },
       },
       {
+        bolumFotografi: {
+          dosya: '075-kotu-gecen-stajda-ne-yapilir-3',
+          baslik: 'Okulun staj birimine başvur',
+          ozet: 'Durumu erken bildir ve bildirimini e-posta ile yap ki yazılı bir iz kalsın.',
+          gorselAlt: 'Öğrenci okulun staj danışmanına durumunu anlatıyor.',
+        },
         baslik: 'Okulun rolü',
         paragraflar: [
           'Okulun staj birimi stajı onaylayan taraf. İşyeriyle konuşma ağırlığı sende değil onlarda; bu yüzden ' +
@@ -921,6 +1109,12 @@ export const STAJ_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        bolumFotografi: {
+          dosya: '076-kotu-gecen-stajda-ne-yapilir-4',
+          baslik: 'Sonraki adımı okulla belirle',
+          ozet: 'Okulla konuşmadan bırakma; güvenlik riski, taciz ya da yasa dışı bir talep varsa önce kendini koru.',
+          gorselAlt: 'Öğrenci ve danışman masadaki notlar üzerinden seçenekleri konuşuyor.',
+        },
         baslik: 'Stajı bırakmak',
         paragraflar: [
           'Stajı kendi başına bırakmak, o dönemki stajın tümüyle geçersiz sayılmasına ve baştan yapılmasına ' +

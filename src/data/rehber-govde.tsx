@@ -8,6 +8,7 @@ import {
 import {
   IsaretListesi,
   IslemAkisi,
+  OgrenciBolumGorseli,
   SadeAyrinti,
   SadeFotograf,
   SadeKontrol,
@@ -184,10 +185,36 @@ export interface Blok {
   isaretListesi?: { depoAnahtari: string; maddeler: IsaretMaddesi[] };
   /** Fotoğrafı tamamlayan kısa işlem akışı. */
   akis?: { baslik?: string; adimlar: AkisAdimi[] };
+  /**
+   * ÖĞRENCİ REHBERİ BÖLÜM FOTOĞRAFI (12 Ekim 2026) — `OgrenciBolumGorseli`.
+   * `ozet`siz (öğrenci) blokta çiziliyor: varsayılan yeri başlığın hemen
+   * altı; `konum: 'son'` bloğun içeriğinden sonra (aynı bölüme ikinci
+   * görsel düştüğünde). Metin ve listeler yerinde, açık kalıyor.
+   * Dosya `public/rehber-gorselleri/ogrenci/<dosya>.avif|webp`.
+   */
+  bolumFotografi?: OgrenciFotografi & { konum?: 'bas' | 'son' };
+  /** Aynı bloğa düşen ikinci fotoğraf (her zaman bloğun sonunda). */
+  bolumFotografi2?: OgrenciFotografi;
+}
+
+/**
+ * Bölüm fotoğrafının verisi. Alt metin `gorselAlt` adıyla: okuma süresi
+ * sayımı (rehberOkumaDakika) düz nesnelerde bu alanı ve `dosya`/`konum`u
+ * atlıyor — alt metin okunan metin değil.
+ */
+export interface OgrenciFotografi {
+  dosya: string;
+  gorselAlt: string;
+  baslik: string;
+  ozet: string;
 }
 
 const Baslik: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <h2 className="text-lg font-bold text-gray-900 pt-4">{children}</h2>
+);
+
+const FotografCizimi: React.FC<{ f: OgrenciFotografi }> = ({ f }) => (
+  <OgrenciBolumGorseli dosya={f.dosya} alt={f.gorselAlt} baslik={f.baslik} ozet={f.ozet} />
 );
 
 /**
@@ -291,6 +318,7 @@ export const GovdeCizimi: React.FC<{ bloklar: Blok[] }> = ({ bloklar }) => {
       ) : (
       <React.Fragment key={i}>
         {b.baslik && <Baslik>{b.baslik}</Baslik>}
+        {b.bolumFotografi && b.bolumFotografi.konum !== 'son' && <FotografCizimi f={b.bolumFotografi} />}
         {b.paragraflar?.map((p, j) => (
           <p key={j} className="text-sm sm:text-base text-gray-600 leading-relaxed">
             {metniCiz(p, `${i}-${j}`)}
@@ -337,6 +365,8 @@ export const GovdeCizimi: React.FC<{ bloklar: Blok[] }> = ({ bloklar }) => {
             {metniCiz(b.uyari, `${i}-u`)}
           </div>
         )}
+        {b.bolumFotografi?.konum === 'son' && <FotografCizimi f={b.bolumFotografi} />}
+        {b.bolumFotografi2 && <FotografCizimi f={b.bolumFotografi2} />}
       </React.Fragment>
       )
     )}

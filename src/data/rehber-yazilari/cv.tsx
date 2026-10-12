@@ -33,6 +33,12 @@ export const CV_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        bolumFotografi: {
+          dosya: '077-ats-uyumlu-cv-1',
+          baslik: 'Sade CV düzeni kur',
+          ozet: 'Tek sütun, düz paragraf ve madde imli liste; tablo ve metin kutusu ayrıştırmayı bozuyor.',
+          gorselAlt: 'Öğrenci dağınık taslak yığınının yanında sade, tek sütunlu bir CV taslağını düzenliyor.',
+        },
         baslik: 'Sistemin takıldığı yerler',
         tablo: {
           sutunlar: ['Bunu yapma', 'Bunun yerine'],
@@ -48,6 +54,12 @@ export const CV_REHBERLERI: Rehber[] = [
         },
       },
       {
+        bolumFotografi: {
+          dosya: '078-ats-uyumlu-cv-2',
+          baslik: 'Başlıkları anlaşılır yaz',
+          ozet: 'Eğitim, Deneyim, Projeler, Beceriler gibi standart başlıklar ayrıştırmada işe yarıyor.',
+          gorselAlt: 'Öğrenci elindeki CV sayfasında başlıkları kalemle kontrol ediyor.',
+        },
         baslik: 'Başlıkları standart tut',
         paragraflar: [
           'Sistem metni başlıklara göre bölüyor. "Hayat Yolculuğum" ya da "Neler Yapabilirim" gibi yaratıcı başlıklar ' +
@@ -63,6 +75,12 @@ export const CV_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        bolumFotografi: {
+          dosya: '079-ats-uyumlu-cv-3',
+          baslik: 'İlanla eşleşen gerçek becerileri seç',
+          ozet: 'Karşılığı olan becerini ilandaki kelimeyle yaz; bilmediğin aracı CV’ye ekleme.',
+          gorselAlt: 'Öğrenci iki sayfayı yan yana tutup ilanla kendi becerilerini karşılaştırıyor.',
+        },
         baslik: 'Anahtar kelimeler',
         paragraflar: [
           'İlan metni, o pozisyon için aranan kelimelerin listesidir. CV\'nde bu kelimelerin gerçekten karşılığı ' +
@@ -83,6 +101,12 @@ export const CV_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        bolumFotografi: {
+          dosya: '080-ats-uyumlu-cv-4',
+          baslik: 'PDF çıktısını kontrol et',
+          ozet: 'PDF’i açıp metni seçebildiğine, tek sütun olduğuna ve iletişim bilgisinin gövdede durduğuna bak.',
+          gorselAlt: 'Öğrenci dizüstü bilgisayarda tek sayfalık CV’sinin önizlemesine bakıyor; ekrandaki yazı okunmuyor.',
+        },
         baslik: 'Kontrol listesi',
         kontrol: {
           baslik: 'Göndermeden önce',
@@ -151,6 +175,18 @@ export const CV_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        bolumFotografi: {
+          dosya: '081-cvde-proje-nasil-anlatilir-1',
+          baslik: 'Projenin amacını göster',
+          ozet: 'Ne çözülüyordu, neden yapıldı; tek cümle.',
+          gorselAlt: 'Öğrenci masadaki maketi ve tasarım defterini karşısındakine gösteriyor.',
+        },
+        bolumFotografi2: {
+          dosya: '084-cvde-proje-nasil-anlatilir-4',
+          baslik: 'Sonucu somutlaştır',
+          ozet: '“Çalıştı” yerine sayı, süre ya da çıktı yaz.',
+          gorselAlt: 'Öğrenci ilk çizimini bitmiş masa lambası prototipiyle karşılaştırıyor.',
+        },
         baslik: 'Üç parça',
         sirali: [
           'Problem: ne çözülüyordu, neden yapıldı. Tek cümle.',
@@ -159,6 +195,12 @@ export const CV_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        bolumFotografi: {
+          dosya: '082-cvde-proje-nasil-anlatilir-2',
+          baslik: 'Kendi katkını ayır',
+          ozet: 'Takım projesinde hangi kısmın sende olduğunu ve hangi aracı kullandığını yaz.',
+          gorselAlt: 'Öğrenci grup projesinde kendi yaptığı kısmı ekip arkadaşına gösteriyor.',
+        },
         baslik: 'Örnekler',
         karsilastirma: {
           kotuBaslik: 'Bilgi vermiyor',
@@ -178,6 +220,12 @@ export const CV_REHBERLERI: Rehber[] = [
         },
       },
       {
+        bolumFotografi: {
+          dosya: '083-cvde-proje-nasil-anlatilir-3',
+          baslik: 'Hangi projeyi seçeceğini bil',
+          ozet: 'Ders projesi, kişisel çalışma, kulüp ve gönüllü işler de geçerli proje.',
+          gorselAlt: 'Öğrenci elindeki robot prototipini anlatırken ekip arkadaşları dinliyor.',
+        },
         baslik: 'Hangi proje sayılır',
         liste: [
           'Ders projesi ve bitirme projesi — en yaygın ve tamamen geçerli.',
@@ -247,6 +295,13 @@ export const CV_REHBERLERI: Rehber[] = [
       'ikinci paragraf.',
     bloklar: [
       {
+        bolumFotografi: {
+          dosya: '086-on-yazi-nasil-yazilir-2',
+          baslik: 'Kısa taslak oluştur',
+          ozet: 'Ön yazı istenmiyorsa e-postanın gövdesi çoğu zaman ön yazının kendisi oluyor.',
+          gorselAlt: 'Öğrenci dizüstü bilgisayarın yanında defterine kısa bir ön yazı taslağı yazıyor.',
+          konum: 'son',
+        },
         paragraflar: [
           'Ön yazı istenmediği sürece uzun bir metin göndermek gerekmiyor; [e-postanın gövdesi](/rehber/staj-basvuru-epostasi) çoğu zaman ön yazının ' +
             'kendisi oluyor. Yine de bazı şirketler ayrı bir dosya istiyor ve burs başvurularında da benzer bir metin ' +
@@ -254,6 +309,18 @@ export const CV_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        bolumFotografi: {
+          dosya: '085-on-yazi-nasil-yazilir-1',
+          baslik: 'Neden o şirket',
+          ozet: 'Şirketin ürünü, projesi ya da çalışma alanı hakkında somut bir şey yaz; bu paragraf her başvuruda değişir.',
+          gorselAlt: 'Öğrenci dizüstü bilgisayarın yanında bir kurumun proje broşürünü inceliyor.',
+        },
+        bolumFotografi2: {
+          dosya: '087-on-yazi-nasil-yazilir-3',
+          baslik: 'CV ile tekrar etme',
+          ozet: 'CV’deki bir satırı burada hikâyeye çevir; aynı listeyi ikinci kez yazma.',
+          gorselAlt: 'Öğrenci iki elinde iki ayrı sayfayı tutup karşılaştırıyor.',
+        },
         baslik: 'Üç paragraf',
         sirali: [
           'Kim olduğun ve ne istediğin: üniversite, bölüm, sınıf, hangi tarihlerde staj. İki cümle.',
@@ -262,6 +329,12 @@ export const CV_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        bolumFotografi: {
+          dosya: '088-on-yazi-nasil-yazilir-4',
+          baslik: 'Şirkete özel cümleyi kontrol et',
+          ozet: 'Her CV’de yazan genel cümleler yerine sana ait somut bir örnek kullan.',
+          gorselAlt: 'Öğrenci ekrandaki bir proje fotoğrafına bakarak defterindeki notunu düzeltiyor.',
+        },
         baslik: 'Kaçınılması gerekenler',
         karsilastirma: {
           kotuBaslik: 'Her CV\'de yazan',
@@ -342,6 +415,18 @@ export const CV_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        bolumFotografi: {
+          dosya: '089-portfolyo-nasil-hazirlanir-1',
+          baslik: 'En güçlü işleri seç',
+          ozet: 'Bitmiş ve anlatılabilir işleri koy; yarım kalmış, açıklaması olmayan dosyaları çıkar.',
+          gorselAlt: 'Öğrenci masadaki maketler arasından portfolyosuna koyacaklarını seçiyor.',
+        },
+        bolumFotografi2: {
+          dosya: '090-portfolyo-nasil-hazirlanir-2',
+          baslik: 'Süreci de göster',
+          ozet: 'Yalnızca sonucu değil taslağı, kararı ve sonucu birlikte göster.',
+          gorselAlt: 'Öğrenci masaya ilk çizimi, ara modeli ve bitmiş ürünü sırayla diziyor.',
+        },
         baslik: 'Ne girer, ne girmez',
         tablo: {
           sutunlar: ['Girer', 'Girmez'],
@@ -354,6 +439,12 @@ export const CV_REHBERLERI: Rehber[] = [
         },
       },
       {
+        bolumFotografi: {
+          dosya: '091-portfolyo-nasil-hazirlanir-3',
+          baslik: 'Kendi rolünü ayır',
+          ozet: 'Her işte problemi, senin yaptığın kısmı ve sonucu yaz.',
+          gorselAlt: 'Öğrenci ve ekip arkadaşı masadaki proje çıktılarının farklı kısımlarını gösteriyor.',
+        },
         baslik: 'Her iş için üç başlık',
         sirali: [
           'Problem: neyi çözüyordu, kim içindi.',
@@ -365,6 +456,12 @@ export const CV_REHBERLERI: Rehber[] = [
           'kararların anlatılması: neden bu rengi, neden bu yapıyı seçtin.',
       },
       {
+        bolumFotografi: {
+          dosya: '092-portfolyo-nasil-hazirlanir-4',
+          baslik: 'Sunumu sadeleştir',
+          ozet: 'Alanına uygun tek bir yer seç; mühendislik ve mimarlıkta tek bir PDF yeterli.',
+          gorselAlt: 'Öğrenci basılı portfolyo sayfalarını düz bir dosyada düzenliyor.',
+        },
         baslik: 'Nerede yayımlanır',
         liste: [
           'Tasarım ve görsel işler: Behance, Dribbble ya da kendi tek sayfalık siten.',
@@ -435,6 +532,12 @@ export const CV_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        bolumFotografi: {
+          dosya: '094-linkedin-profili-nasil-duzenlenir-2',
+          baslik: 'Başlığı net yaz',
+          ozet: 'Bölümünü, sınıfını ve ne aradığını yaz; “Öğrenci” tek başına bir şey söylemiyor.',
+          gorselAlt: 'Öğrenci dizüstü bilgisayarın yanında defterine kısa bir tanıtım cümlesi yazıyor.',
+        },
         baslik: 'Başlık',
         karsilastirma: {
           kotuBaslik: 'Zayıf başlık',
@@ -448,6 +551,12 @@ export const CV_REHBERLERI: Rehber[] = [
         },
       },
       {
+        bolumFotografi: {
+          dosya: '095-linkedin-profili-nasil-duzenlenir-3',
+          baslik: 'Elindekini anlat',
+          ozet: 'Ne okuduğunu, hangi alana ilgi duyduğunu ve elindeki proje ya da deneyimi üç dört cümleyle yaz.',
+          gorselAlt: 'Öğrenci elindeki proje fotoğrafına bakarak notlarını yazıyor; yanında açık bir dizüstü bilgisayar var.',
+        },
         baslik: 'Hakkında bölümü',
         paragraflar: [
           'Üç dört cümle yeterli: ne okuduğun, hangi alana ilgi duyduğun, ne aradığın. Birinci tekil şahısla yaz; ' +
@@ -461,6 +570,12 @@ export const CV_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        bolumFotografi: {
+          dosya: '093-linkedin-profili-nasil-duzenlenir-1',
+          baslik: 'Sade bir profil fotoğrafı seç',
+          ozet: 'Arka planı sade, yüzün net görünen bir fotoğraf kullan; selfie olmasın.',
+          gorselAlt: 'Öğrenci küçük basılı fotoğraflar arasından sade bir portre seçiyor.',
+        },
         baslik: 'Doldurulacak diğer alanlar',
         liste: [
           'Fotoğraf: sade arka plan, yüz net. Selfie olmasın.',
@@ -472,6 +587,12 @@ export const CV_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        bolumFotografi: {
+          dosya: '096-linkedin-profili-nasil-duzenlenir-4',
+          baslik: 'Mezunlarla bağlantı kur',
+          ozet: 'Davetine iki cümlelik bir not ekle: kim olduğun ve neden bağlanmak istediğin.',
+          gorselAlt: 'Öğrenci kampüs masasında bir mezunla konuşuyor.',
+        },
         baslik: 'Bağlantı ve mesaj',
         paragraflar: [
           'Boş bir davet çoğu zaman kabul edilmiyor. İki cümlelik bir not ekle: kim olduğun ve neden bağlanmak istediğin. ' +
@@ -524,6 +645,12 @@ export const CV_REHBERLERI: Rehber[] = [
       'hizasına al, ışığı yüzüne karşıdan ver ve yanına CV\'nin bir kopyasını koy.',
     bloklar: [
       {
+        bolumFotografi: {
+          dosya: '097-online-mulakat-1',
+          baslik: 'Bağlantıyı önceden dene',
+          ozet: 'Uygulamayı bir kez aç; kamerayı, mikrofonu ve internet bağlantısını dene.',
+          gorselAlt: 'Öğrenci kulaklığını takıp dizüstü bilgisayarının kamerasını deniyor.',
+        },
         baslik: 'Bir gün önce',
         kontrol: {
           baslik: 'Teknik hazırlık',
@@ -537,6 +664,12 @@ export const CV_REHBERLERI: Rehber[] = [
         },
       },
       {
+        bolumFotografi: {
+          dosya: '098-online-mulakat-2',
+          baslik: 'Sade bir ortam hazırla',
+          ozet: 'Işık yüzüne karşıdan gelsin, arka plan sade olsun, bildirimler kapalı olsun.',
+          gorselAlt: 'Öğrenci masayı toplarken pencere perdesini ayarlayıp ışığı yumuşatıyor.',
+        },
         baslik: 'Ortam',
         liste: [
           'Işık yüzüne karşıdan gelsin; arkanda pencere olmasın, yoksa siluet görünürsün.',
@@ -547,6 +680,12 @@ export const CV_REHBERLERI: Rehber[] = [
         ],
       },
       {
+        bolumFotografi: {
+          dosya: '099-online-mulakat-3',
+          baslik: 'Kamerada doğal konuş',
+          ozet: 'Konuşurken kameraya bak ve karşı tarafın cümlesini bitirmesini bekle.',
+          gorselAlt: 'Öğrenci odasında dizüstü bilgisayarın karşısında el hareketleriyle konuşuyor.',
+        },
         baslik: 'Görüşme sırasında',
         paragraflar: [
           'Online görüşmede beden dili yarı yarıya kayboluyor; kalanı bilinçli kullanmak gerekiyor.',
@@ -570,6 +709,12 @@ export const CV_REHBERLERI: Rehber[] = [
           'Ekranda açık duran notları okuduğun anlaşılıyor. Notlar hatırlatıcı olsun, metin olmasın.',
       },
       {
+        bolumFotografi: {
+          dosya: '100-online-mulakat-4',
+          baslik: 'Görüşmeyi toparla',
+          ozet: 'Aynı gün iki cümlelik bir teşekkür e-postası gönder; konuşulan bir konuya değin.',
+          gorselAlt: 'Öğrenci kapalı dizüstü bilgisayarın yanında defterine kısa notlar yazıyor.',
+        },
         baslik: 'Görüşmeden sonra',
         paragraflar: [
           'Aynı gün içinde iki cümlelik bir teşekkür e-postası gönder. Konuşulan bir konuya değinirsen ' +
