@@ -70,10 +70,34 @@ function yapisalVeri(yol, s) {
   return { '@context': 'https://schema.org', '@graph': [kirinti] };
 }
 
-/** JSON-LD'yi <script> içine güvenle gömer: `</script` dizisi etiketi kapatamasın. */
-function jsonGom(veri) {
-  return JSON.stringify(veri).replace(/<\/(script)/gi, '<\\/$1').replace(/<!--/g, '<\\!--');
+/**
+ * JSON'u <script> içine güvenle gömer.
+ *
+ * Bütün `<`, `>` ve `&` karakterleri JSON kaçışına (`\u003c` …) çevriliyor:
+ * `</script`, `<!--` ya da büyük/küçük harf ve boşluk oyunlarıyla
+ * (`</SCRIPT >`) etiketi erken kapatmak mümkün olmuyor. JSON ayrıştırıcısı
+ * bu kaçışları aynı karakter olarak okuyor; veri değişmiyor. U+2028/2029 da
+ * kaçırılıyor.
+ */
+export function jsonGom(veri) {
+  return JSON.stringify(veri)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026')
+    .split(String.fromCharCode(0x2028)).join('\\u2028')
+    .split(String.fromCharCode(0x2029)).join('\\u2029');
 }
+
+/*
+  DEĞİŞTİRME DİZESİ DEĞİL, DEĞİŞTİRME İŞLEVİ (12 Ekim 2026, güvenlik incelemesi)
+
+  `String.prototype.replace` ikinci argüman DİZE olduğunda `$&`, `$'`, `` $` ``
+  ve `$1` kalıplarını yorumluyor. Başlık, açıklama ve JSON-LD veritabanından
+  geliyor; "Başlık $' sonu" gibi bir değer kabuğun geri kalanını (betikler
+  dahil) yanlış yere kopyalıyordu (ölçüldü: 2 yerine 9 <script> etiketi).
+  Her ekleme `koy(değer)` ile yapılıyor: değer olduğu gibi giriyor.
+*/
+const koy = (deger) => () => deger;
 
 /**
  * @param {string} kabuk   kökü boş uygulama kabuğu (dist/_onrender/kabuk.html)
@@ -90,37 +114,41 @@ export function sayfaHtml(kabuk, yol, s, o = {}) {
     döndürse bile bir tarayıcı sayfayı içeriğiyle değerlendirebiliyor.
   */
   if (s.dizinDisi) {
-    html = html.replace('</head>', '  <meta name="robots" content="noindex, follow" />\n  </head>');
+    html = html.replace('</head>', koy('  <meta name="robots" content="noindex, follow" />\n  </head>'));
   }
 
-  html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${kacir(s.baslik)}</title>`);
-  html = html.replace(/<meta name="description"[^>]*>/, `<meta name="description" content="${kacir(s.aciklama)}" />`);
-  html = html.replace(/<meta property="og:title"[^>]*>/, `<meta property="og:title" content="${kacir(s.baslik)}" />`);
+  html = html.replace(/<title>[\s\S]*?<\/title>/, koy(`<title>${kacir(s.baslik)}</title>`));
+  html = html.replace(/<meta name="description"[^>]*>/, koy(`<meta name="description" content="${kacir(s.aciklama)}" />`));
+  html = html.replace(/<meta property="og:title"[^>]*>/, koy(`<meta property="og:title" content="${kacir(s.baslik)}" />`));
   html = html.replace(
     /<meta property="og:description"[^>]*>/,
-    `<meta property="og:description" content="${kacir(s.aciklama)}" />`,
+    koy(`<meta property="og:description" content="${kacir(s.aciklama)}" />`),
   );
 
   if (s.gorsel) {
     html = html
-      .replace(/<meta property="og:image"[^>]*>/, `<meta property="og:image" content="${SITE + s.gorsel}" />`)
-      .replace(/<meta property="og:image:alt"[^>]*>/, `<meta property="og:image:alt" content="${kacir(s.baslik)}" />`);
+      .replace(/<meta property="og:image"[^>]*>/, koy(`<meta property="og:image" content="${kacir(SITE + s.gorsel)}" />`))
+      .replace(/<meta property="og:image:alt"[^>]*>/, koy(`<meta property="og:image:alt" content="${kacir(s.baslik)}" />`));
   }
 
-  /* Canonical VARSA değiştiriliyor, eklenmiyor: iki çelişen canonical olmasın. */
-  const canonicalEtiketi = `<link rel="canonical" href="${tamAdres}" />`;
-  const ogUrlEtiketi = `<meta property="og:url" content="${tamAdres}" />`;
+  /*
+    Canonical VARSA değiştiriliyor, eklenmiyor: iki çelişen canonical olmasın.
+    Adres de kaçırılıyor: yol veritabanındaki slug'tan geliyor; tırnak taşıyan
+    bir değer özniteliği kıramasın.
+  */
+  const canonicalEtiketi = `<link rel="canonical" href="${kacir(tamAdres)}" />`;
+  const ogUrlEtiketi = `<meta property="og:url" content="${kacir(tamAdres)}" />`;
   html = /<link[^>]+rel="canonical"[^>]*>/.test(html)
-    ? html.replace(/<link[^>]+rel="canonical"[^>]*>/, canonicalEtiketi)
-    : html.replace('</head>', `  ${canonicalEtiketi}\n  </head>`);
+    ? html.replace(/<link[^>]+rel="canonical"[^>]*>/, koy(canonicalEtiketi))
+    : html.replace('</head>', koy(`  ${canonicalEtiketi}\n  </head>`));
   html = /<meta[^>]+property="og:url"[^>]*>/.test(html)
-    ? html.replace(/<meta[^>]+property="og:url"[^>]*>/, ogUrlEtiketi)
-    : html.replace('</head>', `  ${ogUrlEtiketi}\n  </head>`);
+    ? html.replace(/<meta[^>]+property="og:url"[^>]*>/, koy(ogUrlEtiketi))
+    : html.replace('</head>', koy(`  ${ogUrlEtiketi}\n  </head>`));
 
   const veri = yapisalVeri(yol, s);
   html = html.replace(
     '</head>',
-    (veri ? `    <script type="application/ld+json">${jsonGom(veri)}</script>\n` : '') + '  </head>',
+    koy((veri ? `    <script type="application/ld+json">${jsonGom(veri)}</script>\n` : '') + '  </head>'),
   );
 
   /*
@@ -143,13 +171,13 @@ export function sayfaHtml(kabuk, yol, s, o = {}) {
     : s.govde
       ? `<div data-onrender-govde><div class="sv-cubuk"></div><div class="sv-metin">${s.govde}</div></div>`
       : o.iskelet || '';
-  html = html.replace('<div id="root"></div>', `<div id="root">${icerik}</div>`);
+  html = html.replace('<div id="root"></div>', koy(`<div id="root">${icerik}</div>`));
 
-  /* AÇILIŞ TOHUMU — `</script>` dizisi kaçırılıyor. */
+  /* AÇILIŞ TOHUMU — `<`, `>` ve `&` JSON kaçışıyla gömülüyor. */
   if (s.tohum) {
     html = html.replace(
       '</body>',
-      `  <script type="application/json" id="ilk-katalog">${jsonGom(s.tohum)}</script>\n  </body>`,
+      koy(`  <script type="application/json" id="ilk-katalog">${jsonGom(s.tohum)}</script>\n  </body>`),
     );
   }
   return html;
