@@ -46,6 +46,8 @@ import { kunye, YAZAR } from '../src/lib/rehber-kunye.mjs';
 */
 import { kacir, duzMetin, ozetle, ilanYolu as ortakIlanYolu } from '../src/lib/seo/metin.mjs';
 import { STAJ_ILANLARI_METNI } from '../src/lib/staj-ilanlari-metni.mjs';
+import { guvenliLogoAdresi } from '../src/lib/bildirim-basvurusu.mjs';
+import { basHarfler, paletSirasi } from '../src/lib/logo-yedegi.mjs';
 import { ilanSayfasi, ILAN_SECIMI, istanbulBugun, benzerIlanlariSec } from '../src/lib/seo/ilan-sayfasi.mjs';
 import { sayfaHtml } from '../src/lib/seo/sayfa-html.mjs';
 import { ARSIV_SAYFA_BOYU, acikIlanMi, arsivSirasi, arsivYolu, arsivSayfaBasligi, arsivSayfaNumaralari } from '../src/lib/seo/ilan-arsivi.mjs';
@@ -1541,20 +1543,68 @@ async function main() {
     listeden yazılsaydı React devreye girdiğinde ilanlar değişirdi.
     Şehir adı ham geliyor ("Istanbul"); arayüzle aynı sözlükten geçiyor.
   */
-  /* `ozetli: false` ana sayfada: ilan özetleri /staj-ilanlari'nın içeriği (kopya riski). */
-  const gorunurIlanKartlari = (liste, { ozetli = true } = {}) =>
+  /*
+    KART TASARIMI REACT KARTINA YAKIN (14 Ekim 2026)
+
+    JavaScript'siz ilk HTML'in kartları yalnız metindi (başlık, şirket ·
+    şehir, özet): bağımsız bir okuyucu ve arama motorunun ilk okuması
+    görselsiz bir liste görüyordu. Artık InternshipCard'ın iskeleti:
+    80×80 şirket logosu, başlık, şirket, şehir · çalışma şekli ve
+    "İlanı incele". Ölçüler canlı React kartından alındı (index.html'deki
+    `.sv-kart*` stilleri). Kaydet düğmesi yok: oturum ve etkileşim istiyor,
+    çalışmayan bir düğme çizilmiyor.
+
+    LOGO KAYNAĞI: katalog tohumundaki `companies.logo_url` — React kartının
+    okuduğu alanın aynısı (mappers → companyLogo). Yalnız HTTPS ya da
+    kökten göreli adres (guvenliLogoAdresi). Logo yoksa uydurma görsel
+    YOK: CompanyLogo'nun yedeği, şirket adının baş harfleri, aynı renk
+    sırasıyla (lib/logo-yedegi.mjs).
+
+    YÜKLEME: sabit 80×80 (width/height + aspect-ratio) — görsel inince satır
+    oynamıyor. İlk ekranda kalan ilk 3 logo hemen, kalanı loading="lazy".
+  */
+  const HEMEN_YUKLENEN_LOGO = 3;
+  const logoHtml = (i, sira) => {
+    const sirket = (i.companies || {}).name || '';
+    const adres = guvenliLogoAdresi((i.companies || {}).logo_url);
+    if (adres) {
+      return (
+        '<span class="sv-logo">' +
+        `<img src="${kacir(adres)}" alt="${kacir(sirket ? `${sirket} logosu` : 'Şirket logosu')}" width="80" height="80" ` +
+        (sira < HEMEN_YUKLENEN_LOGO ? 'loading="eager" ' : 'loading="lazy" ') +
+        'decoding="async" />' +
+        '</span>'
+      );
+    }
+    return (
+      `<span class="sv-logo sv-logo-yedek sv-logo-p${paletSirasi(sirket)}" role="img" aria-label="${kacir(`${sirket || 'Şirket'} logosu yok`)}">` +
+      `${kacir(basHarfler(sirket))}</span>`
+    );
+  };
+  const gorunurIlanKartlari = (liste) =>
     liste.length
       ? '<ul class="sv-kartlar">' +
         liste
-          .map((i) => {
+          .map((i, sira) => {
             const sirket = (i.companies || {}).name || '';
-            const yer = i.city ? konumEtiketi(i.city) : '';
-            const alt = [sirket, yer].filter(Boolean).join(' · ');
+            const yer = [i.city ? konumEtiketi(i.city) : '', i.work_type ? calismaEtiketi(i.work_type) : '']
+              .filter(Boolean)
+              .join(' · ');
+            const yol = ortakIlanYolu(i);
             return (
               '<li class="sv-kart">' +
-              `<a class="sv-kart-baslik" href="${ortakIlanYolu(i)}">${kacir(i.title)}</a>` +
-              (alt ? `<span class="sv-kart-alt">${kacir(alt)}</span>` : '') +
-              (ozetli ? `<span class="sv-kart-ozet">${kacir(ozetle(i.description, 150))}</span>` : '') +
+              logoHtml(i, sira) +
+              '<div class="sv-kart-govde">' +
+              `<a class="sv-kart-baslik" href="${yol}">${kacir(i.title)}</a>` +
+              (sirket ? `<span class="sv-kart-sirket">${kacir(sirket)}</span>` : '') +
+              '<div class="sv-kart-alt-sira">' +
+              (yer
+                ? '<span class="sv-kart-konum"><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><path d="M20 10c0 4.99-5.54 10.19-7.4 11.8a1 1 0 0 1-1.2 0C9.54 20.19 4 14.99 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>' +
+                  `${kacir(yer)}</span>`
+                : '<span></span>') +
+              `<a class="sv-kart-incele" href="${yol}" aria-label="${kacir(`${i.title} ilanını incele`)}">İlanı incele</a>` +
+              '</div>' +
+              '</div>' +
               '</li>'
             );
           })
@@ -2301,7 +2351,7 @@ async function main() {
   const gorunurKimlikler = new Set(gorunurIlanlar.map((i) => String(i.id)));
   const gizliIlanlar = ilanlar.filter((i) => !gorunurKimlikler.has(String(i.id)));
 
-  const ilanKartlari = gorunurIlanKartlari(gorunurIlanlar, { ozetli: false });
+  const ilanKartlari = gorunurIlanKartlari(gorunurIlanlar);
 
   /*
     GİZLİ İLAN LİSTESİ KALDIRILDI.

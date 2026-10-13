@@ -193,8 +193,9 @@
       /*
         GERÇEK KARTLAR
 
-        Yükseklik iskeletteki gri kutuyla aynı (188px): JavaScript inip
-        React kendi kartlarını çizdiğinde satırlar kaymıyor.
+        İskelet kutusu (yukarıda, ön render edilmemiş adresler) 188px kaldı.
+        Ön render kartı artık React kartının kendi ölçülerinde (aşağıda,
+        14 Ekim 2026): JavaScript açılınca satırlar ona göre kaymıyor.
       */
       [data-onrender-govde] .sv-liste {
         min-width: 0;
@@ -223,6 +224,18 @@
         line-height: 1.55;
         color: #4b5563;
       }
+      /*
+        ÖN RENDER İLAN KARTI — REACT KARTININ ÖLÇÜLERİYLE (14 Ekim 2026)
+
+        Ölçüler canlı InternshipCard'dan alındı: 16px iç boşluk ve köşe,
+        80x80 logo kutusu (12px köşe, 8px iç boşluk, contain), başlık
+        16/22 kalın, şirket ve konum 14/20, "İlanı incele" 44px yüksek mavi
+        çerçeveli düğme. Renkler Tailwind'in sRGB karşılıkları. Kartlar
+        arası boşluk masaüstünde 12, telefonda 6 (React ile aynı).
+        Eskiden kart 188px sabit yükseklikteydi (gri iskelet kutusuyla
+        eşitti); React kartı 126 (masaüstü) / ~220 (telefon) ve bu ölçü
+        kendiliğinden ona yakın düşüyor.
+      */
       .sv-kartlar {
         list-style: none;
         margin: 0;
@@ -230,32 +243,121 @@
       }
       .sv-kart {
         box-sizing: border-box;
-        min-height: 188px;
-        margin-bottom: 16px;
-        padding: 20px;
+        margin-bottom: 6px;
+        padding: 16px;
         background: #ffffff;
         border: 1px solid #e5e7eb;
         border-radius: 16px;
         display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        min-width: 0;
+      }
+      .sv-logo {
+        box-sizing: border-box;
+        flex: 0 0 auto;
+        width: 80px;
+        height: 80px;
+        aspect-ratio: 1 / 1;
+        padding: 8px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      .sv-logo img {
+        width: 100%;
+        height: 100%;
+        aspect-ratio: 1 / 1;
+        object-fit: contain;
+        display: block;
+      }
+      /* Logo yedeği: CompanyLogo ile aynı baş harfler ve renk sırası. */
+      .sv-logo-yedek {
+        font-size: 24px;
+        font-weight: 900;
+        line-height: 1;
+        user-select: none;
+      }
+      .sv-logo-p0 { background: #dbeafe; color: #1d4ed8; }
+      .sv-logo-p1 { background: #d1fae5; color: #047857; }
+      .sv-logo-p2 { background: #ffedd5; color: #c2410c; }
+      .sv-logo-p3 { background: #ede9fe; color: #6d28d9; }
+      .sv-logo-p4 { background: #ffe4e6; color: #be123c; }
+      .sv-logo-p5 { background: #cffafe; color: #0e7490; }
+      .sv-kart-govde {
+        min-width: 0;
+        flex: 1 1 auto;
+        display: flex;
         flex-direction: column;
-        gap: 8px;
       }
       .sv-kart-baslik {
         font-size: 16px;
-        font-weight: 700;
-        line-height: 1.35;
-        color: #111827;
+        font-weight: 600;
+        line-height: 22px;
+        color: #0f172a;
+        text-decoration: none;
+        overflow-wrap: anywhere;
+      }
+      .sv-kart-sirket {
+        margin-top: 2px;
+        font-size: 14px;
+        line-height: 20px;
+        color: #374151;
+        overflow-wrap: anywhere;
+      }
+      .sv-kart-alt-sira {
+        margin-top: 4px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 8px 12px;
+      }
+      .sv-kart-konum {
+        flex: 1 1 112px;
+        min-width: 0;
+        display: inline-flex;
+        align-items: flex-start;
+        gap: 6px;
+        font-size: 14px;
+        line-height: 20px;
+        color: #4b5563;
+      }
+      .sv-kart-konum svg {
+        flex: 0 0 auto;
+        margin-top: 2px;
+        fill: none;
+        stroke: #9ca3af;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .sv-kart-incele {
+        box-sizing: border-box;
+        margin-left: auto;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 0 14px;
+        border: 1px solid #2563eb;
+        border-radius: 12px;
+        background: #ffffff;
+        color: #1d4ed8;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 20px;
+        white-space: nowrap;
         text-decoration: none;
       }
-      .sv-kart-alt {
-        font-size: 13px;
-        font-weight: 600;
-        color: #2563eb;
-      }
-      .sv-kart-ozet {
-        font-size: 13px;
-        line-height: 1.55;
-        color: #6b7280;
+      @media (min-width: 640px) {
+        .sv-kart {
+          margin-bottom: 12px;
+        }
       }
       /* Ana sayfa: tüm ilanlara bağlantı ve fırsat şeridi (14 Ekim 2026). */
       .sv-tum-ilanlar {

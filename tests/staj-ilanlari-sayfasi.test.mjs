@@ -100,7 +100,7 @@ test('ön render: ana sayfanın görünür düzeni, aynı kartlar, bilgi bölüm
   assert.match(blok, /gorunurIlanKartlari\(stajIlanlariKartlari\) \+\s*merkezListeleri\.stajIlanlari\(stajIlanlariVerisi\)/);
   assert.match(blok, /govde: '',/);
   /* Kart işaretlemesi ana sayfayla ORTAK tek yardımcı. */
-  assert.match(r, /const ilanKartlari = gorunurIlanKartlari\(gorunurIlanlar, \{ ozetli: false \}\);/);
+  assert.match(r, /const ilanKartlari = gorunurIlanKartlari\(gorunurIlanlar\);/);
   assert.equal((r.match(/'<li class="sv-kart">'/g) || []).length, 1);
 });
 
@@ -178,7 +178,7 @@ test('ANA SAYFA ALT KÜME DEĞİL: 6 kart, fırsat şeridi ve /staj-ilanlari ba�
   */
   const r = oku('scripts/onrender.mjs');
   assert.match(r, /const GORUNUR_KART = 6;/);
-  assert.match(r, /const ilanKartlari = gorunurIlanKartlari\(gorunurIlanlar, \{ ozetli: false \}\);/);
+  assert.match(r, /const ilanKartlari = gorunurIlanKartlari\(gorunurIlanlar\);/);
   assert.match(r, /'<h2 id="firsat-seridi">Güncel öğrenci fırsatları<\/h2>'/);
   assert.match(r, /<a href="\/staj-ilanlari">Tüm staj ilanları →<\/a>/);
   /* /staj-ilanlari kendi 12 kartını taşıyor. */
