@@ -2598,23 +2598,18 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           ) : (
             <div className="flex flex-col gap-4">
               {/*
-                KARTLAR TELEFONDA EKRANIN İKİ KENARINA YASLI
+                KARTLAR SAYFANIN YAN BOŞLUĞUNDA (13 Ekim 2026)
 
-                Sayfanın `main` alanı `px-4` taşıyor — formlar ve hesap
-                eylemleri ekranın kenarına yapışmamalı. Liste o boşluğu
-                `-mx-4` ile geri alıyor ve kartlar yüzey oluyor; aralarında
-                boşluk değil 1 pikselik çizgi var (kartın kendi alt
-                kenarlığı, bkz. YUZEY.kabuk).
-
-                Aşağıdaki "daha fazla" düğmesi ve yönlendirme bloğu bu
-                kabın DIŞINDA: onlar kutu, kenara yaslanmamalı.
+                Kap telefonda `YUZEY.kap` (`-mx-4`) ile ekranın iki
+                kenarına yaslanıyordu. Onaylanan kart ise yuvarlak köşeli
+                ve kenarlıklı: kenara oturunca köşeleri ve yan çizgileri
+                ekran kenarında kesik görünüyordu (canlı, 360 ve 375 px'te
+                ölçüldü; kullanıcı "yatay taşma" diye bildirdi). Kartlar
+                artık `main`in 16 px yan boşluğunda, üstteki şirket
+                şeridiyle hizalı. Kart tasarımı değişmedi; aralarında
+                küçük boşluk kaldı.
               */}
-              {/*
-                Onaylanan tasarımda kartlar ekranın iki kenarına kadar uzanıyor
-                (`YUZEY.kap` = telefonda `-mx-4`) ve her kartın kendi ince
-                çerçevesi var; aralarında 1 piksellik çizgi değil küçük boşluk.
-              */}
-              <div className={`flex flex-col gap-1.5 sm:gap-3 ${YUZEY.kap}`}>
+              <div className="flex flex-col gap-1.5 sm:gap-3">
                 {filteredListings.map(({ listing, match, hasApplied }, index) => (
                 <React.Fragment key={listing.id}>
                   {/* Internship Card */}

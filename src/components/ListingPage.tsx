@@ -491,10 +491,22 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                   logoUrl={listing.companyLogo || undefined}
                 />
                 <div className="min-w-0 flex-1">
-                  <button
-                    type="button"
-                    onClick={() => onNavigate(`/sirket/${listing.companySlug ?? slugify(listing.companyName)}`)}
+                  <a
+                    href={`/sirket/${listing.companySlug ?? slugify(listing.companyName)}`}
+                    onClick={(e) => {
+                      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                      e.preventDefault();
+                      onNavigate(`/sirket/${listing.companySlug ?? slugify(listing.companyName)}`);
+                    }}
                     /*
+                      GERÇEK BAĞLANTI (13 Ekim 2026): `<button onClick>`
+                      idi; JavaScript çalıştıktan sonra sayfada şirket
+                      sayfasına taranabilir bir `<a href>` kalmıyordu
+                      (Google işlenmiş DOM'daki bağlantıları izliyor).
+                      Orta tuş ve "yeni sekmede aç" artık çalışıyor; düz
+                      tıklama yukarıdaki geri dönüş bağlantısı gibi
+                      uygulamanın kendi gezinmesine devrediliyor.
+
                       Dokunma hedefi 44 piksel (`min-h-11`), ama düzende 24
                       piksel yer tutuyor (`-my-2.5`): yazı satırı kadar
                       görünsün, başlığı aşağı itmesin. Ölçüldü: önce 20–24
@@ -503,7 +515,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                     className={`-my-2.5 inline-flex min-h-11 items-center text-left text-sm sm:text-base font-bold text-blue-600 hover:underline rounded-sm break-words ${ODAK_HALKASI}`}
                   >
                     {listing.companyName}
-                  </button>
+                  </a>
                   {/*
                     BAŞLIK VE PAYLAŞ AYNI SATIRDA, SIĞMAZSA ALT ALTA
 

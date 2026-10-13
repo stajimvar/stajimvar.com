@@ -811,7 +811,7 @@ export const OpportunitiesPage: React.FC<{
             />
           ) : filtered.length ? (
             /*
-              TELEFONDA TEK SÜTUN, KENARA YASLI
+              TELEFONDA TEK SÜTUN
 
               İki sütundu: 375 piksellik ekranda karta 174 piksel
               kalıyordu ve kartın yarısı — kime uygun olduğu, tutarın
@@ -822,8 +822,15 @@ export const OpportunitiesPage: React.FC<{
               Tek sütun ve tam genişlik: aynı kart artık bütün alanlarını
               gösteriyor. `sm:` üstünde iki, `lg:` üstünde üç sütun —
               masaüstü düzeni değişmedi.
+
+              KENARA YASLI DEĞİL (13 Ekim 2026): kap telefonda
+              `YUZEY.kap` (`-mx-4`) ile ekran kenarına yaslanıyordu;
+              fırsat kartı da ilan kartı gibi yuvarlak köşeli ve
+              kenarlıklı olduğu için köşeleri ekran kenarında kesik
+              görünüyordu. Kartlar artık sayfanın 16 px yan boşluğunda;
+              kart tasarımı değişmedi.
             */
-            <div className={`flex flex-col gap-1.5 sm:gap-3 ${YUZEY.kap} sm:mx-0`}>
+            <div className="flex flex-col gap-1.5 sm:gap-3">
               {filtered.map((item: Opportunity) => (
                 <Card
                   key={item.id}

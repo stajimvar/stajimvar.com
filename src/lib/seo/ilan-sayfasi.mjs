@@ -222,7 +222,51 @@ export function ilanKirintisi(ilan) {
  * sorumluluklar, nitelikler, başvuru yolu ve ilgili bağlantılar.
  * Tek bir H1 var; React açılınca kökü kendi ağacıyla değiştiriyor.
  */
-export function ilanGorunurGovde(ilan, konumEtiketi, simdi = Date.now(), { sirketSayfasiVar = true } = {}) {
+/*
+  BENZER İLANLAR — İLAN SAYFASINDAN YANA BAĞLANTI (13 Ekim 2026)
+
+  İlan sayfası öbür ilanlara yalnız `/staj-ilanlari` (en yeni 12 ilan)
+  üzerinden bağlanıyordu: daha eski bir ilana ulaşmanın yolu sayfalı liste
+  ya da site haritasıydı, ilanı okuyan kişiye de "buna benzer ne var"
+  gösterilmiyordu. Her ilan sayfası artık en fazla 6 açık ilana gerçek
+  <a href> veriyor. Seçim veriden, tahmin yok:
+    1. aynı şirketin öbür açık ilanları,
+    2. aynı şehirdeki açık ilanlar,
+    3. kalan yer en yeni açık ilanlarla doluyor.
+  Süresi geçmiş ve ilanın kendisi listeye girmiyor. Kenar çiziminde aday
+  listesi ayrı bir (zorunlu olmayan) sorguyla geliyor; o sorgu düşerse
+  bölüm çizilmiyor, sayfa yine 200.
+*/
+export const BENZER_SECIMI = 'id,title,city,posted_at,created_at,application_deadline,companies(name,slug)';
+export const BENZER_ADET = 6;
+
+const sehirAnahtari = (c) => {
+  const k = String(c || '').trim().toLocaleLowerCase('tr');
+  return k && !SEHIR_OLMAYAN.has(k) ? k : '';
+};
+const yeniOnce = (a, b) => {
+  const t = (i) => String(i.posted_at || i.created_at || '');
+  const fark = t(b).localeCompare(t(a));
+  return fark !== 0 ? fark : String(a.id).localeCompare(String(b.id));
+};
+
+export function benzerIlanlariSec(ilan, adaylar, { adet = BENZER_ADET, simdi = Date.now() } = {}) {
+  if (!Array.isArray(adaylar) || !adaylar.length) return [];
+  const sirket = ilan.companies?.slug || '';
+  const sehir = sehirAnahtari(ilan.city);
+  /* İlanın kendisi ve aynı kimliğin ikinci kopyası dışarıda. */
+  const gorulen = new Set([ilan.id]);
+  const uygun = [];
+  for (const a of adaylar) {
+    if (!a?.id || !a.title || gorulen.has(a.id) || sonBasvuruDurumu(a, simdi).suresiGecti) continue;
+    gorulen.add(a.id);
+    uygun.push(a);
+  }
+  const grup = (a) => (sirket && a.companies?.slug === sirket ? 0 : sehir && sehirAnahtari(a.city) === sehir ? 1 : 2);
+  return uygun.sort((a, b) => grup(a) - grup(b) || yeniOnce(a, b)).slice(0, adet);
+}
+
+export function ilanGorunurGovde(ilan, konumEtiketi, simdi = Date.now(), { sirketSayfasiVar = true, benzerler = [] } = {}) {
   const sirket = ilan.companies || {};
   /* Şirket sayfası yoksa bağlantı verilmiyor (kırık iç bağlantı olmasın). */
   const sirketBag = Boolean(sirket.slug) && sirketSayfasiVar;
@@ -243,6 +287,17 @@ export function ilanGorunurGovde(ilan, konumEtiketi, simdi = Date.now(), { sirke
   const bolum = (baslik, maddeler) =>
     maddeler.length ? `<h2>${baslik}</h2><ul>${maddeler.map((m) => `<li>${kacir(m)}</li>`).join('')}</ul>` : '';
 
+  const benzerBolumu = benzerler.length
+    ? '<h2>Benzer staj ilanları</h2><ul class="sv-benzer">' +
+      benzerler
+        .map((b) => {
+          const yer = sehirAnahtari(b.city) ? konumEtiketi(b.city) : '';
+          const alt = [b.companies?.name, yer].filter(Boolean).map(kacir).join(' · ');
+          return `<li><a href="${kacir(ilanYolu(b))}">${kacir(b.title)}</a>${alt ? ` — ${alt}` : ''}</li>`;
+        })
+        .join('') +
+      '</ul>'
+    : '';
   const hedef = ilanHedefi({ applicationMethod: ilan.application_method, applyUrl: ilan.apply_url });
   const basvuru = durum.suresiGecti
     ? ''
@@ -266,6 +321,7 @@ export function ilanGorunurGovde(ilan, konumEtiketi, simdi = Date.now(), { sirke
     bolum('Sorumluluklar', dizi(ilan.responsibilities)) +
     bolum('Aranan nitelikler', dizi(ilan.required_skills)) +
     basvuru +
+    benzerBolumu +
     '<p class="sv-baglantilar"><a href="/staj-ilanlari">Tüm staj ilanları</a>' +
     (sirketBag ? ` · <a href="/sirket/${kacir(sirket.slug)}">${kacir(sirket.name || 'Şirket')} sayfası</a>` : '') +
     ' · <a href="/rehber/staj-basvuru-epostasi">Başvuru e-postası nasıl yazılır</a></p>' +

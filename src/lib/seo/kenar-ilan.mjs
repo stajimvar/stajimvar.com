@@ -36,11 +36,42 @@
  * Bilinmeyen adresler ana sayfaya YÖNLENDİRİLMİYOR.
  */
 import { ilanAdresiniCoz, ilanYolu, kacir } from './metin.mjs';
-import { ILAN_SECIMI, ilanSayfasi, sonBasvuruDurumu } from './ilan-sayfasi.mjs';
+import { ILAN_SECIMI, BENZER_SECIMI, benzerIlanlariSec, ilanSayfasi, sonBasvuruDurumu } from './ilan-sayfasi.mjs';
 import { sayfaHtml } from './sayfa-html.mjs';
 import { zorunluVeriGetir } from './veri-kaynagi.mjs';
 
 const KENAR_ZAMAN_ASIMI_MS = 2500;
+
+/*
+  BENZER İLAN ADAYLARI — ZORUNLU DEĞİL (13 Ekim 2026)
+
+  İlanın kendisi zorunlu okuma: okunamazsa yedek dosya ya da 503. Benzer
+  ilanlar ise süs değil ama sayfanın varlık nedeni de değil: bu okuma
+  düşerse (zaman aşımı, ağ, 5xx) bölüm çizilmiyor, sayfa yine 200 ve
+  kabukla PARALEL istendiği için bekleme eklemiyor. Aday kümesi en yeni
+  200 yayındaki ilanla sınırlı: yanıt küçük kalıyor, seçim
+  (benzerIlanlariSec) aynı şirket ve aynı şehri bu küme içinde arıyor.
+*/
+const BENZER_ADAY_SINIRI = 200;
+const BENZER_ZAMAN_ASIMI_MS = 1500;
+
+async function benzerAdaylari(ayar, getir) {
+  try {
+    return await zorunluVeriGetir({
+      kaynak: 'benzer-ilanlar',
+      taban: ayar.taban,
+      anahtar: ayar.anahtar,
+      yol:
+        `/rest/v1/listings?status=eq.published&order=posted_at.desc.nullslast,created_at.desc` +
+        `&limit=${BENZER_ADAY_SINIRI}&select=${encodeURIComponent(BENZER_SECIMI)}`,
+      zamanAsimiMs: BENZER_ZAMAN_ASIMI_MS,
+      deneme: 1,
+      getir,
+    });
+  } catch {
+    return [];
+  }
+}
 
 /**
  * @param {object} o
@@ -83,12 +114,13 @@ export async function ilanIsteginiCoz({ yol, ayar, getir, kabukGetir, gorselVarM
   const kanonik = ilanYolu(ilan);
   if (yol !== kanonik) return { tur: 301, konum: kanonik };
 
-  const kabuk = await kabukGetir();
+  const [kabuk, adaylar] = await Promise.all([kabukGetir(), benzerAdaylari(ayar, getir)]);
   if (!kabuk) return { tur: 'yedek', neden: 'kabuk okunamadı' };
 
   const sirketSlug = ilan.companies?.slug;
   const sirketSayfasiVar = sirketSlug && sirketSayfasiVarMi ? await sirketSayfasiVarMi(sirketSlug) : Boolean(sirketSlug);
-  const { s } = ilanSayfasi(ilan, konumEtiketi, simdi, { sirketSayfasiVar });
+  const benzerler = benzerIlanlariSec(ilan, adaylar, { simdi });
+  const { s } = ilanSayfasi(ilan, konumEtiketi, simdi, { sirketSayfasiVar, benzerler });
   if (s.gorsel && gorselVarMi && !(await gorselVarMi(s.gorsel))) delete s.gorsel;
   return { tur: 200, html: sayfaHtml(kabuk, kanonik, s, {}), yol: kanonik };
 }

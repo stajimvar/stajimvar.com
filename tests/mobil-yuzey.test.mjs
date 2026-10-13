@@ -101,20 +101,28 @@ test('beş ekran da ortak kabuğu kullanıyor, kendi kutusunu çizmiyor', () => 
   );
 });
 
-test('liste kapları kenara yaslı, kutular değil', () => {
+test('ilan ve fırsat kart listeleri kenara yaslı değil', () => {
   const ilanlar = oku('src/components/MatchedInternshipsView.tsx');
   const firsatlar = oku('src/components/OpportunitiesPage.tsx');
   /*
-    Yalnız KARTLARIN kabı yaslanıyor. "Daha fazla ilan göster" düğmesi ve
-    yönlendirme bloğu bu kabın DIŞINDA: onlar liste öğesi değil,
-    listeden sonra gelen kontroller — kenara yaslanınca listenin devamı
-    gibi okunurlardı.
+    KARTLAR SAYFANIN YAN BOŞLUĞUNDA (13 Ekim 2026)
+
+    İki kart listesinin kabı telefonda `YUZEY.kap` (`-mx-4`) ile ekranın
+    iki kenarına yaslanıyordu. Onaylanan kart yuvarlak köşeli ve
+    kenarlıklı; kenara oturunca köşeleri ve yan çizgileri ekran kenarında
+    kesik görünüyordu (canlı, 360 ve 375 px'te ölçüldü; kullanıcı "yatay
+    taşma" diye bildirdi). Düzeltme kartta değil kapta: kap artık yan
+    boşluğu geri almıyor, kart tasarımı aynı.
+
+    "Daha fazla ilan göster" düğmesi yine kart kabının DIŞINDA: liste
+    öğesi değil, listeden sonra gelen bir kontrol.
   */
-  /* Kartlar hâlâ kenara yaslı; aralarında 1 px çizgi değil küçük boşluk var. */
-  assert.ok(ilanlar.includes('<div className={`flex flex-col gap-1.5 sm:gap-3 ${YUZEY.kap}`}>'));
+  for (const [ad, kaynak] of [['ilanlar', ilanlar], ['fırsatlar', firsatlar]]) {
+    const kaplar = kaynak.match(/<div className=\{?[`"]flex flex-col gap-1\.5 sm:gap-3[^>]*>/g) || [];
+    assert.equal(kaplar.length, 1, `${ad}: kart listesi kabı bulunamadı`);
+    assert.doesNotMatch(kaplar[0], /YUZEY\.kap|-mx-4/, `${ad}: kart listesi kabı kenara yaslanıyor`);
+  }
   assert.match(ilanlar, /hasMoreCountriesPage && <button/);
-  /* Fırsatlar da İlanlar gibi: kenara yaslı, kartlar arasında küçük boşluk. */
-  assert.match(firsatlar, /flex flex-col gap-1\.5 sm:gap-3 \$\{YUZEY\.kap\} sm:mx-0/);
 });
 
 test('akışta ayırıcı kartta duruyor, listede ikinci kez çizilmiyor', () => {

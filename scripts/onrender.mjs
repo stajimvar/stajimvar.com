@@ -45,9 +45,9 @@ import { kunye, YAZAR } from '../src/lib/rehber-kunye.mjs';
   derlemede de kenarda da aynı çıktıyı üretsin diye kural tek yerde.
 */
 import { kacir, duzMetin, ozetle, ilanYolu as ortakIlanYolu } from '../src/lib/seo/metin.mjs';
-import { ilanSayfasi, ILAN_SECIMI, istanbulBugun } from '../src/lib/seo/ilan-sayfasi.mjs';
+import { ilanSayfasi, ILAN_SECIMI, istanbulBugun, benzerIlanlariSec } from '../src/lib/seo/ilan-sayfasi.mjs';
 import { sayfaHtml } from '../src/lib/seo/sayfa-html.mjs';
-import { ARSIV_SAYFA_BOYU, acikIlanMi, arsivSirasi, arsivYolu, arsivSayfaBasligi } from '../src/lib/seo/ilan-arsivi.mjs';
+import { ARSIV_SAYFA_BOYU, acikIlanMi, arsivSirasi, arsivYolu, arsivSayfaBasligi, arsivSayfaNumaralari } from '../src/lib/seo/ilan-arsivi.mjs';
 import { zorunluVeriGetir, VeriKaynagiHatasi, azalmaKapisi } from '../src/lib/seo/veri-kaynagi.mjs';
 
 const kok = path.dirname(path.dirname(url.fileURLToPath(import.meta.url)));
@@ -1669,8 +1669,26 @@ async function main() {
           return `<li><a href="${ortakIlanYolu(i)}">${kacir(i.title)}</a>${alt ? ` — ${kacir(alt)}` : ''}</li>`;
         })
         .join('');
+      /*
+        Numaralı sayfa bağlantıları (13 Ekim 2026): yalnız önceki/sonraki
+        varken son sayfa 7 tık derindeydi. Liste React ile ortak
+        (arsivSayfaNumaralari).
+      */
+      const numaralar =
+        toplamSayfa > 1
+          ? arsivSayfaNumaralari(n, toplamSayfa)
+              .map((k) =>
+                k === null
+                  ? '<span aria-hidden="true">…</span>'
+                  : k === n
+                    ? `<span aria-current="page">${k}</span>`
+                    : `<a href="${arsivYolu(k)}">${k}</a>`
+              )
+              .join(' ')
+          : '';
       const gezinme = [
         n > 1 ? `<a href="${arsivYolu(n - 1)}">← Önceki sayfa</a>` : '',
+        numaralar,
         n < toplamSayfa ? `<a href="${arsivYolu(n + 1)}">Sonraki sayfa →</a>` : '',
       ]
         .filter(Boolean)
@@ -1727,7 +1745,10 @@ async function main() {
   const bugunTR = istanbulBugun();
   for (const i of ilanlar) {
     const onek = String(i.id).split('-')[0];
-    const { yol, s, eksik, suresiGecti } = ilanSayfasi(i, konumEtiketi);
+    /* Benzer ilanlar: kenar çizimiyle aynı seçim (benzerIlanlariSec). */
+    const { yol, s, eksik, suresiGecti } = ilanSayfasi(i, konumEtiketi, Date.now(), {
+      benzerler: benzerIlanlariSec(i, ilanlar),
+    });
     /* Tam kimlik ve yalnızca önek: ikisi de kanonik adrese gidiyor (kenar düşerse). */
     eskiAdresler.push(`/ilan/${i.id}   ${yol}   301`);
     eskiAdresler.push(`/ilan/${onek}   ${yol}   301`);
