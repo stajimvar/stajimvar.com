@@ -139,9 +139,11 @@ test('HTTP 200 tek başına açık kanıtı sayılmıyor', () => {
     %27'si hakkında doğrulanmamış bir iddia.
   */
   assert.match(KAPANMA, /export function acikKaniti\(govde, baslik, adres\)/);
-  assert.match(KONTROL, /import \{ acikKaniti, kapanmaSebebi \} from '\.\.\/src\/lib\/ilan-kapanma\.mjs'/);
+  assert.match(KONTROL, /import \{ acikKaniti, kapanmaSebebi, yenidenAcmaKaniti \} from '\.\.\/src\/lib\/ilan-kapanma\.mjs'/);
   const dal = KONTROL.slice(KONTROL.indexOf('} else if (yanit.ok) {'));
-  const kanitSatiri = dal.indexOf('const kanit = acikKaniti(');
+  /* 13 Ekim 2026: kapalı ilanda daha sıkı kanıt (yenidenAcmaKaniti); yayındakinde acikKaniti. */
+  const kanitSatiri = dal.indexOf('const kanit =');
+  assert.match(dal, /const kanit =\s*ilan\.status === 'closed'\s*\? yenidenAcmaKaniti\(govde, ilan\.title, adres\)\s*: acikKaniti\(govde, ilan\.title, adres\);/);
   const acikYazma = dal.indexOf("source_status: 'acik'");
   assert.ok(kanitSatiri > 0 && kanitSatiri < acikYazma, "'acik' yazımı kanıttan sonra olmalı");
 });
