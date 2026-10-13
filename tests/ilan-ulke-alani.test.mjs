@@ -22,6 +22,7 @@ import { randomUUID } from 'node:crypto';
 
 const GOC = new URL('../supabase/migrations/20261120010000_ilan_otomatik_kontrol.sql', import.meta.url);
 const ULKE_GOCU = new URL('../supabase/migrations/20261213010000_ilan_ulke_alani.sql', import.meta.url);
+const KANIT_GOCU = new URL('../supabase/migrations/20261214010000_ilan_konum_kanitli_duzeltmeler.sql', import.meta.url);
 
 const SAHIP = '11111111-1111-4111-8111-111111111111'; // doğrulanmış şirket, Owner
 const IZLEYICI = '22222222-2222-4222-8222-222222222222'; // aynı şirkette Viewer
@@ -200,6 +201,15 @@ before(async () => {
   ESKI_IZ = (await db.query(`select public.ilan_icerik_ozeti(l) as o from public.listings l
                               where id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'`)).rows[0].o;
   await db.exec(await readFile(ULKE_GOCU, 'utf8'));
+  /* Kanıtlı düzeltme göçünün hedefleriyle aynı kimlik öneki ve değerler; Luron önceden değişmiş (ezilmemeli). */
+  await db.exec(`select set_config('request.jwt.claims', '{"role":"service_role"}', false);
+    insert into public.listings (id, company_id, title, city, country_code, work_type, origin, status) values
+      ('2a1ca32c-0000-4000-8000-000000000001', 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'Hiroba', 'Çankaya', null, 'On-site', 'scraped', 'published'),
+      ('b39b1b88-0000-4000-8000-000000000001', 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'Luron', null, 'GB', 'On-site', 'manual', 'published'),
+      ('cc55e6ec-0000-4000-8000-000000000001', 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'Atrya', 'Berlin', 'DE', 'Remote', 'scraped', 'published'),
+      ('a67768ee-0000-4000-8000-000000000001', 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'FixFirst', null, 'DE', 'Remote', 'scraped', 'published');
+    select set_config('request.jwt.claims', '', false);`);
+  await db.exec(await readFile(KANIT_GOCU, 'utf8'));
   await db.exec(`grant select on public.listings to service_role;`);
 
   await db.exec(`
@@ -322,4 +332,61 @@ test('göçten önce kaydedilmiş bekleyen içerik (ülke anahtarı yok) ilanın
                                   from public.listings l where id = $1`, [id])).rows[0].i;
   await db.query(`select public.ilan_bekleyen_icerigi_yaz($1, $2)`, [id, eski]);
   assert.equal((await ulkeAlanlari(id)).country_code, 'TR');
+});
+
+/* ------------------------------------------- 20261214010000: doğrulama damgası */
+
+test('doğrulama damgası: kanıtsız damga reddediliyor; ülkeler damgasız değişince damga düşüyor', async () => {
+  const id = await ulkeliTaslak(SAHIP, { work_type: 'Remote', city: '', basvuru_ulkeleri: ['DE'] });
+  /* Kanıtsız damga kısıta takılıyor. */
+  await assert.rejects(
+    db.query(`update public.listings set basvuru_ulkeleri_dogrulandi_at = now() where id = $1`, [id]),
+    /listings_basvuru_ulkeleri_damgasi/,
+  );
+  /* Göçün yaptığı gibi: değer, kanıt ve damga aynı güncellemede. */
+  await db.query(`update public.listings set basvuru_ulkeleri = array['DE','AT'], basvuru_ulkeleri_kanit = 'kaynak: x',
+                  basvuru_ulkeleri_dogrulandi_at = now() where id = $1`, [id]);
+  let r = (await db.query(`select basvuru_ulkeleri, basvuru_ulkeleri_kanit, basvuru_ulkeleri_dogrulandi_at from public.listings where id = $1`, [id])).rows[0];
+  assert.deepEqual(r.basvuru_ulkeleri, ['DE', 'AT']);
+  assert.ok(r.basvuru_ulkeleri_dogrulandi_at, 'aynı güncellemede atılan damga kalmalı');
+  /* Ülkeler damga yenilenmeden değişirse eski kanıt geçersiz. */
+  await db.query(`update public.listings set basvuru_ulkeleri = array['DE'] where id = $1`, [id]);
+  r = (await db.query(`select basvuru_ulkeleri_kanit, basvuru_ulkeleri_dogrulandi_at from public.listings where id = $1`, [id])).rows[0];
+  assert.equal(r.basvuru_ulkeleri_dogrulandi_at, null);
+  assert.equal(r.basvuru_ulkeleri_kanit, null);
+});
+
+test('doğrulama damgasını işveren ve ziyaretçi yazamıyor, okuyabiliyor', async () => {
+  const id = await ulkeliTaslak(SAHIP, { work_type: 'Remote', city: '', basvuru_ulkeleri: ['TR'] });
+  await assert.rejects(
+    olarak(SAHIP, `update public.listings set basvuru_ulkeleri_kanit = 'beyan', basvuru_ulkeleri_dogrulandi_at = now() where id = $1`, [id]),
+    /permission denied/,
+  );
+  const okunan = await olarak(SAHIP, `select basvuru_ulkeleri_dogrulandi_at from public.listings where id = $1`, [id]);
+  assert.equal(okunan.length, 1);
+  await assert.rejects(
+    olarak('anon', `update public.listings set basvuru_ulkeleri_dogrulandi_at = now() where id = $1`, [id]),
+    /permission denied/,
+  );
+});
+
+test('kanıtlı düzeltme göçü: yalnız kaynağın söylediği değer, yalnız beklenen mevcut değerin üstüne', async () => {
+  const satir = async (onek) =>
+    (await db.query(`select city, country_code, work_type, basvuru_ulkeleri, basvuru_ulkeleri_kanit, basvuru_ulkeleri_dogrulandi_at
+                       from public.listings where id::text like $1`, [`${onek}-%`])).rows[0];
+  const hiroba = await satir('2a1ca32c');
+  assert.equal(hiroba.country_code, 'TR');
+  assert.equal(hiroba.city, 'Çankaya', 'şehir değişmemeli');
+  const luron = await satir('b39b1b88');
+  assert.equal(luron.country_code, 'GB', 'değer önceden değişmişse göç ÜZERİNE YAZMAMALI');
+  assert.equal(luron.city, null);
+  const atrya = await satir('cc55e6ec');
+  assert.equal(atrya.work_type, 'Hybrid');
+  assert.equal(atrya.basvuru_ulkeleri, null);
+  const fix = await satir('a67768ee');
+  assert.deepEqual(fix.basvuru_ulkeleri, ['DE']);
+  assert.match(fix.basvuru_ulkeleri_kanit, /join\.com.*TELECOMMUTE.*Germany/);
+  assert.ok(fix.basvuru_ulkeleri_dogrulandi_at, 'kanıtlı değer damgalı');
+  const [e] = (await db.query(`select country_code from public.listings where id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'`)).rows;
+  assert.equal(e.country_code, null, 'ilgisiz ilan değişmemeli');
 });
