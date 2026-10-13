@@ -100,7 +100,7 @@ test('ön render: ana sayfanın görünür düzeni, aynı kartlar, bilgi bölüm
   assert.match(blok, /gorunurIlanKartlari\(stajIlanlariKartlari\) \+\s*merkezListeleri\.stajIlanlari\(stajIlanlariVerisi\)/);
   assert.match(blok, /govde: '',/);
   /* Kart işaretlemesi ana sayfayla ORTAK tek yardımcı. */
-  assert.match(r, /const ilanKartlari = gorunurIlanKartlari\(gorunurIlanlar\);/);
+  assert.match(r, /const ilanKartlari = gorunurIlanKartlari\(gorunurIlanlar, \{ ozetli: false \}\);/);
   assert.equal((r.match(/'<li class="sv-kart">'/g) || []).length, 1);
 });
 
@@ -165,4 +165,49 @@ test('sayfa gecikmeli yükleniyor: bolumler.ts ana pakete binmiyor', () => {
   assert.match(app, /const StajIlanlariIcerik = React\.lazy\(/);
   assert.doesNotMatch(app, /^import \{ StajIlanlariIcerik \}/m);
   assert.doesNotMatch(oku('src/lib/staj-ilanlari-metni.mjs'), /^import /m);
+});
+
+/* ------------------------------------- 14 Ekim 2026: kopya riski ve sayı kapsamı */
+
+test('ANA SAYFA ALT KÜME DEĞİL: 6 kart, fırsat şeridi ve /staj-ilanlari bağlantısı', () => {
+  /*
+    Ölçüldü: iki ilk HTML aynı 12 kartı taşıyınca ana sayfanın metninin
+    %90'ı /staj-ilanlari'da birebir geçiyordu. Ana sayfa artık ilk 6 kartı
+    (aynı tohum, React'in ilk 6 kartı) ve canlıda da gösterdiği fırsat
+    şeridini taşıyor; ilan niyetinin sayfasına açık bağlantı veriyor.
+  */
+  const r = oku('scripts/onrender.mjs');
+  assert.match(r, /const GORUNUR_KART = 6;/);
+  assert.match(r, /const ilanKartlari = gorunurIlanKartlari\(gorunurIlanlar, \{ ozetli: false \}\);/);
+  assert.match(r, /'<h2 id="firsat-seridi">Güncel öğrenci fırsatları<\/h2>'/);
+  assert.match(r, /<a href="\/staj-ilanlari">Tüm staj ilanları →<\/a>/);
+  /* /staj-ilanlari kendi 12 kartını taşıyor. */
+  assert.match(r, /stajIlanlariKartlari = kaynakListe\.slice\(0, 12\);/);
+
+  const dosya = path.join(KOK, 'dist', 'index.html');
+  const staj = path.join(KOK, 'dist', 'staj-ilanlari.html');
+  if (!existsSync(dosya) || !existsSync(staj)) return;
+  const metin = (f) => {
+    const h = readFileSync(f, 'utf8');
+    return h.slice(h.indexOf('<div id="root">'), h.lastIndexOf('</body>'))
+      .replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<[^>]+>/g, ' ')
+      .replace(/&[a-z#0-9]+;/g, ' ').replace(/\s+/g, ' ').trim().toLocaleLowerCase('tr').split(' ');
+  };
+  const obek = (k) => { const s = new Set(); for (let i = 0; i + 5 <= k.length; i++) s.add(k.slice(i, i + 5).join(' ')); return s; };
+  const a = obek(metin(dosya));
+  const b = obek(metin(staj));
+  const ortak = [...a].filter((x) => b.has(x)).length;
+  assert.ok(ortak / a.size < 0.6, `ana sayfanın metninin ${Math.round((ortak / a.size) * 100)}%'i /staj-ilanlari'da`);
+});
+
+test('SAYILARIN KAPSAMI YAZILI: Türkiye / tüm ülkeler karışmıyor', () => {
+  const liste = oku('src/components/MatchedInternshipsView.tsx');
+  assert.match(liste, /\? "Türkiye'deki ilanlar"/);
+  assert.match(liste, /\? 'Tüm ülkelerdeki ilanlar'/);
+  assert.match(liste, /\{seciliBolge === 'tumu' \? '\.' : ' \(tüm ülkeler\)\.'\}/);
+  const icerik = oku('src/components/StajIlanlariIcerik.tsx');
+  assert.match(icerik, /turkiye: "Türkiye'de ",/);
+  assert.match(icerik, /'Tüm ülkelerdeki açık ilanları sayfa sayfa gör'/);
+  assert.match(oku('src/components/StajIlanlariArsivi.tsx'), /Tüm ülkelerden \{ilanlar!\.length\} açık ilan/);
+  assert.match(oku('scripts/onrender.mjs'), /`<p>Tüm ülkelerden \$\{aciklar\.length\} açık ilan/);
 });

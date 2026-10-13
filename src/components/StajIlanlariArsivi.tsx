@@ -106,7 +106,7 @@ export const StajIlanlariArsivi: React.FC<{
         {gecerli && (
           <>
             <p className="text-sm text-gray-600">
-              {ilanlar!.length} açık ilan, en yeniden eskiye · sayfa {sayfa}/{toplamSayfa}
+              Tüm ülkelerden {ilanlar!.length} açık ilan, en yeniden eskiye · sayfa {sayfa}/{toplamSayfa}
             </p>
             <ul className="space-y-2">
               {bu.map((ilan) => {

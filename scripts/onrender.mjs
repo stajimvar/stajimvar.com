@@ -1541,7 +1541,8 @@ async function main() {
     listeden yazılsaydı React devreye girdiğinde ilanlar değişirdi.
     Şehir adı ham geliyor ("Istanbul"); arayüzle aynı sözlükten geçiyor.
   */
-  const gorunurIlanKartlari = (liste) =>
+  /* `ozetli: false` ana sayfada: ilan özetleri /staj-ilanlari'nın içeriği (kopya riski). */
+  const gorunurIlanKartlari = (liste, { ozetli = true } = {}) =>
     liste.length
       ? '<ul class="sv-kartlar">' +
         liste
@@ -1553,7 +1554,7 @@ async function main() {
               '<li class="sv-kart">' +
               `<a class="sv-kart-baslik" href="${ortakIlanYolu(i)}">${kacir(i.title)}</a>` +
               (alt ? `<span class="sv-kart-alt">${kacir(alt)}</span>` : '') +
-              `<span class="sv-kart-ozet">${kacir(ozetle(i.description, 150))}</span>` +
+              (ozetli ? `<span class="sv-kart-ozet">${kacir(ozetle(i.description, 150))}</span>` : '') +
               '</li>'
             );
           })
@@ -1748,7 +1749,8 @@ async function main() {
         govde:
           '<main><nav aria-label="Sayfa yolu"><a href="/staj-ilanlari">Staj ilanları</a> › Tüm açık ilanlar</nav>' +
           '<h1>Tüm staj ilanları</h1>' +
-          `<p>${aciklar.length} açık ilan, en yeniden eskiye · sayfa ${n}/${toplamSayfa}</p>` +
+          /* Kapsam yazılı: Türkiye kapısındaki sayıyla karışmasın (14 Ekim 2026). */
+          `<p>Tüm ülkelerden ${aciklar.length} açık ilan, en yeniden eskiye · sayfa ${n}/${toplamSayfa}</p>` +
           `<ul>${satirlar}</ul>` +
           (gezinme ? `<nav aria-label="Sayfalar"><p>${gezinme}</p></nav>` : '') +
           '</main>',
@@ -2269,7 +2271,17 @@ async function main() {
   const katalogTohumu = await katalogTohumuGetir(TOHUM_ULKESI);
   const tohumIlanlari = Array.isArray(katalogTohumu?.listings) ? katalogTohumu.listings : [];
 
-  const GORUNUR_KART = 12;
+  /*
+    ANA SAYFA 6 KART, /staj-ilanlari 12 (14 Ekim 2026)
+
+    İki adres artık aynı canlı listeyi çiziyor. İlk HTML'leri de aynı 12
+    kartı taşıyınca ölçüldü: ana sayfanın metninin %90'ı /staj-ilanlari'da
+    birebir geçiyordu (5'li kelime öbekleri) — arama motoru için ana sayfa,
+    ilan sayfasının bir alt kümesiydi. "Staj ilanları" niyetinin sayfası
+    /staj-ilanlari; ana sayfa ilk 6 kartı (React'in ilk 6 kartıyla aynı,
+    aynı tohum) ve canlıda da gösterdiği fırsat şeridini taşıyor.
+  */
+  const GORUNUR_KART = 6;
   /* Kart işaretlemesi ve şehir yazımı: `gorunurIlanKartlari` (yukarıda, /staj-ilanlari ile ortak). */
 
   /*
@@ -2289,7 +2301,7 @@ async function main() {
   const gorunurKimlikler = new Set(gorunurIlanlar.map((i) => String(i.id)));
   const gizliIlanlar = ilanlar.filter((i) => !gorunurKimlikler.has(String(i.id)));
 
-  const ilanKartlari = gorunurIlanKartlari(gorunurIlanlar);
+  const ilanKartlari = gorunurIlanKartlari(gorunurIlanlar, { ozetli: false });
 
   /*
     GİZLİ İLAN LİSTESİ KALDIRILDI.
@@ -2306,6 +2318,40 @@ async function main() {
     bu açığı her dağıtımda kapatıyor; bu liste ancak ondan sonra
     kaldırılabilirdi.
   */
+
+  /*
+    FIRSAT ŞERİDİ — CANLI ANA SAYFADA DA VAR (OpportunitiesHomeSection)
+
+    Aynı seçim: yayında, süresi geçmemiş, son başvuru tarihine göre (tarihsiz
+    olanlar sonda), ilk 8. Giriş yapmamış ziyaretçinin gördüğü şerit bu.
+    /staj-ilanlari bu şeridi göstermiyor; iki sayfayı ayıran içeriklerden biri.
+  */
+  const bugunFirsat = istanbulBugun();
+  const firsatSirasi = (f) => String(f.application_deadline || '9999-12-31').slice(0, 10);
+  const seritFirsatlari = firsatlar
+    .filter((f) => f.status === 'published' && f.slug)
+    .filter((f) => {
+      const gun = String(f.application_deadline || '').slice(0, 10);
+      return !/^\d{4}-\d{2}-\d{2}$/.test(gun) || gun >= bugunFirsat;
+    })
+    .sort((a, b) => firsatSirasi(a).localeCompare(firsatSirasi(b)))
+    .slice(0, 8);
+  const firsatSeridi = seritFirsatlari.length
+    ? '<section class="sv-firsatlar" aria-labelledby="firsat-seridi">' +
+      '<h2 id="firsat-seridi">Güncel öğrenci fırsatları</h2>' +
+      '<ul>' +
+      seritFirsatlari
+        .map(
+          (f) =>
+            `<li><a href="/firsatlar/${kacir(f.slug)}">${kacir(f.title)}</a>` +
+            (f.organization_name ? ` <span>${kacir(f.organization_name)}</span>` : '') +
+            '</li>',
+        )
+        .join('') +
+      '</ul>' +
+      '<p><a href="/firsatlar">Tüm fırsatlar →</a></p>' +
+      '</section>'
+    : '';
 
   const anaSayfaNav =
     '<nav class="sv-nav"><ul>' +
@@ -2343,6 +2389,8 @@ async function main() {
       '<h1>Staj aramaya buradan başla.</h1>' +
       '<p class="sv-giris">Şirketlerin kariyer sayfalarından derlenen ve StajımVar’da yayımlanan staj ilanlarını keşfet.</p>' +
       ilanKartlari +
+      `<p class="sv-tum-ilanlar"><a href="/staj-ilanlari">Tüm staj ilanları →</a></p>` +
+      firsatSeridi +
       anaSayfaNav +
       '</main>' +
       '<div class="sv-kutu sv-yan"></div>' +

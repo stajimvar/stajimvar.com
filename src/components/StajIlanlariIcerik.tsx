@@ -106,6 +106,17 @@ const Bag: React.FC<{
   </a>
 );
 
+/*
+  SAYININ KAPSAMI CÜMLEDE (14 Ekim 2026): Türkiye kapısındaki 94 ile tüm
+  ülkelerdeki sayfalı arşivin 174'ü aynı sayfada; hangisinin neyi saydığı
+  yazılı olmalı. Sayı değişmiyor, yalnız kapsamı söyleniyor.
+*/
+const SAYI_KAPSAMI = {
+  turkiye: "Türkiye'de ",
+  yurtdisi: 'Yurtdışında ',
+  tumu: 'Tüm ülkelerde ',
+} as const;
+
 const STAJ_TURU_REHBERLERI: ReadonlyArray<readonly [string, string]> = [
   ['/rehber/staj-sigortasi-kim-yapar', 'Zorunlu stajda sigortayı kim yapar?'],
   ['/rehber/gonullu-staj-rehberi', 'Gönüllü staj nasıl yapılır?'],
@@ -170,6 +181,7 @@ export const StajIlanlariIcerik: React.FC<
             <ul className={`mt-3 space-y-1.5 ${METIN}`}>
               {typeof toplam === 'number' && (
                 <li>
+                  {SAYI_KAPSAMI[gorunum]}
                   <strong className="font-bold text-gray-900">{toplam}</strong> yayında staj ilanı
                   {typeof sirketToplam === 'number' ? `, ${sirketToplam} şirketten` : ''}
                   {typeof sehirToplam === 'number' ? `, ${sehirToplam} şehirde` : ''}.
@@ -183,7 +195,7 @@ export const StajIlanlariIcerik: React.FC<
           )}
           <p className="mt-3 text-sm">
             <Bag href="/staj-ilanlari/sayfa/1" onNavigate={onNavigate} className={BAG}>
-              Tüm açık ilanları sayfa sayfa gör
+              {gorunum === 'tumu' ? 'Tüm açık ilanları sayfa sayfa gör' : 'Tüm ülkelerdeki açık ilanları sayfa sayfa gör'}
             </Bag>
           </p>
         </div>

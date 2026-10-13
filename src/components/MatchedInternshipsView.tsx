@@ -1221,6 +1221,23 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           ? 'tumu'
           : null;
 
+  /*
+    SAYILARIN KAPSAMI GÖRÜNÜR (14 Ekim 2026)
+
+    Yan sütundaki "94 Açık ilan" Türkiye kapısında Türkiye'yi, "Tüm
+    ilanlar"da bütün ülkeleri sayıyor; sayfalı arşiv (/staj-ilanlari/sayfa)
+    ise her zaman bütün ülkeleri. Kapsam yazmayınca aynı sitede 94 ile 174
+    çelişki gibi okunuyordu. Sayı değişmedi; yanına neyi saydığı yazıldı.
+  */
+  const sayiKapsami =
+    seciliBolge === 'turkiye'
+      ? "Türkiye'deki ilanlar"
+      : seciliBolge === 'yurtdisi'
+        ? 'Yurtdışındaki ilanlar'
+        : seciliBolge === 'tumu'
+          ? 'Tüm ülkelerdeki ilanlar'
+          : null;
+
   const bolgeSec = (bolge: IlanBolgesi) => {
     setYurtdisiSecili(bolge === 'yurtdisi');
     if (bolge === 'tumu') setSelectedCompanies([]);
@@ -2752,6 +2769,9 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               </div>
             ))}
           </div>
+          {sayiKapsami && (
+            <p className="-mt-2 px-1 text-center text-xs font-medium text-gray-500">{sayiKapsami}</p>
+          )}
 
           {/*
             Sağ sütunun üstü: sitenin ne yaptığını anlatan kutu.
@@ -2761,7 +2781,9 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           */}
           {typeof bugunDogrulanan === 'number' && bugunDogrulanan > 0 && (
             <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900">
-              Bugün {bugunDogrulanan} ilan kaynağından yeniden kontrol edildi.
+              {/* Bu sayı ülke ayırmıyor; Türkiye kapısındaki sayaçla karışmasın diye kapsam yazılıyor. */}
+              Bugün {bugunDogrulanan} ilan kaynağından yeniden kontrol edildi
+              {seciliBolge === 'tumu' ? '.' : ' (tüm ülkeler).'}
             </p>
           )}
           <aside className="bg-white rounded-2xl p-5 border border-gray-200 space-y-4 shadow-xs">
