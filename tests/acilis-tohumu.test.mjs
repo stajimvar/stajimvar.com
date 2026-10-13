@@ -90,10 +90,16 @@ test('anasayfada gizli ilan listesi kalmadı', () => {
   */
   assert.ok(!html.includes('<div data-seo-prerender>'), 'anasayfada gizli SEO bloğu var');
 
-  const ilanBaglari = [...html.matchAll(/href="\/ilan\/[^"]+"/g)].length;
+  /*
+    14 Ekim 2026: her kartta iki bağlantı var (başlık ve "İlanı incele",
+    React kartıyla aynı) ve ikisi de AYNI ilana gidiyor. Korunan şey
+    değişmedi: kartların dışında ilan bağlantısı yok — farklı ilan adresi
+    sayısı görünür kart sayısına eşit.
+  */
+  const ilanAdresleri = new Set([...html.matchAll(/href="(\/ilan\/[^"]+)"/g)].map((m) => m[1]));
   const gorunurKart = [...html.matchAll(/<a class="sv-kart-baslik"/g)].length;
   assert.equal(
-    ilanBaglari,
+    ilanAdresleri.size,
     gorunurKart,
     'anasayfada görünür kartların dışında ilan bağlantısı var',
   );

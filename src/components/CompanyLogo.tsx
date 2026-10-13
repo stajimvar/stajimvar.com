@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { basHarfler, paletSirasi } from '../lib/logo-yedegi.mjs';
 
 /**
  * Şirket logosu, güvenli yedekle.
@@ -20,21 +21,9 @@ const PALETTE = [
   'bg-cyan-100 text-cyan-700',
 ];
 
-function initials(name: string): string {
-  const words = name
-    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
-    .split(/\s+/)
-    .filter(Boolean);
-  if (words.length === 0) return '?';
-  if (words.length === 1) return words[0].slice(0, 2).toLocaleUpperCase('tr-TR');
-  return (words[0][0] + words[1][0]).toLocaleUpperCase('tr-TR');
-}
-
-function paletteIndex(name: string): number {
-  let sum = 0;
-  for (const ch of name) sum = (sum + ch.codePointAt(0)!) % 997;
-  return sum % PALETTE.length;
-}
+/* Baş harf ve renk sırası ön render ile ORTAK (lib/logo-yedegi.mjs): iki görünüm aynı kutuyu çizsin. */
+const initials = basHarfler;
+const paletteIndex = paletSirasi;
 
 interface CompanyLogoProps {
   name: string;
