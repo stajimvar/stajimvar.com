@@ -34,8 +34,9 @@ const blokBasi = (kaynak, baslik) => {
 
 test('kısa giriş: tek görünür h1, açıklama gerçek veriyle uyumlu, ön render aynı', () => {
   assert.equal((kod.match(/<h1\b/g) || []).length, 1, 'ekranda tek h1');
-  assert.match(kod, /<h1 className="text-lg font-extrabold[^"]*">\s*Staj aramaya buradan başla\.\s*<\/h1>/);
-  assert.match(kod, /Şirketlerin kariyer sayfalarından derlenen ve StajımVar’da yayımlanan staj ilanlarını keşfet\./);
+  /* Varsayılan metin ana sayfanın; /staj-ilanlari `giris` ile kendi h1'ini veriyor (14 Ekim 2026). */
+  assert.match(kod, /<h1 className="text-lg font-extrabold[^"]*">\s*\{giris\?\.baslik \?\? 'Staj aramaya buradan başla\.'\}\s*<\/h1>/);
+  assert.match(kod, /\{giris\?\.aciklama \?\? 'Şirketlerin kariyer sayfalarından derlenen ve StajımVar’da yayımlanan staj ilanlarını keşfet\.'\}/);
   assert.doesNotMatch(kod, /İlk adımın burada/);
   const onRender = oku('scripts/onrender.mjs');
   assert.match(onRender, /'<h1>Staj aramaya buradan başla\.<\/h1>'/);

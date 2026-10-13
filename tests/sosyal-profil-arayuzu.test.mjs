@@ -2092,7 +2092,9 @@ test('Başvurularım sağ sütundan kalktı ama yolu duruyor', () => {
   assert.doesNotMatch(ogrenciProfili, /id="basvuru"/);
 
   assert.match(app, /const istenenTab = activeTab;/);
-  assert.match(app, /\{safeTab === 'applications' && basvuruTakibi\}/);
+  /* 14 Ekim 2026: ana kabuk içeriği `icerikSekmesi`ne bakıyor (/staj-ilanlari'da hep ilanlar). */
+  assert.match(app, /const icerikSekmesi = stajIlanlariAdresi \? 'internships' : safeTab;/);
+  assert.match(app, /\{icerikSekmesi === 'applications' && basvuruTakibi\}/);
   assert.match(app, /const basvuruTakibi = activeStudent \? \(/);
   assert.match(hesapSayfasi, /data-testid="account-sheet-applications"/);
   assert.match(hesapSayfasi, /onClick=\{onOpenApplications\}/);

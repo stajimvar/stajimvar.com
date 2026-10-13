@@ -282,7 +282,19 @@ test('dist: her JobPosting zorunlu alanlarla; kırıntı üst adresi gerçek mer
     assert.ok(kirinti, `${ad}: kırıntı yok`);
     assert.equal(kirinti.itemListElement[1].item, 'https://stajimvar.com/staj-ilanlari', `${ad}: kırıntı /ilan'a gidiyor`);
     if (!jp) continue;
-    assert.ok(jp.jobLocation?.address?.addressCountry, `${ad}: addressCountry yok`);
+    /*
+      UZAKTAN İLAN (#341, #343): Google TELECOMMUTE ilanda adres yerine
+      başvurulabilen ülkeyi (`applicantLocationRequirements`) istiyor. Bu
+      dal o PR'lardan beri vardı ama test yalnız derleme çıktısıyla koştuğu
+      için güncellenmemişti (14 Ekim 2026). Ülke şartı gevşemedi: ya adresin
+      ülkesi ya da en az bir başvuru ülkesi.
+    */
+    if (jp.jobLocationType === 'TELECOMMUTE') {
+      const ulkeler = [].concat(jp.applicantLocationRequirements || []);
+      assert.ok(ulkeler.length > 0 && ulkeler.every((u) => String(u?.name || '').trim()), `${ad}: uzaktan ilanda başvuru ülkesi yok`);
+    } else {
+      assert.ok(jp.jobLocation?.address?.addressCountry, `${ad}: addressCountry yok`);
+    }
     assert.ok(String(jp.hiringOrganization?.name || '').trim(), `${ad}: şirket adı yok`);
     assert.notEqual(jp.hiringOrganization.name, 'Bilinmiyor');
   }

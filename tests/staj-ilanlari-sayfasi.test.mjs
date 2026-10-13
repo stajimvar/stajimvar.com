@@ -55,28 +55,67 @@ test('sayfa üretiliyor: title, H1, description, canonical', () => {
   assert.match(govde, /href="\/rehber\/staj-nasil-bulunur"/);
 });
 
-test('ANA SAYFANIN KOPYASI DEĞİL', () => {
+test('ANA SAYFANIN KOPYASI DEĞİL: aynı liste, farklı h1 ve SEO bilgi bölümü', () => {
   /*
-    İki sayfa aynı kelimeler için yarışmamalı: ana sayfa marka ve genel
-    tanıtım, bu sayfa ilan arama niyeti. Bileşen ürün tanıtımını,
-    fırsatları ve araçları HİÇ çizmiyor.
+    14 Ekim 2026 (kullanıcı kararı): sayfanın üstünde ana sayfadaki GERÇEK
+    liste çiziliyor (logolu kartlar, süzgeçler, kaydet/incele). İki adres
+    yine aynı içerik değil: h1 ve giriş cümlesi bu adresin konusunu
+    söylüyor, fırsat şeridi yerine "Staj ilanları hakkında" bilgi bölümü
+    var. Bilgi bölümü ürün tanıtımı, fırsatlar ya da quiz çizmiyor.
   */
+  const metin = oku('src/lib/staj-ilanlari-metni.mjs');
+  assert.match(metin, /h1: 'Güncel Staj İlanları'/);
   const icerik = oku('src/components/StajIlanlariIcerik.tsx');
-  assert.match(icerik, /Güncel Staj İlanları/);
-  assert.match(icerik, /İlanlar nereden geliyor\?/);
-  /* Ana sayfaya özgü bölümler burada yok. */
-  for (const yabanci of ['OpportunitiesHomeSection', 'MatchedInternshipsView', 'SkillQuizzes']) {
-    assert.ok(!icerik.includes(yabanci), `${yabanci} bu sayfada olmamalı`);
+  const kod = icerik.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
+  assert.match(kod, /İlanlar nereden geliyor\?/);
+  assert.match(kod, /Staj ilanları hakkında/);
+  for (const yabanci of ['OpportunitiesHomeSection', 'MatchedInternshipsView', 'SkillQuizzes', '<h1']) {
+    assert.ok(!kod.includes(yabanci), `${yabanci} bilgi bölümünde olmamalı`);
   }
+  const app = oku('src/App.tsx');
+  assert.match(app, /giris=\{stajIlanlariAdresi \? \{ baslik: STAJ_ILANLARI_METNI\[stajIlanlariGorunumu\]\.h1/);
+  assert.match(app, /\{stajIlanlariAdresi \? \(\s*<Suspense fallback=\{null\}>\s*<StajIlanlariIcerik \{\.\.\.stajIlanlariVerisi\(globalListings\.page\)\} onNavigate=\{navigate\} \/>/);
+  /* Fırsat şeridi yalnız ana sayfada. */
+  assert.match(app, /\) : \(\s*<OpportunitiesHomeSection/);
 });
 
-test('SAYILAR UYDURULMUYOR: veri yoksa satır hiç çizilmiyor', () => {
+test('/staj-ilanlari ANA LİSTE KABUĞUNDA: erken dönüş ve metin sayfası yok', () => {
+  const app = oku('src/App.tsx');
+  assert.ok(!existsSync(path.join(KOK, 'src', 'components', 'StajIlanlariSayfasi.tsx')), 'eski metin sayfası kalktı');
+  assert.doesNotMatch(app, /<StajIlanlariSayfasi/);
+  assert.match(app, /const stajIlanlariAdresi = temizYol === '\/staj-ilanlari';/);
+  assert.match(app, /const ilanListesiAdresi = temizYol === '\/' \|\| stajIlanlariAdresi;/);
+  assert.match(app, /if \(!ilanListesiAdresi\) \{\s*return <BulunamadiSayfasi/);
+  /* Bu adreste içerik hep ilan listesi; üst çubukta arama yapmak sayfadan atmıyor. */
+  assert.match(app, /const icerikSekmesi = stajIlanlariAdresi \? 'internships' : safeTab;/);
+  assert.match(app, /\{icerikSekmesi === 'internships' && globalListings\.phase === 'ready' && globalListings\.page && \(/);
+  assert.match(app, /if \(q && !ilanListesiAdresi\) navigate\('\/'\);/);
+});
+
+test('ön render: ana sayfanın görünür düzeni, aynı kartlar, bilgi bölümü altta', () => {
+  const r = oku('scripts/onrender.mjs');
+  const blok = r.slice(r.indexOf("sayfaYaz('/staj-ilanlari'"), r.indexOf("sayfaYaz('/staj-ilanlari'") + 2500);
+  assert.match(blok, /gorunurGovde:/);
+  assert.match(blok, /`<h1>\$\{kacir\(STAJ_ILANLARI_METNI\.turkiye\.h1\)\}<\/h1>`/);
+  assert.match(blok, /gorunurIlanKartlari\(stajIlanlariKartlari\) \+\s*merkezListeleri\.stajIlanlari\(stajIlanlariVerisi\)/);
+  assert.match(blok, /govde: '',/);
+  /* Kart işaretlemesi ana sayfayla ORTAK tek yardımcı. */
+  assert.match(r, /const ilanKartlari = gorunurIlanKartlari\(gorunurIlanlar\);/);
+  assert.equal((r.match(/'<li class="sv-kart">'/g) || []).length, 1);
+});
+
+test('SAYILAR UYDURULMUYOR: veri yoksa satır hiç çizilmiyor, kaynak listeyle aynı', () => {
   const icerik = oku('src/components/StajIlanlariIcerik.tsx');
   /* "0 ilan" ya da "—" yazmak, ölçülmemiş bir şeyi ölçülmüş göstermek olurdu. */
   assert.match(icerik, /typeof toplam === 'number' && \(/);
-  assert.match(icerik, /\{ilanlar\.length > 0 && \(/);
   assert.match(icerik, /\{sehirler\.length > 0 && \(/);
   assert.doesNotMatch(icerik, /\?\? 0\b/);
+  /* Canlıda sayılar üstteki listenin KENDİ katalog sayfasından. */
+  const app = oku('src/App.tsx');
+  assert.match(app, /const stajIlanlariVerisi = \(sayfa: NonNullable<typeof globalListings\.page>\) =>/);
+  assert.match(app, /: sayfa\.total,/);
+  /* Tüm açık ilanlara giden gerçek bağlantı (sayfalı arşiv) bilgi bölümünde kaldı. */
+  assert.match(icerik, /href="\/staj-ilanlari\/sayfa\/1"/);
 });
 
 test('eski /ilanlar adresi buraya yönleniyor', () => {
@@ -122,6 +161,8 @@ test('sayfa gecikmeli yükleniyor: bolumler.ts ana pakete binmiyor', () => {
     (ölçüldü): bu sayfayı hiç açmayan ziyaretçinin de indirdiği 190 KB.
   */
   const app = oku('src/App.tsx');
-  assert.match(app, /const StajIlanlariSayfasi = React\.lazy\(/);
-  assert.doesNotMatch(app, /^import \{ StajIlanlariSayfasi \}/m);
+  /* 14 Ekim 2026: liste altındaki bilgi bölümü gecikmeli; h1 metni küçük, bağımsız modülden. */
+  assert.match(app, /const StajIlanlariIcerik = React\.lazy\(/);
+  assert.doesNotMatch(app, /^import \{ StajIlanlariIcerik \}/m);
+  assert.doesNotMatch(oku('src/lib/staj-ilanlari-metni.mjs'), /^import /m);
 });

@@ -1,5 +1,6 @@
 import React from 'react';
 import { BOLUMLER } from '../data/bolumler';
+import { STAJ_ILANLARI_METNI } from '../lib/staj-ilanlari-metni.mjs';
 
 /**
  * /staj-ilanlari — "staj ilanları" arama niyetinin BİRİNCİL sayfası.
@@ -12,28 +13,29 @@ import { BOLUMLER } from '../data/bolumler';
  * 137 gösterim, ana sayfadan TEK tıklama yok ve tam "staj ilanları"
  * sorgusunda ana sayfa hiç gösterim almıyor.
  *
- * Bu sayfanın tek konusu ilan aramak. Ana sayfanın kopyası DEĞİL:
- * ürün tanıtımı, fırsatlar, araçlar ve sosyal katman burada hiç yok;
- * buradaki şehir/bölüm dökümü ve "nasıl arıyoruz" anlatımı da ana
- * sayfada yok. İkisi aynı kelimeler için yarışmıyor.
+ * Bu sayfanın tek konusu ilan aramak. Ana sayfanın kopyası DEĞİL: fırsat
+ * şeridi burada yok; buradaki şehir/bölüm dökümü, "nasıl arıyoruz"
+ * anlatımı ve staj türü rehberleri de ana sayfada yok.
+ *
+ * LİSTE ÜSTTE, BİLGİ ALTTA (14 Ekim 2026, kullanıcı kararı)
+ * ---------------------------------------------------------
+ * Sayfa yalnız bu metinden oluşuyordu: görselsiz, uzun bir okuma sayfası.
+ * Üst çubuktaki "Staj İlanları" sekmesi buraya götürdüğü için kullanıcı
+ * gerçek ilan listesini (logolu kartlar, süzgeçler, kaydet) hiç
+ * görmüyordu. Artık sayfanın üstünde ana sayfadaki GERÇEK liste
+ * (MatchedInternshipsView) çiziliyor; h1 ve giriş cümlesi
+ * lib/staj-ilanlari-metni.mjs'ten. Bu bileşen yalnız listenin ALTINDAKİ bilgi bölümü:
+ * arama motoru için hazırlanan metin ve bağlantılar kaybolmadı, yeri
+ * değişti.
  *
  * SAYILAR UYDURULMUYOR
  * --------------------
  * Bu bileşen hiçbir sayı hesaplamıyor ve hiçbir metni kendi üretmiyor:
- * ne verilirse onu yazıyor. Veri gelmediyse ilgili bölüm HİÇ
- * çizilmiyor — "0 ilan" ya da "—" yazmak, ölçülmemiş bir şeyi ölçülmüş
- * gibi göstermek olurdu.
+ * ne verilirse onu yazıyor. Veri gelmediyse ilgili satır HİÇ çizilmiyor
+ * — "0 ilan" ya da "—" yazmak, ölçülmemiş bir şeyi ölçülmüş gibi
+ * göstermek olurdu. Sayılar listenin kendi katalog sayfasından (aynı
+ * RPC, aynı kapsam) geliyor; ikinci bir sayım yok.
  */
-
-export interface IlanOzeti {
-  /** `/ilan/<slug>` — gerçek ilan sayfası. */
-  yol: string;
-  baslik: string;
-  sirket: string;
-  sehir: string | null;
-  /** "On-site", "Remote", "Hybrid" gibi; ham değer çağırandan geliyor. */
-  calismaSekli: string | null;
-}
 
 export interface SehirSayisi {
   ad: string;
@@ -48,8 +50,6 @@ export interface StajIlanlariVerisi {
   /** Kaynağı son kontrol edilmiş ilan sayısı ve son kontrol anı. */
   dogrulananToplam?: number;
   sonKontrol?: string | null;
-  /** En yeni ilanlar; sıralama çağıranda yapılıyor. */
-  ilanlar?: IlanOzeti[];
   /** İlanı olan şehirler, çoktan aza. */
   sehirler?: SehirSayisi[];
   /**
@@ -60,39 +60,14 @@ export interface StajIlanlariVerisi {
   gorunum?: 'turkiye' | 'yurtdisi' | 'tumu';
 }
 
-const GORUNUM_METNI = {
-  turkiye: {
-    h1: 'Güncel Staj İlanları',
-    aciklama:
-      'Türkiye genelindeki güncel staj ilanlarını şehir, bölüm ve staj türüne göre filtrele. Şirketlerin resmî başvuru sayfalarına doğrudan ulaş.',
-    liste: 'Tüm staj ilanlarını filtrele',
-    adres: '/?country=TR',
-    son: 'Son eklenen staj ilanları',
-    sehir: "Türkiye'de ilanın en çok olduğu şehirler",
-  },
-  yurtdisi: {
-    h1: 'Yurtdışında Staj İlanları',
-    aciklama:
-      'Çalışma konumu Türkiye dışında olan staj ilanları. Dil, vize ve başvuru koşullarını her ilanın kendi kaynak sayfasında kontrol et.',
-    liste: 'Yurtdışı ilanlarını filtrele',
-    adres: '/?country=all&bolge=yurtdisi',
-    son: 'Son eklenen yurtdışı staj ilanları',
-    sehir: 'Yurtdışında ilanın en çok olduğu şehirler',
-  },
-  tumu: {
-    h1: 'Tüm Staj İlanları',
-    aciklama:
-      "Türkiye'deki ve yurtdışındaki bütün yayındaki staj ilanları; konumu kaynakta belirtilmemiş ilanlar dahil.",
-    liste: 'Tüm ilanları filtrele',
-    adres: '/?country=all',
-    son: 'Son eklenen staj ilanları',
-    sehir: 'İlanın en çok olduğu şehirler',
-  },
-} as const;
+/** Sayfanın h1'i ve giriş cümlesi — bkz. lib/staj-ilanlari-metni.mjs. */
+export const GORUNUM_METNI = STAJ_ILANLARI_METNI;
 
-/* Tasarım sistemi aynen: bölüm ve rehber sayfalarındaki kart ve başlık ölçüleri. */
+/* Tasarım sistemi aynen: bölüm ve rehber sayfalarındaki kart ölçüleri. */
 const KART = 'rounded-2xl border border-gray-200 bg-white p-5 sm:p-6';
-const BASLIK2 = 'text-lg font-extrabold tracking-tight text-gray-900 sm:text-xl';
+const BASLIK3 = 'text-base font-extrabold tracking-tight text-gray-900 sm:text-lg';
+const METIN = 'text-[15px] leading-relaxed text-gray-700';
+const BAG = 'font-semibold text-blue-700 hover:underline';
 
 /** Tarihi "14 Eylül 2026" biçiminde yazıyor; geçersizse null. */
 export function tarihYaz(deger: string | null | undefined): string | null {
@@ -100,22 +75,6 @@ export function tarihYaz(deger: string | null | undefined): string | null {
   const t = new Date(deger);
   if (Number.isNaN(t.getTime())) return null;
   return t.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
-}
-
-/**
- * Çalışma şeklinin Türkçesi.
- *
- * Ham değerler İngilizce (`on-site`, `remote`, `hybrid`) ve ekranda öyle
- * duruyordu. Bilinmeyen bir değer ÇEVRİLMİYOR, olduğu gibi yazılıyor:
- * uydurma bir karşılık, yanlış bir bilgi olurdu.
- */
-export function calismaSekliYaz(deger: string | null | undefined): string | null {
-  if (!deger) return null;
-  const k = deger.trim().toLowerCase();
-  if (k === 'on-site' || k === 'onsite') return 'İş yerinde';
-  if (k === 'remote') return 'Uzaktan';
-  if (k === 'hybrid') return 'Hibrit';
-  return deger;
 }
 
 /*
@@ -147,8 +106,18 @@ const Bag: React.FC<{
   </a>
 );
 
+const STAJ_TURU_REHBERLERI: ReadonlyArray<readonly [string, string]> = [
+  ['/rehber/staj-sigortasi-kim-yapar', 'Zorunlu stajda sigortayı kim yapar?'],
+  ['/rehber/gonullu-staj-rehberi', 'Gönüllü staj nasıl yapılır?'],
+  ['/rehber/uzaktan-staj-kabul-edilir-mi', 'Uzaktan staj kabul ediliyor mu?'],
+  ['/rehber/staj-basvurusu-gerekli-belgeler', 'Staj başvurusu için gerekli belgeler'],
+  ['/rehber/staj-nasil-bulunur', 'Staj nasıl bulunur?'],
+  ['/araclar/staj-ucreti-hesaplama', 'Staj ücreti hesaplama'],
+];
+
 /**
- * Sayfanın GÖVDESİ — hem canlı rota hem ön render aynı bileşeni çiziyor.
+ * LİSTENİN ALTINDAKİ BİLGİ BÖLÜMÜ — canlı rota ve ön render aynı bileşeni
+ * çiziyor (scripts/onrender.mjs).
  *
  * Ön render `onNavigate` vermiyor: statik HTML'de bağlantılar düz
  * `<a href>` kalıyor ve tarayıcı onları izleyebiliyor.
@@ -161,7 +130,6 @@ export const StajIlanlariIcerik: React.FC<
   sehirToplam,
   dogrulananToplam,
   sonKontrol,
-  ilanlar = [],
   sehirler = [],
   onNavigate,
   gorunum = 'turkiye',
@@ -180,230 +148,123 @@ export const StajIlanlariIcerik: React.FC<
   const bolumler = BOLUMLER.slice().sort((a, b) => a.ad.localeCompare(b.ad, 'tr'));
 
   return (
-    <main className="space-y-6">
-      <header className="space-y-3">
-        <h1 className="text-2xl font-black tracking-tight text-gray-900 sm:text-3xl">
-          {metin.h1}
-        </h1>
-        <p className="text-[15px] leading-relaxed text-gray-700">{metin.aciklama}</p>
-      </header>
+    <section aria-labelledby="staj-ilanlari-bilgi" className="mt-10 border-t border-gray-200 pt-8 sm:mt-12">
+      <h2 id="staj-ilanlari-bilgi" className="text-xl font-extrabold tracking-tight text-gray-900 sm:text-2xl">
+        Staj ilanları hakkında
+      </h2>
 
-      {/*
-        TAM LİSTEYE ÇIKIŞ EN ÜSTTE
+      <div className="mt-5 grid gap-4 lg:grid-cols-2">
+        {/*
+          SAYILAR VE SON KONTROL
 
-        Bu sayfa arama niyetinin karşılığı: metin, döküm ve bağlantılar.
-        Süzgeçli GERÇEK liste (şehir, çalışma şekli, şirket, ücret)
-        uygulamanın kendi ekranında ve oraya giden yol en üstte
-        duruyor — okumak isteyen aşağı iniyor, aramak isteyen tek
-        dokunuşla listeye geçiyor.
-      */}
-      <p>
-        <Bag
-          href={metin.adres}
-          onNavigate={onNavigate}
-          className="inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-600 px-5 text-sm font-bold text-white hover:bg-blue-700"
-        >
-          {metin.liste}
-        </Bag>
-      </p>
+          Her biri ayrı ayrı koşullu: biri gelmediyse yalnız o cümle düşüyor.
 
-      {/*
-        SAYILAR VE SON KONTROL
-
-        Her biri ayrı ayrı koşullu: biri gelmediyse yalnız o cümle
-        düşüyor, blok komple kaybolmuyor. "0 ilan" yazmak ile "ilan
-        sayısı okunamadı" aynı şey değil.
-      */}
-      {(toplam || sirketToplam || sehirToplam || kontrolTarihi) && (
-        <section className={KART}>
-          <h2 className={BASLIK2}>Listede şu an ne var?</h2>
-          <ul className="mt-3 space-y-1.5 text-[15px] leading-relaxed text-gray-700">
-            {typeof toplam === 'number' && (
-              <li>
-                <strong className="font-bold text-gray-900">{toplam}</strong> yayında staj ilanı
-                {typeof sirketToplam === 'number' ? `, ${sirketToplam} şirketten` : ''}
-                {typeof sehirToplam === 'number' ? `, ${sehirToplam} şehirde` : ''}.
-              </li>
-            )}
-            {typeof dogrulananToplam === 'number' && dogrulananToplam > 0 && (
-              <li>
-                {dogrulananToplam} ilanın başvuru bağlantısı kaynağından kontrol edildi.
-              </li>
-            )}
-            {kontrolTarihi && <li>Son kontrol: {kontrolTarihi}.</li>}
-          </ul>
-        </section>
-      )}
-
-      {/*
-        İLANLARI NASIL DERLİYORUZ
-
-        Ana sayfada bu anlatım YOK; orada ürünün tamamı tanıtılıyor.
-        Burada arama sonucundan gelen kişinin ilk sorusu cevaplanıyor:
-        "bu liste nereden geliyor, başvuruyu kime yapacağım".
-      */}
-      <section className={KART}>
-        <h2 className={BASLIK2}>İlanlar nereden geliyor?</h2>
-        <p className="mt-3 text-[15px] leading-relaxed text-gray-700">
-          İlanları aracı sitelerden değil, şirketlerin kendi kariyer sayfalarından
-          derliyoruz. Her ilanda şirketin kendi başvuru bağlantısı var; başvuru
-          StajımVar üzerinden değil, şirketin resmî sayfasında tamamlanıyor.
-        </p>
-        <p className="mt-2 text-[15px] leading-relaxed text-gray-700">
-          Kaynağı doğrulanmayan kayıt listeye girmiyor. Bir ilan kapandığında
-          listeden düşüyor; kapanmış bir ilan açıkmış gibi gösterilmiyor.
-        </p>
-      </section>
-
-      {/* ------------------------------------------------------- ilanlar */}
-      {ilanlar.length > 0 && (
-        <section className="space-y-3">
-          <h2 className={BASLIK2}>{metin.son}</h2>
-          <ul className="space-y-2">
-            {ilanlar.map((ilan) => {
-              const alt = [ilan.sirket, ilan.sehir, calismaSekliYaz(ilan.calismaSekli)]
-                .filter(Boolean)
-                .join(' · ');
-              return (
-                <li key={ilan.yol}>
-                  <Bag
-                    href={ilan.yol}
-                    onNavigate={onNavigate}
-                    className="block rounded-2xl border border-gray-200 bg-white p-4 transition-colors hover:border-blue-500"
-                  >
-                    <span className="block text-[15px] font-bold text-gray-900">{ilan.baslik}</span>
-                    {alt && <span className="mt-0.5 block text-sm text-gray-600">{alt}</span>}
-                  </Bag>
+          TÜM AÇIK İLANLAR — GERÇEK BAĞLANTI (12 Ekim 2026): sayfalı tam
+          liste (`/staj-ilanlari/sayfa/1`) tarayıcının da izleyebildiği bir
+          <a href>; her ilan oradan birkaç tık uzakta. Bkz.
+          src/lib/seo/ilan-arsivi.mjs.
+        */}
+        <div className={KART}>
+          <h3 className={BASLIK3}>Listede şu an ne var?</h3>
+          {(typeof toplam === 'number' || kontrolTarihi) && (
+            <ul className={`mt-3 space-y-1.5 ${METIN}`}>
+              {typeof toplam === 'number' && (
+                <li>
+                  <strong className="font-bold text-gray-900">{toplam}</strong> yayında staj ilanı
+                  {typeof sirketToplam === 'number' ? `, ${sirketToplam} şirketten` : ''}
+                  {typeof sehirToplam === 'number' ? `, ${sehirToplam} şehirde` : ''}.
                 </li>
-              );
-            })}
-          </ul>
-          {/*
-            TÜM AÇIK İLANLAR — GERÇEK BAĞLANTI (12 Ekim 2026)
-
-            Burada yalnız en yeni 12 ilan var; geri kalanına giden yol
-            JavaScript'le çalışan listeydi. Sayfalı tam liste
-            (`/staj-ilanlari/sayfa/1`) tarayıcının da izleyebildiği bir
-            <a href>. Bkz. src/lib/seo/ilan-arsivi.mjs.
-          */}
-          <p className="pt-1">
-            <Bag
-              href="/staj-ilanlari/sayfa/1"
-              onNavigate={onNavigate}
-              className="text-sm font-bold text-blue-700 hover:underline"
-            >
+              )}
+              {typeof dogrulananToplam === 'number' && dogrulananToplam > 0 && (
+                <li>{dogrulananToplam} ilanın başvuru bağlantısı kaynağından kontrol edildi.</li>
+              )}
+              {kontrolTarihi && <li>Son kontrol: {kontrolTarihi}.</li>}
+            </ul>
+          )}
+          <p className="mt-3 text-sm">
+            <Bag href="/staj-ilanlari/sayfa/1" onNavigate={onNavigate} className={BAG}>
               Tüm açık ilanları sayfa sayfa gör
             </Bag>
           </p>
-        </section>
-      )}
+        </div>
 
-      {/* -------------------------------------------------------- şehir */}
-      {sehirler.length > 0 && (
-        <section className={KART}>
-          <h2 className={BASLIK2}>{metin.sehir}</h2>
-          <p className="mt-2 text-sm leading-relaxed text-gray-600">
-            Şehir süzgeci ilan listesinin içinde: listeyi açıp şehri seçebilirsin.
+        {/*
+          İLANLARI NASIL DERLİYORUZ — arama sonucundan gelen kişinin ilk
+          sorusu: "bu liste nereden geliyor, başvuruyu kime yapacağım".
+        */}
+        <div className={KART}>
+          <h3 className={BASLIK3}>İlanlar nereden geliyor?</h3>
+          <p className={`mt-3 ${METIN}`}>
+            İlanları aracı sitelerden değil, şirketlerin kendi kariyer sayfalarından
+            derliyoruz. Her ilanda şirketin kendi başvuru bağlantısı var; başvuru
+            StajımVar üzerinden değil, şirketin resmî sayfasında tamamlanıyor.
           </p>
-          <ul className="mt-3 flex flex-wrap gap-2">
-            {sehirler.map((s) => (
-              <li
-                key={s.ad}
-                className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-sm text-gray-700"
-              >
-                {s.ad} <span className="font-bold text-gray-900">{s.adet}</span>
+          <p className={`mt-2 ${METIN}`}>
+            Kaynağı doğrulanmayan kayıt listeye girmiyor. Bir ilan kapandığında
+            listeden düşüyor; kapanmış bir ilan açıkmış gibi gösterilmiyor.
+          </p>
+        </div>
+
+        {/* -------------------------------------------------------- şehir */}
+        {sehirler.length > 0 && (
+          <div className={KART}>
+            <h3 className={BASLIK3}>{metin.sehir}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-gray-600">
+              Şehir süzgeci yukarıdaki listenin içinde.
+            </p>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {sehirler.map((s) => (
+                <li
+                  key={s.ad}
+                  className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-sm text-gray-700"
+                >
+                  {s.ad} <span className="font-bold text-gray-900">{s.adet}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/*
+          STAJ TÜRÜ — şehir kartı yoksa (canlıda şehir dökümü gelmiyor)
+          iki sütunlu ızgarada yalnız kalıp yanında boşluk bırakmasın diye
+          tam genişlik.
+        */}
+        <div className={`${KART} ${sehirler.length === 0 ? 'lg:col-span-2' : ''}`}>
+          <h3 className={BASLIK3}>Staj türüne göre ne değişiyor?</h3>
+          <p className={`mt-2 ${METIN}`}>
+            Zorunlu staj, gönüllü staj ve uzaktan staj başvuru biçimi, evrak ve sigorta
+            tarafında birbirinden ayrılıyor. Her birinin kendi rehberi var:
+          </p>
+          <ul className="mt-3 space-y-1.5 text-[15px]">
+            {STAJ_TURU_REHBERLERI.map(([yol, ad]) => (
+              <li key={yol}>
+                <Bag href={yol} onNavigate={onNavigate} className={BAG}>
+                  {ad}
+                </Bag>
               </li>
             ))}
           </ul>
-        </section>
-      )}
+        </div>
 
-      {/* -------------------------------------------------------- bölüm */}
-      <section className={KART}>
-        <h2 className={BASLIK2}>Bölümüne göre staj</h2>
-        <p className="mt-2 text-[15px] leading-relaxed text-gray-700">
-          Her bölüm için ayrı bir sayfa var: staj nerede yapılır, stajyer gerçekte ne
-          iş yapar, başvurmadan önce ne öğrenmek işe yarar.
-        </p>
-        <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-1.5 text-sm">
-          {bolumler.map((b) => (
-            <li key={b.slug}>
-              <Bag
-                href={`/bolum/${b.slug}`}
-                onNavigate={onNavigate}
-                className="font-semibold text-blue-700 hover:underline"
-              >
-                {b.ad} stajı
-              </Bag>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* --------------------------------------------------- staj türü */}
-      <section className={KART}>
-        <h2 className={BASLIK2}>Staj türüne göre ne değişiyor?</h2>
-        <p className="mt-2 text-[15px] leading-relaxed text-gray-700">
-          Zorunlu staj, gönüllü staj ve uzaktan staj başvuru biçimi, evrak ve sigorta
-          tarafında birbirinden ayrılıyor. Her birinin kendi rehberi var:
-        </p>
-        <ul className="mt-3 space-y-1.5 text-[15px]">
-          <li>
-            <Bag
-              href="/rehber/staj-sigortasi-kim-yapar"
-              onNavigate={onNavigate}
-              className="font-semibold text-blue-700 hover:underline"
-            >
-              Zorunlu stajda sigortayı kim yapar?
-            </Bag>
-          </li>
-          <li>
-            <Bag
-              href="/rehber/gonullu-staj-rehberi"
-              onNavigate={onNavigate}
-              className="font-semibold text-blue-700 hover:underline"
-            >
-              Gönüllü staj nasıl yapılır?
-            </Bag>
-          </li>
-          <li>
-            <Bag
-              href="/rehber/uzaktan-staj-kabul-edilir-mi"
-              onNavigate={onNavigate}
-              className="font-semibold text-blue-700 hover:underline"
-            >
-              Uzaktan staj kabul ediliyor mu?
-            </Bag>
-          </li>
-          <li>
-            <Bag
-              href="/rehber/staj-basvurusu-gerekli-belgeler"
-              onNavigate={onNavigate}
-              className="font-semibold text-blue-700 hover:underline"
-            >
-              Staj başvurusu için gerekli belgeler
-            </Bag>
-          </li>
-          <li>
-            <Bag
-              href="/rehber/staj-nasil-bulunur"
-              onNavigate={onNavigate}
-              className="font-semibold text-blue-700 hover:underline"
-            >
-              Staj nasıl bulunur?
-            </Bag>
-          </li>
-          <li>
-            <Bag
-              href="/araclar/staj-ucreti-hesaplama"
-              onNavigate={onNavigate}
-              className="font-semibold text-blue-700 hover:underline"
-            >
-              Staj ücreti hesaplama
-            </Bag>
-          </li>
-        </ul>
-      </section>
-    </main>
+        {/* -------------------------------------------------------- bölüm */}
+        <div className={`${KART} lg:col-span-2`}>
+          <h3 className={BASLIK3}>Bölümüne göre staj</h3>
+          <p className={`mt-2 ${METIN}`}>
+            Her bölüm için ayrı bir sayfa var: staj nerede yapılır, stajyer gerçekte ne
+            iş yapar, başvurmadan önce ne öğrenmek işe yarar.
+          </p>
+          <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-1.5 text-sm">
+            {bolumler.map((b) => (
+              <li key={b.slug}>
+                <Bag href={`/bolum/${b.slug}`} onNavigate={onNavigate} className={BAG}>
+                  {b.ad} stajı
+                </Bag>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
   );
 };

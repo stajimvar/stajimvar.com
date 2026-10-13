@@ -45,6 +45,7 @@ import { kunye, YAZAR } from '../src/lib/rehber-kunye.mjs';
   derlemede de kenarda da aynı çıktıyı üretsin diye kural tek yerde.
 */
 import { kacir, duzMetin, ozetle, ilanYolu as ortakIlanYolu } from '../src/lib/seo/metin.mjs';
+import { STAJ_ILANLARI_METNI } from '../src/lib/staj-ilanlari-metni.mjs';
 import { ilanSayfasi, ILAN_SECIMI, istanbulBugun, benzerIlanlariSec } from '../src/lib/seo/ilan-sayfasi.mjs';
 import { sayfaHtml } from '../src/lib/seo/sayfa-html.mjs';
 import { ARSIV_SAYFA_BOYU, acikIlanMi, arsivSirasi, arsivYolu, arsivSayfaBasligi, arsivSayfaNumaralari } from '../src/lib/seo/ilan-arsivi.mjs';
@@ -1531,6 +1532,35 @@ async function main() {
   */
   const { konumEtiketi, calismaEtiketi } = await icerikDerle(path.join(kok, 'src', 'lib', 'sehir.ts'), 'sehir');
 
+  /*
+    GÖRÜNÜR İLAN KARTLARI — `/` VE `/staj-ilanlari` ORTAK (14 Ekim 2026)
+
+    İki adres artık aynı listeyi çiziyor (App → MatchedInternshipsView);
+    JavaScript inmeden görünen kartlar da aynı işaretleme olmalı. Kartlar
+    istemcinin ilk çizimde kullandığı katalog TOHUMUNDAN geliyor: başka bir
+    listeden yazılsaydı React devreye girdiğinde ilanlar değişirdi.
+    Şehir adı ham geliyor ("Istanbul"); arayüzle aynı sözlükten geçiyor.
+  */
+  const gorunurIlanKartlari = (liste) =>
+    liste.length
+      ? '<ul class="sv-kartlar">' +
+        liste
+          .map((i) => {
+            const sirket = (i.companies || {}).name || '';
+            const yer = i.city ? konumEtiketi(i.city) : '';
+            const alt = [sirket, yer].filter(Boolean).join(' · ');
+            return (
+              '<li class="sv-kart">' +
+              `<a class="sv-kart-baslik" href="${ortakIlanYolu(i)}">${kacir(i.title)}</a>` +
+              (alt ? `<span class="sv-kart-alt">${kacir(alt)}</span>` : '') +
+              `<span class="sv-kart-ozet">${kacir(ozetle(i.description, 150))}</span>` +
+              '</li>'
+            );
+          })
+          .join('') +
+        '</ul>'
+      : '';
+
   /* ---------------------------------------------- /staj-ilanlari ---- */
   /*
     "STAJ İLANLARI" ARAMA NİYETİNİN BİRİNCİL SAYFASI
@@ -1564,6 +1594,8 @@ async function main() {
   if (!katalogSayaclari) {
     console.log('  UYARI: katalog sayaçları alınamadı, yerel sayım kullanılıyor (ayrışabilir)');
   }
+  /* İlk ekranın kartları: ana sayfayla aynı tohum, aynı sıra (aşağıda). */
+  let stajIlanlariKartlari = [];
   const stajIlanlariVerisi = (() => {
     const sehirSayaci = new Map();
     const sirketler = new Set();
@@ -1586,15 +1618,7 @@ async function main() {
     const kaynakListe = Array.isArray(katalogSayaclari?.listings) && katalogSayaclari.listings.length
       ? katalogSayaclari.listings
       : turkiyeIlanlari.slice().sort((a, b) => zaman(b) - zaman(a));
-    const enYeniler = kaynakListe
-      .slice(0, 12)
-      .map((ilan) => ({
-        yol: ortakIlanYolu(ilan),
-        baslik: ilan.title,
-        sirket: ilan.companies?.name || '',
-        sehir: ilan.city ? konumEtiketi(ilan.city) : null,
-        calismaSekli: ilan.work_type || null,
-      }));
+    stajIlanlariKartlari = kaynakListe.slice(0, 12);
 
     return {
       gorunum: 'turkiye',
@@ -1619,7 +1643,8 @@ async function main() {
       toplam: katalogSayaclari?.total ?? turkiyeIlanlari.length,
       sirketToplam: katalogSayaclari?.companyTotal ?? sirketler.size,
       sehirToplam: katalogSayaclari?.cityTotal ?? sehirSayaci.size,
-      ilanlar: enYeniler,
+      dogrulananToplam: katalogSayaclari?.verifiedTotal,
+      sonKontrol: katalogSayaclari?.lastVerifiedAt ?? null,
       sehirler: [...sehirSayaci.entries()]
         .sort((a, b) => b[1] - a[1])
         .slice(0, 12)
@@ -1631,7 +1656,30 @@ async function main() {
     baslik: 'Güncel Staj İlanları 2026 | StajımVar',
     aciklama:
       'Türkiye genelindeki güncel staj ilanlarını şehir, bölüm ve staj türüne göre filtrele. Şirketlerin resmî başvuru sayfalarına doğrudan ulaş.',
-    govde: merkezListeleri.stajIlanlari(stajIlanlariVerisi),
+    /*
+      GÖRÜNÜR GÖVDE ANA SAYFANIN DÜZENİNDE (14 Ekim 2026)
+
+      Bu adres bir okuma sayfasıydı (`govde`, sade `.sv-metin` düzeni) ve
+      React de aynı metni çiziyordu. Artık canlı sayfa ana sayfadaki
+      gerçek listeyi çiziyor; ön render da aynı iskeleti yazıyor — üst
+      çubuk, yan sütun yer tutucuları, h1, ilk ilan kartları — ve SEO
+      bilgi bölümü listenin ALTINDA, canlıdakiyle aynı bileşenden. Metin,
+      bağlantılar ve h1 ilk HTML'de kalıyor; JavaScript açılınca ekran
+      sıçramıyor.
+    */
+    gorunurGovde:
+      '<div class="sv-cubuk"></div>' +
+      '<div class="sv-govde">' +
+      '<div class="sv-kutu sv-yan"></div>' +
+      '<main class="sv-liste">' +
+      `<h1>${kacir(STAJ_ILANLARI_METNI.turkiye.h1)}</h1>` +
+      `<p class="sv-giris">${kacir(STAJ_ILANLARI_METNI.turkiye.aciklama)}</p>` +
+      gorunurIlanKartlari(stajIlanlariKartlari) +
+      merkezListeleri.stajIlanlari(stajIlanlariVerisi) +
+      '</main>' +
+      '<div class="sv-kutu sv-yan"></div>' +
+      '</div>',
+    govde: '',
     /*
       KATALOG TOHUMU BU SAYFADA DA (12 Ekim 2026)
 
@@ -2222,13 +2270,7 @@ async function main() {
   const tohumIlanlari = Array.isArray(katalogTohumu?.listings) ? katalogTohumu.listings : [];
 
   const GORUNUR_KART = 12;
-  const ilanYolu = ortakIlanYolu;
-  /*
-    Şehir adı ham geliyor ve kaynaklar "Istanbul" yazıyor. Arayüzde
-    konumEtiketi ile düzeltiliyor; ön render edilen metin de aynı
-    sözlükten geçiyor ki ikisi ayrışmasın.
-  */
-  const ilanYeri = (i) => (i.city ? konumEtiketi(i.city) : '');
+  /* Kart işaretlemesi ve şehir yazımı: `gorunurIlanKartlari` (yukarıda, /staj-ilanlari ile ortak). */
 
   /*
     GÖRÜNÜR KARTLAR TOHUMDAN GELİYOR — `ilanlar` listesinden değil.
@@ -2247,24 +2289,7 @@ async function main() {
   const gorunurKimlikler = new Set(gorunurIlanlar.map((i) => String(i.id)));
   const gizliIlanlar = ilanlar.filter((i) => !gorunurKimlikler.has(String(i.id)));
 
-  const ilanKartlari = gorunurIlanlar.length
-    ? '<ul class="sv-kartlar">' +
-      gorunurIlanlar
-        .map((i) => {
-          const sirket = (i.companies || {}).name || '';
-          const yer = ilanYeri(i);
-          const alt = [sirket, yer].filter(Boolean).join(' · ');
-          return (
-            '<li class="sv-kart">' +
-            `<a class="sv-kart-baslik" href="${ilanYolu(i)}">${kacir(i.title)}</a>` +
-            (alt ? `<span class="sv-kart-alt">${kacir(alt)}</span>` : '') +
-            `<span class="sv-kart-ozet">${kacir(ozetle(i.description, 150))}</span>` +
-            '</li>'
-          );
-        })
-        .join('') +
-      '</ul>'
-    : '';
+  const ilanKartlari = gorunurIlanKartlari(gorunurIlanlar);
 
   /*
     GİZLİ İLAN LİSTESİ KALDIRILDI.
