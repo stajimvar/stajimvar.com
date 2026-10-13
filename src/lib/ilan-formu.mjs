@@ -12,11 +12,14 @@
  * Kural burada saf işlev: form bileşeni değişse de doğrulama aynı kalıyor
  * ve sınanabiliyor.
  */
+import { ulkeKoduGecerli, ulkeListesiTemizle } from './ulkeler.mjs';
 
 /** Formun zorunlu alanları. Dokuzdan fazlası eklenmemeli. */
 export const ZORUNLU_ALANLAR = [
   'unvan',
   'sehir',
+  /* Ülke (13 Ekim 2026): yoksa ilan Google'da iş ilanı olarak çıkamıyor. */
+  'ulke',
   'calismaSekli',
   'tur',
   'sure',
@@ -113,6 +116,16 @@ export function ilanSorunlari(deger) {
   if (metin(deger.unvan).length < 3) s.unvan = 'Pozisyon adını yaz.';
   /* Tamamen uzaktan çalışılan ilanda şehir zorunlu değil (sunucu kuralıyla aynı). */
   if (!metin(deger.sehir) && deger.calismaSekli !== 'Remote') s.sehir = 'Şehir gerekiyor.';
+  /*
+    ÜLKE (13 Ekim 2026) — sunucu kuralıyla aynı (20261213010000):
+      ofis/hibrit  → işin yapılacağı ülke zorunlu
+      uzaktan      → başvurulabilen en az bir ülke zorunlu; iş yeri ülkesi
+                     isteğe bağlı
+    Değer şirketin seçimi; şehirden ülke çıkarılmıyor.
+  */
+  if (deger.calismaSekli !== 'Remote' && !ulkeKoduGecerli(deger.ulke)) s.ulke = 'Ülkeyi seç.';
+  if (deger.calismaSekli === 'Remote' && ulkeListesiTemizle(deger.basvuruUlkeleri).length === 0)
+    s.basvuruUlkeleri = 'Hangi ülkelerden başvurulabileceğini seç.';
   if (!CALISMA_SEKILLERI.some((c) => c.id === deger.calismaSekli))
     s.calismaSekli = 'Çalışma şeklini seç.';
   if (!STAJ_TURLERI.some((t) => t.id === deger.tur)) s.tur = 'Staj türünü seç.';
@@ -162,6 +175,17 @@ export function ilanSatiri(deger, { companyId, durum }) {
     title: metin(deger.unvan),
     city: metin(deger.sehir),
     work_type: deger.calismaSekli,
+    /*
+      Ülke yalnız geçerli bir kodsa gidiyor; boş seçim `null` (veritabanı
+      kısıtı ISO alfa-2 istiyor). Başvurulabilen ülkeler YALNIZ uzaktan
+      ilanda: öteki çalışma şekillerinde `null` gidiyor, aksi hâlde
+      `listings_basvuru_ulkeleri_uzaktan` kısıtı kaydı reddeder.
+    */
+    country_code: ulkeKoduGecerli(deger.ulke) ? deger.ulke : null,
+    basvuru_ulkeleri:
+      deger.calismaSekli === 'Remote' && ulkeListesiTemizle(deger.basvuruUlkeleri).length
+        ? ulkeListesiTemizle(deger.basvuruUlkeleri)
+        : null,
     /*
       ILANIN "STAJ TURU" ILE SIRKETIN "HANGI STAJLARI KABUL ETTIGI"
       AYNI ALAN DEGIL
@@ -263,6 +287,13 @@ export function ilanFormDegeri(satir) {
   return {
     unvan: metin(satir?.title),
     sehir: metin(satir?.city),
+    /*
+      Kayıtlı ülke yoksa BOŞ geliyor, Türkiye'ye düşmüyor: mevcut bir
+      ilanın ülkesini şirket seçmeden doldurmak tahmin olurdu. Türkiye
+      varsayılanı yalnız YENİ ilanın boş formunda (IlanFormu).
+    */
+    ulke: ulkeKoduGecerli(satir?.country_code) ? satir.country_code : '',
+    basvuruUlkeleri: ulkeListesiTemizle(satir?.basvuru_ulkeleri),
     calismaSekli: CALISMA_SEKILLERI.some((c) => c.id === satir?.work_type)
       ? satir.work_type
       : 'On-site',

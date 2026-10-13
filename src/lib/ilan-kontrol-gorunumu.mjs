@@ -63,6 +63,8 @@ export const YAYIN_SONUCU_METNI = {
 export const GEREKCE_FORM_ALANI = {
   title: 'unvan',
   city: 'sehir',
+  country_code: 'ulke',
+  basvuru_ulkeleri: 'basvuruUlkeleri',
   duration: 'sure',
   stipend_text: 'ucret',
   description: 'aciklama',
@@ -73,6 +75,8 @@ export const GEREKCE_FORM_ALANI = {
 export const FORM_ALANI_ADI = {
   unvan: 'Pozisyon',
   sehir: 'Şehir',
+  ulke: 'Ülke',
+  basvuruUlkeleri: 'Başvurulabilen ülkeler',
   sure: 'Süre',
   ucret: 'Ücret',
   aciklama: 'İş tanımı',

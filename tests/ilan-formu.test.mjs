@@ -6,7 +6,10 @@ import {
   ilanGecerli,
   ilanSatiri,
   ilanSorunlari,
+  ilanFormDegeri,
 } from '../src/lib/ilan-formu.mjs';
+import { ULKE_SECENEKLERI, ulkeAdi, ulkeListesiTemizle } from '../src/lib/ulkeler.mjs';
+import { GEREKCE_FORM_ALANI } from '../src/lib/ilan-kontrol-gorunumu.mjs';
 
 /*
   Hedef: İK telefonla iki dakikada ilan açsın. Bunun tek yolu az soru
@@ -18,6 +21,7 @@ import {
 const GECERLI = {
   unvan: 'Yazılım Stajyeri',
   sehir: 'İstanbul',
+  ulke: 'TR',
   calismaSekli: 'Hybrid',
   tur: 'yaz',
   sure: '20 iş günü',
@@ -158,4 +162,65 @@ test('eski basvuruTipi alani gonderilse bile satiri degistirmiyor', () => {
 test('basvuru adresi artik zorunlu alan degil', () => {
   assert.ok(!ZORUNLU_ALANLAR.includes('basvuruUrl'));
   assert.equal(ilanSorunlari(GECERLI).basvuruUrl, undefined);
+});
+
+/*
+  ÜLKE VE BAŞVURULABİLEN ÜLKELER (13 Ekim 2026)
+
+  Sunucu kuralıyla aynı (20261213010000): ofis/hibrit ilanda ülke, uzaktan
+  ilanda başvurulabilen en az bir ülke zorunlu. Kayıtlı ülkesi olmayan
+  ilan düzenlemeye açılınca ülke BOŞ gelir; Türkiye'ye düşmez.
+*/
+test('ofis ve hibrit ilanda ülke zorunlu; uzaktan ilanda iş yeri ülkesi değil başvuru ülkeleri zorunlu', () => {
+  assert.equal(ilanSorunlari({ ...GECERLI, ulke: '' }).ulke, 'Ülkeyi seç.');
+  assert.equal(ilanSorunlari({ ...GECERLI, ulke: 'tr' }).ulke, 'Ülkeyi seç.', 'küçük harf kod geçersiz');
+  assert.equal(ilanSorunlari({ ...GECERLI, calismaSekli: 'On-site', ulke: 'DE' }).ulke, undefined);
+
+  const uzak = { ...GECERLI, calismaSekli: 'Remote', sehir: '', ulke: '' };
+  assert.equal(ilanSorunlari(uzak).ulke, undefined);
+  assert.equal(ilanSorunlari(uzak).basvuruUlkeleri, 'Hangi ülkelerden başvurulabileceğini seç.');
+  assert.equal(ilanSorunlari({ ...uzak, basvuruUlkeleri: ['TR'] }).basvuruUlkeleri, undefined);
+  assert.equal(ilanSorunlari({ ...uzak, basvuruUlkeleri: ['Türkiye'] }).basvuruUlkeleri, 'Hangi ülkelerden başvurulabileceğini seç.');
+});
+
+test('satır: ülke ve başvuru ülkeleri veritabanı kısıtlarına uygun gidiyor', () => {
+  const ofis = ilanSatiri({ ...GECERLI, ulke: 'TR', basvuruUlkeleri: ['DE'] }, { companyId: 'c', durum: 'draft' });
+  assert.equal(ofis.country_code, 'TR');
+  assert.equal(ofis.basvuru_ulkeleri, null, 'uzaktan olmayan ilanda başvuru ülkeleri gitmemeli (kısıt)');
+
+  const uzak = ilanSatiri(
+    { ...GECERLI, calismaSekli: 'Remote', sehir: '', ulke: '', basvuruUlkeleri: ['TR', 'de', 'TR', 'xx1'] },
+    { companyId: 'c', durum: 'draft' },
+  );
+  assert.equal(uzak.country_code, null);
+  assert.deepEqual(uzak.basvuru_ulkeleri, ['TR', 'DE']);
+
+  assert.equal(ilanSatiri({ ...GECERLI, ulke: '' }, { companyId: 'c', durum: 'draft' }).country_code, null);
+});
+
+test('düzenleme: kayıtlı ülkesi olmayan ilan Türkiye varsayılmadan boş açılıyor', () => {
+  assert.equal(ilanFormDegeri({ title: 'x', city: 'İstanbul', country_code: null }).ulke, '');
+  assert.deepEqual(ilanFormDegeri({ title: 'x', city: 'İstanbul' }).basvuruUlkeleri, []);
+  const d = ilanFormDegeri({ title: 'x', work_type: 'Remote', country_code: 'DE', basvuru_ulkeleri: ['TR', 'DE'] });
+  assert.equal(d.ulke, 'DE');
+  assert.deepEqual(d.basvuruUlkeleri, ['TR', 'DE']);
+  /* Gidip gelince değer korunuyor. */
+  const geri = ilanSatiri({ ...GECERLI, ...d, calismaSekli: 'Remote', sehir: '' }, { companyId: 'c', durum: 'draft' });
+  assert.deepEqual(geri.basvuru_ulkeleri, ['TR', 'DE']);
+  assert.equal(geri.country_code, 'DE');
+});
+
+test('ülke seçenekleri: Türkiye başta, Türkçe adlar, geçerli ve tekrarsız kodlar', () => {
+  assert.equal(ULKE_SECENEKLERI[0].kod, 'TR');
+  assert.equal(ulkeAdi('DE'), 'Almanya');
+  assert.equal(ulkeAdi('TR'), 'Türkiye');
+  const kodlar = ULKE_SECENEKLERI.map((u) => u.kod);
+  assert.equal(new Set(kodlar).size, kodlar.length);
+  assert.ok(kodlar.every((k) => /^[A-Z]{2}$/.test(k)));
+  assert.deepEqual(ulkeListesiTemizle(['de', 'DE', '', null, 'TUR', 'NL']), ['DE', 'NL']);
+});
+
+test('sunucu gerekçeleri ülke alanlarının altına düşüyor', () => {
+  assert.equal(GEREKCE_FORM_ALANI.country_code, 'ulke');
+  assert.equal(GEREKCE_FORM_ALANI.basvuru_ulkeleri, 'basvuruUlkeleri');
 });

@@ -777,12 +777,34 @@ select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
 
 select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
   $q$insert into public.listings (company_id, title, city, work_type, term, duration,
-        is_paid, stipend_text, description, origin, status)
+        is_paid, stipend_text, description, origin, status, country_code)
      values ('11111111-aaaa-4000-8000-000000000001', 'Otomatik Kontrol Stajyeri', 'Izmir',
              'On-site', 'All Year', '20 is gunu', true, 'Asgari staj ucreti',
              repeat('Ekibimizde urun gelistirme sureclerine destek olacak bir stajyer ariyoruz. ', 4),
+             'employer_posted', 'draft', 'TR')$q$),
+  'A, yayina gondermek icin taslak kaydedebilir (ulke dahil; 20261213010000)');
+
+-- ULKESIZ OFIS ILANI YAYINA CIKMAZ (20261213010000): ayni ilan ulke
+-- secilmeden gonderilirse duzeltmeye doner.
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(
+  $q$insert into public.listings (company_id, title, city, work_type, term, duration,
+        is_paid, stipend_text, description, origin, status)
+     values ('11111111-aaaa-4000-8000-000000000001', 'Ulkesiz Kontrol Stajyeri', 'Izmir',
+             'On-site', 'All Year', '20 is gunu', true, 'Asgari staj ucreti',
+             repeat('Ekibimizde urun gelistirme sureclerine destek olacak bir stajyer ariyoruz. ', 4) || ' Ulkesiz.',
              'employer_posted', 'draft')$q$),
-  'A, yayina gondermek icin taslak kaydedebilir');
+  'A, ulkesiz taslak kaydedebilir');
+
+select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(format(
+  'select public.ilan_yayina_gonder(%L)',
+  (select id from public.listings where title = 'Ulkesiz Kontrol Stajyeri'))),
+  'A, ulkesiz taslagi gonderebilir');
+
+select pg_temp.bekle(
+  (select status::text <> 'published' and kontrol_durumu = 'duzeltme'
+          and kontrol_gerekceleri @> '[{"kural": "zorunlu.ulke"}]'::jsonb
+     from public.listings where title = 'Ulkesiz Kontrol Stajyeri'),
+  'Ulkesiz ofis ilani yayina cikmadi, ulke duzeltmesi istendi');
 
 select pg_temp.bekle(not pg_temp.yazma_engellendi_mi(format(
   'select public.ilan_yayina_gonder(%L)',
