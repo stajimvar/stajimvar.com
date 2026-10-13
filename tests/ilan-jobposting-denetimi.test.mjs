@@ -93,6 +93,44 @@ test('uzaktan ilan: başvuru coğrafyası kaynakta yoksa JobPosting YAZILMIYOR (
   assert.equal(hibrit.jobLocationType, undefined);
 });
 
+test('uzaktan ilan: başvurulabilen ülkeler beyanlıysa TELECOMMUTE + applicantLocationRequirements', () => {
+  /*
+    13 Ekim 2026: işveren uzaktan ilanda başvurulabilen ülkeleri seçiyor
+    (`basvuru_ulkeleri`, 20261213010000). Google: %100 uzaktan işte
+    jobLocationType TELECOMMUTE, en az bir ülke ve açıklamada bunun açıkça
+    yazması. Fiziksel iş yeri olmadığı için jobLocation yazılmıyor.
+  */
+  const uzak = { ...TEMEL, work_type: 'Remote', city: null, country_code: 'DE', basvuru_ulkeleri: ['TR', 'DE', 'TR', 'TUR'] };
+  const r = ilanJobPosting(uzak, etiket, SIMDI);
+  assert.deepEqual(r.eksik, []);
+  assert.equal(r.veri.jobLocationType, 'TELECOMMUTE');
+  assert.equal('jobLocation' in r.veri, false, 'tamamen uzaktan işte boş ya da uydurma jobLocation yok');
+  assert.deepEqual(
+    r.veri.applicantLocationRequirements.map((x) => x['@type']),
+    ['Country', 'Country'],
+    'geçersiz ve tekrar eden kod ayıklanıyor',
+  );
+  assert.deepEqual(r.veri.applicantLocationRequirements.map((x) => x.name), ['Türkiye', 'Germany']);
+  assert.match(r.veri.description, /tamamen uzaktan yapılıyor\. Başvurulabilen ülkeler: Türkiye, Almanya\./);
+  /* Görünür sayfa da aynı bilgiyi söylüyor. */
+  assert.match(ilanGorunurGovde(uzak, etiket, SIMDI), /Başvurulabilen ülkeler: Türkiye, Almanya/);
+  /* JSON'a dönüşte null alan kalmıyor. */
+  assert.doesNotMatch(JSON.stringify(r.veri), /null/);
+});
+
+test('başvurulabilen ülkeler yalnız uzaktan ilanda okunuyor; boş ya da geçersizse JobPosting yok', () => {
+  for (const ulkeler of [[], ['Türkiye'], null]) {
+    const r = ilanJobPosting({ ...TEMEL, work_type: 'Remote', basvuru_ulkeleri: ulkeler }, etiket, SIMDI);
+    assert.equal(r.veri, null, JSON.stringify(ulkeler));
+    assert.match(r.eksik.join(' '), /applicantLocationRequirements/);
+  }
+  /* Ofis ilanında (DB kısıtı izin vermese de) alan yok sayılıyor: ofis = jobLocation. */
+  const ofis = ilanJobPosting({ ...TEMEL, basvuru_ulkeleri: ['DE'] }, etiket, SIMDI).veri;
+  assert.equal(ofis.jobLocationType, undefined);
+  assert.equal(ofis.applicantLocationRequirements, undefined);
+  assert.equal(ofis.jobLocation.address.addressCountry, 'TR');
+});
+
 test('açıklama KESİLMİYOR: uzun metin, sorumluluklar ve nitelikler yapısal veride ve görünür sayfada tam', () => {
   const uzun = 'Bu ilanın açıklaması oldukça uzun bir metin. '.repeat(80).trim(); // ~3600 karakter
   const ilan = { ...TEMEL, description: `${uzun}\nİkinci paragraf burada.` };
