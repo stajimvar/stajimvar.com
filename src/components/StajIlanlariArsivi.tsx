@@ -10,6 +10,7 @@ import {
   arsivSirasi,
   arsivYolu,
   arsivSayfaBasligi,
+  arsivSayfaNumaralari,
 } from '../lib/seo/ilan-arsivi.mjs';
 
 /**
@@ -136,6 +137,38 @@ export const StajIlanlariArsivi: React.FC<{
                 <a href={arsivYolu(sayfa - 1)} onClick={(e) => git(e, arsivYolu(sayfa - 1))} className="text-blue-700 hover:underline">
                   ← Önceki sayfa
                 </a>
+              )}
+              {/*
+                NUMARALI SAYFALAR (13 Ekim 2026): yalnız önceki/sonraki
+                varken son sayfa 7 tık derindeydi. Liste ön render ile aynı
+                yardımcıdan geliyor (`arsivSayfaNumaralari`); `null` iki
+                numara arasındaki atlanan aralık. Bulunulan sayfa bağlantı
+                değil — kendine bağlantı tarayıcıya yeni bir yol vermiyor.
+                Her hedef en az 44 piksel (`min-h-11 min-w-11`).
+              */}
+              {arsivSayfaNumaralari(sayfa, toplamSayfa!).map((k, i) =>
+                k === null ? (
+                  <span key={`bosluk-${i}`} aria-hidden="true" className="text-gray-500">
+                    …
+                  </span>
+                ) : k === sayfa ? (
+                  <span
+                    key={k}
+                    aria-current="page"
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center text-gray-900"
+                  >
+                    {k}
+                  </span>
+                ) : (
+                  <a
+                    key={k}
+                    href={arsivYolu(k)}
+                    onClick={(e) => git(e, arsivYolu(k))}
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center text-blue-700 hover:underline"
+                  >
+                    {k}
+                  </a>
+                ),
               )}
               {sayfa < toplamSayfa! && (
                 <a href={arsivYolu(sayfa + 1)} onClick={(e) => git(e, arsivYolu(sayfa + 1))} className="text-blue-700 hover:underline">

@@ -103,8 +103,13 @@ test('FIRSAT IZGARASI: TELEFONDA TEK SÜTUN, sm ÜSTÜNDE REHBERLE AYNI', () => 
     üstünde üç sütun.
   */
   /* İlanlar gibi tek sütun (17 Eylül 2026). */
-  assert.match(firsat, /flex flex-col gap-1\.5 sm:gap-3 \$\{YUZEY\.kap\} sm:mx-0/);
-  assert.match(firsat, /\$\{YUZEY\.kap\} sm:mx-0/, 'liste kenara yaslanmıyor');
+  assert.match(firsat, /<div className="flex flex-col gap-1\.5 sm:gap-3">/);
+  /*
+    KENARA YASLI DEĞİL (13 Ekim 2026): fırsat kartı yuvarlak ve kenarlıklı;
+    `YUZEY.kap` ile ekran kenarına yaslanınca köşeleri ve yan çizgileri
+    kesik görünüyordu. Liste artık sayfanın 16 px yan boşluğunda.
+  */
+  assert.doesNotMatch(firsat, /gap-1\.5 sm:gap-3 \$\{YUZEY\.kap\}/, 'liste kenara yaslanmamalı');
   /* İskelet listenin oturacağı yere oturuyor: gelince sayfa zıplamamalı. */
   const iskelet = firsat.slice(firsat.indexOf('const ListeIskeleti'));
   assert.match(iskelet, /flex flex-col gap-1\.5 sm:gap-3/);
