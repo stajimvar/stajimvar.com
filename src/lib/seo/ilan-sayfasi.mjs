@@ -34,6 +34,7 @@ export const ILAN_SECIMI =
   'id,title,description,responsibilities,required_skills,duration,min_grade_level,' +
   'city,country_code,work_type,apply_url,application_method,posted_at,created_at,updated_at,' +
   'application_deadline,is_paid,stipend_text,basvuru_ulkeleri,origin,' +
+  'basvuru_ulkeleri_kanit,basvuru_ulkeleri_dogrulandi_at,' +
   'companies(name,slug,website_url,logo_url,industry,location,description)';
 
 const AYLAR = [
@@ -103,16 +104,37 @@ const CALISMA = { 'On-site': 'İş yerinde', Hybrid: 'Hibrit', Remote: 'Uzaktan'
   en az bir ülke istiyor (`applicantLocationRequirements`) ve açıklamanın da
   bunu açıkça söylemesini istiyor.
 
-  YALNIZ DOĞRULANMIŞ DEĞER: değer ancak işverenin KENDİ açtığı ilanda
-  (`origin = 'employer_posted'`) kullanılıyor. Orada ülkeleri işveren seçiyor
-  ve ilan yayına ancak sunucu kontrolünden (`zorunlu.basvuru_ulkeleri`) ya da
-  yönetici onayından geçerek çıkıyor. Toplama hattından gelen ilanda bu alanı
-  doğrulayan bir adım yok; dolu olsa bile yok sayılıyor. Değer yoksa JobPosting
-  yine yazılmıyor: ilanın ülke kodu (şirketin yeri) başvuru şartı sayılmıyor.
+  YALNIZ DOĞRULANMIŞ DEĞER. İki yol var:
+    1. İşverenin KENDİ ilanı (`origin = 'employer_posted'`): ülkeleri işveren
+       seçiyor, ilan yayına ancak sunucu kontrolünden
+       (`zorunlu.basvuru_ulkeleri`) ya da yönetici onayından geçerek çıkıyor.
+    2. Öteki ilanlar: GEÇERLİ DOĞRULAMA DAMGASI şart (20261214010000):
+         basvuru_ulkeleri_dogrulandi_at  okunabilir bir zaman, gelecekte değil
+         basvuru_ulkeleri_kanit          resmî kaynağın https adresi VE
+                                         kaynaktaki ifade (adresten fazlası)
+       Damgayı yalnız otomasyon ve göç yazabiliyor; ülkeler damgasız
+       değişince veritabanı damgayı düşürüyor.
+  Damga eksik ya da geçersizse ülkeler yok sayılıyor, JobPosting yazılmıyor:
+  ilanın ülke kodu (şirketin yeri) başvuru şartı sayılmıyor.
 */
-export function basvurulabilenUlkeler(ilan) {
-  if (ilan.work_type !== 'Remote' || ilan.origin !== 'employer_posted') return [];
-  return ulkeListesiTemizle(ilan.basvuru_ulkeleri);
+const DAMGA_SAAT_PAYI_MS = 5 * 60 * 1000;
+
+export function basvuruUlkesiKanitiGecerli(ilan, simdi = Date.now()) {
+  const zaman = Date.parse(String(ilan.basvuru_ulkeleri_dogrulandi_at ?? ''));
+  if (!Number.isFinite(zaman) || zaman > simdi + DAMGA_SAAT_PAYI_MS) return false;
+  const kanit = String(ilan.basvuru_ulkeleri_kanit ?? '').trim();
+  const adres = (kanit.match(/https:\/\/[^\s"'<>]+/) || [])[0];
+  if (!adres || !guvenliDisAdres(adres)) return false;
+  /* Adresin yanında kaynaktaki ifade de olmalı: yalnız bağlantı kanıt değil. */
+  return kanit.replace(adres, '').replace(/[\s—–:;,.-]+/g, ' ').trim().length >= 10;
+}
+
+export function basvurulabilenUlkeler(ilan, simdi = Date.now()) {
+  if (ilan.work_type !== 'Remote') return [];
+  const ulkeler = ulkeListesiTemizle(ilan.basvuru_ulkeleri);
+  if (!ulkeler.length) return [];
+  if (ilan.origin === 'employer_posted') return ulkeler;
+  return basvuruUlkesiKanitiGecerli(ilan, simdi) ? ulkeler : [];
 }
 
 /** Yapısal veride ülke adı İngilizce ("DE" → "Germany"); üretilemezse kod. */
@@ -180,7 +202,7 @@ export function ilanJobPosting(ilan, konumEtiketi, simdi = Date.now()) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(tarih)) eksik.push('datePosted');
 
   const { yerellik, ulke } = ilanKonumu(ilan, konumEtiketi);
-  const basvuruUlkeleri = basvurulabilenUlkeler(ilan);
+  const basvuruUlkeleri = basvurulabilenUlkeler(ilan, simdi);
   let jobLocation = null;
   if (ilan.work_type === 'Remote') {
     if (!basvuruUlkeleri.length) {
@@ -326,8 +348,8 @@ export function ilanGorunurGovde(ilan, konumEtiketi, simdi = Date.now(), { sirke
       : `Şirket: ${kacir(sirket.name)}`),
     gorunen && `Şehir: ${kacir(gorunen)}`,
     CALISMA[ilan.work_type] && `Çalışma şekli: ${CALISMA[ilan.work_type]}`,
-    basvurulabilenUlkeler(ilan).length &&
-      `Başvurulabilen ülkeler: ${kacir(basvurulabilenUlkeler(ilan).map(ulkeAdi).join(', '))}`,
+    basvurulabilenUlkeler(ilan, simdi).length &&
+      `Başvurulabilen ülkeler: ${kacir(basvurulabilenUlkeler(ilan, simdi).map(ulkeAdi).join(', '))}`,
     ilan.duration && `Süre: ${kacir(duzMetin(ilan.duration))}`,
     ilan.min_grade_level && `En az sınıf: ${kacir(String(ilan.min_grade_level))}`,
     durum.metin && `Son başvuru: ${durum.metin}`,

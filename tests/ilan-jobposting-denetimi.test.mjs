@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
-import { ilanJobPosting, ilanGorunurGovde, ilanSayfasi, ilanKonumu } from '../src/lib/seo/ilan-sayfasi.mjs';
+import { ilanJobPosting, ilanGorunurGovde, ilanSayfasi, ilanKonumu, basvuruUlkesiKanitiGecerli } from '../src/lib/seo/ilan-sayfasi.mjs';
 
 /*
   İLAN DETAYI — JobPosting DENETİMİ (12 Ekim 2026'da yeniden yazıldı)
@@ -144,6 +144,80 @@ test('YALNIZ DOĞRULANMIŞ: toplama hattından gelen uzaktan ilanda başvuru ül
     assert.equal(r.veri, null, String(origin));
     assert.match(r.eksik.join(' '), /applicantLocationRequirements/);
     assert.doesNotMatch(ilanGorunurGovde(ilan, etiket, SIMDI), /Başvurulabilen ülkeler/);
+  }
+});
+
+/*
+  DOĞRULAMA DAMGASI (20261214010000) — toplama hattından gelen uzaktan ilan
+
+  Başvuru ülkeleri bu ilanlarda ancak geçerli damgayla kullanılıyor:
+  okunabilir ve gelecekte olmayan bir doğrulama zamanı + resmî kaynağın
+  https adresi + kaynaktaki ifade. Damga geçersizse JobPosting yok ve görünür
+  sayfa da ülke söylemiyor (iki çıktı aynı kararı veriyor).
+*/
+const KANITLI = {
+  ...TEMEL,
+  origin: 'scraped',
+  work_type: 'Remote',
+  city: 'Berlin, DE | Germany (REMOTE)',
+  country_code: 'DE',
+  basvuru_ulkeleri: ['DE'],
+  /* Göçteki gerçek kanıt metni (WongDoody). */
+  basvuru_ulkeleri_kanit: 'https://job-boards.greenhouse.io/wongdoody/jobs/7988851003 — kaynak konumu: "Berlin, DE | Germany (REMOTE)"',
+  basvuru_ulkeleri_dogrulandi_at: '2026-10-12T09:00:00Z',
+};
+
+test('damgalı uzaktan ilan: TELECOMMUTE + kanıtlı ülke; görünür sayfa aynı ülkeyi söylüyor', () => {
+  const r = ilanJobPosting(KANITLI, etiket, SIMDI);
+  assert.deepEqual(r.eksik, []);
+  assert.equal(r.veri.jobLocationType, 'TELECOMMUTE');
+  assert.deepEqual(r.veri.applicantLocationRequirements, [{ '@type': 'Country', name: 'Germany' }]);
+  assert.equal('jobLocation' in r.veri, false, 'tamamen uzaktan işte iş yeri adresi üretilmiyor');
+  assert.match(r.veri.description, /tamamen uzaktan yapılıyor\. Başvurulabilen ülkeler: Almanya\./);
+  assert.match(ilanGorunurGovde(KANITLI, etiket, SIMDI), /Başvurulabilen ülkeler: Almanya/);
+  assert.doesNotMatch(JSON.stringify(r.veri), /null/);
+});
+
+test('göçteki dört kanıt metni de geçerli damga sayılıyor', () => {
+  const kanitlar = [
+    'https://join.com/companies/fixfirst/16668569-founders-associate-intern — kaynak yapısal verisi: jobLocationType TELECOMMUTE, applicantLocationRequirements Country "Germany"; sayfa: "Remote (Germany)"',
+    'https://app.gethirex.com/o/kaizen-technology/uyiv8wb6ymtfh4ys--part-time-product-specialist-student-position-4/ — kaynak yapısal verisi: jobLocationType TELECOMMUTE, applicantLocationRequirements Country "TR"; sayfa: "Istanbul, Türkiye · Staj · Uzaktan"',
+    'https://jobs.ashbyhq.com/trading212/f8d628f4-6093-48bc-942e-6057b44707fc — kaynak yapısal verisi: jobLocationType TELECOMMUTE, applicantLocationRequirements Country "Germany"',
+    KANITLI.basvuru_ulkeleri_kanit,
+  ];
+  for (const k of kanitlar) {
+    assert.equal(basvuruUlkesiKanitiGecerli({ ...KANITLI, basvuru_ulkeleri_kanit: k }, SIMDI), true, k.slice(0, 40));
+  }
+});
+
+test('damga geçersizse JobPosting yok, görünür sayfa ülke söylemiyor', () => {
+  const gecersiz = {
+    'damga yok': { basvuru_ulkeleri_dogrulandi_at: null },
+    'okunamayan zaman': { basvuru_ulkeleri_dogrulandi_at: 'dün' },
+    'gelecekte damga': { basvuru_ulkeleri_dogrulandi_at: '2026-10-13T12:00:00Z' },
+    'kanıt yok': { basvuru_ulkeleri_kanit: null },
+    'yalnız adres': { basvuru_ulkeleri_kanit: 'https://job-boards.greenhouse.io/wongdoody/jobs/7988851003' },
+    'adres yok': { basvuru_ulkeleri_kanit: 'kaynak konumu: "Berlin, DE | Germany (REMOTE)"' },
+    'http adres': { basvuru_ulkeleri_kanit: 'http://ornek.com/ilan — kaynak: "Germany (REMOTE)"' },
+    'javascript adres': { basvuru_ulkeleri_kanit: 'javascript:alert(1) — kaynak: "Germany (REMOTE)"' },
+    'ülke yok': { basvuru_ulkeleri: null },
+    'geçersiz ülke': { basvuru_ulkeleri: ['Germany'] },
+  };
+  for (const [ad, ek] of Object.entries(gecersiz)) {
+    const ilan = { ...KANITLI, ...ek };
+    const r = ilanJobPosting(ilan, etiket, SIMDI);
+    assert.equal(r.veri, null, ad);
+    assert.match(r.eksik.join(' '), /applicantLocationRequirements/, ad);
+    assert.doesNotMatch(ilanGorunurGovde(ilan, etiket, SIMDI), /Başvurulabilen ülkeler/, ad);
+  }
+});
+
+test('damga ofis ve hibrit ilanı etkilemiyor', () => {
+  for (const work_type of ['On-site', 'Hybrid']) {
+    const v = ilanJobPosting({ ...KANITLI, work_type, city: 'Berlin' }, etiket, SIMDI).veri;
+    assert.equal(v.jobLocationType, undefined, work_type);
+    assert.equal(v.applicantLocationRequirements, undefined, work_type);
+    assert.equal(v.jobLocation.address.addressCountry, 'DE', work_type);
   }
 });
 
