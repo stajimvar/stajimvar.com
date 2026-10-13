@@ -66,3 +66,12 @@ Beklenen JobPosting sayısı: bugün **155** → göçle **160** → damga PR'ı
 - **İleride:** birçok kariyer sistemi (join.com, Ashby, gethirex) `applicantLocationRequirements`
   bilgisini kendi yapısal verisinde veriyor. İçe aktarıcı bu alanı okuyup kanıtıyla
   damgasız yazabilir; yönetici onaylayınca damga atılır.
+
+## Güncellik araştırması (13 Ekim 2026, ikinci tur) — otomatik kapatma YOK
+
+| İlan | Kanıt | Karar |
+|---|---|---|
+| Connectinno `188ef3f5` | recruspace sayfası: "Application Closed — This job posting is closed for applications. Please check out our other openings"; başvuru düğmesi yok; kaynağın JobPosting'i `validThrough: 2026-09-25`. Bağlantı kontrolümüz aynı gün ilanı "açık" saymıştı: ifade listesinde yoktu. | **Kesin kapanmış.** Kapatma, mevcut mekanizmayla (ilan bağlantı kontrolü) yapılacak: bu PR'daki ifade tanıma birleşince bir sonraki kontrol turu ilanı kendi kanıt kaydıyla (`closure_reason`, `deactivation_reason`) kapatır. Başvuru yok; hiçbir kayıt silinmez. |
+| SAP `19cee4c0` | Resmî ilan adresi ve SAP'nin Türkiye sayfası `jobs.sap.com/en/jobs/` genel listesine yönleniyor; listede ilan yok. Bağlantı kontrolü "erişilemedi", son başarılı doğrulama 21 Eylül. Üçüncü taraf siteler hâlâ listeliyor (resmî kaynak değil). | **Kapanma kesin değil — kapatılmadı.** Sitenin taşınması da aynı yönlendirmeyi üretebilir. Yönetici kontrolü ya da kontrolün sonraki turları bekleniyor. |
+| Guess Europe `a0de0769` | Workable: gömülü veri `"workplace":"on_site"`, yapısal veri İstanbul/Turkey (TELECOMMUTE yok), görünür "On-site · Part-time · Apply now". | **Açık; Uzaktan → Ofis** düzeltmesi (`20261215010000_guess_europe_ofis.sql`). JobPosting kazanır. |
+| KLUUU, Wegain, Dgpays, SHFT, Formed, NREL, Tether | — | Değişiklik yok; bilgi uydurulmuyor. |

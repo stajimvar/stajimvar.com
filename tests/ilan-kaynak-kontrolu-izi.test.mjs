@@ -60,7 +60,7 @@ test('kapatma YALNIZ kesin kanıtla; geçici hata kapatmıyor', () => {
 
   /* Kapanma kararı `kapanmaSebebi()` dönerse veriliyor — o da 404/410/
      workday yönlendirmesi/sayfa metni dışında bir şey döndürmüyor. */
-  assert.match(kod, /const sebep = kapanmaSebebi\(yanit, govde\)/);
+  assert.match(kod, /const sebep = kapanmaSebebi\(yanit, govde, \{ baslik: ilan\.title, adres \}\)/);
   assert.match(kod, /if \(sebep\) \{/);
   assert.match(kod, /source_status: 'kapali',\s*\n\s*status: 'closed',/);
 
