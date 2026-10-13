@@ -21,6 +21,7 @@ import { kacir, duzMetin, ozetle, paragraflar, ilanYolu } from './metin.mjs';
 import { guvenliDisAdres } from '../guvenli-url.mjs';
 import { ilanHedefi } from '../ilan-hedefi.mjs';
 import { basvuruYolu } from '../basvuru-yolu.mjs';
+import { ulkeAdi, ulkeListesiTemizle } from '../ulkeler.mjs';
 
 export const SITE = 'https://stajimvar.com';
 
@@ -32,7 +33,7 @@ export const SITE = 'https://stajimvar.com';
 export const ILAN_SECIMI =
   'id,title,description,responsibilities,required_skills,duration,min_grade_level,' +
   'city,country_code,work_type,apply_url,application_method,posted_at,created_at,updated_at,' +
-  'application_deadline,is_paid,stipend_text,' +
+  'application_deadline,is_paid,stipend_text,basvuru_ulkeleri,origin,' +
   'companies(name,slug,website_url,logo_url,industry,location,description)';
 
 const AYLAR = [
@@ -94,6 +95,40 @@ export function ilanKonumu(ilan, konumEtiketi) {
 
 const CALISMA = { 'On-site': 'İş yerinde', Hybrid: 'Hibrit', Remote: 'Uzaktan' };
 
+/*
+  UZAKTAN İLANDA BAŞVURULABİLEN ÜLKELER (13 Ekim 2026)
+
+  `basvuru_ulkeleri` (20261213010000; yalnız uzaktan ilanda dolu olabiliyor,
+  ISO alfa-2). Google tamamen uzaktan işte `jobLocationType: TELECOMMUTE` ile
+  en az bir ülke istiyor (`applicantLocationRequirements`) ve açıklamanın da
+  bunu açıkça söylemesini istiyor.
+
+  YALNIZ DOĞRULANMIŞ DEĞER: değer ancak işverenin KENDİ açtığı ilanda
+  (`origin = 'employer_posted'`) kullanılıyor. Orada ülkeleri işveren seçiyor
+  ve ilan yayına ancak sunucu kontrolünden (`zorunlu.basvuru_ulkeleri`) ya da
+  yönetici onayından geçerek çıkıyor. Toplama hattından gelen ilanda bu alanı
+  doğrulayan bir adım yok; dolu olsa bile yok sayılıyor. Değer yoksa JobPosting
+  yine yazılmıyor: ilanın ülke kodu (şirketin yeri) başvuru şartı sayılmıyor.
+*/
+export function basvurulabilenUlkeler(ilan) {
+  if (ilan.work_type !== 'Remote' || ilan.origin !== 'employer_posted') return [];
+  return ulkeListesiTemizle(ilan.basvuru_ulkeleri);
+}
+
+/** Yapısal veride ülke adı İngilizce ("DE" → "Germany"); üretilemezse kod. */
+function ingilizceUlkeAdi(kod) {
+  try {
+    return new Intl.DisplayNames(['en'], { type: 'region' }).of(kod) || kod;
+  } catch {
+    return kod;
+  }
+}
+
+/** "Bu staj tamamen uzaktan yapılıyor. Başvurulabilen ülkeler: Türkiye, Almanya." */
+function uzaktanCumlesi(ulkeler) {
+  return `Bu staj tamamen uzaktan yapılıyor. Başvurulabilen ülkeler: ${ulkeler.map(ulkeAdi).join(', ')}.`;
+}
+
 /** Sayfa <title> — derleme ve istemci aynı biçimi kullanıyor. */
 export function ilanSayfaBasligi(ilan, konumEtiketi) {
   const { gorunen } = ilanKonumu(ilan, konumEtiketi);
@@ -127,13 +162,12 @@ const dizi = (d) =>
  * doldurmak yanlış beyan.
  *
  * UZAKTAN İLAN (TELECOMMUTE): Google en az bir ülke istiyor —
- * `applicantLocationRequirements` (tercih edilen) ya da yalnız fiziksel bir
- * çalışma seçeneği DE varsa `jobLocation` ülkesi. Bizde başvuranın bulunması
- * gereken coğrafyayı söyleyen kaynak alanı yok (`international_applicants`
- * yayındaki ilanların hepsinde boş, 12 Ekim 2026) ve `work_type = 'Remote'`
- * fiziksel bir seçenek olduğunu söylemiyor. İlanın ülke kodunu başvuru
- * coğrafyası saymak bir tahmin olurdu; bu yüzden uzaktan ilana JobPosting
- * YAZILMIYOR, sayfa görünür metniyle duruyor ve ilan raporda listeleniyor.
+ * `applicantLocationRequirements`. 13 Ekim 2026'dan beri bu bilgi
+ * `basvuru_ulkeleri` alanında (işverenin ya da yöneticinin beyanı); doluysa
+ * `jobLocationType: TELECOMMUTE` + ülkeler yazılıyor ve açıklamaya
+ * "tamamen uzaktan; başvurulabilen ülkeler: …" cümlesi ekleniyor. Alan
+ * boşsa JobPosting YİNE yazılmıyor: ilanın ülke kodunu (şirketin yeri)
+ * başvuru coğrafyası saymak tahmin olurdu; ilan raporda listeleniyor.
  */
 export function ilanJobPosting(ilan, konumEtiketi, simdi = Date.now()) {
   const eksik = [];
@@ -146,9 +180,12 @@ export function ilanJobPosting(ilan, konumEtiketi, simdi = Date.now()) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(tarih)) eksik.push('datePosted');
 
   const { yerellik, ulke } = ilanKonumu(ilan, konumEtiketi);
+  const basvuruUlkeleri = basvurulabilenUlkeler(ilan);
   let jobLocation = null;
   if (ilan.work_type === 'Remote') {
-    eksik.push('applicantLocationRequirements (uzaktan ilan; başvuru coğrafyası kaynakta yok)');
+    if (!basvuruUlkeleri.length) {
+      eksik.push('applicantLocationRequirements (uzaktan ilan; başvuru coğrafyası kaynakta yok)');
+    }
   } else if (ulke) {
     jobLocation = {
       '@type': 'Place',
@@ -172,7 +209,11 @@ export function ilanJobPosting(ilan, konumEtiketi, simdi = Date.now()) {
     aciklamaParcalari.map((p) => `<p>${kacir(p)}</p>`).join('') +
     (sorumluluk.length ? `<p><strong>Sorumluluklar</strong></p><ul>${sorumluluk.map((m) => `<li>${kacir(m)}</li>`).join('')}</ul>` : '') +
     (nitelik.length ? `<p><strong>Aranan nitelikler</strong></p><ul>${nitelik.map((m) => `<li>${kacir(m)}</li>`).join('')}</ul>` : '') +
-    (ilan.work_type && CALISMA[ilan.work_type] ? `<p>Çalışma şekli: ${CALISMA[ilan.work_type]}</p>` : '') +
+    (basvuruUlkeleri.length
+      ? `<p>${kacir(uzaktanCumlesi(basvuruUlkeleri))}</p>`
+      : ilan.work_type && CALISMA[ilan.work_type]
+        ? `<p>Çalışma şekli: ${CALISMA[ilan.work_type]}</p>`
+        : '') +
     (ilan.duration ? `<p>Süre: ${kacir(duzMetin(ilan.duration))}</p>` : '');
 
   const veri = {
@@ -195,7 +236,13 @@ export function ilanJobPosting(ilan, konumEtiketi, simdi = Date.now()) {
       ...(guvenliDisAdres(sirket.website_url) ? { sameAs: guvenliDisAdres(sirket.website_url) } : {}),
       ...(guvenliDisAdres(sirket.logo_url) ? { logo: guvenliDisAdres(sirket.logo_url) } : {}),
     },
-    jobLocation,
+    ...(jobLocation ? { jobLocation } : {}),
+    ...(basvuruUlkeleri.length
+      ? {
+          jobLocationType: 'TELECOMMUTE',
+          applicantLocationRequirements: basvuruUlkeleri.map((kod) => ({ '@type': 'Country', name: ingilizceUlkeAdi(kod) })),
+        }
+      : {}),
   };
   return { veri, eksik: [] };
 }
@@ -279,6 +326,8 @@ export function ilanGorunurGovde(ilan, konumEtiketi, simdi = Date.now(), { sirke
       : `Şirket: ${kacir(sirket.name)}`),
     gorunen && `Şehir: ${kacir(gorunen)}`,
     CALISMA[ilan.work_type] && `Çalışma şekli: ${CALISMA[ilan.work_type]}`,
+    basvurulabilenUlkeler(ilan).length &&
+      `Başvurulabilen ülkeler: ${kacir(basvurulabilenUlkeler(ilan).map(ulkeAdi).join(', '))}`,
     ilan.duration && `Süre: ${kacir(duzMetin(ilan.duration))}`,
     ilan.min_grade_level && `En az sınıf: ${kacir(String(ilan.min_grade_level))}`,
     durum.metin && `Son başvuru: ${durum.metin}`,
