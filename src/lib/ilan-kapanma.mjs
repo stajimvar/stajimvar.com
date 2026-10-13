@@ -27,6 +27,18 @@ export const KAPANMA_METINLERI = [
   'this job is closed',
   'bu ilan yayından kaldırıl',
   'başvuru süresi doldu',
+  /*
+    ALMANCA (13 Ekim 2026, ölçüldü): join.com arşivlenmiş ilan için 200
+    dönüyor ve "Diese Stelle ist nicht mehr verfügbar … wurde archiviert
+    oder die Bewerbungsfrist ist abgelaufen" diyor — sayfada JobPosting
+    verisi DURUYOR. Bu ifadeler tanınmadığı için kapanmış 2zero ilanı
+    "açık" sayılıp yayına geri alınabiliyordu. "no longer available" ile
+    aynı anlam; ama yalnız "Stelle/Stellenanzeige" ile birlikte (genel
+    "nicht mehr verfügbar" başka bir özelliği de anlatabilir).
+  */
+  'stelle ist nicht mehr verfügbar',
+  'stellenanzeige ist nicht mehr verfügbar',
+  'wurde archiviert oder die bewerbungsfrist ist abgelaufen',
 ];
 
 /**
@@ -239,4 +251,47 @@ export function acikKaniti(govde, baslik, adres) {
   return bulunan * 3 >= kelimeler.length * 2
     ? `ana başlık ilanı gösteriyor (${bulunan}/${kelimeler.length})`
     : null;
+}
+
+/*
+  KAPALI İLANI YENİDEN AÇMAK İÇİN DAHA SIKI KANIT (13 Ekim 2026)
+
+  Yayındaki ilanı açık saymak ile KAPANMIŞ ilanı yayına geri almak aynı
+  karar değil. İkincisi bir öğrenciyi kapalı bir başvuruya gönderebilir.
+
+  ÖLÇÜLDÜ: join.com arşivlenmiş ilanın sayfasında JobPosting verisini
+  bırakıyor (2zero: "Diese Stelle ist nicht mehr verfügbar" + JobPosting).
+  `acikKaniti` JobPosting'i yeterli saydığı için kapalı ilan yayına
+  dönebiliyordu. Yeniden açmak için üçü birden:
+    1. Sayfa ilanın kendisi (acikKaniti).
+    2. Sayfada ETKİN bir başvuru düğmesi var.
+    3. JobPosting `validThrough` taşıyorsa geçmişte değil.
+  Kanıt yoksa ilan kapalı KALIYOR; betik onu 'belirsiz' olarak işaretliyor
+  (yönetici kuyruğu). Yanlış yeniden açma, yanlış kapatma kadar sessiz.
+*/
+/** JobPosting `validThrough` geçmişte mi? Okunamıyorsa false. */
+export function gecerlilikGecmis(govde, simdi = Date.now()) {
+  for (const [, ham] of govde.matchAll(/<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)) {
+    let veri;
+    try {
+      veri = JSON.parse(ham);
+    } catch {
+      continue;
+    }
+    const ogeler = Array.isArray(veri) ? veri : Array.isArray(veri?.['@graph']) ? veri['@graph'] : [veri];
+    for (const oge of ogeler) {
+      if (oge?.['@type'] !== 'JobPosting' || !oge.validThrough) continue;
+      const t = new Date(oge.validThrough).getTime();
+      if (Number.isFinite(t) && t < simdi) return true;
+    }
+  }
+  return false;
+}
+
+export function yenidenAcmaKaniti(govde, baslik, adres, simdi = Date.now()) {
+  const kanit = acikKaniti(govde, baslik, adres);
+  if (!kanit) return null;
+  if (!etkinBasvuruDugmesi(govde)) return null;
+  if (gecerlilikGecmis(govde, simdi)) return null;
+  return `${kanit} + etkin başvuru düğmesi`;
 }

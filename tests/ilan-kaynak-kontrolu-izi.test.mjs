@@ -167,3 +167,30 @@ test('günlük tek zamanlama, ikinci sistem kurulmadı', () => {
   assert.equal((AKIS.match(/cron:/g) ?? []).length, 1, 'tek zamanlama olmalı');
   assert.match(AKIS, /node scripts\/ilan-baglanti-kontrol\.mjs/);
 });
+
+/* ------------------------- 5. KAPANMA İZİ EZİLMİYOR, GEÇİŞLER RAPORLANIYOR */
+
+test('zaten kapalı ilanın kapanma anı ve sebebi her koşuda yeniden yazılmıyor', () => {
+  const kod = jsYorumsuz(ISCI);
+  assert.match(kod, /closed_at, closure_reason'/, 'mevcut kapanma izi okunmalı');
+  assert.match(kod, /const zatenKapali = ilan\.status === 'closed' && Boolean\(ilan\.closed_at\);/);
+  /* Zaten kapalıysa yalnız boş sebep dolduruluyor; an ve devre dışı izi yazılmıyor. */
+  assert.match(kod, /const kapanmaIzi = zatenKapali\s*\? ilan\.closure_reason\s*\? \{\}\s*: \{ closure_reason: sebep \}/);
+  assert.match(kod, /\.\.\.kapanmaIzi,/);
+});
+
+test('kapalı ilan yayına yalnız sıkı kanıtla dönüyor', () => {
+  const kod = jsYorumsuz(ISCI);
+  assert.match(kod, /ilan\.status === 'closed'\s*\? yenidenAcmaKaniti\(govde, ilan\.title, adres\)\s*: acikKaniti\(govde, ilan\.title, adres\)/);
+});
+
+test('gerçek durum geçişleri ayrı sayılıyor ve listeleniyor (adres yazılmadan)', () => {
+  const kod = jsYorumsuz(ISCI);
+  assert.match(kod, /if \(ilan\.status !== 'closed'\) gecisler\.push\(\{ tur: 'KAPANDI'/);
+  assert.match(kod, /gecisler\.push\(\{ tur: 'YENİDEN AÇILDI'/);
+  assert.match(kod, /yeni_kapanan=\$\{/);
+  assert.match(kod, /yeniden_acilan=\$\{/);
+  const liste = kod.slice(kod.indexOf("durum geçişleri (bu koşuda değişen)"));
+  assert.doesNotMatch(liste.slice(0, 300), /adres|apply_url|source_url/);
+});
+

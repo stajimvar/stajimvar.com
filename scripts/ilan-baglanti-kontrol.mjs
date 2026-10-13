@@ -34,7 +34,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createClient } from '@supabase/supabase-js';
-import { acikKaniti, kapanmaSebebi } from '../src/lib/ilan-kapanma.mjs';
+import { acikKaniti, kapanmaSebebi, yenidenAcmaKaniti } from '../src/lib/ilan-kapanma.mjs';
 
 const KOK = path.resolve(import.meta.dirname, '..');
 
@@ -119,7 +119,7 @@ const { data: ilanlar, error } = await db
   .from('listings')
   .select(
     'id, title, apply_url, source_url, status, origin, posted_at, ' +
-      'consecutive_failures, application_deadline, source_checked_at'
+      'consecutive_failures, application_deadline, source_checked_at, closed_at, closure_reason'
   )
   .or('status.in.(published,closed),and(status.eq.draft,origin.eq.scraped)')
   .order('source_checked_at', { ascending: true, nullsFirst: true })
@@ -196,6 +196,15 @@ let tarihYazildi = 0;
   dokuz sitenin bizi engellediğini mi yoksa dokuz kez zaman aşımı mı
   olduğunu söylemiyor. Birincisi User-Agent/oran sorunu, ikincisi ağ.
 */
+/*
+  DURUM GEÇİŞLERİ (13 Ekim 2026)
+
+  Koşu her kapalı ilanı yeniden "KAPALI" yazdırıyordu; hangisinin BU
+  koşuda kapandığı ayırt edilemiyordu (durum geçmişi tutan tablo yok).
+  Gerçek geçişler ayrıca toplanıyor ve koşu sonunda listeleniyor. Adres
+  yazılmıyor (iş kaydı herkese açık), başlık ve sebep yetiyor.
+*/
+const gecisler = [];
 const sayac = { adresYok: 0, kapanma404: 0, kapanma410: 0, kapanmaMetin: 0, engel403: 0, oran429: 0, sunucu5xx: 0, digerHTTP: 0, zamanAsimi: 0, agHatasi: 0, belirsiz: 0 };
 /*
   Yazma hatası sayılıyor: tek bir üçüncü taraf hatası işi kırmamalı ama
@@ -254,23 +263,41 @@ for (const ilan of ilanlar) {
       else if (yanit.status === 410) sayac.kapanma410++;
       else sayac.kapanmaMetin++;
       etiket = `KAPALI  ${sebep}`;
+      /*
+        ZATEN KAPALIYSA KAPANMA ANI EZİLMİYOR (13 Ekim 2026)
+
+        Ölçüldü: kapalı 62 ilanın 56'sı daha önce kapanmıştı ama her koşu
+        `closed_at`'i o günün tarihiyle yeniden yazıyordu; "son yedi günde
+        kapananlar" sorusunun cevabı bozuluyordu. Zaten kapalı ve
+        kapanma anı bilinen kayıtta an, devre dışı bırakma izi ve sebep
+        korunuyor; sebep yalnız boşsa yazılıyor.
+      */
+      const zatenKapali = ilan.status === 'closed' && Boolean(ilan.closed_at);
+      if (ilan.status !== 'closed') gecisler.push({ tur: 'KAPANDI', baslik: ilan.title, sebep });
+      const kapanmaIzi = zatenKapali
+        ? ilan.closure_reason
+          ? {}
+          : { closure_reason: sebep }
+        : {
+            /*
+              KARARIN İZİ
+
+              `sebep` zaten hesaplanıyordu ama yalnız konsola yazılıp
+              atılıyordu; ilan kapandıktan sonra "niye kapandı" sorusunun
+              veritabanında cevabı yoktu.
+            */
+            closure_reason: sebep,
+            closed_at: simdi,
+            deactivated_at: simdi,
+            deactivation_reason: `başvuru bağlantısı kapandı — ${sebep}`,
+          };
       guncelleme = {
         ...guncelleme,
         source_status: 'kapali',
         status: 'closed',
-        /*
-          KARARIN İZİ
-
-          `sebep` zaten hesaplanıyordu ama yalnız konsola yazılıp
-          atılıyordu; ilan kapandıktan sonra "niye kapandı" sorusunun
-          veritabanında cevabı yoktu. Sayaç da sıfırlanıyor: kayıt
-          artık geçici hata kuyruğunda değil.
-        */
-        closure_reason: sebep,
-        closed_at: simdi,
+        /* Sayaç sıfırlanıyor: kayıt artık geçici hata kuyruğunda değil. */
         consecutive_failures: 0,
-        deactivated_at: simdi,
-        deactivation_reason: `başvuru bağlantısı kapandı — ${sebep}`,
+        ...kapanmaIzi,
       };
     } else if (yanit.ok) {
       /*
@@ -280,7 +307,16 @@ for (const ilan of ilanlar) {
         adresi genel kariyer sayfasına yönlendirdiğinde o sayfa da 200
         dönüyor; kapanma metni yok, ilan da yok.
       */
-      const kanit = acikKaniti(govde, ilan.title, adres);
+      /*
+        KAPALI İLAN İÇİN DAHA SIKI KANIT: yayına geri almak yalnız sayfa
+        ilanın kendisiyse VE etkin başvuru düğmesi varsa (src/lib/
+        ilan-kapanma.mjs, yenidenAcmaKaniti). join.com arşivlenmiş ilanda
+        JobPosting verisini bırakıyor; o tek başına yeterli değil.
+      */
+      const kanit =
+        ilan.status === 'closed'
+          ? yenidenAcmaKaniti(govde, ilan.title, adres)
+          : acikKaniti(govde, ilan.title, adres);
 
       if (kanit) {
         acik++;
@@ -311,6 +347,7 @@ for (const ilan of ilanlar) {
           kanıtlanamadığı için taslakta duruyorlar. Yalnız `source_status`
           ilerliyor.
         */
+        if (ilan.status === 'closed') gecisler.push({ tur: 'YENİDEN AÇILDI', baslik: ilan.title, sebep: kanit });
         if (ilan.status === 'closed') guncelleme.status = 'published';
 
         const tarih = yayinTarihi(govde);
@@ -410,8 +447,14 @@ console.log(
     `metinle_kapali=${sayac.kapanmaMetin} 403=${sayac.engel403} 429=${sayac.oran429} ` +
     `5xx=${sayac.sunucu5xx} diger_http=${sayac.digerHTTP} zaman_asimi=${sayac.zamanAsimi} ` +
     `belirsiz=${sayac.belirsiz} ` +
-    `ag_hatasi=${sayac.agHatasi} adres_yok=${sayac.adresYok} yazma_hatasi=${yazmaHatasiSayisi}`
+    `ag_hatasi=${sayac.agHatasi} adres_yok=${sayac.adresYok} yazma_hatasi=${yazmaHatasiSayisi} ` +
+    `yeni_kapanan=${gecisler.filter((g) => g.tur === 'KAPANDI').length} ` +
+    `yeniden_acilan=${gecisler.filter((g) => g.tur === 'YENİDEN AÇILDI').length}`
 );
+if (gecisler.length) {
+  console.log('\ndurum geçişleri (bu koşuda değişen):');
+  for (const g of gecisler) console.log(`  ${g.tur.padEnd(15)} ${g.baslik.slice(0, 60)} — ${g.sebep}`);
+}
 
 /*
   İŞ NE ZAMAN KIRMIZI OLMALI

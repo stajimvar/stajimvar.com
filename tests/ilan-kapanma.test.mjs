@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { kapanmaSebebi, acikKaniti, ilanaOzguKapanma, etkinBasvuruDugmesi } from '../src/lib/ilan-kapanma.mjs';
+import { kapanmaSebebi, acikKaniti, ilanaOzguKapanma, etkinBasvuruDugmesi, yenidenAcmaKaniti, gecerlilikGecmis } from '../src/lib/ilan-kapanma.mjs';
 
 /*
   İLAN KAPANMA KARARI — DAVRANIŞ TESTLERİ (13 Ekim 2026)
@@ -107,3 +107,45 @@ test('açık ilan: kapanma yok ve açıklık kanıtı var', () => {
   assert.equal(kapanmaSebebi(OK(), govde, { baslik: 'AI Product Intern' }), null);
   assert.ok(acikKaniti(govde, 'AI Product Intern', 'https://ornek.com/ilan/123456'));
 });
+
+/* ------------------------------ ALMANCA VE YENİDEN AÇMA (13 Ekim 2026) */
+
+/* join.com arşivlenmiş ilan biçimi (2zero, ölçüldü): 200, JobPosting duruyor, düğme yok. */
+const ARSIV_JOIN =
+  `<html><head><link rel="canonical" href="https://join.com/companies/ornek/16690371-praktikum">${JSONLD()}</head><body>` +
+  '<p>Diese Stelle ist nicht mehr verfügbar</p><p>Die Stelle "Praktikum Marketing" wurde archiviert oder die Bewerbungsfrist ist abgelaufen.</p>' +
+  '<p>Unsere anderen offenen Positionen</p></body></html>';
+
+test('KAPALI: Almanca "Stelle ist nicht mehr verfügbar" (join.com arşivi, JobPosting dursa da)', () => {
+  assert.match(kapanmaSebebi(OK('https://join.com/companies/ornek/16690371-praktikum'), ARSIV_JOIN), /stelle ist nicht mehr verfügbar/);
+});
+
+test('YENİDEN AÇMA: JobPosting tek başına yetmiyor, etkin başvuru düğmesi şart', () => {
+  const adres = 'https://ornek.com/ilan/123456';
+  const yalnizVeri = `<html><head>${JSONLD()}</head><body><h1>AI Product Intern</h1><p>Join us.</p></body></html>`;
+  /* Yayındaki ilan için açıklık kanıtı (değişmedi)… */
+  assert.ok(acikKaniti(yalnizVeri, 'AI Product Intern', adres));
+  /* …ama kapalı ilanı yayına geri almaya yetmiyor. */
+  assert.equal(yenidenAcmaKaniti(yalnizVeri, 'AI Product Intern', adres), null);
+  const dugmeli = yalnizVeri.replace('</body>', '<a href="/apply">Apply now</a></body>');
+  assert.ok(yenidenAcmaKaniti(dugmeli, 'AI Product Intern', adres));
+  /* Devre dışı düğme sayılmıyor. */
+  assert.equal(yenidenAcmaKaniti(yalnizVeri.replace('</body>', '<button disabled>Apply now</button></body>'), 'AI Product Intern', adres), null);
+});
+
+test('YENİDEN AÇMA: JobPosting validThrough geçmişteyse düğme olsa da açılmıyor', () => {
+  const simdi = Date.UTC(2026, 9, 13);
+  const govde = `<html><head>${JSONLD(',"validThrough":"2026-09-25"')}</head><body><h1>AI Product Intern</h1><a href="/apply">Apply now</a></body></html>`;
+  assert.equal(gecerlilikGecmis(govde, simdi), true);
+  assert.equal(yenidenAcmaKaniti(govde, 'AI Product Intern', 'https://ornek.com/ilan/123456', simdi), null);
+  assert.equal(gecerlilikGecmis(`<html><head>${JSONLD(',"validThrough":"2026-12-31"')}</head></html>`, simdi), false);
+  assert.equal(gecerlilikGecmis('<script type="application/ld+json">{bozuk</script>', simdi), false);
+});
+
+test('KAPATMAMALI: Almanca açık ilan ve genel "nicht mehr verfügbar" cümlesi', () => {
+  const govde =
+    `<html><head>${JSONLD()}</head><body><h1>AI Product Intern</h1>` +
+    '<p>Die alte Version dieser Funktion ist nicht mehr verfügbar.</p><a href="/apply">Jetzt bewerben</a></body></html>';
+  assert.equal(kapanmaSebebi(OK(), govde, { baslik: 'AI Product Intern' }), null);
+});
+
