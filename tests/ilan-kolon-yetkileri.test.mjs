@@ -24,6 +24,8 @@ import { ilanSatiri } from '../src/lib/ilan-formu.mjs';
 const YETKI_GOCLERI = [
   'supabase/migrations/20260906010000_ilan_kolon_yetkileri.sql',
   'supabase/migrations/20260906020000_ilan_basvuru_yolu_sabit.sql',
+  /* Ülke ve başvurulabilen ülkeler (13 Ekim 2026). */
+  'supabase/migrations/20261213010000_ilan_ulke_alani.sql',
 ];
 
 const MIGRATION = YETKI_GOCLERI.map((yol) => readFileSync(yol, 'utf8')).join('\n');

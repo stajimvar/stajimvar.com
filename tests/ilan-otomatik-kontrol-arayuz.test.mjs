@@ -197,7 +197,8 @@ test('yönetici kararıyla kaldırılan/reddedilen ilan şirkete karar olarak an
 test('uzaktan çalışmada şehir isteğe bağlı; geçmiş son başvuru alanın yanında hata', () => {
   assert.match(FORM, /const uzaktan = deger\.calismaSekli === 'Remote';/);
   assert.match(FORM, /sorun=\{goster\('sehir'\)\} istegeBagli=\{uzaktan\}/);
-  assert.match(FORM, /'Son başvuru ve şehir dışında tüm alanlar zorunlu'/);
+  assert.match(FORM, /'Son başvuru, şehir ve iş yeri ülkesi dışında tüm alanlar zorunlu'/);
+  assert.match(FORM, /sorun=\{goster\('ulke'\)\} istegeBagli=\{uzaktan\}/);
   assert.match(FORM, /sorun=\{goster\('sonBasvuru'\)\} istegeBagli>/);
 });
 
@@ -301,6 +302,8 @@ test('sunucu alanı form alanına eşleniyor; alansız ya da tanınmayan gerekç
   assert.deepEqual(GEREKCE_FORM_ALANI, {
     title: 'unvan',
     city: 'sehir',
+    country_code: 'ulke',
+    basvuru_ulkeleri: 'basvuruUlkeleri',
     duration: 'sure',
     stipend_text: 'ucret',
     description: 'aciklama',

@@ -419,7 +419,7 @@ export async function ilanOku(id: string) {
   const { data, error } = await db
     .from('listings')
     .select(
-      'id, company_id, title, city, work_type, term, duration, is_paid, stipend_text, ' +
+      'id, company_id, title, city, country_code, basvuru_ulkeleri, work_type, term, duration, is_paid, stipend_text, ' +
         'description, application_deadline, status, origin, ' +
         'mandatory_staj_accepted, voluntary_staj_accepted, kontrol_durumu, kontrol_gerekceleri, kontrol_at, ' +
         'yonetici_incelemesi_gerekli, bekleyen:ilan_bekleyen_degisiklikleri(icerik, durum, gerekceler, kontrol_at)'

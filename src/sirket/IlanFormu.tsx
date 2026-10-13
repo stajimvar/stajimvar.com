@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, Check, Clock, Copy, ExternalLink, Info } from 'lucide-react';
+import { AlertTriangle, Check, Clock, Copy, ExternalLink, Info, X } from 'lucide-react';
 import {
   ACIKLAMA_EN_AZ,
   ACIKLAMA_EN_FAZLA,
@@ -31,6 +31,7 @@ import {
   yoneticiKarariMi,
 } from '../lib/ilan-kontrol-gorunumu.mjs';
 import { listingSlug } from '../lib/slug';
+import { ULKE_SECENEKLERI, ulkeAdi } from '../lib/ulkeler.mjs';
 import { AutocompleteField } from '../components/AutocompleteField';
 import { TR_CITIES } from '../data/turkeyData';
 import { FORM_ALAN, UzayanMetin } from './form-parcalari';
@@ -163,6 +164,10 @@ const SecimSeridi: React.FC<{
 export interface IlanFormDegeri {
   unvan: string;
   sehir: string;
+  /** ISO 3166-1 alfa-2 ('TR'); seçilmemişse ''. */
+  ulke: string;
+  /** Uzaktan ilanda başvurulabilen ülkeler (ISO alfa-2). */
+  basvuruUlkeleri: string[];
   calismaSekli: string;
   tur: string;
   sure: string;
@@ -172,9 +177,29 @@ export interface IlanFormDegeri {
   sonBasvuru: string;
 }
 
+/** `yaz` ile yazılabilen (metin değerli) alanlar. */
+type MetinAlani = {
+  [A in keyof IlanFormDegeri]: IlanFormDegeri[A] extends string ? A : never;
+}[keyof IlanFormDegeri];
+
+/*
+  ÜLKE (13 Ekim 2026)
+
+  Ülkesi olmayan ilan Google'da iş ilanı olarak çıkamıyor; bu yüzden
+  ofis/hibrit ilanda ülke, uzaktan ilanda başvurulabilen ülkeler zorunlu
+  (form ve sunucu kuralı aynı, 20261213010000). Ülke şehirden
+  ÇIKARILMIYOR: "Batum" yazan şirketin ilanını Türkiye saymak tahmin
+  olurdu; değer şirketin seçimi.
+
+  Türkiye varsayılanı yalnız YENİ ilanın boş formunda. Düzenlemede değer
+  kayıttan geliyor (`ilanFormDegeri`); kayıtlı ülke yoksa alan boş kalıyor
+  ve şirket kendisi seçiyor.
+*/
 const BOS: IlanFormDegeri = {
   unvan: '',
   sehir: '',
+  ulke: 'TR',
+  basvuruUlkeleri: ['TR'],
   calismaSekli: 'On-site',
   tur: 'yaz',
   sure: '20 iş günü',
@@ -360,8 +385,11 @@ export const IlanFormu: React.FC<{
     }
   }, [kontrol]);
 
-  const yaz = (alan: keyof IlanFormDegeri) => (v: string) =>
+  const yaz = (alan: MetinAlani) => (v: string) =>
     setDeger((o) => ({ ...o, [alan]: v }));
+  /* Dizi alanı ayrı: `yaz` yalnız metin alırsa yanlış alana dizi yazılamaz. */
+  const basvuruUlkeleriYaz = (v: string[]) => setDeger((o) => ({ ...o, basvuruUlkeleri: v }));
+  const ulkeEkleSecimi = React.useRef<HTMLSelectElement>(null);
 
   const sorunlar = ilanSorunlari(deger);
   const goster = (alan: keyof IlanFormDegeri) => (gonderildi ? sorunlar[alan] : undefined);
@@ -925,8 +953,8 @@ export const IlanFormu: React.FC<{
             İlan bilgileri
           </h2>
           <p className="text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
-            {/* Tamamen uzaktan çalışmada şehir zorunlu değil (form ve sunucu kuralı aynı). */}
-            {uzaktan ? 'Son başvuru ve şehir dışında tüm alanlar zorunlu' : 'Son başvuru dışında tüm alanlar zorunlu'}
+            {/* Tamamen uzaktan çalışmada şehir ve iş yeri ülkesi zorunlu değil (form ve sunucu kuralı aynı). "İş yeri": başvurulabilen ülkeler uzaktanda zorunlu, karışmasın. */}
+            {uzaktan ? 'Son başvuru, şehir ve iş yeri ülkesi dışında tüm alanlar zorunlu' : 'Son başvuru dışında tüm alanlar zorunlu'}
           </p>
         </div>
 
@@ -973,6 +1001,32 @@ export const IlanFormu: React.FC<{
               <SunucuNotu id={sunucuNotuId('sehir')} mesajlar={sunucuGerekceleri.sehir} />
             </div>
             <div className="min-w-0">
+              {/* Uzaktan ilanda iş yeri ülkesi isteğe bağlı (sunucu kuralıyla aynı). */}
+              <Etiket htmlFor={`${k}-ulke`} sorun={goster('ulke')} istegeBagli={uzaktan}>
+                Ülke
+              </Etiket>
+              <select
+                id={`${k}-ulke`}
+                value={deger.ulke}
+                onChange={(e) => yaz('ulke')(e.target.value)}
+                aria-describedby={aciklayan('ulke')}
+                className={FORM_ALAN}
+              >
+                {/* Boş seçenek: değer boşken ya da ülke isteğe bağlıyken (uzaktan) geri alınabilsin. */}
+                {(!deger.ulke || uzaktan) && <option value="">Ülke seç</option>}
+                {/* Kayıtlı kod listede yoksa kaybolmasın. */}
+                {deger.ulke && !ULKE_SECENEKLERI.some((u) => u.kod === deger.ulke) && (
+                  <option value={deger.ulke}>{ulkeAdi(deger.ulke)}</option>
+                )}
+                {ULKE_SECENEKLERI.map((u) => (
+                  <option key={u.kod} value={u.kod}>
+                    {u.ad}
+                  </option>
+                ))}
+              </select>
+              <SunucuNotu id={sunucuNotuId('ulke')} mesajlar={sunucuGerekceleri.ulke} />
+            </div>
+            <div className="min-w-0 sm:col-span-2">
               <Etiket id={`${k}-sekil`} sorun={goster('calismaSekli')}>
                 Çalışma şekli
               </Etiket>
@@ -983,6 +1037,74 @@ export const IlanFormu: React.FC<{
                 onSec={yaz('calismaSekli')}
               />
             </div>
+
+            {/*
+              BAŞVURULABİLEN ÜLKELER — yalnız uzaktan ilanda
+
+              Uzaktan ilanın iş yeri yok; Google ilanı kimlere göstereceğini
+              başvurulabilen ülkelerden okuyor. Seçilenler sarılan bir
+              listede (yatay kaydırma yok), her birinin kendi 44 px'lik
+              kaldır düğmesi var; yardım cümlesi her zaman görünür (panel
+              telefonda okunuyor, bilgi hover'a bırakılmıyor). Uzaktan
+              değilken alan çizilmiyor; değer state'te kalsa da
+              `ilanSatiri` öteki çalışma şekillerinde `null` gönderiyor.
+            */}
+            {uzaktan && (
+              <div className="min-w-0 sm:col-span-2">
+                <Etiket htmlFor={`${k}-basvuru-ulke`} sorun={goster('basvuruUlkeleri')}>
+                  Başvurulabilen ülkeler
+                </Etiket>
+                <p id={`${k}-basvuru-ulke-yardim`} className="mb-2 text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+                  Öğrenciler hangi ülkelerden başvurabilir? Google, uzaktan ilanı bu bilgiyle gösteriyor.
+                </p>
+                {deger.basvuruUlkeleri.length > 0 && (
+                  <ul aria-label="Seçilen ülkeler" className="mb-2 flex flex-wrap gap-2">
+                    {deger.basvuruUlkeleri.map((kod) => (
+                      <li
+                        key={kod}
+                        className="inline-flex min-h-11 items-center rounded-xl border pl-3 text-sm font-bold"
+                        style={{ borderColor: SIRKET_VURGU_KOYU, color: SIRKET_VURGU_KOYU, background: SIRKET_ROZET }}
+                      >
+                        {ulkeAdi(kod)}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            basvuruUlkeleriYaz(deger.basvuruUlkeleri.filter((u) => u !== kod));
+                            /* Düğme DOM'dan çıkıyor; odak boşa düşmesin. */
+                            ulkeEkleSecimi.current?.focus();
+                          }}
+                          aria-label={`${ulkeAdi(kod)} kaldır`}
+                          className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-xl focus-visible:outline-2 focus-visible:outline-blue-600"
+                        >
+                          <X aria-hidden className="h-4 w-4" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <select
+                  ref={ulkeEkleSecimi}
+                  id={`${k}-basvuru-ulke`}
+                  value=""
+                  onChange={(e) => {
+                    const kod = e.target.value;
+                    if (kod && !deger.basvuruUlkeleri.includes(kod)) {
+                      basvuruUlkeleriYaz([...deger.basvuruUlkeleri, kod]);
+                    }
+                  }}
+                  aria-describedby={aciklayan('basvuruUlkeleri', `${k}-basvuru-ulke-yardim`)}
+                  className={`${FORM_ALAN} sm:max-w-xs`}
+                >
+                  <option value="">Ülke ekle</option>
+                  {ULKE_SECENEKLERI.filter((u) => !deger.basvuruUlkeleri.includes(u.kod)).map((u) => (
+                    <option key={u.kod} value={u.kod}>
+                      {u.ad}
+                    </option>
+                  ))}
+                </select>
+                <SunucuNotu id={sunucuNotuId('basvuruUlkeleri')} mesajlar={sunucuGerekceleri.basvuruUlkeleri} />
+              </div>
+            )}
 
             <div className="min-w-0 sm:col-span-2">
               <Etiket id={`${k}-tur`} sorun={goster('tur')}>
