@@ -34,6 +34,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createClient } from '@supabase/supabase-js';
+import { acikKaniti, kapanmaSebebi } from '../src/lib/ilan-kapanma.mjs';
 
 const KOK = path.resolve(import.meta.dirname, '..');
 
@@ -64,172 +65,6 @@ const BASLIK = {
   'Accept-Language': 'tr,en;q=0.8',
 };
 
-/*
-  SAĞLAYICIYA ÖZEL KAPANMA İŞARETLERİ
-
-  HTTP durumu tek başına yetmiyor: Workable kapanan ilanda 410 dönüyor ama
-  bazı sağlayıcılar kapanan ilan için de 200 + "artık başvuru alınmıyor"
-  sayfası veriyor. Metin işaretleri o yüzden gerekli.
-
-  Workday kapanan ilanı /invalid-url adresine yönlendiriyor — durum 404
-  olmasa bile son adresi kontrol etmek gerekiyor.
-*/
-const KAPANMA_METINLERI = [
-  'not available anymore',
-  'no longer accepting applications',
-  'no longer available',
-  'position has been closed',
-  'posting is no longer',
-  'this job is closed',
-  'bu ilan yayından kaldırıl',
-  'başvuru süresi doldu',
-];
-
-/**
- * Görünür metni ayıklar: script, style ve noscript blokları atılıyor.
- *
- * NEDEN GEREKLİ
- * -------------
- * Kapanma işaretleri BÜTÜN HTML içinde aranıyordu, gömülü JavaScript dahil.
- * Modern iş ilanı siteleri hata metinlerini sayfanın içindeki bir sözlükte
- * taşıyor; ilan açıkken bile o metinler kaynakta duruyor.
- *
- * Ölçüldü — üç canlı ilan bu yüzden kapatıldı:
- *   hrpanda  "booking.errors.slotUnavailable":"This time is no longer available"
- *            (randevu slotu hatası; ilanla ilgisi yok)
- *   Jibe     "NO_JOBS_404":"…this job may be no longer available…"
- *            (404 sayfasının ŞABLONU, sayfanın kendisi değil)
- *
- * Üçünün de adresi 200 dönüyordu. Yanlış kapatma sessiz bir hata: ilan
- * listeden düşüyor ve kimse fark etmiyor.
- */
-function gorunurMetin(govde) {
-  return govde
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ');
-}
-
-function kapanmaSebebi(yanit, govde) {
-  /*
-    HTTP durumu ve yönlendirme SAYFANIN TAMAMINDAN okunuyor; metin işaretleri
-    ise yalnızca görünür metinden. Durum kodu yanıtın kendi bilgisi, metin
-    ise yorum gerektiriyor.
-  */
-  const metin = gorunurMetin(govde).toLowerCase();
-  if (yanit.url.includes('invalid-url')) return 'workday: invalid-url yönlendirmesi';
-  if (yanit.status === 404) return 'HTTP 404';
-  if (yanit.status === 410) return 'HTTP 410';
-  for (const iz of KAPANMA_METINLERI) if (metin.includes(iz)) return `sayfa metni: "${iz}"`;
-  return null;
-}
-
-/**
- * İLANIN HÂLÂ AÇIK OLDUĞUNA DAİR POZİTİF KANIT
- *
- * HTTP 200 tek başına kanıt DEĞİL. Kaynak sitesi ilanı kaldırdığında
- * adres çoğu zaman 404 dönmüyor: genel kariyer sayfasına, arama
- * sonuçlarına ya da "bu pozisyon artık listede değil" demeyen bir
- * şablona yönlendiriyor. O sayfa 200 dönüyor ve kapanma metni de
- * içermiyor.
- *
- * Eski davranışta bu, iki kere yanlıştı:
- *   · `source_verified_at` ilerliyordu — kartta "Son kontrol: bugün"
- *     yazarken doğrulanan şey ilan değil, şirketin kariyer sayfasıydı.
- *   · KAPANMIŞ ilan `status='published'` ile yayına GERİ ALINIYORDU.
- *
- * ÜÇ KANIT, ÜÇÜ DE SAYFANIN KENDİSİ HAKKINDA:
- *   1. schema.org JobPosting — sayfa "burada bir iş ilanı var" diyor.
- *   2. Kanonik adres bizim ilan kimliğimizi taşıyor — sayfa "ben o
- *      ilanım" diyor.
- *   3. <h1> ana başlığı ilanın ayırt edici kelimelerini taşıyor.
- *
- * BAŞLIK ARTIK GÖRÜNÜR METNİN HER YERİNDE ARANMIYOR. Görünür metin
- * menüyü, "önerilen ilanlar" şeridini, "geçmiş ilanlar" listesini ve
- * genel ilan listesini de kapsıyor: kapanmış bir ilanın başlığı, onu
- * hâlâ listeleyen bir sayfada geçebilir ve ilan yanlışlıkla "açık"
- * damgası alırdı. <h1> sayfanın KENDİ konusu.
- *
- * Kanıt yoksa sonuç 'belirsiz': kapalı demiyoruz, açık da demiyoruz —
- * ilan ne kapatılıyor ne yeniden açılıyor.
- */
-/** Sayfanin ANA basligi (ilk <h1>). Menu ve serit basliklari h1 degil. */
-function anaBaslik(govde) {
-  const m = govde.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
-  return m ? gorunurMetin(m[1]) : '';
-}
-
-/** Sayfanin kendi beyan ettigi kanonik adres. */
-function kanonikAdres(govde) {
-  const m = govde.match(/<link[^>]+rel=["']canonical["'][^>]*>/i);
-  if (!m) return '';
-  const h = m[0].match(/href=["']([^"']+)["']/i);
-  return h ? h[1] : '';
-}
-
-/**
- * ILAN KIMLIGI — adresin icindeki uzun, ayirt edici parca.
- *
- * Workday `.../job/.../R-12345`, Workable `.../j/ABCD1234EF`, Lever ve
- * Greenhouse sayisal kimlik kullaniyor. Kalip bunlarin hepsini tek
- * kurala indiriyor: adresin son parcalari icinde en az alti karakterli,
- * icinde rakam gecen parca.
- */
-function ilanKimligi(adres) {
-  const parcalar = String(adres || '').split(/[/?#]/).filter(Boolean);
-  for (const p of parcalar.reverse()) {
-    if (p.length >= 6 && /\d/.test(p) && /^[A-Za-z0-9._-]+$/.test(p)) return p;
-  }
-  return '';
-}
-
-function acikKaniti(govde, baslik, adres) {
-  if (/"@type"\s*:\s*"JobPosting"/i.test(govde)) return 'sayfada JobPosting verisi';
-
-  /*
-    KANONİK ADRES BİZİM İLANI GÖSTERİYOR
-
-    Sayfa kendi kimliğini beyan ediyor. Kaynak ilanı kaldırıp adresi
-    genel kariyer sayfasına yönlendirdiğinde canonical O sayfayı
-    gösteriyor, bizim ilan kimliğimizi değil.
-  */
-  const kimlik = ilanKimligi(adres);
-  if (kimlik) {
-    const kanonik = kanonikAdres(govde);
-    if (kanonik && kanonik.includes(kimlik)) return `canonical ilan kimliğini taşıyor (${kimlik})`;
-  }
-
-  /*
-    BAŞLIK ANA BAŞLIKTA — GÖRÜNÜR METNİN HER YERİNDE DEĞİL
-
-    Önceki kural başlığın kelimelerini SAYFANIN TAMAMINDA arıyordu.
-    Görünür metin menüyü, "önerilen ilanlar" şeridini, "geçmiş
-    ilanlar" listesini ve genel ilan listesini de kapsıyor: kapanmış
-    bir ilanın başlığı, onu hâlâ listeleyen bir liste sayfasında
-    geçebilir ve ilan "açık" damgası alırdı.
-
-    <h1> sayfanın KENDİ konusu. Menü ve öneri şeritleri h1'de olmuyor.
-  */
-  const genel = /^(staj|stajyer|intern|internship|program|programi|programı|uzun|donem|dönem|yaz|kis|kış|ve|for|the)$/i;
-  const kelimeler = gorunurMetin(baslik)
-    .toLowerCase()
-    .split(/[^\p{L}\p{N}]+/u)
-    .filter((k) => k.length > 3 && !genel.test(k));
-  if (kelimeler.length === 0) return null;
-
-  const h1 = anaBaslik(govde).toLowerCase();
-  if (!h1) return null;
-  const bulunan = kelimeler.filter((k) => h1.includes(k)).length;
-  /*
-    EŞİK YARIDAN ÜÇTE İKİYE ÇIKTI: h1 kısa bir metin, tesadüfi
-    eşleşme payı daha yüksek. "Yazılım Stajyeri" ile "Yazılım
-    Mimarı" arasındaki farkı kaybetmemek için çoğunluk yetmiyor.
-  */
-  return bulunan * 3 >= kelimeler.length * 2
-    ? `ana başlık ilanı gösteriyor (${bulunan}/${kelimeler.length})`
-    : null;
-}
 
 /** Sayfanın kendi JobPosting verisinden gerçek yayın tarihi. */
 function yayinTarihi(govde) {
@@ -410,7 +245,8 @@ for (const ilan of ilanlar) {
     /* Yönlendirmeler izlendikten sonra GERÇEKTEN okunan adres. */
     guncelleme.final_checked_url = yanit.url || adres;
     const govde = await yanit.text();
-    const sebep = kapanmaSebebi(yanit, govde);
+    /* Başlık ve adres ilana özgü kapanma ifadesinin sayfa kimliği için (src/lib/ilan-kapanma.mjs). */
+    const sebep = kapanmaSebebi(yanit, govde, { baslik: ilan.title, adres });
 
     if (sebep) {
       kapali++;

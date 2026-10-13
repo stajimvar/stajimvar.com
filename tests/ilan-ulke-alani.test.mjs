@@ -23,6 +23,7 @@ import { randomUUID } from 'node:crypto';
 const GOC = new URL('../supabase/migrations/20261120010000_ilan_otomatik_kontrol.sql', import.meta.url);
 const ULKE_GOCU = new URL('../supabase/migrations/20261213010000_ilan_ulke_alani.sql', import.meta.url);
 const KANIT_GOCU = new URL('../supabase/migrations/20261214010000_ilan_konum_kanitli_duzeltmeler.sql', import.meta.url);
+const GUESS_GOCU = new URL('../supabase/migrations/20261215010000_guess_europe_ofis.sql', import.meta.url);
 
 const SAHIP = '11111111-1111-4111-8111-111111111111'; // doğrulanmış şirket, Owner
 const IZLEYICI = '22222222-2222-4222-8222-222222222222'; // aynı şirkette Viewer
@@ -207,9 +208,11 @@ before(async () => {
       ('2a1ca32c-0000-4000-8000-000000000001', 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'Hiroba', 'Çankaya', null, 'On-site', 'scraped', 'published'),
       ('b39b1b88-0000-4000-8000-000000000001', 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'Luron', null, 'GB', 'On-site', 'manual', 'published'),
       ('cc55e6ec-0000-4000-8000-000000000001', 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'Atrya', 'Berlin', 'DE', 'Remote', 'scraped', 'published'),
-      ('a67768ee-0000-4000-8000-000000000001', 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'FixFirst', null, 'DE', 'Remote', 'scraped', 'published');
+      ('a67768ee-0000-4000-8000-000000000001', 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'FixFirst', null, 'DE', 'Remote', 'scraped', 'published'),
+      ('a0de0769-0000-4000-8000-000000000001', 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', 'Guess', 'İstanbul', 'TR', 'Remote', 'scraped', 'published');
     select set_config('request.jwt.claims', '', false);`);
   await db.exec(await readFile(KANIT_GOCU, 'utf8'));
+  await db.exec(await readFile(GUESS_GOCU, 'utf8'));
   await db.exec(`grant select on public.listings to service_role;`);
 
   await db.exec(`
@@ -389,4 +392,16 @@ test('kanıtlı düzeltme göçü: yalnız kaynağın söylediği değer, yalnı
   assert.ok(fix.basvuru_ulkeleri_dogrulandi_at, 'kanıtlı değer damgalı');
   const [e] = (await db.query(`select country_code from public.listings where id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'`)).rows;
   assert.equal(e.country_code, null, 'ilgisiz ilan değişmemeli');
+});
+
+test('Guess Europe göçü: kaynak ofis diyor, Uzaktan → Ofis; şehir ve ülke aynı', async () => {
+  const [g] = (await db.query(`select work_type, city, country_code, basvuru_ulkeleri, status from public.listings where id::text like 'a0de0769-%'`)).rows;
+  assert.equal(g.work_type, 'On-site');
+  assert.equal(g.city, 'İstanbul');
+  assert.equal(g.country_code, 'TR');
+  assert.equal(g.status, 'published', 'düzeltme ilanı kapatmamalı');
+  /* Göç ikinci kez koşsa da (koşul artık tutmuyor) hiçbir şey değişmiyor. */
+  await db.exec(await readFile(GUESS_GOCU, 'utf8'));
+  const [g2] = (await db.query(`select work_type from public.listings where id::text like 'a0de0769-%'`)).rows;
+  assert.equal(g2.work_type, 'On-site');
 });

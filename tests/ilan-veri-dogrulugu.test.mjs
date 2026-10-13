@@ -15,6 +15,8 @@ const GOC = oku('supabase/migrations/20261001010000_ilan_veri_dogrulugu.sql');
 const PROMOTE = oku('automation/promote.py');
 const KARIYER = oku('automation/kariyer_html_kosu.py');
 const KONTROL = oku('scripts/ilan-baglanti-kontrol.mjs');
+/* Kapanma/açıklık kararları 13 Ekim 2026'dan beri modülde; betik onları çağırıyor. */
+const KAPANMA = oku('src/lib/ilan-kapanma.mjs');
 const DUZELT = oku('scripts/ucret-bilgisi-duzelt.mjs');
 const DETAY = oku('src/components/ListingPage.tsx');
 const KART = oku('src/components/InternshipCard.tsx');
@@ -136,7 +138,8 @@ test('HTTP 200 tek başına açık kanıtı sayılmıyor', () => {
     "açık" sayıp `source_verified_at` damgası atıyordu — envanterin
     %27'si hakkında doğrulanmamış bir iddia.
   */
-  assert.match(KONTROL, /function acikKaniti\(govde, baslik, adres\)/);
+  assert.match(KAPANMA, /export function acikKaniti\(govde, baslik, adres\)/);
+  assert.match(KONTROL, /import \{ acikKaniti, kapanmaSebebi \} from '\.\.\/src\/lib\/ilan-kapanma\.mjs'/);
   const dal = KONTROL.slice(KONTROL.indexOf('} else if (yanit.ok) {'));
   const kanitSatiri = dal.indexOf('const kanit = acikKaniti(');
   const acikYazma = dal.indexOf("source_status: 'acik'");
@@ -315,9 +318,9 @@ test('açık kanıtı ana başlıkta aranıyor, sayfanın her yerinde değil', (
     şeridinde/genel listede geçmesi sayesinde "doğrulandı" damgası
     alıyordu.
   */
-  assert.match(KONTROL, /function anaBaslik\(govde\)/);
-  assert.match(KONTROL, /<h1\[\^>\]\*>/, 'ana başlık h1\'den okunmalı');
-  const fn = KONTROL.slice(KONTROL.indexOf('function acikKaniti('));
+  assert.match(KAPANMA, /function anaBaslik\(govde\)/);
+  assert.match(KAPANMA, /<h1\[\^>\]\*>/, 'ana başlık h1\'den okunmalı');
+  const fn = KAPANMA.slice(KAPANMA.indexOf('function acikKaniti('));
   const son = fn.indexOf('\n/** Sayfanın kendi JobPosting');
   const govde = fn.slice(0, son > 0 ? son : 2500);
   /* Başlık karşılaştırması h1 üzerinde; tüm görünür metin üzerinde DEĞİL. */
