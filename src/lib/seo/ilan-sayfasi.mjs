@@ -33,7 +33,7 @@ export const SITE = 'https://stajimvar.com';
 export const ILAN_SECIMI =
   'id,title,description,responsibilities,required_skills,duration,min_grade_level,' +
   'city,country_code,work_type,apply_url,application_method,posted_at,created_at,updated_at,' +
-  'application_deadline,is_paid,stipend_text,basvuru_ulkeleri,' +
+  'application_deadline,is_paid,stipend_text,basvuru_ulkeleri,origin,' +
   'companies(name,slug,website_url,logo_url,industry,location,description)';
 
 const AYLAR = [
@@ -98,15 +98,21 @@ const CALISMA = { 'On-site': 'İş yerinde', Hybrid: 'Hibrit', Remote: 'Uzaktan'
 /*
   UZAKTAN İLANDA BAŞVURULABİLEN ÜLKELER (13 Ekim 2026)
 
-  `basvuru_ulkeleri` işverenin ya da yöneticinin beyanı (20261213010000;
-  yalnız uzaktan ilanda dolu olabiliyor, ISO alfa-2). Google tamamen uzaktan
-  işte `jobLocationType: TELECOMMUTE` ile en az bir ülke istiyor
-  (`applicantLocationRequirements`) ve açıklamanın da bunu açıkça
-  söylemesini istiyor. Değer yoksa JobPosting yine yazılmıyor: ilanın ülke
-  kodu (şirketin yeri) başvuru şartı sayılmıyor.
+  `basvuru_ulkeleri` (20261213010000; yalnız uzaktan ilanda dolu olabiliyor,
+  ISO alfa-2). Google tamamen uzaktan işte `jobLocationType: TELECOMMUTE` ile
+  en az bir ülke istiyor (`applicantLocationRequirements`) ve açıklamanın da
+  bunu açıkça söylemesini istiyor.
+
+  YALNIZ DOĞRULANMIŞ DEĞER: değer ancak işverenin KENDİ açtığı ilanda
+  (`origin = 'employer_posted'`) kullanılıyor. Orada ülkeleri işveren seçiyor
+  ve ilan yayına ancak sunucu kontrolünden (`zorunlu.basvuru_ulkeleri`) ya da
+  yönetici onayından geçerek çıkıyor. Toplama hattından gelen ilanda bu alanı
+  doğrulayan bir adım yok; dolu olsa bile yok sayılıyor. Değer yoksa JobPosting
+  yine yazılmıyor: ilanın ülke kodu (şirketin yeri) başvuru şartı sayılmıyor.
 */
 export function basvurulabilenUlkeler(ilan) {
-  return ilan.work_type === 'Remote' ? ulkeListesiTemizle(ilan.basvuru_ulkeleri) : [];
+  if (ilan.work_type !== 'Remote' || ilan.origin !== 'employer_posted') return [];
+  return ulkeListesiTemizle(ilan.basvuru_ulkeleri);
 }
 
 /** Yapısal veride ülke adı İngilizce ("DE" → "Germany"); üretilemezse kod. */

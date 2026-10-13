@@ -100,7 +100,7 @@ test('uzaktan ilan: başvurulabilen ülkeler beyanlıysa TELECOMMUTE + applicant
     jobLocationType TELECOMMUTE, en az bir ülke ve açıklamada bunun açıkça
     yazması. Fiziksel iş yeri olmadığı için jobLocation yazılmıyor.
   */
-  const uzak = { ...TEMEL, work_type: 'Remote', city: null, country_code: 'DE', basvuru_ulkeleri: ['TR', 'DE', 'TR', 'TUR'] };
+  const uzak = { ...TEMEL, origin: 'employer_posted', work_type: 'Remote', city: null, country_code: 'DE', basvuru_ulkeleri: ['TR', 'DE', 'TR', 'TUR'] };
   const r = ilanJobPosting(uzak, etiket, SIMDI);
   assert.deepEqual(r.eksik, []);
   assert.equal(r.veri.jobLocationType, 'TELECOMMUTE');
@@ -120,15 +120,31 @@ test('uzaktan ilan: başvurulabilen ülkeler beyanlıysa TELECOMMUTE + applicant
 
 test('başvurulabilen ülkeler yalnız uzaktan ilanda okunuyor; boş ya da geçersizse JobPosting yok', () => {
   for (const ulkeler of [[], ['Türkiye'], null]) {
-    const r = ilanJobPosting({ ...TEMEL, work_type: 'Remote', basvuru_ulkeleri: ulkeler }, etiket, SIMDI);
+    const r = ilanJobPosting({ ...TEMEL, origin: 'employer_posted', work_type: 'Remote', basvuru_ulkeleri: ulkeler }, etiket, SIMDI);
     assert.equal(r.veri, null, JSON.stringify(ulkeler));
     assert.match(r.eksik.join(' '), /applicantLocationRequirements/);
   }
   /* Ofis ilanında (DB kısıtı izin vermese de) alan yok sayılıyor: ofis = jobLocation. */
-  const ofis = ilanJobPosting({ ...TEMEL, basvuru_ulkeleri: ['DE'] }, etiket, SIMDI).veri;
+  const ofis = ilanJobPosting({ ...TEMEL, origin: 'employer_posted', basvuru_ulkeleri: ['DE'] }, etiket, SIMDI).veri;
   assert.equal(ofis.jobLocationType, undefined);
   assert.equal(ofis.applicantLocationRequirements, undefined);
   assert.equal(ofis.jobLocation.address.addressCountry, 'TR');
+});
+
+test('YALNIZ DOĞRULANMIŞ: toplama hattından gelen uzaktan ilanda başvuru ülkeleri yok sayılıyor', () => {
+  /*
+    Doğrulanmış değer = işverenin kendi ilanında seçtiği ve sunucu kontrolünden
+    ya da yönetici onayından geçen değer. Kaynaktan derlenen ilanda bu alanı
+    doğrulayan bir adım yok: dolu olsa da JobPosting'e ve görünür sayfaya
+    girmiyor, ülke tahmin edilmiyor.
+  */
+  for (const origin of ['scraped', 'manual', 'internal', undefined]) {
+    const ilan = { ...TEMEL, origin, work_type: 'Remote', city: null, country_code: 'DE', basvuru_ulkeleri: ['DE'] };
+    const r = ilanJobPosting(ilan, etiket, SIMDI);
+    assert.equal(r.veri, null, String(origin));
+    assert.match(r.eksik.join(' '), /applicantLocationRequirements/);
+    assert.doesNotMatch(ilanGorunurGovde(ilan, etiket, SIMDI), /Başvurulabilen ülkeler/);
+  }
 });
 
 test('açıklama KESİLMİYOR: uzun metin, sorumluluklar ve nitelikler yapısal veride ve görünür sayfada tam', () => {
