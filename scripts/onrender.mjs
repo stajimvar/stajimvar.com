@@ -45,6 +45,7 @@ import { kunye, YAZAR } from '../src/lib/rehber-kunye.mjs';
   derlemede de kenarda da aynı çıktıyı üretsin diye kural tek yerde.
 */
 import { kacir, duzMetin, ozetle, ilanYolu as ortakIlanYolu } from '../src/lib/seo/metin.mjs';
+import { STAJ_ILANLARI_METNI } from '../src/lib/staj-ilanlari-metni.mjs';
 import { ilanSayfasi, ILAN_SECIMI, istanbulBugun, benzerIlanlariSec } from '../src/lib/seo/ilan-sayfasi.mjs';
 import { sayfaHtml } from '../src/lib/seo/sayfa-html.mjs';
 import { ARSIV_SAYFA_BOYU, acikIlanMi, arsivSirasi, arsivYolu, arsivSayfaBasligi, arsivSayfaNumaralari } from '../src/lib/seo/ilan-arsivi.mjs';
@@ -1531,6 +1532,36 @@ async function main() {
   */
   const { konumEtiketi, calismaEtiketi } = await icerikDerle(path.join(kok, 'src', 'lib', 'sehir.ts'), 'sehir');
 
+  /*
+    GÖRÜNÜR İLAN KARTLARI — `/` VE `/staj-ilanlari` ORTAK (14 Ekim 2026)
+
+    İki adres artık aynı listeyi çiziyor (App → MatchedInternshipsView);
+    JavaScript inmeden görünen kartlar da aynı işaretleme olmalı. Kartlar
+    istemcinin ilk çizimde kullandığı katalog TOHUMUNDAN geliyor: başka bir
+    listeden yazılsaydı React devreye girdiğinde ilanlar değişirdi.
+    Şehir adı ham geliyor ("Istanbul"); arayüzle aynı sözlükten geçiyor.
+  */
+  /* `ozetli: false` ana sayfada: ilan özetleri /staj-ilanlari'nın içeriği (kopya riski). */
+  const gorunurIlanKartlari = (liste, { ozetli = true } = {}) =>
+    liste.length
+      ? '<ul class="sv-kartlar">' +
+        liste
+          .map((i) => {
+            const sirket = (i.companies || {}).name || '';
+            const yer = i.city ? konumEtiketi(i.city) : '';
+            const alt = [sirket, yer].filter(Boolean).join(' · ');
+            return (
+              '<li class="sv-kart">' +
+              `<a class="sv-kart-baslik" href="${ortakIlanYolu(i)}">${kacir(i.title)}</a>` +
+              (alt ? `<span class="sv-kart-alt">${kacir(alt)}</span>` : '') +
+              (ozetli ? `<span class="sv-kart-ozet">${kacir(ozetle(i.description, 150))}</span>` : '') +
+              '</li>'
+            );
+          })
+          .join('') +
+        '</ul>'
+      : '';
+
   /* ---------------------------------------------- /staj-ilanlari ---- */
   /*
     "STAJ İLANLARI" ARAMA NİYETİNİN BİRİNCİL SAYFASI
@@ -1564,6 +1595,8 @@ async function main() {
   if (!katalogSayaclari) {
     console.log('  UYARI: katalog sayaçları alınamadı, yerel sayım kullanılıyor (ayrışabilir)');
   }
+  /* İlk ekranın kartları: ana sayfayla aynı tohum, aynı sıra (aşağıda). */
+  let stajIlanlariKartlari = [];
   const stajIlanlariVerisi = (() => {
     const sehirSayaci = new Map();
     const sirketler = new Set();
@@ -1586,15 +1619,7 @@ async function main() {
     const kaynakListe = Array.isArray(katalogSayaclari?.listings) && katalogSayaclari.listings.length
       ? katalogSayaclari.listings
       : turkiyeIlanlari.slice().sort((a, b) => zaman(b) - zaman(a));
-    const enYeniler = kaynakListe
-      .slice(0, 12)
-      .map((ilan) => ({
-        yol: ortakIlanYolu(ilan),
-        baslik: ilan.title,
-        sirket: ilan.companies?.name || '',
-        sehir: ilan.city ? konumEtiketi(ilan.city) : null,
-        calismaSekli: ilan.work_type || null,
-      }));
+    stajIlanlariKartlari = kaynakListe.slice(0, 12);
 
     return {
       gorunum: 'turkiye',
@@ -1619,7 +1644,8 @@ async function main() {
       toplam: katalogSayaclari?.total ?? turkiyeIlanlari.length,
       sirketToplam: katalogSayaclari?.companyTotal ?? sirketler.size,
       sehirToplam: katalogSayaclari?.cityTotal ?? sehirSayaci.size,
-      ilanlar: enYeniler,
+      dogrulananToplam: katalogSayaclari?.verifiedTotal,
+      sonKontrol: katalogSayaclari?.lastVerifiedAt ?? null,
       sehirler: [...sehirSayaci.entries()]
         .sort((a, b) => b[1] - a[1])
         .slice(0, 12)
@@ -1631,7 +1657,30 @@ async function main() {
     baslik: 'Güncel Staj İlanları 2026 | StajımVar',
     aciklama:
       'Türkiye genelindeki güncel staj ilanlarını şehir, bölüm ve staj türüne göre filtrele. Şirketlerin resmî başvuru sayfalarına doğrudan ulaş.',
-    govde: merkezListeleri.stajIlanlari(stajIlanlariVerisi),
+    /*
+      GÖRÜNÜR GÖVDE ANA SAYFANIN DÜZENİNDE (14 Ekim 2026)
+
+      Bu adres bir okuma sayfasıydı (`govde`, sade `.sv-metin` düzeni) ve
+      React de aynı metni çiziyordu. Artık canlı sayfa ana sayfadaki
+      gerçek listeyi çiziyor; ön render da aynı iskeleti yazıyor — üst
+      çubuk, yan sütun yer tutucuları, h1, ilk ilan kartları — ve SEO
+      bilgi bölümü listenin ALTINDA, canlıdakiyle aynı bileşenden. Metin,
+      bağlantılar ve h1 ilk HTML'de kalıyor; JavaScript açılınca ekran
+      sıçramıyor.
+    */
+    gorunurGovde:
+      '<div class="sv-cubuk"></div>' +
+      '<div class="sv-govde">' +
+      '<div class="sv-kutu sv-yan"></div>' +
+      '<main class="sv-liste">' +
+      `<h1>${kacir(STAJ_ILANLARI_METNI.turkiye.h1)}</h1>` +
+      `<p class="sv-giris">${kacir(STAJ_ILANLARI_METNI.turkiye.aciklama)}</p>` +
+      gorunurIlanKartlari(stajIlanlariKartlari) +
+      merkezListeleri.stajIlanlari(stajIlanlariVerisi) +
+      '</main>' +
+      '<div class="sv-kutu sv-yan"></div>' +
+      '</div>',
+    govde: '',
     /*
       KATALOG TOHUMU BU SAYFADA DA (12 Ekim 2026)
 
@@ -1700,7 +1749,8 @@ async function main() {
         govde:
           '<main><nav aria-label="Sayfa yolu"><a href="/staj-ilanlari">Staj ilanları</a> › Tüm açık ilanlar</nav>' +
           '<h1>Tüm staj ilanları</h1>' +
-          `<p>${aciklar.length} açık ilan, en yeniden eskiye · sayfa ${n}/${toplamSayfa}</p>` +
+          /* Kapsam yazılı: Türkiye kapısındaki sayıyla karışmasın (14 Ekim 2026). */
+          `<p>Tüm ülkelerden ${aciklar.length} açık ilan, en yeniden eskiye · sayfa ${n}/${toplamSayfa}</p>` +
           `<ul>${satirlar}</ul>` +
           (gezinme ? `<nav aria-label="Sayfalar"><p>${gezinme}</p></nav>` : '') +
           '</main>',
@@ -2221,14 +2271,18 @@ async function main() {
   const katalogTohumu = await katalogTohumuGetir(TOHUM_ULKESI);
   const tohumIlanlari = Array.isArray(katalogTohumu?.listings) ? katalogTohumu.listings : [];
 
-  const GORUNUR_KART = 12;
-  const ilanYolu = ortakIlanYolu;
   /*
-    Şehir adı ham geliyor ve kaynaklar "Istanbul" yazıyor. Arayüzde
-    konumEtiketi ile düzeltiliyor; ön render edilen metin de aynı
-    sözlükten geçiyor ki ikisi ayrışmasın.
+    ANA SAYFA 6 KART, /staj-ilanlari 12 (14 Ekim 2026)
+
+    İki adres artık aynı canlı listeyi çiziyor. İlk HTML'leri de aynı 12
+    kartı taşıyınca ölçüldü: ana sayfanın metninin %90'ı /staj-ilanlari'da
+    birebir geçiyordu (5'li kelime öbekleri) — arama motoru için ana sayfa,
+    ilan sayfasının bir alt kümesiydi. "Staj ilanları" niyetinin sayfası
+    /staj-ilanlari; ana sayfa ilk 6 kartı (React'in ilk 6 kartıyla aynı,
+    aynı tohum) ve canlıda da gösterdiği fırsat şeridini taşıyor.
   */
-  const ilanYeri = (i) => (i.city ? konumEtiketi(i.city) : '');
+  const GORUNUR_KART = 6;
+  /* Kart işaretlemesi ve şehir yazımı: `gorunurIlanKartlari` (yukarıda, /staj-ilanlari ile ortak). */
 
   /*
     GÖRÜNÜR KARTLAR TOHUMDAN GELİYOR — `ilanlar` listesinden değil.
@@ -2247,24 +2301,7 @@ async function main() {
   const gorunurKimlikler = new Set(gorunurIlanlar.map((i) => String(i.id)));
   const gizliIlanlar = ilanlar.filter((i) => !gorunurKimlikler.has(String(i.id)));
 
-  const ilanKartlari = gorunurIlanlar.length
-    ? '<ul class="sv-kartlar">' +
-      gorunurIlanlar
-        .map((i) => {
-          const sirket = (i.companies || {}).name || '';
-          const yer = ilanYeri(i);
-          const alt = [sirket, yer].filter(Boolean).join(' · ');
-          return (
-            '<li class="sv-kart">' +
-            `<a class="sv-kart-baslik" href="${ilanYolu(i)}">${kacir(i.title)}</a>` +
-            (alt ? `<span class="sv-kart-alt">${kacir(alt)}</span>` : '') +
-            `<span class="sv-kart-ozet">${kacir(ozetle(i.description, 150))}</span>` +
-            '</li>'
-          );
-        })
-        .join('') +
-      '</ul>'
-    : '';
+  const ilanKartlari = gorunurIlanKartlari(gorunurIlanlar, { ozetli: false });
 
   /*
     GİZLİ İLAN LİSTESİ KALDIRILDI.
@@ -2281,6 +2318,40 @@ async function main() {
     bu açığı her dağıtımda kapatıyor; bu liste ancak ondan sonra
     kaldırılabilirdi.
   */
+
+  /*
+    FIRSAT ŞERİDİ — CANLI ANA SAYFADA DA VAR (OpportunitiesHomeSection)
+
+    Aynı seçim: yayında, süresi geçmemiş, son başvuru tarihine göre (tarihsiz
+    olanlar sonda), ilk 8. Giriş yapmamış ziyaretçinin gördüğü şerit bu.
+    /staj-ilanlari bu şeridi göstermiyor; iki sayfayı ayıran içeriklerden biri.
+  */
+  const bugunFirsat = istanbulBugun();
+  const firsatSirasi = (f) => String(f.application_deadline || '9999-12-31').slice(0, 10);
+  const seritFirsatlari = firsatlar
+    .filter((f) => f.status === 'published' && f.slug)
+    .filter((f) => {
+      const gun = String(f.application_deadline || '').slice(0, 10);
+      return !/^\d{4}-\d{2}-\d{2}$/.test(gun) || gun >= bugunFirsat;
+    })
+    .sort((a, b) => firsatSirasi(a).localeCompare(firsatSirasi(b)))
+    .slice(0, 8);
+  const firsatSeridi = seritFirsatlari.length
+    ? '<section class="sv-firsatlar" aria-labelledby="firsat-seridi">' +
+      '<h2 id="firsat-seridi">Güncel öğrenci fırsatları</h2>' +
+      '<ul>' +
+      seritFirsatlari
+        .map(
+          (f) =>
+            `<li><a href="/firsatlar/${kacir(f.slug)}">${kacir(f.title)}</a>` +
+            (f.organization_name ? ` <span>${kacir(f.organization_name)}</span>` : '') +
+            '</li>',
+        )
+        .join('') +
+      '</ul>' +
+      '<p><a href="/firsatlar">Tüm fırsatlar →</a></p>' +
+      '</section>'
+    : '';
 
   const anaSayfaNav =
     '<nav class="sv-nav"><ul>' +
@@ -2318,6 +2389,8 @@ async function main() {
       '<h1>Staj aramaya buradan başla.</h1>' +
       '<p class="sv-giris">Şirketlerin kariyer sayfalarından derlenen ve StajımVar’da yayımlanan staj ilanlarını keşfet.</p>' +
       ilanKartlari +
+      `<p class="sv-tum-ilanlar"><a href="/staj-ilanlari">Tüm staj ilanları →</a></p>` +
+      firsatSeridi +
       anaSayfaNav +
       '</main>' +
       '<div class="sv-kutu sv-yan"></div>' +

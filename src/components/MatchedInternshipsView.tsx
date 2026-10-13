@@ -262,6 +262,16 @@ interface MatchedInternshipsViewProps {
   catalogLastVerifiedAt?: string | null;
   hasMoreCountriesPage?: boolean;
   onLoadMoreCountriesPage?: ()=>void;
+  /**
+   * SAYFANIN H1'İ VE KISA GİRİŞİ (14 Ekim 2026)
+   *
+   * Aynı liste iki adreste çiziliyor: `/` (marka sayfası, "Staj aramaya
+   * buradan başla.") ve `/staj-ilanlari` ("staj ilanları" arama niyetinin
+   * sayfası, "Güncel Staj İlanları"). Liste, süzgeçler ve kartlar aynı;
+   * yalnız başlık ve giriş cümlesi adresin konusunu söylüyor. Verilmezse
+   * ana sayfanın metni.
+   */
+  giris?: { baslik: string; aciklama: string };
 }
 
 export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
@@ -294,6 +304,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   catalogLastVerifiedAt,
   hasMoreCountriesPage=false,
   onLoadMoreCountriesPage,
+  giris,
 }) => {
 
   /*
@@ -1208,6 +1219,23 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         ? 'turkiye'
         : countrySelection === 'all'
           ? 'tumu'
+          : null;
+
+  /*
+    SAYILARIN KAPSAMI GÖRÜNÜR (14 Ekim 2026)
+
+    Yan sütundaki "94 Açık ilan" Türkiye kapısında Türkiye'yi, "Tüm
+    ilanlar"da bütün ülkeleri sayıyor; sayfalı arşiv (/staj-ilanlari/sayfa)
+    ise her zaman bütün ülkeleri. Kapsam yazmayınca aynı sitede 94 ile 174
+    çelişki gibi okunuyordu. Sayı değişmedi; yanına neyi saydığı yazıldı.
+  */
+  const sayiKapsami =
+    seciliBolge === 'turkiye'
+      ? "Türkiye'deki ilanlar"
+      : seciliBolge === 'yurtdisi'
+        ? 'Yurtdışındaki ilanlar'
+        : seciliBolge === 'tumu'
+          ? 'Tüm ülkelerdeki ilanlar'
           : null;
 
   const bolgeSec = (bolge: IlanBolgesi) => {
@@ -2364,10 +2392,10 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           */}
           <div className="pb-2 pt-3 sm:pb-0 sm:pt-0 lg:relative lg:overflow-hidden lg:rounded-2xl lg:border lg:border-blue-100 lg:bg-gradient-to-r lg:from-blue-50 lg:via-white lg:to-blue-50/80 lg:py-5 lg:px-6 lg:shadow-xs xl:pr-44">
             <h1 className="text-lg font-extrabold leading-6 tracking-tight text-slate-900 sm:text-xl sm:leading-7 lg:text-[28px] lg:leading-9">
-            Staj aramaya buradan başla.
+            {giris?.baslik ?? 'Staj aramaya buradan başla.'}
             </h1>
             <p className="mt-0.5 text-sm leading-5 text-gray-600 lg:mt-1.5">
-            Şirketlerin kariyer sayfalarından derlenen ve StajımVar’da yayımlanan staj ilanlarını keşfet.
+            {giris?.aciklama ?? 'Şirketlerin kariyer sayfalarından derlenen ve StajımVar’da yayımlanan staj ilanlarını keşfet.'}
             </p>
             <div aria-hidden className="pointer-events-none absolute right-8 top-1/2 hidden -translate-y-1/2 xl:block">
               <span className="absolute -left-6 top-6 h-12 w-10 -rotate-12 rounded-lg border border-blue-100 bg-white shadow-sm" />
@@ -2741,6 +2769,9 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               </div>
             ))}
           </div>
+          {sayiKapsami && (
+            <p className="-mt-2 px-1 text-center text-xs font-medium text-gray-500">{sayiKapsami}</p>
+          )}
 
           {/*
             Sağ sütunun üstü: sitenin ne yaptığını anlatan kutu.
@@ -2750,7 +2781,9 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
           */}
           {typeof bugunDogrulanan === 'number' && bugunDogrulanan > 0 && (
             <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900">
-              Bugün {bugunDogrulanan} ilan kaynağından yeniden kontrol edildi.
+              {/* Bu sayı ülke ayırmıyor; Türkiye kapısındaki sayaçla karışmasın diye kapsam yazılıyor. */}
+              Bugün {bugunDogrulanan} ilan kaynağından yeniden kontrol edildi
+              {seciliBolge === 'tumu' ? '.' : ' (tüm ülkeler).'}
             </p>
           )}
           <aside className="bg-white rounded-2xl p-5 border border-gray-200 space-y-4 shadow-xs">

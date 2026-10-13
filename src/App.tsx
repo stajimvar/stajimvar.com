@@ -50,6 +50,7 @@ import { useGlobalListingPreferences } from './components/useGlobalListingPrefer
 import { Logo } from './components/Logo';
 import { LEGAL_ROUTES } from './lib/yasal-rotalar';
 import { niyetYaz, niyetOku, niyetSil } from './lib/basvuru-niyeti.mjs';
+import { STAJ_ILANLARI_METNI } from './lib/staj-ilanlari-metni.mjs';
 import { basvuruKarari, basvuruyaAcikMi } from './lib/basvuru-devam.mjs';
 import { istanbulGunBaslangici } from './lib/kontrol-nabzi.mjs';
 import { OgrenciProfiliOlustur } from './components/OgrenciProfiliOlustur';
@@ -121,7 +122,6 @@ import { CheckCircle2 } from 'lucide-react';
 import { SAYFA_GENISLIGI } from './lib/duzen';
 import { cikisiDinle, sayfaBildir } from './lib/izleme.mjs';
 import { PAYLASIM_SURUMU } from './lib/basvuru-durumu.mjs';
-import { konumEtiketi } from './lib/sehir';
 
 /*
   GECİKMELİ YÜKLEME
@@ -201,8 +201,8 @@ const ProfilTamamla = React.lazy(() =>
   sayfayı hiç açmayan ziyaretçinin de indirdiği 190 KB. Bölüm ve rehber
   sayfaları da aynı sebeple gecikmeli.
 */
-const StajIlanlariSayfasi = React.lazy(() =>
-  import('./components/StajIlanlariSayfasi').then((m) => ({ default: m.StajIlanlariSayfasi }))
+const StajIlanlariIcerik = React.lazy(() =>
+  import('./components/StajIlanlariIcerik').then((m) => ({ default: m.StajIlanlariIcerik }))
 );
 /* Açık ilanların sayfalı tam listesi (/staj-ilanlari/sayfa/<n>) — bkz. lib/seo/ilan-arsivi.mjs. */
 const StajIlanlariArsivi = React.lazy(() =>
@@ -1981,6 +1981,15 @@ export default function App() {
   const safeTab = !isLoggedIn && istenenTab !== 'internships' ? 'internships' : istenenTab;
 
   const temizYol = path.replace(/\/+$/, '') || '/';
+  /*
+    İLAN LİSTESİ İKİ ADRESTE (14 Ekim 2026): `/` ve `/staj-ilanlari` aynı
+    ana kabuğu ve aynı listeyi çiziyor. `/staj-ilanlari`da sekme hep
+    "ilanlar": bu adresin konusu ilan listesi, başvurular ya da rozetler
+    değil (öteki sekmelere basınca zaten `/`'ya dönülüyor).
+  */
+  const stajIlanlariAdresi = temizYol === '/staj-ilanlari';
+  const ilanListesiAdresi = temizYol === '/' || stajIlanlariAdresi;
+  const icerikSekmesi = stajIlanlariAdresi ? 'internships' : safeTab;
 
   /*
     ESKİ ŞİRKET PORTALI ARTIK ÇİZİLMİYOR
@@ -2351,7 +2360,8 @@ export default function App() {
       activeTab={safeTab}
       setActiveTab={(sekme) => {
         // Alt sayfadayken sekmeye basılırsa önce ana sayfaya dönülüyor.
-        if (temizYol !== '/') navigate('/');
+        // /staj-ilanlari zaten ilan listesi: "İlanlar" sekmesi orada kalıyor.
+        if (temizYol !== '/' && !(stajIlanlariAdresi && sekme === 'internships')) navigate('/');
         handleTabChange(sekme);
       }}
       activeSubTab={activeSubTab}
@@ -2420,7 +2430,7 @@ export default function App() {
         */
         if (/^\/rehber(\/|$)/.test(temizYol)) return;
         // Arama ilan listesinde işliyor; başka sayfadayken oraya götürüyor.
-        if (q && temizYol !== '/') navigate('/');
+        if (q && !ilanListesiAdresi) navigate('/');
       }}
       /*
         Sosyal sayfalarda (/cv, /profil, /topluluklar, /baglantilar) üst
@@ -3651,53 +3661,17 @@ export default function App() {
     );
   }
 
-  if (temizYol === '/staj-ilanlari') {
-    const sayfa = globalListings.page;
-    /*
-      METİN VE SAYILAR SEÇİLİ KAPIYA GÖRE (17 Eylül 2026)
+  /*
+    /staj-ilanlari ARTIK ANA LİSTE KABUĞUNDA (14 Ekim 2026)
 
-      Türkiye kataloğunda sunucu sayıları doğrudan Türkiye'yi anlatıyor.
-      Yurtdışı `country=all` kataloğundan sınıflandırmayla ayrılıyor: toplam
-      ülke dağılımındaki TR dışı ülkelerin toplamı, liste de yalnız
-      yurtdışı sınıfındaki ilanlar; şirket/şehir sayısı o kapsam için
-      sunucuda yok, yazılmıyor.
-    */
-    const adresParam = new URLSearchParams(window.location.search);
-    const kapi: 'turkiye' | 'yurtdisi' | 'tumu' =
-      globalListings.country === 'TR'
-        ? 'turkiye'
-        : adresParam.get('bolge') === 'yurtdisi' || (/^[A-Z]{2}$/.test(globalListings.country) && globalListings.country !== 'TR')
-          ? 'yurtdisi'
-          : 'tumu';
-    const kapidakiIlanlar = (sayfa?.listings ?? []).filter(
-      (ilan) => kapi !== 'yurtdisi' || ilanCografyasi(ilan) === COGRAFYA.YURTDISI,
-    );
-    const yurtdisiToplami = (sayfa?.facets.countries ?? [])
-      .filter((u) => u.code !== 'TR')
-      .reduce((n, u) => n + u.count, 0);
-    return icerikSayfasi(
-      <StajIlanlariSayfasi
-        onBack={goHome}
-        onNavigate={navigate}
-        veri={{
-          gorunum: kapi,
-          toplam: kapi === 'yurtdisi' && globalListings.country === 'all' ? yurtdisiToplami : sayfa?.total,
-          sirketToplam: kapi === 'yurtdisi' && globalListings.country === 'all' ? undefined : sayfa?.companyTotal,
-          sehirToplam: kapi === 'yurtdisi' && globalListings.country === 'all' ? undefined : sayfa?.cityTotal,
-          dogrulananToplam: kapi === 'yurtdisi' && globalListings.country === 'all' ? undefined : sayfa?.verifiedTotal,
-          sonKontrol: sayfa?.lastVerifiedAt ?? null,
-          ilanlar: kapidakiIlanlar.slice(0, 12).map((ilan) => ({
-            yol: `/ilan/${listingSlug(ilan)}`,
-            baslik: ilan.title,
-            sirket: ilan.companyName,
-            /* Ön render ile aynı yazım ("Istanbul" → "İstanbul"). */
-            sehir: ilan.city ? konumEtiketi(ilan.city) : null,
-            calismaSekli: ilan.workType || null,
-          })),
-        }}
-      />
-    );
-  }
+    Bu adres burada erken dönüp yalnız metinden oluşan bir sayfa
+    (StajIlanlariSayfasi) çiziyordu; üst çubuktaki "Staj İlanları" sekmesi
+    buraya götürdüğü için kullanıcı logolu kartları, süzgeçleri ve
+    kaydet/incele alanlarını hiç görmüyordu. Artık erken dönüş yok: adres
+    aşağıdaki ana kabuğa düşüyor ve `/` ile AYNI listeyi çiziyor; yalnız
+    h1/giriş cümlesi bu adresin konusunu söylüyor ve listenin altına SEO
+    bilgi bölümü (StajIlanlariIcerik) ekleniyor. Bkz. `stajIlanlariAdresi`.
+  */
 
   /* Bölüme göre staj rehberi. */
   if (temizYol === '/bolumler') {
@@ -4020,7 +3994,37 @@ export default function App() {
     Yapılabilecek en doğru şey, sayfanın kendisinin "burada bir şey yok"
     demesi ve dizine girmeyi reddetmesi.
   */
-  if (temizYol !== '/') {
+  /*
+    /staj-ilanlari METNİ VE SAYILARI SEÇİLİ KAPIYA GÖRE (17 Eylül 2026)
+
+    Türkiye kataloğunda sunucu sayıları doğrudan Türkiye'yi anlatıyor.
+    Yurtdışı `country=all` kataloğundan sınıflandırmayla ayrılıyor: toplam
+    ülke dağılımındaki TR dışı ülkelerin toplamı; şirket/şehir sayısı o
+    kapsam için sunucuda yok, yazılmıyor. Sayılar listenin KENDİ katalog
+    sayfasından — üstteki listeyle aynı kaynak, ikinci bir sayım yok.
+  */
+  const stajIlanlariGorunumu: 'turkiye' | 'yurtdisi' | 'tumu' =
+    globalListings.country === 'TR'
+      ? 'turkiye'
+      : new URLSearchParams(window.location.search).get('bolge') === 'yurtdisi' ||
+          (/^[A-Z]{2}$/.test(globalListings.country) && globalListings.country !== 'TR')
+        ? 'yurtdisi'
+        : 'tumu';
+  const stajIlanlariVerisi = (sayfa: NonNullable<typeof globalListings.page>) => {
+    const yurtdisiTumden = stajIlanlariGorunumu === 'yurtdisi' && globalListings.country === 'all';
+    return {
+      gorunum: stajIlanlariGorunumu,
+      toplam: yurtdisiTumden
+        ? sayfa.facets.countries.filter((u) => u.code !== 'TR').reduce((n, u) => n + u.count, 0)
+        : sayfa.total,
+      sirketToplam: yurtdisiTumden ? undefined : sayfa.companyTotal,
+      sehirToplam: yurtdisiTumden ? undefined : sayfa.cityTotal,
+      dogrulananToplam: yurtdisiTumden ? undefined : sayfa.verifiedTotal,
+      sonKontrol: sayfa.lastVerifiedAt ?? null,
+    };
+  };
+
+  if (!ilanListesiAdresi) {
     return <BulunamadiSayfasi yol={temizYol} ustCubuk={ustCubuk} onNavigate={navigate} />;
   }
 
@@ -4049,7 +4053,7 @@ export default function App() {
         Alt boşluğa dokunulmadı; oradaki pay mobil gezinme çubuğu için.
       */}
       <main className={anaAlanSinifi}>
-        {safeTab === 'company-portal' && !activeCompany ? (
+        {icerikSekmesi === 'company-portal' && !activeCompany ? (
           /*
             Şirket hesabı yokken portalı çizmek, uydurma bir şirketin panelini
             göstermek demekti. Gerçek kayıt akışı kurulana kadar durumu
@@ -4073,7 +4077,7 @@ export default function App() {
               İşveren sayfasına git
             </button>
           </div>
-        ) : safeTab === 'company-portal' ? (
+        ) : icerikSekmesi === 'company-portal' ? (
           <CompanyPortalView
             allListings={allListings}
             allStudents={[]}
@@ -4091,7 +4095,7 @@ export default function App() {
           />
         ) : (
           <>
-            {safeTab === 'internships' && globalListings.phase === 'loading' && (
+            {icerikSekmesi === 'internships' && globalListings.phase === 'loading' && (
               <div className="w-full space-y-4 py-10" role="status" aria-live="polite">
                 <div className="h-40 rounded-3xl bg-gray-100 animate-pulse"/>
                 <div className="h-28 rounded-2xl bg-gray-100 animate-pulse"/>
@@ -4102,7 +4106,7 @@ export default function App() {
               </div>
             )}
 
-            {safeTab === 'internships' && globalListings.phase === 'error' && (
+            {icerikSekmesi === 'internships' && globalListings.phase === 'error' && (
               <div className="w-full my-10 rounded-2xl border border-red-200 bg-red-50 p-6 text-center space-y-3">
                 <p className="font-bold text-red-800">
                   İlanlar yüklenemedi.
@@ -4120,7 +4124,7 @@ export default function App() {
               </div>
             )}
 
-            {safeTab === 'internships' && globalListings.phase === 'ready' && globalListings.page && (
+            {icerikSekmesi === 'internships' && globalListings.phase === 'ready' && globalListings.page && (
               <>
               {/*
                 FIRSAT ŞERİDİ İLANLARIN ALTINDA
@@ -4170,16 +4174,28 @@ export default function App() {
                 catalogLastVerifiedAt={globalListings.page.lastVerifiedAt}
                 hasMoreCountriesPage={globalListings.page.hasMore}
                 onLoadMoreCountriesPage={globalListings.loadMore}
+                giris={stajIlanlariAdresi ? { baslik: STAJ_ILANLARI_METNI[stajIlanlariGorunumu].h1, aciklama: STAJ_ILANLARI_METNI[stajIlanlariGorunumu].aciklama } : undefined}
               />
-              <OpportunitiesHomeSection
-                onNavigate={navigate}
-                searchQuery={aramaTerimi}
-                ogrenci={isLoggedIn ? activeStudent : null}
-              />
+              {/*
+                /staj-ilanlari: fırsat şeridinin yerinde SEO bilgi bölümü
+                (aynı bileşen ön render'da da çiziliyor). Ana sayfada şerit
+                kaldı; iki adres aynı içeriği taşımıyor.
+              */}
+              {stajIlanlariAdresi ? (
+                <Suspense fallback={null}>
+                  <StajIlanlariIcerik {...stajIlanlariVerisi(globalListings.page)} onNavigate={navigate} />
+                </Suspense>
+              ) : (
+                <OpportunitiesHomeSection
+                  onNavigate={navigate}
+                  searchQuery={aramaTerimi}
+                  ogrenci={isLoggedIn ? activeStudent : null}
+                />
+              )}
               </>
             )}
 
-            {safeTab === 'badges' && activeStudent && (
+            {icerikSekmesi === 'badges' && activeStudent && (
               <SkillQuizzesView
                 quizzes={quizzes}
                 student={activeStudent}
@@ -4189,7 +4205,7 @@ export default function App() {
               />
             )}
 
-            {safeTab === 'profile' && ogrenciProfilEkrani()}
+            {icerikSekmesi === 'profile' && ogrenciProfilEkrani()}
 
             {/*
               BAŞVURULARIM ARTIK KENDİ SEKMESİ
@@ -4200,7 +4216,7 @@ export default function App() {
               portfolyo aldı; çeviri bırakılsaydı hesap menüsündeki
               "Başvurularım" satırı hiçbir yere götürmezdi.
             */}
-            {safeTab === 'applications' && basvuruTakibi}
+            {icerikSekmesi === 'applications' && basvuruTakibi}
           </>
         )}
       </main>
