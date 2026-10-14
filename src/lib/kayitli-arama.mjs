@@ -35,6 +35,7 @@
 */
 import { normalizeCountryCode } from './global-preferences.mjs';
 import { COGRAFYA, ilanCografyasi } from './ilan-cografyasi.mjs';
+import { ileUyuyorMu } from './ilan-ili.mjs';
 
 /*
   AYNI BÖLÜM SÖZLÜĞÜ — LİSTE, BÖLÜM SAYFASI VE SIRALAMA
@@ -230,6 +231,8 @@ export function ilaniNormalize(kayit) {
     city: metin(sec('city', 'city')),
     workType: metin(sec('work_type', 'workType')),
     countryCode: metin(sec('country_code', 'countryCode')) || null,
+    /* Doğrulanmış il (varsa); şehir süzgeci lib/ilan-ili ile okuyor. */
+    il: metin(sec('il', 'il')) || null,
     /* Üç değerli: true / false / null. `?? null` şart — `|| null`
        false'u da null yapardı ve "açık ücretsiz" kaybolurdu. */
     isPaid: (() => {
@@ -294,8 +297,15 @@ export function aramaEslesiyorMu(ilan, filtreler) {
   /* Yurtdışı görünümü: tek kural (ilan-cografyasi); belirsiz konum girmiyor. */
   if (f.bolge === COGRAFYA.YURTDISI && ilanCografyasi(i) !== COGRAFYA.YURTDISI) return false;
 
+  /*
+    ŞEHİR — TEK KURAL (14 Ekim 2026): ilanın ili lib/ilan-ili'den.
+    Eskiden ham metin seçilen ille birebir karşılaştırılıyordu ve
+    "Turkey - Istanbul" yazan ilan "İstanbul" aramasında düşüyordu.
+    Eski eşleşme korunuyor (ileUyuyorMu): bir arama eskiden bulduğu ilanı
+    bulmaya devam ediyor; yalnız eksikler ekleniyor.
+  */
   if (f.city !== 'all') {
-    if (katla(i.city) !== katla(f.city)) return false;
+    if (!ileUyuyorMu(i, f.city)) return false;
   }
 
   if (f.workTypes.length > 0 && !f.workTypes.includes(i.workType)) return false;
