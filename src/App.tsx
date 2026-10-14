@@ -206,6 +206,9 @@ const StajIlanlariIcerik = React.lazy(() =>
   import('./components/StajIlanlariIcerik').then((m) => ({ default: m.StajIlanlariIcerik }))
 );
 /* Açık ilanların sayfalı tam listesi (/staj-ilanlari/sayfa/<n>) — bkz. lib/seo/ilan-arsivi.mjs. */
+const SehirIlanlari = React.lazy(() =>
+  import('./components/SehirIlanlari').then((m) => ({ default: m.SehirIlanlari }))
+);
 const StajIlanlariArsivi = React.lazy(() =>
   import('./components/StajIlanlariArsivi').then((m) => ({ default: m.StajIlanlariArsivi }))
 );
@@ -3655,6 +3658,13 @@ export default function App() {
     Ön render her sayfayı dosya olarak yazıyor; olmayan sayfa numarası ara
     katmanda 404 alıyor (dosya yok, uygulama önekinde değil).
   */
+  /* Şehir sayfası (yalnız İstanbul): lib/seo/sehir-ilanlari, kenarda da çiziliyor. */
+  const sehirEslesmesi = temizYol.match(/^\/staj-ilanlari\/(istanbul)(?:\/sayfa\/([1-9]\d{0,3}))?$/);
+  if (sehirEslesmesi) {
+    return icerikSayfasi(
+      <SehirIlanlari slug={sehirEslesmesi[1]} sayfa={Number(sehirEslesmesi[2] ?? 1)} onBack={goHome} onNavigate={navigate} />,
+    );
+  }
   const arsivEslesmesi = temizYol.match(/^\/staj-ilanlari\/sayfa\/([1-9]\d{0,3})$/);
   if (arsivEslesmesi) {
     return icerikSayfasi(

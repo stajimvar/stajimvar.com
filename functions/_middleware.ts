@@ -15,7 +15,9 @@ import {
   Pages paketleyicisi onu doğrudan derliyor.
 */
 import { ilanIsteginiCoz, ilanHaritasiUret } from '../src/lib/seo/kenar-ilan.mjs';
-import { konumEtiketi } from '../src/lib/sehir';
+import { calismaEtiketi, ilanKonumEtiketi, konumEtiketi } from '../src/lib/sehir';
+import { sehirIsteginiCoz } from '../src/lib/seo/kenar-sehir.mjs';
+import { sehirAdresiniCoz } from '../src/lib/seo/sehir-ilanlari.mjs';
 
 /**
  * Bilinmeyen adreslere gerçek 404, uygulama adreslerine kabuk döndürür.
@@ -626,6 +628,70 @@ export const onRequest: PagesFunction<Ortam> = async (baglam) => {
       return yeni;
     }
     return ilanCevabi;
+  }
+
+  /*
+    ŞEHİR SAYFASI — KENARDA CANLI VERİDEN (14 Ekim 2026)
+
+    /staj-ilanlari/istanbul(/sayfa/<n>). Karar tablosu
+    src/lib/seo/kenar-sehir.mjs: bilinmeyen şehir dokunulmadan geçiyor
+    (404), "/sayfa/1" 301, aralık dışı sayfa 404, veri okunamazsa derleme
+    dosyası ya da 503. Kapanan ilan bir sonraki çizimde listeden çıkıyor;
+    kenar önbelleği (`kenardanSun`) yalnız 200 HTML'i 60 sn tutuyor.
+  */
+  if (okuma && sehirAdresiniCoz(istekYolu)) {
+    const uret = async (): Promise<Response> => {
+      const sonuc = await sehirIsteginiCoz({
+        yol: istekYolu,
+        ayar: await supabaseAyari(env, request.url),
+        getir: fetch,
+        kabukGetir: () => kabukGetir(env, request.url),
+        etiketler: {
+          konum: (i: { il?: string | null; ilce?: string | null; city?: string | null }) =>
+            i.il || i.city ? ilanKonumEtiketi(i) : '',
+          calisma: calismaEtiketi,
+        },
+      });
+      /* Yalnız bilinen şehir adresleri buraya giriyor; 'gec' olmuyor. */
+      if (sonuc.tur === 'gec') return next();
+      if (sonuc.tur === 200) {
+        return new Response(sonuc.html, {
+          status: 200,
+          headers: { 'content-type': 'text/html; charset=utf-8', 'x-sehir-kaynagi': 'kenar' },
+        });
+      }
+      if (sonuc.tur === 301) {
+        return new Response(null, {
+          status: 301,
+          headers: { location: new URL(sonuc.konum, request.url).toString(), 'cache-control': 'public, max-age=3600' },
+        });
+      }
+      if (sonuc.tur === 404) return bulunamadi(env, request.url);
+      const statik = await next();
+      if (statik.status !== 404) {
+        const yeni = new Response(statik.body, statik);
+        /* Yedek kenarda tutulmuyor (kenardanSun 'statik-yedek'i atlıyor). */
+        yeni.headers.set('x-ilan-kaynagi', 'statik-yedek');
+        return yeni;
+      }
+      return new Response('Liste şu anda yüklenemiyor. Birkaç dakika sonra yeniden dene.', {
+        status: 503,
+        headers: {
+          'content-type': 'text/plain; charset=utf-8',
+          'retry-after': '120',
+          'cache-control': 'no-store',
+          'x-robots-tag': 'noindex',
+        },
+      });
+    };
+    const sehirCevabi = await kenardanSun(request, uret, (is) => baglam.waitUntil(is));
+    /* Yalnız 200 kenarda tutuluyor; 404 ve 503 paylaşılan önbelleğe girmesin. */
+    if (sehirCevabi.status === 404 || sehirCevabi.status === 503) {
+      const yeni = new Response(sehirCevabi.body, sehirCevabi);
+      yeni.headers.set('cache-control', 'no-store');
+      return yeni;
+    }
+    return sehirCevabi;
   }
 
   /*
