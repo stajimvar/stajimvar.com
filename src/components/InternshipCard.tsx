@@ -17,7 +17,7 @@ import { InternshipListing, MatchBreakdown } from '../types';
 import { ListingLogo } from './ListingLogo';
 import { listingSlug } from '../lib/slug';
 import { SIRKET_KENAR_GUCLU, SIRKET_ROZET, SIRKET_VURGU_KOYU } from '../sirket/renk';
-import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
+import { calismaEtiketi, ilanKonumEtiketi } from '../lib/sehir';
 import { IlanDurumEtiketleri } from './IlanDurumEtiketleri';
 import { UlkeRozeti } from './UlkeRozeti';
 import { COGRAFYA, ilanCografyasi } from '../lib/ilan-cografyasi.mjs';
@@ -233,7 +233,8 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
     onViewDetails();
   };
   const tipEtiketi = listing.ilanTipi ? ILAN_TIPI_ETIKETI[listing.ilanTipi] : null;
-  const konum = [konumEtiketi(listing.city), calismaEtiketi(listing.workType)].filter(Boolean).join(' · ');
+  /* Konum önce normalize il/ilçeden; ülke adı şehir gibi basılmıyor (lib/sehir). */
+  const konum = [ilanKonumEtiketi(listing), calismaEtiketi(listing.workType)].filter(Boolean).join(' · ');
   const yurtdisi = ilanCografyasi(listing) === COGRAFYA.YURTDISI;
   const turkiyeEtiketi = cografyaEtiketi && ilanCografyasi(listing) === COGRAFYA.TURKIYE;
   const kayitMetni = girisGerekli

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Bookmark, Building2, ExternalLink, ShieldCheck } from 'lucide-react';
 import { SayfaKabugu } from './SayfaKabugu';
+import { isverenLogoAdresi } from '../lib/isveren-logolari.mjs';
 import { STAJ_PROGRAMLARI, type StajProgrami } from '../data/stajProgramlari';
 import { BOLUMLER, bolumBul } from '../data/bolumler';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
@@ -103,9 +104,11 @@ export const Kart: React.FC<{
           gizleniyor — harfli yer tutucu koymak "logo var" izlenimi
           verirdi.
         */}
+        {/* Dosyası olmayan işverende kutu hiç çizilmiyor (lib/isveren-logolari). */}
+        {isverenLogoAdresi(program.slug) && (
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white p-1">
           <img
-            src={`/isveren-logolari/${program.slug}.png`}
+            src={isverenLogoAdresi(program.slug)!}
             alt=""
             aria-hidden="true"
             width={36}
@@ -119,6 +122,7 @@ export const Kart: React.FC<{
             className="h-9 w-9 object-contain"
           />
         </span>
+        )}
 
         <div className="min-w-0 flex-1">
           <p className="font-bold leading-snug text-gray-900">{program.isveren}</p>

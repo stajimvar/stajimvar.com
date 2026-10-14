@@ -48,6 +48,7 @@ import { kacir, duzMetin, ozetle, ilanYolu as ortakIlanYolu } from '../src/lib/s
 import { STAJ_ILANLARI_METNI } from '../src/lib/staj-ilanlari-metni.mjs';
 import { guvenliLogoAdresi } from '../src/lib/bildirim-basvurusu.mjs';
 import { basHarfler, paletSirasi } from '../src/lib/logo-yedegi.mjs';
+import { seritFirsatlari as seritFirsatlariSec, ANASAYFA_BOLUMLERI } from '../src/lib/anasayfa-baglantilari.mjs';
 import { ilanSayfasi, ILAN_SECIMI, istanbulBugun, benzerIlanlariSec } from '../src/lib/seo/ilan-sayfasi.mjs';
 import { sayfaHtml } from '../src/lib/seo/sayfa-html.mjs';
 import { ARSIV_SAYFA_BOYU, acikIlanMi, arsivSirasi, arsivYolu, arsivSayfaBasligi, arsivSayfaNumaralari } from '../src/lib/seo/ilan-arsivi.mjs';
@@ -1532,7 +1533,7 @@ async function main() {
     metin yanlış yazımdaydı. Aynı modül burada da derlenip kullanılıyor;
     ikinci bir şehir sözlüğü tutmak ikisinin ayrışmasına davetiye olurdu.
   */
-  const { konumEtiketi, calismaEtiketi } = await icerikDerle(path.join(kok, 'src', 'lib', 'sehir.ts'), 'sehir');
+  const { konumEtiketi, calismaEtiketi, ilanKonumEtiketi } = await icerikDerle(path.join(kok, 'src', 'lib', 'sehir.ts'), 'sehir');
 
   /*
     GÖRÜNÜR İLAN KARTLARI — `/` VE `/staj-ilanlari` ORTAK (14 Ekim 2026)
@@ -1587,7 +1588,8 @@ async function main() {
         liste
           .map((i, sira) => {
             const sirket = (i.companies || {}).name || '';
-            const yer = [i.city ? konumEtiketi(i.city) : '', i.work_type ? calismaEtiketi(i.work_type) : '']
+            /* Konum önce normalize il/ilçeden; ülke adı şehir gibi basılmıyor (14 Ekim 2026). */
+            const yer = [i.il || i.city ? ilanKonumEtiketi(i) : '', i.work_type ? calismaEtiketi(i.work_type) : '']
               .filter(Boolean)
               .join(' · ');
             const yol = ortakIlanYolu(i);
@@ -2375,17 +2377,14 @@ async function main() {
     Aynı seçim: yayında, süresi geçmemiş, son başvuru tarihine göre (tarihsiz
     olanlar sonda), ilk 8. Giriş yapmamış ziyaretçinin gördüğü şerit bu.
     /staj-ilanlari bu şeridi göstermiyor; iki sayfayı ayıran içeriklerden biri.
+
+    14 Ekim 2026: YALNIZ DİZİNE AÇIK FIRSATLAR. 8 bağlantının 8'i de noindex
+    (ince) fırsat sayfasına gidiyordu. Kural uygulamayla ortak
+    (src/lib/anasayfa-baglantilari.mjs); yeterli fırsat yoksa şerit kısalıyor,
+    noindex sayfayla doldurulmuyor.
   */
   const bugunFirsat = istanbulBugun();
-  const firsatSirasi = (f) => String(f.application_deadline || '9999-12-31').slice(0, 10);
-  const seritFirsatlari = firsatlar
-    .filter((f) => f.status === 'published' && f.slug)
-    .filter((f) => {
-      const gun = String(f.application_deadline || '').slice(0, 10);
-      return !/^\d{4}-\d{2}-\d{2}$/.test(gun) || gun >= bugunFirsat;
-    })
-    .sort((a, b) => firsatSirasi(a).localeCompare(firsatSirasi(b)))
-    .slice(0, 8);
+  const seritFirsatlari = seritFirsatlariSec(firsatlar, bugunFirsat);
   const firsatSeridi = seritFirsatlari.length
     ? '<section class="sv-firsatlar" aria-labelledby="firsat-seridi">' +
       '<h2 id="firsat-seridi">Güncel öğrenci fırsatları</h2>' +
@@ -2402,6 +2401,18 @@ async function main() {
       '<p><a href="/firsatlar">Tüm fırsatlar →</a></p>' +
       '</section>'
     : '';
+
+  /*
+    BÖLÜM BAĞLANTILARI (14 Ekim 2026): ana sayfa yalnız /bolumler'e
+    bağlanıyordu. Var olan bölüm sayfalarına düz bağlantılar; liste
+    uygulamayla ortak (AnaSayfaBolumleri).
+  */
+  const bolumBaglantilari =
+    '<nav class="sv-bolum-baglantilari" aria-labelledby="bolum-baglantilari">' +
+    '<h2 id="bolum-baglantilari">Bölüme göre staj</h2><ul>' +
+    ANASAYFA_BOLUMLERI.map(([slug, ad]) => `<li><a href="/bolum/${slug}">${kacir(ad)}</a></li>`).join('') +
+    '<li><a href="/bolumler">Tüm bölümler →</a></li>' +
+    '</ul></nav>';
 
   const anaSayfaNav =
     '<nav class="sv-nav"><ul>' +
@@ -2441,6 +2452,7 @@ async function main() {
       ilanKartlari +
       `<p class="sv-tum-ilanlar"><a href="/staj-ilanlari">Tüm staj ilanları →</a></p>` +
       firsatSeridi +
+      bolumBaglantilari +
       anaSayfaNav +
       '</main>' +
       '<div class="sv-kutu sv-yan"></div>' +

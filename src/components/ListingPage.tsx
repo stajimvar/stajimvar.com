@@ -1,4 +1,4 @@
-import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
+import { calismaEtiketi, ilanKonumEtiketi, konumEtiketi } from '../lib/sehir';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -588,7 +588,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                 <Bilgi
                   ikon={<MapPin className="w-5 h-5" />}
                   etiket="Konum"
-                  deger={`${konumEtiketi(listing.city)} (${calismaEtiketi(listing.workType)})`}
+                  deger={`${ilanKonumEtiketi(listing)} (${calismaEtiketi(listing.workType)})`}
                   /*
                     Kartla aynı rozet, aynı kural: ülke yalnız yurt dışı
                     ilanlarda çiziliyor (lib/ulke-rozeti.mjs). Şehir adı tek

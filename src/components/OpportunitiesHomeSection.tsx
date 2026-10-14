@@ -6,6 +6,8 @@ import { isExpiredOpportunity, opportunityTypeLabel } from '../lib/opportunity-d
 import { deadlineLabel } from '../lib/firsat-degerlendirme.mjs';
 import type { StudentProfile } from '../types';
 import { kisaTarihMetni } from '../lib/tarih.mjs';
+import { seritFirsatlari, SERIT_ADEDI } from '../lib/anasayfa-baglantilari.mjs';
+import { istanbulBugun } from '../lib/seo/ilan-sayfasi.mjs';
 
 /**
  * Ana sayfadaki fırsat şeridi.
@@ -100,18 +102,35 @@ export const OpportunitiesHomeSection: React.FC<{
       return { items: eslesen, kisisel: false };
     }
 
+    /*
+      DİZİNE AÇIK FIRSATLAR (14 Ekim 2026)
+
+      Şerit ana sayfanın en görünür bağlantıları; 8'in 8'i de noindex
+      (açıklaması ve koşulları boş) fırsatlara gidiyordu. Ön render ile
+      aynı kural ve aynı sıra (lib/anasayfa-baglantilari): ince fırsat
+      şeride girmiyor, yerine başka bir şey doldurulmuyor. Arama sonucu bu
+      süzgeçten geçmiyor — kullanıcının aradığı şey gösteriliyor.
+    */
+    const dizinde = seritFirsatlari(all, istanbulBugun(), all.length);
+
     if (ogrenci) {
-      const uygun = all.filter((row) => !seviyeUymuyor(row, ogrenci));
+      const uygun = dizinde.filter((row) => !seviyeUymuyor(row, ogrenci));
       /* Süzme gerçekten bir şey elediyse "sana uygun" demeye hakkımız var. */
-      if (uygun.length > 0 && uygun.length < all.length) {
-        return { items: uygun.slice(0, 8), kisisel: true };
+      if (uygun.length > 0 && uygun.length < dizinde.length) {
+        return { items: uygun.slice(0, SERIT_ADEDI), kisisel: true };
       }
     }
 
-    return { items: all.slice(0, 8), kisisel: false };
+    return { items: dizinde.slice(0, SERIT_ADEDI), kisisel: false };
   }, [all, terim, ogrenci]);
 
   if (!items.length) return null;
+
+  const git = (yol: string) => (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    e.preventDefault();
+    onNavigate(yol);
+  };
 
   const baslik = terim
     ? 'Aramanla eşleşen fırsatlar'
@@ -125,12 +144,14 @@ export const OpportunitiesHomeSection: React.FC<{
         <h2 id="firsat-seridi" className="text-base font-extrabold text-gray-950">
           {baslik}
         </h2>
-        <button
-          onClick={() => onNavigate('/firsatlar')}
+        {/* Gerçek bağlantı: JavaScript sonrası DOM'da da taranabilir. */}
+        <a
+          href="/firsatlar"
+          onClick={git('/firsatlar')}
           className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 hover:underline cursor-pointer shrink-0"
         >
           Tümünü gör <ArrowRight className="w-3.5 h-3.5" />
-        </button>
+        </a>
       </div>
 
       {/*
@@ -145,10 +166,11 @@ export const OpportunitiesHomeSection: React.FC<{
         {items.map((item) => {
           const tarih = sonBasvuru(item);
           return (
-            <button
+            <a
               key={item.id}
-              onClick={() => onNavigate(`/firsatlar/${item.slug}`)}
-              className="snap-start shrink-0 w-[78%] sm:w-64 text-left rounded-2xl border border-gray-200 bg-white p-3 hover:border-blue-300 hover:bg-blue-50/30 transition-colors cursor-pointer"
+              href={`/firsatlar/${item.slug}`}
+              onClick={git(`/firsatlar/${item.slug}`)}
+              className="block snap-start shrink-0 w-[78%] sm:w-64 text-left rounded-2xl border border-gray-200 bg-white p-3 hover:border-blue-300 hover:bg-blue-50/30 transition-colors cursor-pointer"
             >
               <div className="flex items-center justify-between gap-2 mb-2">
                 <span className="text-[10px] font-black uppercase tracking-wide text-blue-700 bg-blue-50 rounded-full px-2 py-0.5">
@@ -174,7 +196,7 @@ export const OpportunitiesHomeSection: React.FC<{
                   </span>
                 </span>
               </div>
-            </button>
+            </a>
           );
         })}
       </div>

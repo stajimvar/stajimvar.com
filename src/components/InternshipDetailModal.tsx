@@ -1,4 +1,4 @@
-import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
+import { calismaEtiketi, ilanKonumEtiketi } from '../lib/sehir';
 import React from 'react';
 import {
   X,
@@ -197,7 +197,7 @@ export const InternshipDetailModal: React.FC<InternshipDetailModalProps> = ({
             <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
               <p className="text-gray-500 font-medium">Çalışma Şekli</p>
               <p className="font-bold text-gray-900 mt-0.5">
-                {konumEtiketi(listing.city)} ({calismaEtiketi(listing.workType)})
+                {ilanKonumEtiketi(listing)} ({calismaEtiketi(listing.workType)})
               </p>
             </div>
             <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
