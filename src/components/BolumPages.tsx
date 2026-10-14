@@ -2,8 +2,7 @@ import React, { useEffect } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { SayfaKabugu } from './SayfaKabugu';
 import { BolumIcerik } from './BolumIcerik';
-import { RehberdeIlanlar } from './RehberdeIlanlar';
-import { bolumunAlani } from '../lib/bolum-eslestirme.mjs';
+import { BolumIlanlari } from './BolumIlanlari';
 import { BolumEylemleri } from './BolumEylemleri';
 import type { StudentProfile } from '../types';
 import { BolumRozeti } from './BolumGorseli';
@@ -282,10 +281,13 @@ export const BolumPage: React.FC<
           fizyoterapi ve tıbbi laboratuvar stajları ilanla değil okul
           yerleştirmesiyle yürüyor, bu sayfalar da bunu söylüyor. Oralara
           ilan bloğu koymak olmayan bir yolu varmış gibi göstermek olurdu.
+
+          14 Ekim 2026: seçim ön render'la ORTAK (lib/bolum-ilanlari.mjs) —
+          ilanın veritabanındaki birincil alanı, süresi geçmemiş, tekrarsız;
+          eşleşen yoksa dolgu ilan yok. Eskiden başlık tahminiyle eşleşenleri
+          öne alıp kalanı İLGİSİZ ilanlarla dolduruyordu ve ilk HTML'de yoktu.
         */}
-        {bolumunAlani(bolum.slug) && (
-          <RehberdeIlanlar alan={bolumunAlani(bolum.slug)} onNavigate={onNavigate} />
-        )}
+        <BolumIlanlari bolumSlug={bolum.slug} onNavigate={onNavigate} />
       </article>
     </Kabuk>
   );

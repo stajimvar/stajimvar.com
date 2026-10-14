@@ -52,6 +52,7 @@ import { ilanSayfasi, ILAN_SECIMI, istanbulBugun, benzerIlanlariSec } from '../s
 import { sayfaHtml } from '../src/lib/seo/sayfa-html.mjs';
 import { ARSIV_SAYFA_BOYU, acikIlanMi, arsivSirasi, arsivYolu, arsivSayfaBasligi, arsivSayfaNumaralari } from '../src/lib/seo/ilan-arsivi.mjs';
 import { zorunluVeriGetir, VeriKaynagiHatasi, azalmaKapisi } from '../src/lib/seo/veri-kaynagi.mjs';
+import { bolumIlanlari } from '../src/lib/bolum-ilanlari.mjs';
 
 const kok = path.dirname(path.dirname(url.fileURLToPath(import.meta.url)));
 /* Testler gerçek dist'e dokunmadan koşabilsin diye çıktı kökü ortamdan değiştirilebiliyor. */
@@ -601,7 +602,28 @@ async function ilanlariGetir() {
     kaynak: 'yayındaki ilanlar',
     taban: envOku('SUPABASE_URL') || envOku('VITE_SUPABASE_URL'),
     anahtar: envOku('VITE_SUPABASE_ANON_KEY'),
-    yol: `/rest/v1/listings?status=eq.published&order=posted_at.desc.nullslast,id.asc&select=${encodeURIComponent(ILAN_SECIMI)}`,
+    /*
+      `alan_idleri` yalnız burada ekleniyor (kenar çizimi seçimi değişmiyor):
+      bölüm sayfalarındaki ilan bloğu ilanın alanına bakıyor
+      (src/lib/bolum-ilanlari.mjs). Kolon ziyaretçiye açık (göç 20261109010000).
+    */
+    yol: `/rest/v1/listings?status=eq.published&order=posted_at.desc.nullslast,id.asc&select=${encodeURIComponent(`${ILAN_SECIMI},alan_idleri`)}`,
+  });
+}
+
+/**
+ * Etkin alanlar (`sectors`) — bölüm sayfalarındaki ilan bloğu için.
+ *
+ * Ziyaretçi rolü etkin satırların kimlik, slug ve adını okuyabiliyor (göç
+ * 20261109010000). ZORUNLU OKUMA: okunamazsa bölümlerdeki blok "ilan yok"
+ * demesin diye derleme duruyor.
+ */
+async function sektorleriGetir() {
+  return zorunluVeriGetir({
+    kaynak: 'etkin alanlar',
+    taban: envOku('SUPABASE_URL') || envOku('VITE_SUPABASE_URL'),
+    anahtar: envOku('VITE_SUPABASE_ANON_KEY'),
+    yol: '/rest/v1/sectors?aktif=eq.true&select=id,slug,ad&order=sira.asc',
   });
 }
 
@@ -995,6 +1017,7 @@ async function main() {
   /* ---- bölümler ---- */
   const bolumHaritasi = await bolumleriCiz();
   const bolumler = Object.values(bolumHaritasi);
+  const bolumYazimlari = [];
   for (const b of bolumler) {
     const sorular = b.sss || [];
 
@@ -1025,15 +1048,13 @@ async function main() {
       });
     }
 
-    sayfaYaz(`/bolum/${b.slug}`, {
-      lastmod: b.guncelleme ? String(b.guncelleme).slice(0, 10) : null,
-      baslik: `${b.ad} stajı | StajımVar`,
-      aciklama: ozetle(b.aciklama || b.ozet),
-      // Gövde = başlık + BolumIcerik'in çizilmiş hâli (kullanıcının gördüğünün aynısı).
-      govde: `<main><h1>${kacir(b.ad)} stajı</h1>${b.cizim}</main>`,
-      jsonLd: { '@context': 'https://schema.org', '@graph': bolumGrafik },
-    });
-    sayac++;
+    /*
+      YAZIM İLANLARDAN SONRA: gövdenin sonundaki "açık staj ilanları"
+      bloğu ilan verisine ve ortak kart çizimine (`gorunurIlanKartlari`)
+      ihtiyaç duyuyor; ikisi de ilanlar okunduktan sonra hazır. Sayfa
+      orada, aşağıda yazılıyor (bkz. `bolumIlanBlogu`).
+    */
+    bolumYazimlari.push({ b, bolumGrafik });
   }
 
   /*
@@ -1611,6 +1632,61 @@ async function main() {
           .join('') +
         '</ul>'
       : '';
+
+  /* ------------------------------------- bölüm sayfaları: açık ilanlar ---- */
+  /*
+    BÖLÜM SAYFASINDA GÜNCEL STAJ İLANLARI (14 Ekim 2026)
+
+    Bölüm sayfası bölümü anlatıyordu ama ilk HTML'de tek bir ilana
+    bağlanmıyordu (42 sayfanın 42'sinde 0 ilan bağlantısı; uygulamadaki
+    blok yalnız JavaScript ile ve başlık tahminiyle geliyordu). Seçim
+    kuralı src/lib/bolum-ilanlari.mjs: uygulama da aynısını çağırıyor.
+    Kartlar /staj-ilanlari ve ana sayfadaki kartların aynısı. Yapısal
+    veri EKLENMİYOR: liste bir JobPosting değil, ilanların kendi
+    sayfasında zaten var.
+
+    Eşleşen ilan yoksa uydurma ya da dolgu ilan yok: tek cümle ve
+    /staj-ilanlari bağlantısı. Haritada olmayan bölüme (sağlık) blok
+    konmuyor.
+  */
+  const sektorler = await sektorleriGetir();
+  const bolumIlanBlogu = (b) => {
+    const sonuc = bolumIlanlari({ bolumSlug: b.slug, ilanlar, sektorler });
+    if (!sonuc.uygun) return { html: '', adet: 0 };
+    const baslik = sonuc.alan?.ad ? `${sonuc.alan.ad} alanında açık staj ilanları` : 'Açık staj ilanları';
+    const icerik = sonuc.ilanlar.length
+      ? gorunurIlanKartlari(sonuc.ilanlar) +
+        '<p class="sv-tum-ilanlar"><a href="/staj-ilanlari">Tüm staj ilanları →</a></p>'
+      : '<p class="sv-bolum-ilan-yok">Şu anda bu alanda açık staj ilanı yok. ' +
+        '<a href="/staj-ilanlari">Tüm staj ilanlarına göz at →</a></p>';
+    return {
+      html: `<section class="sv-bolum-ilanlari" aria-labelledby="bolum-ilanlari-baslik"><h2 id="bolum-ilanlari-baslik">${kacir(baslik)}</h2>${icerik}</section>`,
+      adet: sonuc.ilanlar.length,
+    };
+  };
+  const bolumIlanOzeti = {};
+  for (const { b, bolumGrafik } of bolumYazimlari) {
+    const blok = bolumIlanBlogu(b);
+    if (blok.html) bolumIlanOzeti[b.slug] = blok.adet;
+    sayfaYaz(`/bolum/${b.slug}`, {
+      lastmod: b.guncelleme ? String(b.guncelleme).slice(0, 10) : null,
+      baslik: `${b.ad} stajı | StajımVar`,
+      aciklama: ozetle(b.aciklama || b.ozet),
+      // Gövde = başlık + BolumIcerik'in çizilmiş hâli (kullanıcının gördüğünün aynısı) + açık ilanlar.
+      govde: `<main><h1>${kacir(b.ad)} stajı</h1>${b.cizim}${blok.html}</main>`,
+      jsonLd: { '@context': 'https://schema.org', '@graph': bolumGrafik },
+    });
+    sayac++;
+  }
+  {
+    const degerler = Object.values(bolumIlanOzeti);
+    console.log(
+      `  bölüm ilanları: ${degerler.length} bölümde blok, ${degerler.filter((n) => n > 0).length} bölümde ilan, ` +
+        `${degerler.reduce((a, n) => a + n, 0)} kart`,
+    );
+    fs.mkdirSync(path.join(dist, '_onrender'), { recursive: true });
+    fs.writeFileSync(path.join(dist, '_onrender', 'bolum-ilanlari.json'), JSON.stringify(bolumIlanOzeti, null, 2));
+  }
 
   /* ---------------------------------------------- /staj-ilanlari ---- */
   /*
