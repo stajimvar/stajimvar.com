@@ -230,6 +230,36 @@ function uygulamaninMi(yol: string): boolean {
   return VERI_ONEKLERI.some((onek) => yol.startsWith(onek) && yol.length > onek.length);
 }
 
+/*
+  PROFİL VE TOPLULUK ADRESLERİ ANA SAYFA GİBİ GÖRÜNMÜYOR (14 Ekim 2026)
+
+  Uygulama adresleri kabuk olarak ANA SAYFANIN dolu HTML'ini alıyor:
+  `/profil/<herhangi-bir-ad>` ve `/topluluklar/<herhangi-bir-slug>`
+  200 ile ana sayfanın başlığını, canonical'ını (`/`) ve ilan kartlarını
+  döndürüyordu. Sonsuz sayıda uydurma adres arama motoruna ana sayfanın
+  kopyası gibi görünüyordu.
+
+  Sunucu burada "var / gizli / geçersiz" ayrımını YAPAMAZ ve yapmamalı:
+  profil ve topluluk okumaları yalnız `authenticated` rolüne açık
+  (`sosyal_topluluklar`, profil RPC'leri), oturumsuz ziyaretçi — arama
+  motoru dahil — her adreste giriş kapısını görüyor. Ayrım oturum
+  açıldıktan sonra istemcide, satır politikasıyla yapılıyor: görülebilen
+  profil çiziliyor; gizli, engellenmiş ve olmayan aynı güvenli ekranı
+  alıyor.
+
+  Bu yüzden durum kodu 200 kalıyor ve HER AD AYNI CEVABI alıyor (var-yok
+  sızmıyor), ama gövde ana sayfa değil, içeriği boş uygulama kabuğu
+  (`/_onrender/kabuk`: canonical yok, ilan kartı yok) ve cevap
+  `noindex`. Uygulama aynı paketle açılıyor; oturum ve erişim kararları
+  değişmiyor.
+*/
+const GIRISLI_ONEKLER = ['/profil', '/topluluklar'];
+
+function girisliKisiAdresiMi(yol: string): boolean {
+  const temiz = yol.replace(/\/+$/, '') || '/';
+  return GIRISLI_ONEKLER.some((onek) => temiz === onek || temiz.startsWith(`${onek}/`));
+}
+
 interface Ortam {
   ASSETS: { fetch: (istek: Request) => Promise<Response> };
   SUPABASE_URL?: string;
@@ -686,6 +716,21 @@ export const onRequest: PagesFunction<Ortam> = async (baglam) => {
   }
 
   if (!uygulamaninMi(yol)) return cevap;
+
+  /* Profil ve topluluk: boş kabuk + noindex (gerekçe `girisliKisiAdresiMi` üstünde). */
+  if (girisliKisiAdresiMi(yol)) {
+    const bosKabuk = await kabukGetir(env, request.url);
+    const govde =
+      bosKabuk ?? (await (await env.ASSETS.fetch(new Request(new URL('/', request.url).toString()))).text());
+    return new Response(govde, {
+      status: 200,
+      headers: {
+        'content-type': 'text/html; charset=utf-8',
+        'cache-control': 'no-store',
+        'x-robots-tag': 'noindex',
+      },
+    });
+  }
 
   /*
     Veriye dayanmayan uygulama adresleri (/cv, /bana-uygun, /sifre-yenile…)
