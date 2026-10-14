@@ -39,7 +39,8 @@ import { fetchOpportunities, fetchSavedListingIds, toggleSavedListing } from '..
 import { SonucYok, type AktifSuzgec } from './SonucYok';
 import { SonrakiAdim } from './SonrakiAdim';
 import { BasvuruSablonu } from './BasvuruSablonu';
-import { ilBul } from '../lib/sehir';
+/* İlanın ili tek kuraldan (lib/ilan-ili): menü, "Diğer" ve kayıtlı arama aynı cevabı veriyor. */
+import { ilanIli } from '../lib/ilan-ili.mjs';
 import { COGRAFYA, ilanCografyasi } from '../lib/ilan-cografyasi.mjs';
 import { fetchBugunDogrulananIlanSayisi } from '../lib/queries';
 import { BolumCipleri } from './BolumCipleri';
@@ -758,7 +759,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
         diye bir deger yok ve olmamali: kayitli arama somut bir sehir
         (ya da hepsi) tutuyor. Bu secim yalnizca listedeki gorunum.
       */
-      if (atla !== 'sehir' && selectedCity === 'diger' && ilBul(listing.city) !== null) {
+      if (atla !== 'sehir' && selectedCity === 'diger' && ilanIli(listing) !== null) {
         return false;
       }
 
@@ -955,7 +956,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   */
   const cityCount = new Set(
     filteredListings
-      .map((item) => ilBul(item.listing.city) ?? item.listing.city)
+      .map((item) => ilanIli(item.listing) ?? item.listing.city)
       .filter((sehir): sehir is string => typeof sehir === 'string' && sehir.trim().length > 0)
   ).size;
 
@@ -1592,7 +1593,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
       if (!matchesCategory(listing, match, subTab)) continue;
       /* Şehir menüsü yalnız Türkiye görünümünde: Paris/Berlin Türkiye şehri gibi sunulmuyor. */
       if (ilanCografyasi(listing) !== COGRAFYA.TURKIYE) continue;
-      const il = ilBul(listing.city);
+      const il = ilanIli(listing);
       if (il) sayim.set(il, (sayim.get(il) ?? 0) + 1);
       else bilinmeyen += 1;
     }
