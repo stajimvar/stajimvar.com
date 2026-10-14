@@ -1,9 +1,5 @@
 import React from 'react';
-import { MapPin } from 'lucide-react';
-import { CompanyLogo } from './CompanyLogo';
-import { listingSlug } from '../lib/slug';
-import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
-import { KART_EYLEMI } from '../lib/kart-cta';
+import { SadeIlanKarti } from './SadeIlanKarti';
 import { bolumIlanAlani, bolumIlanlari } from '../lib/bolum-ilanlari.mjs';
 /*
   YALNIZ TİP: `lib/queries` gövdesi Supabase istemcisini kuruyor; ön render
@@ -92,55 +88,9 @@ export const BolumIlanlari: React.FC<{
       ) : (
         <>
           <ul className="mt-3 space-y-1.5 sm:space-y-3">
-            {durum.ilanlar.map((ilan) => {
-              const yol = `/ilan/${listingSlug(ilan)}`;
-              const sirket = ilan.companies?.name ?? '';
-              const konum = [ilan.city ? konumEtiketi(ilan.city) : '', ilan.work_type ? calismaEtiketi(ilan.work_type) : '']
-                .filter(Boolean)
-                .join(' · ');
-              return (
-                <li
-                  key={ilan.id}
-                  className="flex min-w-0 items-start gap-3 rounded-2xl border border-gray-200 bg-white p-4"
-                >
-                  <div className="shrink-0" title={sirket}>
-                    <CompanyLogo
-                      name={sirket}
-                      logoUrl={ilan.companies?.logo_url ?? ''}
-                      className="!h-20 !w-20 !rounded-xl !p-2 !text-2xl"
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <a
-                      href={yol}
-                      onClick={git(yol)}
-                      className="break-words text-base font-semibold leading-[22px] text-slate-900 hover:text-blue-700"
-                    >
-                      {ilan.title}
-                    </a>
-                    {sirket && <p className="mt-0.5 break-words text-sm leading-5 text-gray-700">{sirket}</p>}
-                    <div className="mt-1 flex min-w-0 flex-wrap items-end gap-x-3 gap-y-2">
-                      <p className="flex min-w-0 flex-1 basis-28 items-start gap-1.5 text-sm leading-5 text-gray-600">
-                        {konum && (
-                          <>
-                            <MapPin aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
-                            <span className="min-w-0 break-words">{konum}</span>
-                          </>
-                        )}
-                      </p>
-                      <a
-                        href={yol}
-                        onClick={git(yol)}
-                        aria-label={`${ilan.title} ilanını incele`}
-                        className={`ml-auto shrink-0 ${KART_EYLEMI.kenar}`}
-                      >
-                        İlanı incele
-                      </a>
-                    </div>
-                  </div>
-                </li>
-              );
-            })}
+            {durum.ilanlar.map((ilan) => (
+              <SadeIlanKarti key={ilan.id} ilan={ilan} onNavigate={onNavigate} />
+            ))}
           </ul>
           <p className="mt-3">{tumIlanlar('Tüm staj ilanları →')}</p>
         </>

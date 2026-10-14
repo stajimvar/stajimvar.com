@@ -133,7 +133,9 @@ test('konum: bütün ilan kartları ve ilan ekranları aynı yardımcıdan', () 
     assert.match(k, /ilanKonumEtiketi\(listing\)/, dosya);
     assert.doesNotMatch(k, /konumEtiketi\(listing\.city\)/, dosya);
   }
-  assert.match(oku('scripts/onrender.mjs'), /const yer = \[i\.il \|\| i\.city \? ilanKonumEtiketi\(i\) : ''/);
+  assert.match(oku('scripts/onrender.mjs'), /konum: \(i\) => \(i\.il \|\| i\.city \? ilanKonumEtiketi\(i\) : ''\),/);
+  /* Uygulamadaki sade kart da (bölüm ve şehir sayfası) aynı yardımcıyı kullanıyor. */
+  assert.match(kodu(oku('src/components/SadeIlanKarti.tsx')), /ilan\.il \|\| ilan\.city \? ilanKonumEtiketi\(ilan\) : ''/);
 });
 
 /* ---------------------------------------------------------- işveren logoları */

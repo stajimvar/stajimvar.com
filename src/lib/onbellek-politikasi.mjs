@@ -43,8 +43,16 @@ export const UYGULAMA_BOLUMLERI = [
   '/sifre-yenile',
 ];
 
-/** Herkese açık belge bölümleri. Alt adresleri de kapsıyor. */
-export const BELGE_BOLUMLERI = ['/ilan', '/bolum', '/rehber'];
+/**
+ * Herkese açık belge bölümleri. Alt adresleri de kapsıyor.
+ *
+ * `/staj-ilanlari/istanbul` (14 Ekim 2026): şehir sayfası kenarda canlı
+ * veriden çiziliyor; her istekte bütün ilanları okumamak için 60 sn
+ * tutuluyor (kapanan ilan en geç bayatlık penceresi sonunda düşüyor).
+ * `/staj-ilanlari` ve arşiv sayfaları BİLEREK dışarıda — onların davranışı
+ * değişmedi.
+ */
+export const BELGE_BOLUMLERI = ['/ilan', '/bolum', '/rehber', '/staj-ilanlari/istanbul'];
 
 const kirp = (yol) => yol.replace(/\/+$/, '') || '/';
 

@@ -163,7 +163,7 @@ test('eşleşen ilan yoksa liste boş — dolgu ilan yok', () => {
 test('ön render: ilan okuması alan_idleri taşıyor, bölüm gövdesine ortak kartlar giriyor, yapısal veri eklenmiyor', () => {
   const r = oku('scripts/onrender.mjs');
   assert.match(r, /import \{ bolumIlanlari \} from '\.\.\/src\/lib\/bolum-ilanlari\.mjs';/);
-  assert.match(r, /encodeURIComponent\(`\$\{ILAN_SECIMI\},alan_idleri`\)/);
+  assert.match(r, /encodeURIComponent\(`\$\{ILAN_SECIMI\},alan_idleri,il,ilce`\)/);
   assert.match(r, /yol: '\/rest\/v1\/sectors\?aktif=eq\.true&select=id,slug,ad&order=sira\.asc'/);
   assert.match(r, /const sonuc = bolumIlanlari\(\{ bolumSlug: b\.slug, ilanlar, sektorler \}\);/);
   assert.match(r, /\? gorunurIlanKartlari\(sonuc\.ilanlar\) \+/);
@@ -183,8 +183,9 @@ test('uygulama: bölüm sayfası aynı kuralı kullanıyor; dolgu ilan yok; rehb
   assert.match(blok, /import \{ bolumIlanAlani, bolumIlanlari \} from '\.\.\/lib\/bolum-ilanlari\.mjs';/);
   assert.match(blok, /const sonuc = bolumIlanlari\(\{ bolumSlug, ilanlar, sektorler \}\);/);
   assert.doesNotMatch(blok, /alanEslestir|\.\.\.hepsi/);
-  /* Kart ölçüleri InternshipCard ile aynı: 80×80 logo. */
-  assert.match(blok, /className="!h-20 !w-20 !rounded-xl !p-2 !text-2xl"/);
+  /* Kart ortak bileşende; ölçüler InternshipCard ile aynı: 80×80 logo. */
+  assert.match(blok, /<SadeIlanKarti key=\{ilan\.id\} ilan=\{ilan\} onNavigate=\{onNavigate\} \/>/);
+  assert.match(oku('src/components/SadeIlanKarti.tsx'), /className="!h-20 !w-20 !rounded-xl !p-2 !text-2xl"/);
   /* Sorgu derlemeyle aynı sırada ve aynı alanlarla. */
   const sorgu = oku('src/lib/queries/index.ts');
   assert.match(sorgu, /\.select\('id, title, city, country_code, work_type, application_deadline, alan_idleri, companies \( name, logo_url \)'\)/);

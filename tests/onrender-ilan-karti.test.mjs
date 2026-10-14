@@ -17,6 +17,8 @@ import { basHarfler, paletSirasi, PALET_UZUNLUGU } from '../src/lib/logo-yedegi.
 const KOK = path.resolve(import.meta.dirname, '..');
 const oku = (p) => readFileSync(path.join(KOK, p), 'utf8').replace(/\r\n/g, '\n');
 const r = oku('scripts/onrender.mjs');
+/* Kart işaretlemesi 14 Ekim 2026'da ortak modüle taşındı (kenar çizimi de kullanıyor). */
+const kart = oku('src/lib/seo/ilan-karti-html.mjs');
 
 test('logo yedeği React ile ortak: aynı harfler, aynı renk sırası', () => {
   assert.equal(basHarfler('Texas Instruments'), 'TI');
@@ -37,26 +39,29 @@ test('logo yedeği React ile ortak: aynı harfler, aynı renk sırası', () => {
 });
 
 test('logo kaynağı katalog verisi, yalnız güvenli adres; yoksa baş harf yedeği', () => {
-  assert.match(r, /const adres = guvenliLogoAdresi\(\(i\.companies \|\| \{\}\)\.logo_url\);/);
-  assert.match(r, /sv-logo sv-logo-yedek sv-logo-p\$\{paletSirasi\(sirket\)\}" role="img"/);
-  assert.match(r, /\$\{kacir\(basHarfler\(sirket\)\)\}/);
+  assert.match(kart, /const adres = guvenliLogoAdresi\(\(i\.companies \|\| \{\}\)\.logo_url\);/);
+  assert.match(kart, /sv-logo sv-logo-yedek sv-logo-p\$\{paletSirasi\(sirket\)\}" role="img"/);
+  assert.match(kart, /\$\{kacir\(basHarfler\(sirket\)\)\}/);
 });
 
 test('logo ölçüsü sabit, alt metinli; ilk 3 hemen, kalanı tembel', () => {
-  assert.match(r, /alt="\$\{kacir\(sirket \? `\$\{sirket\} logosu` : 'Şirket logosu'\)\}" width="80" height="80" /);
-  assert.match(r, /const HEMEN_YUKLENEN_LOGO = 3;/);
-  assert.match(r, /\(sira < HEMEN_YUKLENEN_LOGO \? 'loading="eager" ' : 'loading="lazy" '\)/);
-  assert.match(r, /'decoding="async" \/>'/);
+  assert.match(kart, /alt="\$\{kacir\(sirket \? `\$\{sirket\} logosu` : 'Şirket logosu'\)\}" width="80" height="80" /);
+  assert.match(kart, /export const HEMEN_YUKLENEN_LOGO = 3;/);
+  assert.match(kart, /\(sira < HEMEN_YUKLENEN_LOGO \? 'loading="eager" ' : 'loading="lazy" '\)/);
+  assert.match(kart, /'decoding="async" \/>'/);
   const html = oku('index.html');
   assert.match(html, /\.sv-logo \{[\s\S]*?width: 80px;[\s\S]*?height: 80px;[\s\S]*?aspect-ratio: 1 \/ 1;/);
   assert.match(html, /\.sv-logo img \{[\s\S]*?object-fit: contain;/);
 });
 
 test('kart React kartının parçalarını taşıyor; çalışmayan kaydet düğmesi yok', () => {
-  const blok = r.slice(r.indexOf('const gorunurIlanKartlari = (liste) =>'), r.indexOf('/* ---------------------------------------------- /staj-ilanlari ---- */'));
+  const blok = kart.slice(kart.indexOf('export function ilanKartlariHtml'));
   assert.match(blok, /`<a class="sv-kart-baslik" href="\$\{yol\}">\$\{kacir\(i\.title\)\}<\/a>`/);
   assert.match(blok, /<span class="sv-kart-sirket">/);
-  assert.match(blok, /i\.work_type \? calismaEtiketi\(i\.work_type\) : ''/);
+  assert.match(blok, /i\.work_type \? calisma\(i\.work_type\) : ''/);
+  /* Ön render kartı bu modülden alıyor; çalışma etiketi lib/sehir'den. */
+  assert.match(r, /const gorunurIlanKartlari = \(liste\) => ilanKartlariHtml\(liste, kartEtiketleri\);/);
+  assert.match(r, /calisma: calismaEtiketi,/);
   assert.match(blok, /<a class="sv-kart-incele" href="\$\{yol\}" aria-label="\$\{kacir\(`\$\{i\.title\} ilanını incele`\)\}">İlanı incele<\/a>/);
   assert.doesNotMatch(blok, /aydet|<button/);
   /* Ana sayfa ve /staj-ilanlari aynı yardımcı. */

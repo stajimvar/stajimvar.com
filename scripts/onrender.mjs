@@ -46,14 +46,14 @@ import { kunye, YAZAR } from '../src/lib/rehber-kunye.mjs';
 */
 import { kacir, duzMetin, ozetle, ilanYolu as ortakIlanYolu } from '../src/lib/seo/metin.mjs';
 import { STAJ_ILANLARI_METNI } from '../src/lib/staj-ilanlari-metni.mjs';
-import { guvenliLogoAdresi } from '../src/lib/bildirim-basvurusu.mjs';
-import { basHarfler, paletSirasi } from '../src/lib/logo-yedegi.mjs';
 import { seritFirsatlari as seritFirsatlariSec, ANASAYFA_BOLUMLERI } from '../src/lib/anasayfa-baglantilari.mjs';
 import { ilanSayfasi, ILAN_SECIMI, istanbulBugun, benzerIlanlariSec } from '../src/lib/seo/ilan-sayfasi.mjs';
 import { sayfaHtml } from '../src/lib/seo/sayfa-html.mjs';
 import { ARSIV_SAYFA_BOYU, acikIlanMi, arsivSirasi, arsivYolu, arsivSayfaBasligi, arsivSayfaNumaralari } from '../src/lib/seo/ilan-arsivi.mjs';
 import { zorunluVeriGetir, VeriKaynagiHatasi, azalmaKapisi } from '../src/lib/seo/veri-kaynagi.mjs';
 import { bolumIlanlari } from '../src/lib/bolum-ilanlari.mjs';
+import { ilanKartlariHtml } from '../src/lib/seo/ilan-karti-html.mjs';
+import { SEHIR_SAYFALARI, sehirSayfasi, sehirYolu } from '../src/lib/seo/sehir-ilanlari.mjs';
 
 const kok = path.dirname(path.dirname(url.fileURLToPath(import.meta.url)));
 /* Testler gerçek dist'e dokunmadan koşabilsin diye çıktı kökü ortamdan değiştirilebiliyor. */
@@ -608,7 +608,7 @@ async function ilanlariGetir() {
       bölüm sayfalarındaki ilan bloğu ilanın alanına bakıyor
       (src/lib/bolum-ilanlari.mjs). Kolon ziyaretçiye açık (göç 20261109010000).
     */
-    yol: `/rest/v1/listings?status=eq.published&order=posted_at.desc.nullslast,id.asc&select=${encodeURIComponent(`${ILAN_SECIMI},alan_idleri`)}`,
+    yol: `/rest/v1/listings?status=eq.published&order=posted_at.desc.nullslast,id.asc&select=${encodeURIComponent(`${ILAN_SECIMI},alan_idleri,il,ilce`)}`,
   });
 }
 
@@ -1585,55 +1585,16 @@ async function main() {
     YÜKLEME: sabit 80×80 (width/height + aspect-ratio) — görsel inince satır
     oynamıyor. İlk ekranda kalan ilk 3 logo hemen, kalanı loading="lazy".
   */
-  const HEMEN_YUKLENEN_LOGO = 3;
-  const logoHtml = (i, sira) => {
-    const sirket = (i.companies || {}).name || '';
-    const adres = guvenliLogoAdresi((i.companies || {}).logo_url);
-    if (adres) {
-      return (
-        '<span class="sv-logo">' +
-        `<img src="${kacir(adres)}" alt="${kacir(sirket ? `${sirket} logosu` : 'Şirket logosu')}" width="80" height="80" ` +
-        (sira < HEMEN_YUKLENEN_LOGO ? 'loading="eager" ' : 'loading="lazy" ') +
-        'decoding="async" />' +
-        '</span>'
-      );
-    }
-    return (
-      `<span class="sv-logo sv-logo-yedek sv-logo-p${paletSirasi(sirket)}" role="img" aria-label="${kacir(`${sirket || 'Şirket'} logosu yok`)}">` +
-      `${kacir(basHarfler(sirket))}</span>`
-    );
+  /*
+    Kart işaretlemesi src/lib/seo/ilan-karti-html.mjs'te (14 Ekim 2026):
+    şehir sayfası kenarda da çiziliyor, iki yer tek kaynaktan. Konum ve
+    çalışma etiketi burada derlenen lib/sehir'den veriliyor.
+  */
+  const kartEtiketleri = {
+    konum: (i) => (i.il || i.city ? ilanKonumEtiketi(i) : ''),
+    calisma: calismaEtiketi,
   };
-  const gorunurIlanKartlari = (liste) =>
-    liste.length
-      ? '<ul class="sv-kartlar">' +
-        liste
-          .map((i, sira) => {
-            const sirket = (i.companies || {}).name || '';
-            /* Konum önce normalize il/ilçeden; ülke adı şehir gibi basılmıyor (14 Ekim 2026). */
-            const yer = [i.il || i.city ? ilanKonumEtiketi(i) : '', i.work_type ? calismaEtiketi(i.work_type) : '']
-              .filter(Boolean)
-              .join(' · ');
-            const yol = ortakIlanYolu(i);
-            return (
-              '<li class="sv-kart">' +
-              logoHtml(i, sira) +
-              '<div class="sv-kart-govde">' +
-              `<a class="sv-kart-baslik" href="${yol}">${kacir(i.title)}</a>` +
-              (sirket ? `<span class="sv-kart-sirket">${kacir(sirket)}</span>` : '') +
-              '<div class="sv-kart-alt-sira">' +
-              (yer
-                ? '<span class="sv-kart-konum"><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><path d="M20 10c0 4.99-5.54 10.19-7.4 11.8a1 1 0 0 1-1.2 0C9.54 20.19 4 14.99 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>' +
-                  `${kacir(yer)}</span>`
-                : '<span></span>') +
-              `<a class="sv-kart-incele" href="${yol}" aria-label="${kacir(`${i.title} ilanını incele`)}">İlanı incele</a>` +
-              '</div>' +
-              '</div>' +
-              '</li>'
-            );
-          })
-          .join('') +
-        '</ul>'
-      : '';
+  const gorunurIlanKartlari = (liste) => ilanKartlariHtml(liste, kartEtiketleri);
 
   /* ------------------------------------- bölüm sayfaları: açık ilanlar ---- */
   /*
@@ -1887,6 +1848,31 @@ async function main() {
     }
     console.log(`  tüm açık ilanlar: ${aciklar.length} ilan, ${toplamSayfa} sayfa`);
   }
+
+  /*
+    ŞEHİR SAYFALARI — /staj-ilanlari/istanbul (14 Ekim 2026)
+
+    Kural, sayfalama ve işaretleme src/lib/seo/sehir-ilanlari.mjs'te; ara
+    katman aynı sayfayı her istekte canlı veriden çiziyor (kapanan ilan
+    listeden çıkıyor). Buradaki dosyalar kenarın yedeği ve site
+    haritasının kaynağı. Eşiğin altında kalırsa sayfa noindex alıyor ve
+    haritaya girmiyor. Yalnız İstanbul.
+  */
+  for (const slug of Object.keys(SEHIR_SAYFALARI)) {
+    const ilk = sehirSayfasi({ slug, sayfa: 1, ilanlar, etiketler: kartEtiketleri });
+    for (let n = 1; n <= ilk.toplamSayfa; n++) {
+      const bu = n === 1 ? ilk : sehirSayfasi({ slug, sayfa: n, ilanlar, etiketler: kartEtiketleri });
+      sayfaYaz(sehirYolu(slug, n), bu.s);
+      sayac++;
+    }
+    console.log(`  şehir sayfası ${slug}: ${ilk.adet} ilan, ${ilk.toplamSayfa} sayfa${ilk.s.dizinDisi ? ' (eşik altı: noindex)' : ''}`);
+  }
+  /*
+    Derleme damgası: kenar, veri okunamadığında bu dosyaları yedek olarak
+    sunuyor; damga ondan eskiyse yedek yerine 503 veriyor (bayat liste
+    kapanmış ilanları sınırsız süre göstermesin). Bkz. kenar-sehir.mjs.
+  */
+  fs.writeFileSync(path.join(dist, '_onrender', 'sehir-derleme.json'), JSON.stringify({ zaman: new Date().toISOString() }));
 
   /*
     ESKİ ADRESLER İÇİN KALICI YÖNLENDİRME
