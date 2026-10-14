@@ -60,6 +60,14 @@ jobs:
       # SEO kapısı (scripts/seo-kapisi.mjs). Biri düşerse PR kırmızı.
       - name: Derleme ve SEO kapısı
         run: npm run build
+      # Derleme çıktısını (dist/) okuyan testler yukarıdaki `npm test`
+      # sırasında dist henüz olmadığı için atlanıyor ya da sessizce
+      # geçiyordu: 12 dosyada 104 testin 99'u "geçti", 5'i atlandı
+      # (ölçüldü, 14 Ekim 2026). İlk HTML, canonical, site haritası ve
+      # JobPosting denetimleri burada gerçek çıktı üzerinde koşuyor.
+      - name: Derleme çıktısı testleri (ilk HTML, harita, canonical)
+        run: |
+          node --test $(grep -lE "['\"]dist['\"]" tests/*.test.mjs)
       - name: SEO kapısı özeti
         if: always()
         run: |
