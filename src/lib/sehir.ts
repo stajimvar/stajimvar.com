@@ -29,10 +29,35 @@ export { ilBul };
  * yazmıyoruz. İl biliniyor ama metin daha ayrıntılıysa ikisi birlikte
  * gösteriliyor: "Şişli, İstanbul".
  */
+/*
+  ŞEHİR ALANINDA YALNIZ ÜLKE ADI (14 Ekim 2026)
+
+  Ölçüldü: Insider One ilanının şehir alanında "Turkey" yazıyor ve
+  normalize `il` alanı boş (ilçe de yok). Kart bunu olduğu gibi
+  "Turkey · Ofisten" diye basıyordu: İngilizce ve şehir gibi duran bir
+  ülke adı. Ülke adı şehir sayılmıyor; Türkçe ülke adı gösteriliyor
+  ("Türkiye") — doğru ama kaba bir konum, uydurma şehir yok.
+  Yapısal verideki karşılığı src/lib/seo/ilan-sayfasi.mjs SEHIR_OLMAYAN.
+*/
+const ULKE_ADLARI: Record<string, string> = {
+  turkey: 'Türkiye',
+  turkiye: 'Türkiye',
+  germany: 'Almanya',
+  deutschland: 'Almanya',
+  almanya: 'Almanya',
+  france: 'Fransa',
+  fransa: 'Fransa',
+  'united kingdom': 'Birleşik Krallık',
+  uk: 'Birleşik Krallık',
+  england: 'Birleşik Krallık',
+};
+
 export function konumEtiketi(ham: string | null | undefined): string {
   if (!ham) return 'Konum belirtilmemiş';
 
   const temiz = String(ham).replace(ONEK, '').trim();
+  const ulke = ULKE_ADLARI[katla(temiz)];
+  if (ulke) return ulke;
   const il = ilBul(temiz);
   if (!il) return temiz;
 
@@ -46,6 +71,31 @@ export function konumEtiketi(ham: string | null | undefined): string {
     .filter((p) => p && katla(p) !== katla(il));
 
   return ilceler.length > 0 ? `${ilceler.join(', ')}, ${il}` : il;
+}
+
+/**
+ * İlan kartının konum etiketi: önce doğrulanmış normalize alanlar.
+ *
+ * `il` ve `ilce` veritabanında ham şehir metninden türetiliyor, yalnız
+ * Türkiye için ve tahminsiz (göç 20261023010000; il kısıtlı listeden).
+ * Varsa onlar esas: "Turkey - Istanbul" → "İstanbul". Ham metin aynı ile
+ * işaret ediyor ve daha ayrıntılıysa ("Zincirlikuyu, Istanbul") ayrıntı
+ * korunuyor. `il` yoksa ham metin `konumEtiketi`nden geçiyor (yurt dışı
+ * şehirler, ülke adı → Türkçe ülke adı).
+ */
+export function ilanKonumEtiketi(ilan: {
+  il?: string | null;
+  ilce?: string | null;
+  city?: string | null;
+}): string {
+  const il = ilan.il?.trim();
+  if (il) {
+    const ilce = ilan.ilce?.trim();
+    if (ilce) return `${ilce}, ${il}`;
+    const ham = String(ilan.city ?? '').replace(ONEK, '').trim();
+    return ham && ilBul(ham) === il ? konumEtiketi(ham) : il;
+  }
+  return konumEtiketi(ilan.city);
 }
 
 /*

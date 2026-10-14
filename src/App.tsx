@@ -100,6 +100,7 @@ const FIRSAT_LISTE_YOLLARI = new Set([
   '/kaydedilen-firsatlar',
 ]);
 import { OpportunitiesHomeSection } from './components/OpportunitiesHomeSection';
+import { AnaSayfaBolumleri } from './components/AnaSayfaBolumleri';
 import { basvuruSonucMesaji, basvuruYolu } from './lib/basvuru-yolu.mjs';
 import { basvuruKopyasi } from './lib/basvuru-kopyasi.mjs';
 import { ayrilmaOnayi } from './lib/kaydedilmemis-degisiklik.mjs';
@@ -4192,6 +4193,12 @@ export default function App() {
                   ogrenci={isLoggedIn ? activeStudent : null}
                 />
               )}
+              {/*
+                Ana sayfadan bölüm sayfalarına düz bağlantılar (ön render'la
+                aynı liste, lib/anasayfa-baglantilari). /staj-ilanlari'da
+                yok: orada bilgi bölümü 42 bölümün tamamına bağlanıyor.
+              */}
+              {!stajIlanlariAdresi && <AnaSayfaBolumleri onNavigate={navigate} />}
               </>
             )}
 

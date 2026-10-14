@@ -5,6 +5,7 @@ import { STAJ_PROGRAMLARI } from '../data/stajProgramlari';
 import { dizini, uygunIsverenler } from '../lib/isveren-dizini.mjs';
 import { ILAN_KAYNAGI_KISA } from '../lib/urun-metni';
 import { tarihMetni } from '../lib/tarih.mjs';
+import { isverenLogoAdresi } from '../lib/isveren-logolari.mjs';
 
 /**
  * Bölüm sayfasının İÇERİĞİ — kabuğu değil.
@@ -300,28 +301,37 @@ export const BolumIcerik: React.FC<{ bolum: Bolum }> = ({ bolum }) => {
               işverenin kartına iniyor.
             */}
             <div className="flex flex-wrap gap-2">
-              {isverenler.map((i) => (
+              {isverenler.map((i) => {
+                /*
+                  Dosyası olmayan işverende görsel yok (lib/isveren-logolari):
+                  ön render'da onError çalışmıyor, kırık görsel ve 404 kalıyordu.
+                */
+                const logo = isverenLogoAdresi(i.slug);
+                return (
                 <a
                   key={i.slug}
                   href={`/sirket/${i.slug}`}
                   className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-700 hover:border-blue-300 hover:text-blue-700"
                 >
-                  <img
-                    src={`/isveren-logolari/${i.slug}.png`}
-                    alt=""
-                    aria-hidden="true"
-                    width={20}
-                    height={20}
-                    loading="lazy"
-                    decoding="async"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                    className="h-5 w-5 object-contain"
-                  />
+                  {logo && (
+                    <img
+                      src={logo}
+                      alt=""
+                      aria-hidden="true"
+                      width={20}
+                      height={20}
+                      loading="lazy"
+                      decoding="async"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                      className="h-5 w-5 object-contain"
+                    />
+                  )}
                   {i.isveren}
                 </a>
-              ))}
+                );
+              })}
             </div>
           </section>
         );
