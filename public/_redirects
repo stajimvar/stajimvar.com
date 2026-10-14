@@ -66,9 +66,14 @@
 # Kimlik öneki değişmediği için hangi ilan olduğu belli: yeni adrese kalıcı
 # yönlendirme veriliyor. Ana sayfaya atmak yerine ilanın kendisine
 # göndermek, gelen ziyaretçinin aradığı şeyi bulmasını sağlıyor.
+#
+# İKİSİ KALDIRILDI (14 Ekim 2026): 4bead62e ve 12431c8d artık yayında
+# değil; derlemede sayfaları yok ve hedefleri 404 dönüyordu (301 → 404).
+# Aynı ilanın yayında bir karşılığı yok; başka bir ilana ya da merkeze
+# yönlendirmek yumuşak 404 olurdu. Kural kalkınca adres kenara düşüyor:
+# kenar (src/lib/seo/kenar-ilan.mjs) kimlik önekiyle arıyor — ilan yeniden
+# yayımlanırsa güncel adresine 301, yayında değilse 404 + noindex.
 /ilan/it-intern-a0de0769   /ilan/it-stajyeri-a0de0769   301
-/ilan/uzun-vadeli-full-stack-gelistirici-stajyeri-4bead62e   /ilan/uzun-donem-full-stack-gelistirici-stajyeri-4bead62e   301
-/ilan/customer-success-intern-12431c8d   /ilan/customer-success-stajyeri-12431c8d   301
 
 # favicon.ico
 #
