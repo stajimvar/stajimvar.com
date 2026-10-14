@@ -359,6 +359,31 @@
           margin-bottom: 12px;
         }
       }
+      /*
+        Bölüm sayfasındaki açık ilanlar (14 Ekim 2026): kartlar okuma
+        düzeninin (`.sv-metin`) içinde. Oradaki `ul` madde işareti ve
+        girintisi, bağlantı rengi ve görsel yüksekliği karta geçmesin;
+        kart /staj-ilanlari'dakiyle aynı görünsün.
+      */
+      .sv-metin .sv-kartlar {
+        margin: 12px 0;
+        padding-left: 0;
+        list-style: none;
+      }
+      .sv-metin .sv-kart-baslik {
+        color: #0f172a;
+      }
+      .sv-metin .sv-logo img {
+        height: 100%;
+      }
+      .sv-metin .sv-kart-konum svg {
+        width: 16px;
+        height: 16px;
+      }
+      .sv-metin .sv-bolum-ilan-yok {
+        font-size: 14px;
+        color: #4b5563;
+      }
       /* Ana sayfa: tüm ilanlara bağlantı ve fırsat şeridi (14 Ekim 2026). */
       .sv-tum-ilanlar {
         margin: 0 0 20px;

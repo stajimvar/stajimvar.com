@@ -108,6 +108,53 @@ export async function fetchRehberIlanKartlari(): Promise<RehberIlanKarti[]> {
   }));
 }
 
+/**
+ * BÖLÜM SAYFASININ İLAN BLOĞU — ham satırlar + etkin alanlar.
+ *
+ * Seçim kuralı istemcide değil, ortak modülde (`lib/bolum-ilanlari.mjs`):
+ * ön render da aynı satır biçimini (snake_case) aynı fonksiyona veriyor,
+ * yani JavaScript sonrası liste ilk HTML'dekiyle aynı ölçütle seçiliyor.
+ * Sıra derlemeyle aynı: yayın tarihi en yeni önce, eşitlikte kimlik.
+ * Kolonların hepsi ziyaretçiye açık (`alan_idleri`: göç 20261109010000;
+ * `sectors`: etkin satırlar, aynı göç).
+ */
+export interface BolumIlanSatiri {
+  id: string;
+  title: string;
+  city: string | null;
+  country_code: string | null;
+  work_type: string | null;
+  application_deadline: string | null;
+  alan_idleri: string[] | null;
+  companies: { name: string | null; logo_url: string | null } | null;
+}
+
+export async function fetchBolumIlanVerisi(): Promise<{
+  ilanlar: BolumIlanSatiri[];
+  sektorler: { id: string; slug: string; ad: string }[];
+}> {
+  const [ilan, sektor] = await Promise.all([
+    supabase
+      .from('listings')
+      .select('id, title, city, country_code, work_type, application_deadline, alan_idleri, companies ( name, logo_url )')
+      .eq('status', 'published')
+      .order('posted_at', { ascending: false, nullsFirst: false })
+      .order('id', { ascending: true }),
+    /* `sectors` üretilmiş tiplerde yok (sosyal katman tablosu); sosyal.ts ile aynı köprü. */
+    (supabase as unknown as { from: (tablo: string) => any })
+      .from('sectors')
+      .select('id, slug, ad')
+      .eq('aktif', true)
+      .order('sira', { ascending: true }),
+  ]);
+  if (ilan.error) fail('İlanlar yüklenemedi', ilan.error);
+  if (sektor.error) fail('Alanlar yüklenemedi', sektor.error);
+  return {
+    ilanlar: (ilan.data ?? []) as unknown as BolumIlanSatiri[],
+    sektorler: (sektor.data ?? []) as { id: string; slug: string; ad: string }[],
+  };
+}
+
 export interface PublishedListingsCursor { value: string; id: string }
 export interface PublishedListingsCatalogPage {
   listings: InternshipListing[];
