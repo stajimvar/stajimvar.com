@@ -101,7 +101,9 @@ test('ön render: ana sayfanın görünür düzeni, aynı kartlar, bilgi bölüm
   assert.match(blok, /govde: '',/);
   /* Kart işaretlemesi ana sayfayla ORTAK tek yardımcı. */
   assert.match(r, /const ilanKartlari = gorunurIlanKartlari\(gorunurIlanlar\);/);
-  assert.equal((r.match(/'<li class="sv-kart">'/g) || []).length, 1);
+  /* İşaretleme tek yerde: ortak kart modülü (ön render ve kenar). */
+  assert.equal((r.match(/'<li class="sv-kart">'/g) || []).length, 0);
+  assert.equal((oku('src/lib/seo/ilan-karti-html.mjs').match(/'<li class="sv-kart">'/g) || []).length, 1);
 });
 
 test('SAYILAR UYDURULMUYOR: veri yoksa satır hiç çizilmiyor, kaynak listeyle aynı', () => {

@@ -16,7 +16,7 @@ import {
 */
 import { ilanIsteginiCoz, ilanHaritasiUret } from '../src/lib/seo/kenar-ilan.mjs';
 import { calismaEtiketi, ilanKonumEtiketi, konumEtiketi } from '../src/lib/sehir';
-import { sehirIsteginiCoz } from '../src/lib/seo/kenar-sehir.mjs';
+import { sehirIsteginiCoz, yedekTazeMi } from '../src/lib/seo/kenar-sehir.mjs';
 import { sehirAdresiniCoz } from '../src/lib/seo/sehir-ilanlari.mjs';
 
 /**
@@ -667,12 +667,26 @@ export const onRequest: PagesFunction<Ortam> = async (baglam) => {
         });
       }
       if (sonuc.tur === 404) return bulunamadi(env, request.url);
-      const statik = await next();
-      if (statik.status !== 404) {
-        const yeni = new Response(statik.body, statik);
-        /* Yedek kenarda tutulmuyor (kenardanSun 'statik-yedek'i atlıyor). */
-        yeni.headers.set('x-ilan-kaynagi', 'statik-yedek');
-        return yeni;
+      /*
+        Derleme yedeği yalnız taze ise (kenar-sehir.mjs YEDEK_AZAMI_SAAT):
+        eski bir liste kapanmış ilanları gösterir.
+      */
+      let damga: string | null = null;
+      try {
+        const c = await env.ASSETS.fetch(new Request(new URL('/_onrender/sehir-derleme.json', request.url).toString()));
+        if (c.ok) damga = ((await c.json()) as { zaman?: string }).zaman ?? null;
+      } catch {
+        damga = null;
+      }
+      if (yedekTazeMi(damga)) {
+        const statik = await next();
+        if (statik.status === 200) {
+          const yeni = new Response(statik.body, statik);
+          /* Yedek kenarda tutulmuyor (kenardanSun 'statik-yedek'i atlıyor). */
+          yeni.headers.set('x-ilan-kaynagi', 'statik-yedek');
+          yeni.headers.set('cache-control', 'no-store');
+          return yeni;
+        }
       }
       return new Response('Liste şu anda yüklenemiyor. Birkaç dakika sonra yeniden dene.', {
         status: 503,
@@ -685,8 +699,16 @@ export const onRequest: PagesFunction<Ortam> = async (baglam) => {
       });
     };
     const sehirCevabi = await kenardanSun(request, uret, (is) => baglam.waitUntil(is));
-    /* Yalnız 200 kenarda tutuluyor; 404 ve 503 paylaşılan önbelleğe girmesin. */
-    if (sehirCevabi.status === 404 || sehirCevabi.status === 503) {
+    /*
+      Yalnız canlı 200 kenarda tutuluyor; 404, 503 ve DERLEME YEDEĞİ paylaşılan
+      önbelleğe girmesin. Yedekteki `no-store`u `kenardanSun` belge başlığıyla
+      (s-maxage=60) eziyordu — testte yakalandı; burada son söz veriliyor.
+    */
+    if (
+      sehirCevabi.status === 404 ||
+      sehirCevabi.status === 503 ||
+      sehirCevabi.headers.get('x-ilan-kaynagi') === 'statik-yedek'
+    ) {
       const yeni = new Response(sehirCevabi.body, sehirCevabi);
       yeni.headers.set('cache-control', 'no-store');
       return yeni;

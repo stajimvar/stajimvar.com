@@ -21,6 +21,25 @@ import { SEHIR_ILAN_SECIMI, sehirAdresiniCoz, sehirSayfasi } from './sehir-ilanl
  *
  * @returns {Promise<{tur: 'gec'} | {tur: 301, konum: string} | {tur: 404} | {tur: 'yedek', neden: string} | {tur: 200, html: string}>}
  */
+/*
+  BAYAT YEDEĞİN SINIRI
+
+  Veri okunamadığında derlemede yazılan sayfa sunuluyor. O sayfa dağıtım
+  anının listesi: sonradan kapanan ilanları hâlâ gösterir ve onların sayfası
+  artık 404. Yedek bu yüzden ancak derlemesi YEDEK_AZAMI_SAAT'ten genç ise
+  sunuluyor; daha eskiyse ya da damga okunamıyorsa 503 (arama motoru
+  sonra yeniden dener, bayat liste dizine girmez). Yedek kenarda tutulmuyor.
+*/
+export const YEDEK_AZAMI_SAAT = 12;
+
+/** Derleme damgası (ISO) yedek için yeterince taze mi? Okunamayan damga taze sayılmıyor. */
+export function yedekTazeMi(zaman, simdi = Date.now()) {
+  const t = Date.parse(String(zaman ?? ''));
+  if (!Number.isFinite(t)) return false;
+  const yas = simdi - t;
+  return yas >= 0 && yas <= YEDEK_AZAMI_SAAT * 3600 * 1000;
+}
+
 export async function sehirIsteginiCoz({ yol, ayar, getir, kabukGetir, etiketler, bugun = undefined }) {
   const cozum = sehirAdresiniCoz(yol);
   if (!cozum) return { tur: 'gec' };

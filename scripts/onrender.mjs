@@ -1867,6 +1867,12 @@ async function main() {
     }
     console.log(`  şehir sayfası ${slug}: ${ilk.adet} ilan, ${ilk.toplamSayfa} sayfa${ilk.s.dizinDisi ? ' (eşik altı: noindex)' : ''}`);
   }
+  /*
+    Derleme damgası: kenar, veri okunamadığında bu dosyaları yedek olarak
+    sunuyor; damga ondan eskiyse yedek yerine 503 veriyor (bayat liste
+    kapanmış ilanları sınırsız süre göstermesin). Bkz. kenar-sehir.mjs.
+  */
+  fs.writeFileSync(path.join(dist, '_onrender', 'sehir-derleme.json'), JSON.stringify({ zaman: new Date().toISOString() }));
 
   /*
     ESKİ ADRESLER İÇİN KALICI YÖNLENDİRME

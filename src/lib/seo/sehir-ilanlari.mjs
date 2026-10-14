@@ -144,7 +144,8 @@ export function sehirSayfasi({ slug, sayfa = 1, ilanlar, etiketler, bugun = ista
     'Başvuru şirketin kendi sayfasında yapılıyor; son başvurusu geçen ve yayından kalkan ilan listeden çıkıyor.' +
     (toplamSayfa > 1 ? ` Sayfa ${sayfa}/${toplamSayfa}.` : '') +
     '</p>' +
-    (dagilim ? `<p class="sv-alt">Çalışma şekli: ${kacir(dagilim)}</p>` : '') +
+    /* Düz bilgi satırı: `.sv-alt` mavi vurgu, bağlantı gibi görünüyordu (telefonda görüldü). */
+    (dagilim ? `<p>Çalışma şekli: ${kacir(dagilim)}</p>` : '') +
     (dilim.length
       ? ilanKartlariHtml(dilim, etiketler)
       : `<p>Şu anda ${kacir(tanim.bulunma)} açık staj ilanı yok.</p>`) +

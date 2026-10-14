@@ -198,6 +198,16 @@ export const StajIlanlariIcerik: React.FC<
               {gorunum === 'tumu' ? 'Tüm açık ilanları sayfa sayfa gör' : 'Tüm ülkelerdeki açık ilanları sayfa sayfa gör'}
             </Bag>
           </p>
+          {/*
+            Şehir sayfası (14 Ekim 2026): Türkiye ilanlarının çoğu İstanbul'da;
+            kendi sayfası var (lib/seo/sehir-ilanlari). Tek, açıklayıcı bağlantı —
+            iki sayfa aynı listeyi taşımasın, birbirine yol göstersin.
+          */}
+          <p className="mt-1.5 text-sm">
+            <Bag href="/staj-ilanlari/istanbul" onNavigate={onNavigate} className={BAG}>
+              İstanbul staj ilanları
+            </Bag>
+          </p>
         </div>
 
         {/*
