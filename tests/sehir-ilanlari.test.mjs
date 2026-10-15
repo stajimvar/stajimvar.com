@@ -11,6 +11,7 @@ import {
   sehirIlanlari,
   sehirSayfasi,
   sehirYolu,
+  sehirOnekindeMi,
 } from '../src/lib/seo/sehir-ilanlari.mjs';
 import { sehirIsteginiCoz, yedekTazeMi, YEDEK_AZAMI_SAAT } from '../src/lib/seo/kenar-sehir.mjs';
 import { ilanIli } from '../src/lib/ilan-ili.mjs';
@@ -79,6 +80,13 @@ test('adres: yalnız İstanbul; /sayfa/1 ve sondaki eğik çizgi kanoniğe; biç
   assert.equal(sehirYolu('istanbul'), '/staj-ilanlari/istanbul');
   assert.equal(sehirYolu('istanbul', 1), '/staj-ilanlari/istanbul');
   assert.equal(sehirYolu('istanbul', 3), '/staj-ilanlari/istanbul/sayfa/3');
+  /* Önek: geçersiz alt adresler de şehrin altında sayılıyor (404'ü no-store için). */
+  for (const y of ['/staj-ilanlari/istanbul', '/staj-ilanlari/istanbul/', '/staj-ilanlari/istanbul/sayfa/0', '/staj-ilanlari/istanbul/x/y']) {
+    assert.equal(sehirOnekindeMi(y), true, y);
+  }
+  for (const y of ['/staj-ilanlari', '/staj-ilanlari/istanbulx', '/staj-ilanlari/ankara/sayfa/0', '/staj-ilanlari/sayfa/2', '/staj-ilanlari/constructor', '/rehber/istanbul']) {
+    assert.equal(sehirOnekindeMi(y), false, y);
+  }
 });
 
 /* --------------------------------------------------------- seçim kuralı */
@@ -296,7 +304,11 @@ async function istek(araKatman, adres, { veri = null, damga = null, dosyalar = {
           },
         },
       },
-      next: async () => (dosyalar[yol] ? html(dosyalar[yol]) : new Response('Not found', { status: 404 })),
+      /* Pages, dosya yoksa 404.html'i text/html ile döndürüyor; taklit de öyle. */
+      next: async () =>
+        dosyalar[yol]
+          ? html(dosyalar[yol])
+          : new Response(BULUNAMADI, { status: 404, headers: { 'content-type': 'text/html; charset=utf-8' } }),
       waitUntil: (is) => bekleyen.push(is),
     });
     await Promise.all(bekleyen);
@@ -373,6 +385,47 @@ test('ara katman: veri okunamazsa taze derleme yedeği, bayatsa ya da yoksa 503 
     assert.equal(b.cevap.headers.get('cache-control'), 'no-store', ad);
     assert.ok(Number(b.cevap.headers.get('retry-after')) > 0, ad);
     assert.equal(ONBELLEK.size, 0, ad);
+  }
+});
+
+test('ara katman: geçersiz İstanbul sayfa adresleri 404 + no-store; geçerli sayfalar 200 ve 60 sn önbellek', async () => {
+  /*
+    ÖLÇÜLEN HATA (canlı, 15 Ekim 2026): /sayfa/0 ve /sayfa/02 doğru şekilde
+    404 dönüyordu ama "s-maxage=60" taşıyordu. Şehir adresi sayılmadıkları
+    için olağan yola düşüyor, İstanbul öneki belge kapsamında olduğundan
+    Pages'in 404 HTML'ine belge önbellek başlığı yazılıyordu.
+  */
+  const araKatman = await import('../functions/_middleware.ts');
+  const veri = istanbullar(65);
+  for (const yol of [
+    '/staj-ilanlari/istanbul/sayfa/0',
+    '/staj-ilanlari/istanbul/sayfa/02',
+    '/staj-ilanlari/istanbul/sayfa/x',
+    '/staj-ilanlari/istanbul/baska',
+    '/staj-ilanlari/istanbul/sayfa/2/ek',
+  ]) {
+    ONBELLEK.clear();
+    const s = await istek(araKatman, `${SITE}${yol}`, { veri: null, env: ENV });
+    assert.equal(s.cevap.status, 404, yol);
+    assert.equal(s.cevap.headers.get('cache-control'), 'no-store', `${yol}: ${s.cevap.headers.get('cache-control')}`);
+    assert.match(s.govde, /Sayfa bulunamadı/, yol);
+    assert.match(s.govde, /<meta name="robots" content="noindex"/, `${yol}: gövdedeki noindex kayboldu`);
+    assert.equal(ONBELLEK.size, 0, `${yol}: 404 kenarda tutuldu`);
+    assert.equal(s.supabaseIstekleri.length, 0, `${yol}: veritabanına gidildi`);
+  }
+  /* Aralık dışı sayfa: önceki davranış aynı (404, noindex başlığı, no-store). */
+  ONBELLEK.clear();
+  const disi = await istek(araKatman, `${SITE}/staj-ilanlari/istanbul/sayfa/9`, { veri, env: ENV });
+  assert.equal(disi.cevap.status, 404);
+  assert.equal(disi.cevap.headers.get('x-robots-tag'), 'noindex');
+  assert.equal(disi.cevap.headers.get('cache-control'), 'no-store');
+  /* Geçerli sayfalar değişmedi: 200 ve 60 sn belge önbelleği, kenarda tutuluyor. */
+  for (const yol of ['/staj-ilanlari/istanbul', '/staj-ilanlari/istanbul/sayfa/2', '/staj-ilanlari/istanbul/sayfa/3']) {
+    ONBELLEK.clear();
+    const s = await istek(araKatman, `${SITE}${yol}`, { veri, env: ENV });
+    assert.equal(s.cevap.status, 200, yol);
+    assert.equal(s.cevap.headers.get('cache-control'), 'public, max-age=0, s-maxage=60, stale-while-revalidate=300', yol);
+    assert.equal(ONBELLEK.size, 1, `${yol}: kenarda tutulmadı`);
   }
 });
 

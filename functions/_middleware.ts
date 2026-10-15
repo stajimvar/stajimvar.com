@@ -17,7 +17,7 @@ import {
 import { ilanIsteginiCoz, ilanHaritasiUret } from '../src/lib/seo/kenar-ilan.mjs';
 import { calismaEtiketi, ilanKonumEtiketi, konumEtiketi } from '../src/lib/sehir';
 import { sehirIsteginiCoz, yedekTazeMi } from '../src/lib/seo/kenar-sehir.mjs';
-import { sehirAdresiniCoz } from '../src/lib/seo/sehir-ilanlari.mjs';
+import { sehirAdresiniCoz, sehirOnekindeMi } from '../src/lib/seo/sehir-ilanlari.mjs';
 
 /**
  * Bilinmeyen adreslere gerçek 404, uygulama adreslerine kabuk döndürür.
@@ -722,6 +722,21 @@ export const onRequest: PagesFunction<Ortam> = async (baglam) => {
   */
   const kenar = await kenardanSun(request, next, (is) => baglam.waitUntil(is));
   const cevap = kenar;
+
+  /*
+    GEÇERSİZ ŞEHİR SAYFASI ADRESİ: 404 + no-store (15 Ekim 2026)
+
+    "/staj-ilanlari/istanbul/sayfa/0", "/sayfa/02" gibi adresler şehir
+    sayfası sayılmıyor ve buraya düşüyor. Şehir öneki belge kapsamında
+    olduğu için Pages'in 404 HTML'ine 60 sn belge önbellek başlığı
+    yazılıyordu (canlıda ölçüldü). 404 paylaşımlı önbelleğe girmesin;
+    gövde (404.html, noindex) ve durum kodu aynı kalıyor.
+  */
+  if (cevap.status === 404 && sehirOnekindeMi(istekYolu)) {
+    const yeni = new Response(cevap.body, cevap);
+    yeni.headers.set('cache-control', 'no-store');
+    return yeni;
+  }
 
   /* Dosya bulunduysa işimiz yok — ön render sayfaları buradan geçiyor. */
   if (cevap.status !== 404) return cevap;
