@@ -159,11 +159,37 @@ export function ilanSayfaBasligi(ilan, konumEtiketi) {
   return `${ilan.title}${gorunen ? ` (${gorunen})` : ''}${sirket ? ` — ${sirket}` : ''} | StajımVar`;
 }
 
+/*
+  AÇIKLAMASIZ İLANIN META AÇIKLAMASI (15 Ekim 2026)
+
+  Yedek cümle yalnız konum YOKKEN devreye giriyordu: açıklaması boş ama
+  şehri olan ilan "München. " gibi tek başına bir konum alıyordu. Artık
+  açıklama boşsa (ya da yalnız yer tutucuysa) yedek konumdan bağımsız:
+  başlık, şirket ve konum — hangisi varsa — tek cümlede, ardından sabit bir
+  cümle. Açıklaması olan ilanın meta açıklaması değişmedi.
+*/
+const META_SINIRI = 155;
+const META_YEDEK_SONU ="Staj ilanının temel bilgileri ve başvuru bağlantısı StajımVar'da.";
+
 /** Meta açıklama (kısaltılmış). Sayfanın kendisi kısaltılmıyor. */
 export function ilanMetaAciklamasi(ilan, konumEtiketi) {
   const { gorunen } = ilanKonumu(ilan, konumEtiketi);
-  const govde = ozetle(ilan.description, gorunen ? 140 : 155);
-  return gorunen ? `${gorunen}. ${govde}` : govde || `${ilan.title} staj ilanı.`;
+  const govde = ozetle(gercekAciklama(ilan.description), gorunen ? 140 : 155);
+  if (govde) {
+    if (!gorunen) return govde;
+    /* Uzun konumda ("Düsseldorf, North Rhine-Westphalia, Germany") 140'lık
+       özet sınırı aşıyordu. Yalnız aşan meta yeniden özetleniyor; sınırın
+       içindeki meta birebir aynı kalıyor. ozetle() en fazla bütçe + 1
+       ("…") karakter döndürüyor, bütçe ona göre. */
+    const meta = `${gorunen}. ${govde}`;
+    if ([...meta].length <= META_SINIRI) return meta;
+    const butce = META_SINIRI - [...gorunen].length - 3;
+    return butce >= 40 ? `${gorunen}. ${ozetle(gercekAciklama(ilan.description), butce)}` : ozetle(gercekAciklama(ilan.description), META_SINIRI - 1);
+  }
+  const bas = [duzMetin(ilan.title), duzMetin(ilan.companies?.name), gorunen && duzMetin(gorunen)].filter(Boolean).join(', ');
+  if (!bas) return META_YEDEK_SONU;
+  const kisa = ozetle(bas, 155 - META_YEDEK_SONU.length - 3);
+  return `${kisa.endsWith('…') ? kisa : `${kisa.replace(/\.+$/, '')}.`} ${META_YEDEK_SONU}`;
 }
 
 const dizi = (d) =>
