@@ -17,11 +17,22 @@ const ORTAM = {
   INSTAGRAM_USER_ID: '17841400000000000',
 };
 
-const saglikliDogrulama = (ustuneYaz = {}) => ({
+/*
+  JETON BİTİŞİ TABAN SAATE GÖRE (15 Ekim 2026)
+
+  Bitiş sabit 2026-10-23'tü. `durumOzeti` saati dışarıdan alan testlerde
+  (SIMDI) sorun yoktu, ama `baglantiyiDogrula` gerçek saati kullanıyor:
+  takvim 7 günlük uyarı eşiğine girince sağlıklı jeton "doluyor" sayıldı ve
+  production koşusu düştü. Bitiş artık tabana göre +61 gün: SIMDI tabanında
+  değer eskisiyle aynı (2026-10-23), gerçek saatli testte her zaman 61 gün
+  ileride.
+*/
+const GUN_MS = 24 * 60 * 60 * 1000;
+const saglikliDogrulama = (ustuneYaz = {}, taban = SIMDI) => ({
   data: {
     app_id: ORTAM.INSTAGRAM_APP_ID,
     is_valid: true,
-    expires_at: Math.floor(new Date('2026-10-23T12:00:00.000Z').getTime() / 1000),
+    expires_at: Math.floor((taban.getTime() + 61 * GUN_MS) / 1000),
     scopes: ['instagram_basic', YAYIN_IZNI, 'pages_show_list'],
     ...ustuneYaz,
   },
@@ -245,7 +256,8 @@ test('Facebook yüzeyi çalışıyorsa orada kalınıyor', async () => {
   const ozet = await baglantiyiDogrula(
     ORTAM,
     sahteAg([
-      ['debug_token', saglikliDogrulama()],
+      /* baglantiyiDogrula gerçek saati kullanıyor: taban "şimdi". */
+      ['debug_token', saglikliDogrulama({}, new Date())],
       ['graph.facebook.com/v21.0/17841400000000000/content_publishing_limit', saglikliKota],
       ['graph.facebook.com', saglikliHesap],
       ['graph.instagram.com', { error: { message: 'çağrılmamalıydı', code: 1 } }],
