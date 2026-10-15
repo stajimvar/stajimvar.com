@@ -159,11 +159,26 @@ export function ilanSayfaBasligi(ilan, konumEtiketi) {
   return `${ilan.title}${gorunen ? ` (${gorunen})` : ''}${sirket ? ` — ${sirket}` : ''} | StajımVar`;
 }
 
+/*
+  AÇIKLAMASIZ İLANIN META AÇIKLAMASI (15 Ekim 2026)
+
+  Yedek cümle yalnız konum YOKKEN devreye giriyordu: açıklaması boş ama
+  şehri olan ilan "München. " gibi tek başına bir konum alıyordu. Artık
+  açıklama boşsa (ya da yalnız yer tutucuysa) yedek konumdan bağımsız:
+  başlık, şirket ve konum — hangisi varsa — tek cümlede, ardından sabit bir
+  cümle. Açıklaması olan ilanın meta açıklaması değişmedi.
+*/
+const META_YEDEK_SONU = "Staj ilanının temel bilgileri ve başvuru bağlantısı StajımVar'da.";
+
 /** Meta açıklama (kısaltılmış). Sayfanın kendisi kısaltılmıyor. */
 export function ilanMetaAciklamasi(ilan, konumEtiketi) {
   const { gorunen } = ilanKonumu(ilan, konumEtiketi);
-  const govde = ozetle(ilan.description, gorunen ? 140 : 155);
-  return gorunen ? `${gorunen}. ${govde}` : govde || `${ilan.title} staj ilanı.`;
+  const govde = ozetle(gercekAciklama(ilan.description), gorunen ? 140 : 155);
+  if (govde) return gorunen ? `${gorunen}. ${govde}` : govde;
+  const bas = [duzMetin(ilan.title), duzMetin(ilan.companies?.name), gorunen && duzMetin(gorunen)].filter(Boolean).join(', ');
+  if (!bas) return META_YEDEK_SONU;
+  const kisa = ozetle(bas, 155 - META_YEDEK_SONU.length - 3);
+  return `${kisa.endsWith('…') ? kisa : `${kisa.replace(/\.+$/, '')}.`} ${META_YEDEK_SONU}`;
 }
 
 const dizi = (d) =>
