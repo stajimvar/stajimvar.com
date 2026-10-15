@@ -22,6 +22,7 @@ import { guvenliDisAdres } from '../guvenli-url.mjs';
 import { ilanHedefi } from '../ilan-hedefi.mjs';
 import { basvuruYolu } from '../basvuru-yolu.mjs';
 import { ulkeAdi, ulkeListesiTemizle } from '../ulkeler.mjs';
+import { gercekAciklama, yerTutucuAciklamaMi } from '../ilan-yer-tutucu.mjs';
 
 export const SITE = 'https://stajimvar.com';
 
@@ -221,10 +222,22 @@ export function ilanJobPosting(ilan, konumEtiketi, simdi = Date.now()) {
     eksik.push(yerellik ? 'addressCountry (şehir var, ülke kodu yok)' : 'jobLocation (şehir ve ülke yok)');
   }
 
-  const aciklamaParcalari = paragraflar(ilan.description);
+  /*
+    Yer tutucu açıklama ("Bu ilanın ayrıntıları şirketin kendi kariyer
+    sayfasında…") iş tanımı değil: açıklama yok sayılıyor ve aşağıdaki eksik
+    alan kuralı uygulanıyor (lib/ilan-yer-tutucu). Sayfanın dizine
+    açıklığını bu karar değiştirmiyor.
+  */
+  const aciklamaParcalari = paragraflar(gercekAciklama(ilan.description));
   const sorumluluk = dizi(ilan.responsibilities);
   const nitelik = dizi(ilan.required_skills);
-  if (!aciklamaParcalari.length && !sorumluluk.length && !nitelik.length) eksik.push('description');
+  /*
+    Yer tutucu varsa JobPosting HİÇ yazılmıyor — `required_skills` dolu olsa
+    bile: toplama hattında o alan başlıktan tahminle çıkarılıyor; açıklaması
+    yalnız tahmini beceri listesi olan bir iş ilanı da yanlış beyan olurdu.
+  */
+  if (yerTutucuAciklamaMi(ilan.description)) eksik.push('description (yer tutucu metin)');
+  else if (!aciklamaParcalari.length && !sorumluluk.length && !nitelik.length) eksik.push('description');
   if (eksik.length) return { veri: null, eksik };
 
   const html =

@@ -212,6 +212,36 @@ WORK_TYPE = {"remote": "Remote", "hybrid": "Hybrid", "onsite": "On-site"}
 # --- Pipeline ----------------------------------------------------------------
 
 
+# Toplama hattının eskiden boş açıklama yerine yazdığı cümle (15 Ekim 2026'ya
+# kadar). İş tanımı değil: JobPosting'e gerçek açıklama gibi giriyordu
+# (canlıda 7 ilan). Kaynakta da aynı metin gelirse açıklama yok sayılır.
+# Web tarafındaki karşılığı: src/lib/ilan-yer-tutucu.mjs.
+YER_TUTUCU_CUMLELER = (
+    "bu ilanın ayrıntıları şirketin kendi kariyer sayfasında",
+    "başvurmak için ilana git",
+)
+
+
+def ilan_aciklamasi(ham: str | None) -> str | None:
+    """Kaynak açıklama; yoksa ya da yalnız yer tutucuysa None.
+
+    Uydurma açıklama ÜRETİLMİYOR: kaynak vermediyse alan boş kalır. Web
+    tarafı boş açıklamada JobPosting yazmıyor, sayfa yine yayımlanıyor.
+    """
+    metin = (ham or "").strip()
+    if not metin:
+        return None
+    # Türkçe küçük harf: Python'ın lower()'ı "İ"yi "i̇" (noktalı bileşik), "I"yı
+    # "i" yapıyor; önce Türkçe karşılıkları konuyor.
+    kalan = re.sub(r"<[^>]+>", " ", metin).replace("İ", "i").replace("I", "ı").lower()
+    kalan = re.sub(r"\s+", " ", kalan)
+    for cumle in YER_TUTUCU_CUMLELER:
+        kalan = kalan.replace(cumle, " ")
+    if not re.sub(r"[\s.,;:!?…—–-]+", "", kalan):
+        return None
+    return metin
+
+
 def ilan_durumu(raw: dict) -> str:
     """Yayına mı çıkacak, taslakta mı kalacak?
 
@@ -318,7 +348,9 @@ def promote_one(db, raw: dict, source: dict, *, dry: bool) -> str:
             return "duplicate"
 
     # 7. Yayınla
-    description = raw.get("description") or ""
+    # Yer tutucu ya da boş açıklama None: uydurma metin yazılmıyor.
+    aciklama = ilan_aciklamasi(raw.get("description"))
+    description = aciklama or ""
     mandatory, insurance_note = detect_mandatory_staj(description)
     skills = extract_skills(raw.get("title"), description)
 
@@ -339,9 +371,10 @@ def promote_one(db, raw: dict, source: dict, *, dry: bool) -> str:
         "voluntary_staj_accepted": detect_voluntary_staj(description),
         "is_paid": detect_paid(description),
         "insurance_note": insurance_note,
-        # Bazı kaynaklar (ör. Workday) listede açıklama vermiyor. Boş bir kart
-        # göstermek yerine kullanıcıyı kaynağa yönlendiren bir not bırakılıyor.
-        "description": description or "Bu ilanın ayrıntıları şirketin kendi kariyer sayfasında. Başvurmak için ilana git.",
+        # Bazı kaynaklar (ör. Workday) listede açıklama vermiyor. Eskiden yerine
+        # yönlendirme cümlesi yazılıyordu; o cümle JobPosting'e iş tanımı gibi
+        # giriyordu (15 Ekim 2026). Artık açıklama yoksa alan boş (None).
+        "description": aciklama,
         # Beceri çıkarımı tahminî; ilkler zorunlu, kalanlar tercih edilen sayılıyor.
         "required_skills": skills[:4],
         "preferred_skills": skills[4:10],
