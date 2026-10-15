@@ -125,3 +125,36 @@ test('React yolu: ListingPage aynı fonksiyonu, kaynağın verdiği alanlarla ç
   const kaynak = { title: ILAN.title, city: 'München', description: '', companies: { name: 'BMW Group' } };
   yeterliYedek(ilanMetaAciklamasi(kaynak, etiket), ILAN);
 });
+
+test('uzun konum + gerçek açıklama: nihai meta 155 karakteri aşmıyor, konum korunuyor', () => {
+  const uzun = 'In a nutshell Our interns are responsible for finding the world\'s best talent and convincing them to join us. You possess excellent communication skills. '.repeat(2);
+  for (const city of [
+    'Berlin, DE | Germany (REMOTE)',
+    'Düsseldorf, North Rhine-Westphalia, Germany',
+    'Ulm', 'İstanbul', 'Bad Neustadt an der Saale', 'X'.repeat(60), 'Y'.repeat(130), 'Z'.repeat(200),
+  ]) {
+    for (const description of [uzun, 'Kısa açıklama.', 'a'.repeat(150), 'kelime '.repeat(40)]) {
+      const meta = ilanMetaAciklamasi({ ...ILAN, city, description }, etiket);
+      assert.ok([...meta].length <= 155, `${city}: ${[...meta].length}`);
+      assert.ok(meta.trim().length >= 10, meta);
+      if (city.length < 100) assert.ok(meta.startsWith(`${city}. `), meta);
+    }
+  }
+  /* Bugün sınırı aşan iki gerçek örnek biçimi. */
+  const m1 = ilanMetaAciklamasi({ ...ILAN, city: 'Düsseldorf, North Rhine-Westphalia, Germany', description: uzun }, etiket);
+  assert.ok(m1.startsWith('Düsseldorf, North Rhine-Westphalia, Germany. In a nutshell'));
+  assert.ok(m1.endsWith('…'));
+});
+
+test('sınırın içindeki meta birebir eski kural: konum 13–15 karakter, özet kesilmemiş', () => {
+  /* Eski kural "<konum>. <ozetle(açıklama, 140)>"; sonuç ≤ 155 ise aynen kalmalı. */
+  const city = 'Frankfurt a.M.'; // 14 karakter
+  const description = 'b'.repeat(130) + ' son.';
+  const eski = `${city}. ${description}`;
+  assert.ok([...eski].length <= 155);
+  assert.equal(ilanMetaAciklamasi({ ...ILAN, city, description }, etiket), eski);
+  /* Konum yok: davranış aynı (ozetle 155). */
+  const uzun = 'kelime '.repeat(40).trim();
+  const m = ilanMetaAciklamasi({ ...ILAN, city: null, description: uzun }, etiket);
+  assert.ok(uzun.startsWith(m.replace(/…$/, '')));
+});
