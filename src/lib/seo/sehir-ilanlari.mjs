@@ -55,6 +55,16 @@ export function sehirAdresiniCoz(yol) {
   return { slug, il: SEHIR_SAYFALARI[slug].il, sayfa: 1 };
 }
 
+/**
+ * Adres bir şehir sayfasının öneki altında mı (geçerli olsun ya da olmasın).
+ * "/staj-ilanlari/istanbul/sayfa/0" gibi geçersiz adresler ara katmanda
+ * 404'e düşüyor; bu yardımcı o 404'ün paylaşımlı önbelleğe girmemesi için.
+ */
+export function sehirOnekindeMi(yol) {
+  const m = String(yol || '').match(/^\/staj-ilanlari\/([a-z0-9-]+)(?:\/|$)/);
+  return Boolean(m && Object.hasOwn(SEHIR_SAYFALARI, m[1]));
+}
+
 const sade = (t) => String(t || '').trim().toLocaleLowerCase('tr').replace(/\s+/g, ' ');
 
 /** Şehrin açık ilanları, sıralı ve tekrarsız. */
