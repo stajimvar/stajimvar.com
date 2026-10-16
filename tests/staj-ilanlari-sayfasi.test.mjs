@@ -179,7 +179,8 @@ test('ANA SAYFA ALT KÜME DEĞİL: 6 kart, fırsat şeridi ve /staj-ilanlari ba�
     şeridini taşıyor; ilan niyetinin sayfasına açık bağlantı veriyor.
   */
   const r = oku('scripts/onrender.mjs');
-  assert.match(r, /const GORUNUR_KART = 6;/);
+  assert.match(r, /const GORUNUR_KART = ANASAYFA_ILK_KART;/);
+  assert.match(oku('src/lib/anasayfa-baglantilari.mjs'), /export const ANASAYFA_ILK_KART = 6;/);
   assert.match(r, /const ilanKartlari = gorunurIlanKartlari\(gorunurIlanlar\);/);
   assert.match(r, /'<h2 id="firsat-seridi">Güncel öğrenci fırsatları<\/h2>'/);
   assert.match(r, /<a href="\/staj-ilanlari">Tüm staj ilanları →<\/a>/);

@@ -1,5 +1,35 @@
 import React from 'react';
-import { ANASAYFA_BOLUMLERI } from '../lib/anasayfa-baglantilari.mjs';
+import { ANASAYFA_BOLUMLERI, anaSayfaSehirBaglantisi } from '../lib/anasayfa-baglantilari.mjs';
+
+/**
+ * ANA SAYFA: TÜM İLANLAR VE ŞEHİR SAYFASI (15 Ekim 2026)
+ *
+ * Ön render ilk kartların altında "Tüm staj ilanları →" ve yanında şehir
+ * sayfasını veriyor; uygulamada bu satır yoktu. Aynı iki bağlantı, aynı
+ * yerde: MatchedInternshipsView onu ilk ANASAYFA_ILK_KART kartın ardına
+ * koyuyor. Şehir bağlantısı ortak modülden (lib/anasayfa-baglantilari).
+ */
+export const AnaSayfaIlanBaglantilari: React.FC<{ onNavigate: (yol: string) => void }> = ({ onNavigate }) => {
+  const sehir = anaSayfaSehirBaglantisi();
+  const git = (yol: string) => (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    e.preventDefault();
+    onNavigate(yol);
+  };
+  const sinif = 'inline-flex min-h-6 items-center text-blue-700 hover:underline';
+  return (
+    <p className="flex flex-wrap gap-x-4 gap-y-1.5 py-1.5 text-sm font-bold leading-6">
+      <a href="/staj-ilanlari" onClick={git('/staj-ilanlari')} className={sinif}>
+        Tüm staj ilanları →
+      </a>
+      {sehir && (
+        <a href={sehir.yol} onClick={git(sehir.yol)} className={sinif}>
+          {sehir.metin} →
+        </a>
+      )}
+    </p>
+  );
+};
 
 /**
  * ANA SAYFADAN BÖLÜM SAYFALARINA (14 Ekim 2026)

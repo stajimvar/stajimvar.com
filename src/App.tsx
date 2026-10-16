@@ -100,7 +100,7 @@ const FIRSAT_LISTE_YOLLARI = new Set([
   '/kaydedilen-firsatlar',
 ]);
 import { OpportunitiesHomeSection } from './components/OpportunitiesHomeSection';
-import { AnaSayfaBolumleri } from './components/AnaSayfaBolumleri';
+import { AnaSayfaBolumleri, AnaSayfaIlanBaglantilari } from './components/AnaSayfaBolumleri';
 import { basvuruSonucMesaji, basvuruYolu } from './lib/basvuru-yolu.mjs';
 import { basvuruKopyasi } from './lib/basvuru-kopyasi.mjs';
 import { ayrilmaOnayi } from './lib/kaydedilmemis-degisiklik.mjs';
@@ -4186,6 +4186,8 @@ export default function App() {
                 hasMoreCountriesPage={globalListings.page.hasMore}
                 onLoadMoreCountriesPage={globalListings.loadMore}
                 giris={stajIlanlariAdresi ? { baslik: STAJ_ILANLARI_METNI[stajIlanlariGorunumu].h1, aciklama: STAJ_ILANLARI_METNI[stajIlanlariGorunumu].aciklama } : undefined}
+                /* Ana sayfa: ön render'daki "Tüm staj ilanları → · İstanbul staj ilanları →" satırı, aynı yerde (ilk kartların ardında). */
+                ilkKartlarSonrasi={stajIlanlariAdresi ? undefined : <AnaSayfaIlanBaglantilari onNavigate={navigate} />}
               />
               {/*
                 /staj-ilanlari: fırsat şeridinin yerinde SEO bilgi bölümü

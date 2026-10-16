@@ -46,7 +46,7 @@ import { kunye, YAZAR } from '../src/lib/rehber-kunye.mjs';
 */
 import { kacir, duzMetin, ozetle, ilanYolu as ortakIlanYolu } from '../src/lib/seo/metin.mjs';
 import { STAJ_ILANLARI_METNI } from '../src/lib/staj-ilanlari-metni.mjs';
-import { seritFirsatlari as seritFirsatlariSec, ANASAYFA_BOLUMLERI } from '../src/lib/anasayfa-baglantilari.mjs';
+import { seritFirsatlari as seritFirsatlariSec, ANASAYFA_BOLUMLERI, ANASAYFA_ILK_KART, anaSayfaSehirBaglantisi } from '../src/lib/anasayfa-baglantilari.mjs';
 import { ilanSayfasi, ILAN_SECIMI, istanbulBugun, benzerIlanlariSec } from '../src/lib/seo/ilan-sayfasi.mjs';
 import { sayfaHtml } from '../src/lib/seo/sayfa-html.mjs';
 import { ARSIV_SAYFA_BOYU, acikIlanMi, arsivSirasi, arsivYolu, arsivSayfaBasligi, arsivSayfaNumaralari } from '../src/lib/seo/ilan-arsivi.mjs';
@@ -608,7 +608,7 @@ async function ilanlariGetir() {
       bölüm sayfalarındaki ilan bloğu ilanın alanına bakıyor
       (src/lib/bolum-ilanlari.mjs). Kolon ziyaretçiye açık (göç 20261109010000).
     */
-    yol: `/rest/v1/listings?status=eq.published&order=posted_at.desc.nullslast,id.asc&select=${encodeURIComponent(`${ILAN_SECIMI},alan_idleri,il,ilce`)}`,
+    yol: `/rest/v1/listings?status=eq.published&order=posted_at.desc.nullslast,id.asc&select=${encodeURIComponent(`${ILAN_SECIMI},alan_idleri,ilce`)}`,
   });
 }
 
@@ -2341,6 +2341,8 @@ async function main() {
     listesi. Tarayıcıya da aynı listeyi veriyoruz — uydurma değil, sayfada
     gerçekten duran ilanlar; her biri kendi sayfasına bağlanıyor.
   */
+  const sehirAnaBag = anaSayfaSehirBaglantisi();
+  const anaSayfaSehirBag = sehirAnaBag ? ` · <a href="${kacir(sehirAnaBag.yol)}">${kacir(sehirAnaBag.metin)} →</a>` : '';
   const anaSayfaBaglantilari = [
     /* İlan merkezi ve sayfalı tam liste: ilk 12 kartın ötesine giden taranabilir yol. */
     ['/staj-ilanlari', 'Tüm staj ilanları'],
@@ -2395,7 +2397,8 @@ async function main() {
     /staj-ilanlari; ana sayfa ilk 6 kartı (React'in ilk 6 kartıyla aynı,
     aynı tohum) ve canlıda da gösterdiği fırsat şeridini taşıyor.
   */
-  const GORUNUR_KART = 6;
+  /* Uygulama bağlantı satırını aynı sayıda kartın ardına koyuyor (lib/anasayfa-baglantilari). */
+  const GORUNUR_KART = ANASAYFA_ILK_KART;
   /* Kart işaretlemesi ve şehir yazımı: `gorunurIlanKartlari` (yukarıda, /staj-ilanlari ile ortak). */
 
   /*
@@ -2512,7 +2515,8 @@ async function main() {
       '<h1>Staj aramaya buradan başla.</h1>' +
       '<p class="sv-giris">Şirketlerin kariyer sayfalarından derlenen ve StajımVar’da yayımlanan staj ilanlarını keşfet.</p>' +
       ilanKartlari +
-      `<p class="sv-tum-ilanlar"><a href="/staj-ilanlari">Tüm staj ilanları →</a></p>` +
+      /* Şehir sayfası bağlantısı uygulamayla ortak (lib/anasayfa-baglantilari). */
+      `<p class="sv-tum-ilanlar"><a href="/staj-ilanlari">Tüm staj ilanları →</a>${anaSayfaSehirBag}</p>` +
       firsatSeridi +
       bolumBaglantilari +
       anaSayfaNav +

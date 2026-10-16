@@ -23,6 +23,7 @@ import { ilanHedefi } from '../ilan-hedefi.mjs';
 import { basvuruYolu } from '../basvuru-yolu.mjs';
 import { ulkeAdi, ulkeListesiTemizle } from '../ulkeler.mjs';
 import { gercekAciklama, yerTutucuAciklamaMi } from '../ilan-yer-tutucu.mjs';
+import { ilanSehirBaglantisi } from './sehir-sayfalari.mjs';
 
 export const SITE = 'https://stajimvar.com';
 
@@ -33,7 +34,8 @@ export const SITE = 'https://stajimvar.com';
  */
 export const ILAN_SECIMI =
   'id,title,description,responsibilities,required_skills,duration,min_grade_level,' +
-  'city,country_code,work_type,apply_url,application_method,posted_at,created_at,updated_at,' +
+  /* `il`: şehir sayfası bağlantısı ön render ve kenarda aynı ile baksın. */
+  'city,il,country_code,work_type,apply_url,application_method,posted_at,created_at,updated_at,' +
   'application_deadline,is_paid,stipend_text,basvuru_ulkeleri,origin,' +
   'basvuru_ulkeleri_kanit,basvuru_ulkeleri_dogrulandi_at,' +
   'companies(name,slug,website_url,logo_url,industry,location,description)';
@@ -378,6 +380,8 @@ export function ilanGorunurGovde(ilan, konumEtiketi, simdi = Date.now(), { sirke
   const sirket = ilan.companies || {};
   /* Şirket sayfası yoksa bağlantı verilmiyor (kırık iç bağlantı olmasın). */
   const sirketBag = Boolean(sirket.slug) && sirketSayfasiVar;
+  /* İl şehir sayfasının kuralıyla (lib/seo/sehir-sayfalari); React aynısını çağırıyor. */
+  const sehirBag = ilanSehirBaglantisi(ilan);
   const { gorunen } = ilanKonumu(ilan, konumEtiketi);
   const durum = sonBasvuruDurumu(ilan, simdi);
   const alt = [sirket.name, gorunen, CALISMA[ilan.work_type]].filter(Boolean).map(kacir).join(' · ');
@@ -433,6 +437,7 @@ export function ilanGorunurGovde(ilan, konumEtiketi, simdi = Date.now(), { sirke
     basvuru +
     benzerBolumu +
     '<p class="sv-baglantilar"><a href="/staj-ilanlari">Tüm staj ilanları</a>' +
+    (sehirBag ? ` · <a href="${kacir(sehirBag.yol)}">${kacir(sehirBag.metin)}</a>` : '') +
     (sirketBag ? ` · <a href="/sirket/${kacir(sirket.slug)}">${kacir(sirket.name || 'Şirket')} sayfası</a>` : '') +
     ' · <a href="/rehber/staj-basvuru-epostasi">Başvuru e-postası nasıl yazılır</a></p>' +
     '</main>'

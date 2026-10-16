@@ -35,6 +35,7 @@ import {
 import { InternshipListing, StudentProfile, MatchBreakdown, ApplicationRecord } from '../types';
 import { calculateInternshipMatch } from '../utils/matchingEngine';
 import { InternshipCard } from './InternshipCard';
+import { ANASAYFA_ILK_KART } from '../lib/anasayfa-baglantilari.mjs';
 import { fetchOpportunities, fetchSavedListingIds, toggleSavedListing } from '../lib/opportunities';
 import { SonucYok, type AktifSuzgec } from './SonucYok';
 import { SonrakiAdim } from './SonrakiAdim';
@@ -273,6 +274,16 @@ interface MatchedInternshipsViewProps {
    * ana sayfanın metni.
    */
   giris?: { baslik: string; aciklama: string };
+  /**
+   * İLK KARTLARIN ARDINDAKİ İÇERİK (15 Ekim 2026)
+   *
+   * Ana sayfanın ilk HTML'i ilk ANASAYFA_ILK_KART kartı yazıp "Tüm staj
+   * ilanları → · İstanbul staj ilanları →" satırını hemen ardına koyuyor.
+   * Uygulama satırı listenin sonunda çiziyordu; artık aynı sıradaki kartın
+   * ardında (liste daha kısaysa son kartın ardında). Kartlar, sıra ve
+   * süzgeçler değişmiyor. Verilmezse hiçbir şey eklenmiyor (/staj-ilanlari).
+   */
+  ilkKartlarSonrasi?: React.ReactNode;
 }
 
 export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
@@ -306,6 +317,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   hasMoreCountriesPage=false,
   onLoadMoreCountriesPage,
   giris,
+  ilkKartlarSonrasi,
 }) => {
 
   /*
@@ -2658,6 +2670,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                     yuzey
                     cografyaEtiketi={seciliBolge === 'tumu'}
                   />
+                  {ilkKartlarSonrasi && index === Math.min(ANASAYFA_ILK_KART, filteredListings.length) - 1 && ilkKartlarSonrasi}
 
                   {/*
                     AKIŞ İÇİ REKLAM KALDIRILDI
