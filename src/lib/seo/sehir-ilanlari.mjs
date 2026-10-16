@@ -1,4 +1,5 @@
 import { ilanIli } from '../ilan-ili.mjs';
+import { SEHIR_SAYFALARI, sehirYolu } from './sehir-sayfalari.mjs';
 import { ARSIV_SAYFA_BOYU, acikIlanMi, arsivSirasi, arsivSayfaNumaralari } from './ilan-arsivi.mjs';
 import { istanbulBugun } from './ilan-sayfasi.mjs';
 import { kacir } from './metin.mjs';
@@ -23,17 +24,20 @@ import { ilanKartlariHtml } from './ilan-karti-html.mjs';
  * Dizine açma eşiği: en az 10 açık ilan. Altında sayfa `noindex, follow`
  * alıyor ve haritaya girmiyor (ince sayfa kuralı).
  */
-export const SEHIR_SAYFALARI = Object.freeze({
-  istanbul: Object.freeze({ il: 'İstanbul', bulunma: "İstanbul'daki" }),
-});
+
+/*
+  Şehir listesi, adres ve ilan → şehir sayfası bağlantısı
+  `sehir-sayfalari.mjs`te (15 Ekim 2026): ilan sayfası onları bu dosyayı
+  (dolayısıyla ilan-sayfasi.mjs'i) içe aktarmadan kullanabilsin diye.
+  Eski içe aktarımlar çalışsın: aynı adlar buradan da dışa veriliyor.
+*/
+export { SEHIR_SAYFALARI, sehirYolu, sehirBaglantisi, ilanSehirBaglantisi } from './sehir-sayfalari.mjs';
 
 export const SEHIR_ESIGI = 10;
 
 /** Kenar ve uygulamanın okuduğu alanlar; hepsi ziyaretçiye açık kolonlar. */
 export const SEHIR_ILAN_SECIMI =
   'id,title,city,il,ilce,country_code,work_type,posted_at,created_at,updated_at,application_deadline,status,companies(name,logo_url)';
-
-export const sehirYolu = (slug, n = 1) => (n <= 1 ? `/staj-ilanlari/${slug}` : `/staj-ilanlari/${slug}/sayfa/${n}`);
 
 /**
  * Adresi çözer. Bilinen şehir değilse null (ara katman dokunmuyor).

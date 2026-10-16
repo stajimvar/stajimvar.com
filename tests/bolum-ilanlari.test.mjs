@@ -163,7 +163,9 @@ test('eşleşen ilan yoksa liste boş — dolgu ilan yok', () => {
 test('ön render: ilan okuması alan_idleri taşıyor, bölüm gövdesine ortak kartlar giriyor, yapısal veri eklenmiyor', () => {
   const r = oku('scripts/onrender.mjs');
   assert.match(r, /import \{ bolumIlanlari \} from '\.\.\/src\/lib\/bolum-ilanlari\.mjs';/);
-  assert.match(r, /encodeURIComponent\(`\$\{ILAN_SECIMI\},alan_idleri,il,ilce`\)/);
+  assert.match(r, /encodeURIComponent\(`\$\{ILAN_SECIMI\},alan_idleri,ilce`\)/);
+  /* `il` 15 Ekim 2026'dan beri ILAN_SECIMI'nde (şehir sayfası bağlantısı kenarda da aynı ile bakıyor). */
+  assert.match(oku('src/lib/seo/ilan-sayfasi.mjs'), /'city,il,country_code,/);
   assert.match(r, /yol: '\/rest\/v1\/sectors\?aktif=eq\.true&select=id,slug,ad&order=sira\.asc'/);
   assert.match(r, /const sonuc = bolumIlanlari\(\{ bolumSlug: b\.slug, ilanlar, sektorler \}\);/);
   assert.match(r, /\? gorunurIlanKartlari\(sonuc\.ilanlar\) \+/);

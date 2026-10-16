@@ -18,6 +18,7 @@ import { tarihMetni } from '../lib/tarih.mjs';
 import { sayfaMetaAyarla } from '../lib/sayfa-meta';
 import { ilanSayfaBasligi, ilanMetaAciklamasi } from '../lib/seo/ilan-sayfasi.mjs';
 import { ilanYolu } from '../lib/seo/metin.mjs';
+import { ilanSehirBaglantisi } from '../lib/seo/sehir-sayfalari.mjs';
 import { sonKontrolMetni } from '../lib/zaman';
 /*
   Ücret, staj türü ve sigorta kararları kartla AYNI dosyadan geliyor.
@@ -258,6 +259,15 @@ export const ListingPage: React.FC<ListingPageProps> = ({
     biçimleniyor, ham ISO basılmıyor.
   */
   const sonBasvuru = tarihMetni(listing?.applicationDeadline);
+  /* Şehir sayfası bağlantısı: ön render/kenarla aynı kural (lib/seo/sehir-sayfalari). */
+  const sehirBag = listing
+    ? ilanSehirBaglantisi({ il: listing.il, city: listing.city, countryCode: listing.countryCode })
+    : null;
+  const uygulamadaAc = (adres: string) => (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    onNavigate(adres);
+  };
   /*
     KARAR ORTAK DOSYADA
 
@@ -911,6 +921,28 @@ export const ListingPage: React.FC<ListingPageProps> = ({
             </div>
           </aside>
           </div>
+        )}
+
+        {/*
+          ŞEHİR SAYFASINA BAĞLANTI (15 Ekim 2026)
+
+          Ön render ve kenar çizimi ilanın altında "Tüm staj ilanları ·
+          İstanbul staj ilanları" veriyor (lib/seo/ilan-sayfasi
+          ilanGorunurGovde). Uygulama aynı kuralı (ilanSehirBaglantisi:
+          şehir sayfasının il seçimi) çağırıyor; ili bir şehir sayfasına
+          karşılık gelmeyen ilanda bu satır yok. Gerçek <a>: orta tuş ve yeni
+          sekme çalışsın, düz tıklama uygulama içinde kalsın.
+        */}
+        {durum === 'hazir' && listing && sehirBag && (
+          <p className="flex flex-wrap gap-x-2 gap-y-1 text-sm font-semibold text-gray-600">
+            <a href="/staj-ilanlari" onClick={uygulamadaAc('/staj-ilanlari')} className={`text-blue-700 hover:underline rounded ${ODAK_HALKASI}`}>
+              Tüm staj ilanları
+            </a>
+            <span aria-hidden="true">·</span>
+            <a href={sehirBag.yol} onClick={uygulamadaAc(sehirBag.yol)} className={`text-blue-700 hover:underline rounded ${ODAK_HALKASI}`}>
+              {sehirBag.metin}
+            </a>
+          </p>
         )}
       </main>
 

@@ -1,4 +1,5 @@
 import { duzMetin } from './seo/metin.mjs';
+import { sehirBaglantisi } from './seo/sehir-sayfalari.mjs';
 
 /**
  * ANA SAYFA: FIRSAT ŞERİDİ VE BÖLÜM BAĞLANTILARI (14 Ekim 2026)
@@ -79,3 +80,25 @@ export const ANASAYFA_BOLUMLERI = [
   ['iktisat', 'İktisat'],
   ['grafik-tasarim', 'Grafik Tasarım'],
 ];
+
+/* ------------------------------------------------- şehir sayfası bağlantısı */
+
+/**
+ * ANA SAYFADAN ŞEHİR SAYFASINA (15 Ekim 2026)
+ *
+ * /staj-ilanlari/istanbul yalnız 3 iç bağlantı alıyordu. Ana sayfada
+ * "Tüm staj ilanları →" bağlantısının yanında duruyor; ön render ve uygulama
+ * (AnaSayfaIlanBaglantilari) bağlantıyı buradan alıyor. Adres ve metin şehir
+ * sayfası modülünden (SEHIR_SAYFALARI); listede yoksa bağlantı yok.
+ */
+export function anaSayfaSehirBaglantisi() {
+  return sehirBaglantisi('istanbul');
+}
+
+/**
+ * Ana sayfanın ilk HTML'inde görünen kart sayısı ve bağlantı satırının yeri.
+ * Ön render ilk bu kadar kartı yazıp satırı hemen ardına koyuyor; uygulama
+ * satırı aynı sıradaki kartın ardına koyuyor (MatchedInternshipsView,
+ * `ilkKartlarSonrasi`). İki yer aynı sayıyı buradan okuyor.
+ */
+export const ANASAYFA_ILK_KART = 6;
