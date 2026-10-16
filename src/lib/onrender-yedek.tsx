@@ -67,8 +67,16 @@ export const onRenderYedegiVar: boolean =
  * çizilmiş durumda. Yeni bir kaynak eklenmiyor, var olan işaretleme
  * yerinde tutuluyor.
  */
-export function OnRenderYedegi(): React.ReactElement | null {
-  if (!onRenderYedegiVar) return null;
-  if (typeof location !== 'undefined' && location.pathname !== ILK_YOL) return null;
-  return <div aria-busy="true" dangerouslySetInnerHTML={{ __html: ILK_ICERIK }} />;
+export function onRenderKopyasiKullanilabilir(): boolean {
+  if (!onRenderYedegiVar) return false;
+  return typeof location === 'undefined' || location.pathname === ILK_YOL;
+}
+
+/**
+ * `kalici`: parça hatası sınırı (lib/parca-hatasi) kopyayı bekleme göstergesi
+ * olarak değil, sayfanın kendisi olarak çiziyor — `aria-busy` yok.
+ */
+export function OnRenderYedegi({ kalici = false }: { kalici?: boolean } = {}): React.ReactElement | null {
+  if (!onRenderKopyasiKullanilabilir()) return null;
+  return <div aria-busy={kalici ? undefined : 'true'} dangerouslySetInnerHTML={{ __html: ILK_ICERIK }} />;
 }

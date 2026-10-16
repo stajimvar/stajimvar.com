@@ -8,6 +8,7 @@ import {createRoot} from 'react-dom/client';
   anlamlı: en üstte durması gerekiyor.
 */
 import {OnRenderYedegi} from './lib/onrender-yedek.tsx';
+import {ParcaHatasiSiniri} from './lib/parca-hatasi.tsx';
 import App from './App.tsx';
 /*
   Sayfa araması sağlayıcısı: üst çubuktaki arama/süzgeç simgeleriyle
@@ -75,10 +76,18 @@ createRoot(document.getElementById('root')!).render(
       parça inene kadar kullanıcı ön render edilen sayfayı görmeye devam
       ediyor. Bkz. `lib/onrender-yedek.tsx`.
     */}
-    <Suspense fallback={<OnRenderYedegi />}>
-      <SayfaAramaSaglayici>
-        <App />
-      </SayfaAramaSaglayici>
-    </Suspense>
+    {/*
+      Parça hatası sınırı Suspense'in DIŞINDA: gecikmeli parça yüklenemezse
+      sayfa boşalmıyor, ön render kopyası kalıyor ve index.html'in tek
+      seferlik kurtarması çağrılıyor. Parça hatası olmayan hatalar yukarı
+      geçiyor (davranış değişmedi). Bkz. `lib/parca-hatasi.tsx`.
+    */}
+    <ParcaHatasiSiniri>
+      <Suspense fallback={<OnRenderYedegi />}>
+        <SayfaAramaSaglayici>
+          <App />
+        </SayfaAramaSaglayici>
+      </Suspense>
+    </ParcaHatasiSiniri>
   </StrictMode>,
 );
