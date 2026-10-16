@@ -7,6 +7,7 @@ import {
   kenardaTutulabilirMi,
   kopyaKarari,
   onbellekAnahtariAdresi,
+  kurtarmaIstegiMi,
   onbellekBasligi,
 } from '../src/lib/onbellek-politikasi.mjs';
 /*
@@ -439,7 +440,13 @@ async function kenardanSun(
   const anahtar = new Request(onbellekAnahtariAdresi(request.url), { method: 'GET' });
   const onbellek = (caches as unknown as { default: Cache }).default;
 
-  const bulunan = await onbellek.match(anahtar);
+  /*
+    `?sv=` varlık kurtarmasının taze HTML istemesi (index.html): bayat kopya
+    okunmuyor, aşağıda taze cevap aynı anahtara yazılıyor. Ayrıntı:
+    `kurtarmaIstegiMi` (lib/onbellek-politikasi).
+  */
+  const kurtarma = kurtarmaIstegiMi(request.url);
+  const bulunan = kurtarma ? undefined : await onbellek.match(anahtar);
   if (bulunan) {
     /*
       Yaş, kopyanın yazıldığı anla şimdiki an arasındaki fark. Cache API
@@ -484,7 +491,7 @@ async function kenardanSun(
     isaretli.headers.get('x-ilan-kaynagi') !== 'statik-yedek';
 
   const yeni = new Response(isaretli.body, isaretli);
-  yeni.headers.set('x-onbellek', saklanabilir ? 'MISS' : 'ATLANDI');
+  yeni.headers.set('x-onbellek', saklanabilir ? (kurtarma ? 'MISS-KURTARMA' : 'MISS') : 'ATLANDI');
   if (!saklanabilir) return yeni;
 
   /*
