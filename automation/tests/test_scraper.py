@@ -218,6 +218,138 @@ class ScraperFixtureTests(unittest.TestCase):
         self.assertEqual(jobs[0].source_url, "https://careers.dhl.com/global/en/job/DPDHGLOBALAV373558ENGLOBALEXTERNAL/Uzun-D%C3%B6nem-Stajyer")
 
     @patch("scraper.requests.get")
+    def test_official_jsonld_reads_address_given_as_list(self, get):
+        """Adres liste olarak verilince (Hilti) ilan Türkiye dışı sanılıp elenmemeli."""
+        response = Mock()
+        response.text = '''
+          <script type="application/ld+json">
+          {
+            "@context": "http://schema.org",
+            "@type": "JobPosting",
+            "title": "Customer Experience Intern",
+            "description": "<p>Internship in our Istanbul office.</p>",
+            "datePosted": "2026-10-15T15:27:00+00:00",
+            "hiringOrganization": {"@type": "Organization", "name": "Hilti Corporation"},
+            "jobLocation": [{
+              "@type": "Place",
+              "name": "Istanbul, Marmara Region, Türkiye",
+              "address": [{
+                "@type": "PostalAddress",
+                "addressLocality": "Istanbul",
+                "addressRegion": "Marmara Region",
+                "addressCountry": "Türkiye"
+              }]
+            }]
+          }
+          </script>
+        '''
+        response.raise_for_status.return_value = None
+        get.return_value = response
+
+        adres = "https://careers.hilti.group/en/jobs/21578-en/customer-experience-intern/"
+        jobs = list(scraper.official_jsonld({"name": "Hilti Kariyer", "country": "TR", "urls": [adres], "company_name": "Hilti"}))
+
+        self.assertEqual(len(jobs), 1)
+        self.assertEqual(jobs[0].title, "Customer Experience Intern")
+        self.assertEqual(jobs[0].city, "Istanbul")
+        self.assertEqual(jobs[0].organization_name, "Hilti Corporation")
+        self.assertEqual(jobs[0].source_url, adres)
+
+    @patch("scraper.requests.get")
+    def test_official_jsonld_address_list_outside_turkey_still_filtered(self, get):
+        """Liste düzeltmesi ülke süzgecini gevşetmemeli: TR kaynağında Almanya adresi alınmıyor."""
+        response = Mock()
+        response.text = '''<script type="application/ld+json">{"@type":"JobPosting","title":"Customer Experience Intern",
+          "description":"Praktikum","jobLocation":[{"address":[{"addressLocality":"Kaufering","addressCountry":"Germany"}]}]}</script>'''
+        response.raise_for_status.return_value = None
+        get.return_value = response
+        jobs = list(scraper.official_jsonld({"name": "Hilti Kariyer", "country": "TR", "urls": ["https://example.com/j"], "company_name": "Hilti"}))
+        self.assertEqual(jobs, [])
+
+    MIKRO_SAYFA = '''
+      <header><nav>Skip to main content Search jobs</nav></header>
+      <article itemscope itemtype="http://schema.org/JobPosting">
+        <span itemprop="hiringOrganization" itemscope itemtype="http://schema.org/Organization">
+          <a href="/apply">Apply now &raquo;</a>
+          <span itemprop="name">ALPLA Plastik Sanayi Ve Ticaret Ltd. Sirketi</span>
+        </span>
+        <h1 itemprop="title">Long Term Intern | Human Resources</h1>
+        <meta itemprop="datePosted" content="2026-10-15">
+        <span itemprop="jobLocation" itemscope itemtype="http://schema.org/Place">
+          <span itemprop="address" itemscope itemtype="http://schema.org/PostalAddress">
+            <span itemprop="addressLocality">Gebze</span>
+            <meta itemprop="addressCountry" content="TR">
+          </span>
+        </span>
+        <div itemprop="description"><p>11 aylık uzun dönem staj.</p><p>Gebze fabrikasında.</p></div>
+        <div itemprop="qualifications"><ul><li>3. veya 4. sınıf öğrencisi</li></ul></div>
+        <div class="contact">Contact: Semih S., Human Resources</div>
+      </article>
+      <footer>All rights reserved</footer>
+    '''
+
+    @patch("scraper.requests.get")
+    def test_official_jsonld_reads_microdata_when_no_jsonld(self, get):
+        """JSON-LD vermeyen resmî sayfa (ALPLA, Boehringer, Bosch): microdata alanları okunuyor; menü, iletişim ve alt bilgi alınmıyor."""
+        response = Mock()
+        response.text = self.MIKRO_SAYFA
+        response.raise_for_status.return_value = None
+        get.return_value = response
+        adres = "https://career.alpla.com/en/jobs/turkey/gebze/long-term-intern-human-resources"
+        jobs = list(scraper.official_jsonld({"name": "ALPLA Kariyer", "country": "TR", "urls": [adres], "company_name": "ALPLA"}))
+
+        self.assertEqual(len(jobs), 1)
+        self.assertEqual(jobs[0].title, "Long Term Intern | Human Resources")
+        self.assertEqual(jobs[0].city, "Gebze")
+        self.assertEqual(jobs[0].organization_name, "ALPLA Plastik Sanayi Ve Ticaret Ltd. Sirketi")
+        self.assertIn("11 aylık uzun dönem staj.", jobs[0].description)
+        self.assertIn("3. veya 4. sınıf öğrencisi", jobs[0].description)
+        for disarida in ("Skip to main content", "Semih", "All rights reserved", "Apply now"):
+            self.assertNotIn(disarida, jobs[0].description)
+        self.assertEqual(jobs[0].source_url, adres)
+
+    @patch("scraper.requests.get")
+    def test_microdata_company_name_only_from_name_itemprop(self, get):
+        """Şirket adı serbest metinden alınmıyor (Boehringer'de "Apply now »" okunuyordu); name yoksa kaynağın adı."""
+        response = Mock()
+        response.text = self.MIKRO_SAYFA.replace(
+            '<span itemprop="name">ALPLA Plastik Sanayi Ve Ticaret Ltd. Sirketi</span>', '')
+        response.raise_for_status.return_value = None
+        get.return_value = response
+        jobs = list(scraper.official_jsonld({"name": "ALPLA Kariyer", "country": "TR", "urls": ["https://x/j"], "company_name": "ALPLA"}))
+        self.assertEqual(len(jobs), 1)
+        self.assertEqual(jobs[0].organization_name, "ALPLA")
+
+    @patch("scraper.requests.get")
+    def test_jsonld_wins_over_microdata(self, get):
+        """İkisi birden varsa yalnız JSON-LD: mevcut kaynakların davranışı değişmiyor, ilan iki kez çıkmıyor."""
+        response = Mock()
+        response.text = self.MIKRO_SAYFA + '''<script type="application/ld+json">{"@type":"JobPosting","title":"JSON-LD Stajyer",
+          "description":"x","jobLocation":{"address":{"addressLocality":"Istanbul","addressCountry":"TR"}}}</script>'''
+        response.raise_for_status.return_value = None
+        get.return_value = response
+        jobs = list(scraper.official_jsonld({"name": "K", "country": "TR", "urls": ["https://x/j"], "company_name": "K"}))
+        self.assertEqual([j.title for j in jobs], ["JSON-LD Stajyer"])
+
+    @patch("scraper.requests.get")
+    def test_microdata_scope_without_fields_yields_nothing(self, get):
+        """Kapsamı açıp alan koymayan sayfa (Eczacıbaşı): uydurma ilan yok."""
+        response = Mock()
+        response.text = '<div itemscope itemtype="http://schema.org/JobPosting"><h1>KDS Stajyeri</h1><p>İstanbul</p></div>'
+        response.raise_for_status.return_value = None
+        get.return_value = response
+        self.assertEqual(list(scraper.official_jsonld({"name": "E", "country": "TR", "urls": ["https://x/j"], "company_name": "E"})), [])
+
+    @patch("scraper.requests.get")
+    def test_microdata_outside_jobposting_scope_ignored(self, get):
+        """JobPosting kapsamı dışındaki itemprop'lar (ör. sayfa başlığı) ilan sayılmıyor."""
+        response = Mock()
+        response.text = '<div itemscope itemtype="http://schema.org/WebPage"><h1 itemprop="title">Kariyer</h1></div>'
+        response.raise_for_status.return_value = None
+        get.return_value = response
+        self.assertEqual(list(scraper.official_jsonld({"name": "E", "country": "TR", "urls": ["https://x/j"], "company_name": "E"})), [])
+
+    @patch("scraper.requests.get")
     def test_official_jsonld_ignores_non_jobposting_documents(self, get):
         """Genel WebPage şeması yanlışlıkla ilan olarak yayınlanmamalı."""
         response = Mock()

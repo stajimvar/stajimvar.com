@@ -1061,6 +1061,177 @@
       "urls": [
         "https://join.pmicareers.com/gb/en/job/PMIPMIGB33659EXTERNALENGB/Hiring-People-with-Disabilities-Internship-Full-Time-Roles"
       ]
+    },
+    {
+      "id": "vodafone-tr-official-jsonld",
+      "name": "Vodafone Türkiye Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Vodafone Türkiye",
+      "careers_url": "https://jobs.vodafone.com/careers",
+      "urls": [
+        "https://jobs.vodafone.com/careers/job/563018697924882",
+        "https://jobs.vodafone.com/careers/job/563018698029992"
+      ]
+    },
+    {
+      "id": "evyap-gethirex-jsonld",
+      "name": "Evyap Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Evyap",
+      "careers_url": "https://app.gethirex.com/o/evyap",
+      "website": "https://www.evyap.com.tr",
+      "urls": [
+        "https://app.gethirex.com/o/evyap/wjarrp74gp7we247--global-supply-chain-transformation-intern/"
+      ]
+    },
+    {
+      "id": "tskb-gethirex-jsonld",
+      "name": "TSKB Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "TSKB",
+      "careers_url": "https://app.gethirex.com/o/tskb",
+      "website": "https://www.tskb.com.tr",
+      "urls": [
+        "https://app.gethirex.com/o/tskb/cptuz6cyg4gkkuza--kurumsal-mimari-ve-surec-yonetimi-stajyeri/"
+      ]
+    },
+    {
+      "id": "gsk-official-jsonld",
+      "name": "GSK Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "GSK",
+      "careers_url": "https://jobs.gsk.com/gb/en",
+      "website": "https://www.gsk.com",
+      "urls": [
+        "https://jobs.gsk.com/gb/en/job/447011/Customer-Service-Logistics-Trainee"
+      ]
+    },
+    {
+      "id": "pg-official-jsonld",
+      "name": "Procter & Gamble Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Procter & Gamble",
+      "careers_url": "https://www.pgcareers.com/global/en",
+      "website": "https://www.pg.com",
+      "urls": [
+        "https://www.pgcareers.com/global/en/job/R000158920/Analytics-Insights-Winter-Intern"
+      ]
+    },
+    {
+      "id": "lilly-official-jsonld",
+      "name": "Lilly Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Lilly",
+      "careers_url": "https://careers.lilly.com/us/en",
+      "website": "https://www.lilly.com",
+      "urls": [
+        "https://careers.lilly.com/us/en/job/LILLUSR109639EXTERNALENUS/Lilly-StarT-PRA-Intern"
+      ]
+    },
+    {
+      "id": "ups-tr-official-jsonld",
+      "name": "UPS Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "UPS",
+      "careers_url": "https://www.jobs-ups.com/tr/tr",
+      "urls": [
+        "https://www.jobs-ups.com/tr/tr/job/UPBUPSGLOBALR26020881EXTERNALTRTR/Stajyer"
+      ]
+    },
+    {
+      "id": "bcg-official-jsonld",
+      "name": "BCG Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Boston Consulting Group",
+      "careers_url": "https://careers.bcg.com/global/en",
+      "website": "https://www.bcg.com",
+      "urls": [
+        "https://careers.bcg.com/global/en/job/BCG1US59759EXTERNALENGLOBAL/Intern-T%C3%BCrkiye"
+      ]
+    },
+    {
+      "id": "roche-official-jsonld",
+      "name": "Roche Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Roche",
+      "careers_url": "https://careers.roche.com/global/en",
+      "website": "https://www.roche.com",
+      "urls": [
+        "https://careers.roche.com/global/en/job/ROCHGLOBAL202610125466EXTERNALENGLOBAL/Intern"
+      ]
+    },
+    {
+      "id": "hilti-official-jsonld",
+      "name": "Hilti Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Hilti",
+      "careers_url": "https://careers.hilti.group/en/",
+      "website": "https://www.hilti.com.tr",
+      "urls": [
+        "https://careers.hilti.group/en/jobs/21578-en/customer-experience-intern/"
+      ]
+    },
+    {
+      "id": "boehringer-tr-microdata",
+      "name": "Boehringer Ingelheim Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Boehringer Ingelheim",
+      "careers_url": "https://jobs.boehringer-ingelheim.com",
+      "website": "https://www.boehringer-ingelheim.com",
+      "urls": [
+        "https://jobs.boehringer-ingelheim.com/job/Istanbul-Supply-Chain-Intern-Turk/1447292633/"
+      ],
+      "_not": "JSON-LD yok; schema.org JobPosting microdata okunuyor (scraper._MikroVeriIlani)."
+    },
+    {
+      "id": "bosch-tr-microdata",
+      "name": "Bosch Kariyer (Türkiye)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Bosch",
+      "careers_url": "https://jobs.smartrecruiters.com/BoschGroup",
+      "website": "https://www.bosch.com.tr",
+      "urls": [
+        "https://jobs.smartrecruiters.com/BoschGroup/744000154606874-logistics-smart-start"
+      ],
+      "_not": "Tek ilan; bosch-smartrecruiters-de yalnız Almanya. Microdata okunuyor."
+    },
+    {
+      "id": "alpla-tr-microdata",
+      "name": "ALPLA Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "ALPLA",
+      "careers_url": "https://career.alpla.com/en/jobs",
+      "website": "https://www.alpla.com",
+      "urls": [
+        "https://career.alpla.com/en/jobs/turkey/gebze/long-term-intern-human-resources"
+      ],
+      "_not": "JSON-LD yok; schema.org JobPosting microdata okunuyor. İlan resmî Türkiye listesinde."
     }
   ],
   "notes": "Only add verified public ATS/API endpoints. Keep credentials in environment variables, never here."

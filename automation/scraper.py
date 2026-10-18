@@ -258,6 +258,122 @@ class _JsonLdScripts(HTMLParser):
             self._parts = []
 
 
+_BOS_ETIKETLER = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
+_MIKRO_ALANLAR = {
+    "title", "description", "responsibilities", "qualifications", "datePosted", "validThrough",
+    "addressLocality", "addressCountry", "employmentType",
+}
+
+
+class _MikroVeriIlani(HTMLParser):
+    """schema.org JobPosting MICRODATA'sını okur (JSON-LD vermeyen resmî sayfalar).
+
+    ALPLA, Eczacıbaşı ve Boehringer (SuccessFactors), Bosch (SmartRecruiters)
+    ilanı JSON-LD yerine `itemscope itemtype="…/JobPosting"` ile işaretliyor
+    (ölçüldü, 18 Ekim 2026). Yalnız o kapsamın içindeki `itemprop` alanları
+    alınıyor; menü, alt bilgi ve iletişim bloğu dışarıda kalıyor. Her alanın
+    İLK görülen değeri tutuluyor; `content` niteliği varsa o, yoksa öğenin
+    görünür metni.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.alanlar: dict[str, str] = {}
+        self.organizasyon: str | None = None
+        self._kapsam = 0          # JobPosting itemscope içinde mi (derinlik)
+        self._etiket_yigini: list[bool] = []
+        self._yakala: str | None = None
+        self._yakala_etiket = ""
+        self._yakala_derinlik = 0
+        self._parcalar: list[str] = []
+        self._org_bekle = False
+        self._atla = 0
+
+    def handle_starttag(self, tag: str, attrs) -> None:
+        a = {k.casefold(): (v or "") for k, v in attrs}
+        if tag in {"script", "style", "noscript"}:
+            self._atla += 1
+        if tag in _BOS_ETIKETLER:
+            self._oz(a)
+            return
+        is_kapsam = "itemscope" in a and "jobposting" in a.get("itemtype", "").casefold()
+        self._etiket_yigini.append(is_kapsam)
+        if is_kapsam:
+            self._kapsam += 1
+        if self._yakala:
+            if tag == self._yakala_etiket:
+                self._yakala_derinlik += 1
+            if tag in {"p", "li", "div", "h2", "h3", "h4"}:
+                self._parcalar.append("\n")
+            return
+        self._oz(a, tag)
+
+    def _oz(self, a: dict[str, str], tag: str | None = None) -> None:
+        if not self._kapsam:
+            return
+        prop = a.get("itemprop", "")
+        if prop == "hiringOrganization":
+            self._org_bekle = True
+            return
+        # Şirket adı YALNIZ hiringOrganization'dan sonraki işaretli `name`
+        # alanından (Boehringer'de serbest metin "Apply now »" idi).
+        if prop == "name" and self._org_bekle:
+            self._org_bekle = False
+            prop = "_org"
+        elif prop not in _MIKRO_ALANLAR:
+            return
+        if prop in self.alanlar:
+            return
+        if a.get("content"):
+            self.alanlar[prop] = clean(a["content"])
+        elif tag is not None:
+            self._yakala, self._yakala_etiket, self._yakala_derinlik, self._parcalar = prop, tag, 1, []
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in {"script", "style", "noscript"} and self._atla:
+            self._atla -= 1
+        if tag in _BOS_ETIKETLER:
+            return
+        if self._yakala and tag == self._yakala_etiket:
+            self._yakala_derinlik -= 1
+            if self._yakala_derinlik == 0:
+                metin = re.sub(r"[ \t\r\f\v]+", " ", "".join(self._parcalar))
+                metin = re.sub(r"\s*\n\s*", "\n", metin).strip()
+                if metin:
+                    self.alanlar[self._yakala] = metin
+                self._yakala = None
+        if self._etiket_yigini and self._etiket_yigini.pop():
+            self._kapsam -= 1
+
+    def handle_data(self, veri: str) -> None:
+        if self._atla:
+            return
+        if self._yakala:
+            self._parcalar.append(veri)
+
+    def ilan(self) -> dict[str, Any] | None:
+        if not self.alanlar.get("title"):
+            return None
+        self.organizasyon = clean(self.alanlar.get("_org", "")) or None
+        aciklama = self.alanlar.get("description", "")
+        for ek in ("responsibilities", "qualifications"):
+            parca = self.alanlar.get(ek, "")
+            if parca and parca not in aciklama:
+                aciklama = f"{aciklama}\n{parca}".strip()
+        return {
+            "@type": "JobPosting",
+            "title": self.alanlar["title"],
+            "description": aciklama,
+            "datePosted": self.alanlar.get("datePosted"),
+            "validThrough": self.alanlar.get("validThrough"),
+            "hiringOrganization": {"name": self.organizasyon} if self.organizasyon else {},
+            "jobLocation": {"address": {
+                "addressLocality": self.alanlar.get("addressLocality"),
+                "addressCountry": self.alanlar.get("addressCountry"),
+            }},
+        }
+
+
 def _jsonld_items(value: Any) -> Iterable[dict[str, Any]]:
     if isinstance(value, list):
         for item in value:
@@ -288,11 +404,22 @@ def official_jsonld(config: dict[str, Any]) -> Iterable[Job]:
         parser = _JsonLdScripts()
         parser.feed(response.text)
 
+        bloklar: list[list[dict[str, Any]]] = []
         for block in parser.scripts:
             try:
-                values = list(_jsonld_items(json.loads(block)))
+                bloklar.append(list(_jsonld_items(json.loads(block))))
             except (TypeError, ValueError, json.JSONDecodeError):
                 continue
+        # JSON-LD JobPosting yoksa microdata (bkz. _MikroVeriIlani). İkisi
+        # birden varsa JSON-LD kazanıyor: mevcut kaynakların davranışı aynı.
+        if not any("JobPosting" in str(i.get("@type")) for b in bloklar for i in b):
+            mikro = _MikroVeriIlani()
+            mikro.feed(response.text)
+            bulunan = mikro.ilan()
+            if bulunan:
+                bloklar.append([bulunan])
+
+        for values in bloklar:
 
             for item in values:
                 types = item.get("@type", [])
@@ -308,6 +435,12 @@ def official_jsonld(config: dict[str, Any]) -> Iterable[Job]:
                 if isinstance(location, list):
                     location = location[0] if location else {}
                 address = location.get("address") or {} if isinstance(location, dict) else {}
+                # schema.org adresi tek nesne ya da LİSTE olarak verilebiliyor
+                # (Hilti: "address": [{...}]). Liste görülünce şehir/ülke boş
+                # kalıyor ve ilan "Türkiye değil" diye sessizce eleniyordu
+                # (ölçüldü, 18 Ekim 2026). İlk adres okunuyor.
+                if isinstance(address, list):
+                    address = next((a for a in address if isinstance(a, dict)), {})
                 city = address.get("addressLocality") if isinstance(address, dict) else None
                 country = address.get("addressCountry") if isinstance(address, dict) else None
                 if isinstance(country, dict):
