@@ -36,3 +36,26 @@ test('NREL teslimin dışında', () => {
   assert.doesNotMatch(GOC.replace(/\/\*[\s\S]*?\*\//g, ''), /nrel/i);
   assert.ok(!existsSync(path.join(KOK, 'public', 'isveren-logolari', 'nrel-legacy.png')));
 });
+
+/*
+  İLAN LOGOLARI — 19 EKİM 2026 TESLİMİ
+
+  Beş şirket (P&G, Hilti, GSK, Lilly, TSKB); kullanıcının verdiği dosyalar
+  128 × 128 PNG. Aynı güvenceler: kimlik + ad eşleşmesi, yalnız boş alan.
+*/
+const GOC_EKIM = oku('supabase/migrations/20261216010000_ilan_logolari_pg_hilti_gsk_lilly_tskb.sql');
+
+test('19 Ekim: beş şirket, kimlik + ad + boş logo koşulu; dosyalar 128 × 128 PNG', () => {
+  const satirlar = kod(GOC_EKIM).split(/;\s*/).filter(Boolean);
+  assert.equal(satirlar.length, 5);
+  const beklenen = ['procter-gamble', 'hilti', 'gsk', 'lilly', 'tskb'];
+  satirlar.forEach((s, i) => {
+    assert.match(s, new RegExp(`^update public\.companies set logo_url = 'https://stajimvar\.com/isveren-logolari/${beklenen[i]}\.png'`));
+    assert.match(s, /where id = '[0-9a-f-]{36}' and name = '[^']+' and nullif\(btrim\(logo_url\), ''\) is null$/);
+    const dosya = readFileSync(path.join(KOK, 'public', 'isveren-logolari', `${beklenen[i]}.png`));
+    /* PNG imzası ve IHDR genişlik/yükseklik: 128 × 128. */
+    assert.equal(dosya.subarray(1, 4).toString('latin1'), 'PNG');
+    assert.equal(dosya.readUInt32BE(16), 128);
+    assert.equal(dosya.readUInt32BE(20), 128);
+  });
+});
