@@ -80,3 +80,24 @@ test('20 Ekim: üç şirket, kimlik + ad + boş logo koşulu; dosyalar 128 × 12
     assert.equal(dosya.readUInt32BE(20), 128);
   });
 });
+
+/*
+  İLAN LOGOLARI — 20 EKİM 2026 TESLİMİ (ikinci parti)
+
+  İki şirket (Renault Deutschland AG, Stiebel Eltron); 128 × 128 PNG.
+*/
+const GOC_EKIM_20B = oku('supabase/migrations/20261218010000_ilan_logolari_renault_stiebel.sql');
+
+test('20 Ekim (ikinci parti): iki şirket, kimlik + ad + boş logo koşulu; dosyalar 128 × 128 PNG', () => {
+  const satirlar = kod(GOC_EKIM_20B).split(/;\s*/).filter(Boolean);
+  assert.equal(satirlar.length, 2);
+  const beklenen = ['renault', 'stiebel-eltron'];
+  satirlar.forEach((s, i) => {
+    assert.match(s, new RegExp(`^update public\.companies set logo_url = 'https://stajimvar\.com/isveren-logolari/${beklenen[i]}\.png'`));
+    assert.match(s, /where id = '[0-9a-f-]{36}' and name = '[^']+' and nullif\(btrim\(logo_url\), ''\) is null$/);
+    const dosya = readFileSync(path.join(KOK, 'public', 'isveren-logolari', `${beklenen[i]}.png`));
+    assert.equal(dosya.subarray(1, 4).toString('latin1'), 'PNG');
+    assert.equal(dosya.readUInt32BE(16), 128);
+    assert.equal(dosya.readUInt32BE(20), 128);
+  });
+});
