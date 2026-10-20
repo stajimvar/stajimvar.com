@@ -447,40 +447,30 @@ export const RehberBaglantilari: React.FC<{
  * gezinmeye yardım etmiyor, yalnızca yer kaplıyor.
  */
 
-/*
-  HIZLI CEVAP KUTUSUNDAKİ BAĞLANTININ BİÇİMİ
-
-  Gövdedeki varsayılan `text-blue-600` burada kullanılamaz: kutunun zemini
-  blue-600 → indigo-600 geçişi, yani yazı kendi zemininin üstüne düşüyor.
-  Beyaz yazı bu zeminde 8.59:1 (#FFFFFF / #2563EB) — kalan metinle aynı.
-
-  Bağlantı olduğu RENKTEN anlaşılamadığı için altı çiziliyor: renk tek
-  başına ayırt edici sinyal değil.
-
-  Odak halkası da beyaz; ODAK_HALKASI'nın blue-600'ü bu zeminde
-  görünmezdi (aynı renk).
-*/
-const HIZLI_CEVAP_BAGLANTISI =
-  'rounded-sm font-bold text-white underline decoration-white/60 decoration-2 underline-offset-4 ' +
-  'hover:decoration-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white';
-
 /**
  * İŞVEREN REHBERİ GİRİŞİ (27 Eylül 2026, kullanıcı isteği)
  *
  * Kullanıcının beğendiği /stajyer-nasil-alinir pilotunun girişi (EmployerGuide):
  * solda başlık, tek cümlelik alt başlık ve numaralı adım şeridi, sağda
  * büyük kapak fotoğrafı ("Temsili görsel"). Telefonda başlık → fotoğraf →
- * şerit. Öğrenci rehberleri koyu, tam genişlik kapakta kalıyor.
+ * şerit.
  *
  * Şerit rehberin kendi adımlarından (`rehber.adimlar`, veriden türetiliyor);
  * bağlantılar gövdedeki `#bolum-<no>` başlıklarına gidiyor. Kimlik başlığa
  * baştan yazılı: ön render'da da, JavaScript inmeden de çalışıyor.
+ *
+ * ÖĞRENCİ REHBERLERİ DE BU GİRİŞTE (21 Ekim 2026, kullanıcı isteği): koyu,
+ * tam genişlik kapakta fotoğraf yazının ARKASINDA kalıyor ve karartılıyordu;
+ * işveren girişinde fotoğraf üstte, kendi başına görünüyor. Öğrenci
+ * yazılarının adım şeridi yok (gövde adım bloklarıyla değil düz yazıyla
+ * yazılı); onların içindekiler listesi sağ sütunda zaten var, şerit ikinci
+ * bir kopya olurdu. Şeritsiz girişte sayaç "N bölüm" diyor.
  */
-const IsverenRehberGirisi: React.FC<{ rehber: Rehber }> = ({ rehber }) => {
+const RehberGirisi: React.FC<{ rehber: Rehber; bolumSayisi: number }> = ({ rehber, bolumSayisi }) => {
   const adimlar = rehber.adimlar ?? [];
   return (
     <header className="mt-2 grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-x-12 lg:gap-y-6">
-      <div className="space-y-2 lg:col-start-1 lg:row-start-1 lg:self-end">
+      <div className={`space-y-2 lg:col-start-1 lg:row-start-1 ${adimlar.length > 0 ? 'lg:self-end' : 'lg:self-center'}`}>
         <span className="inline-flex w-fit items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-blue-700">
           {konuEtiketi(rehber.konu)}
         </span>
@@ -491,10 +481,12 @@ const IsverenRehberGirisi: React.FC<{ rehber: Rehber }> = ({ rehber }) => {
             <Clock aria-hidden className="h-4 w-4" />
             {rehberOkumaDakika(rehber)} dk okuma
           </span>
-          <span className="inline-flex items-center gap-1.5">
-            <List aria-hidden className="h-4 w-4" />
-            {adimlar.length} adım
-          </span>
+          {(adimlar.length > 0 || bolumSayisi > 0) && (
+            <span className="inline-flex items-center gap-1.5">
+              <List aria-hidden className="h-4 w-4" />
+              {adimlar.length > 0 ? `${adimlar.length} adım` : `${bolumSayisi} bölüm`}
+            </span>
+          )}
           {rehber.guncelleme && (
             <span className="inline-flex items-center gap-1.5">
               <CalendarCheck aria-hidden className="h-4 w-4" />
@@ -503,12 +495,13 @@ const IsverenRehberGirisi: React.FC<{ rehber: Rehber }> = ({ rehber }) => {
           )}
         </p>
       </div>
-      <figure className="relative m-0 overflow-hidden rounded-2xl bg-gray-100 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center [&_img]:aspect-video [&_img]:h-auto">
+      <figure className={`relative m-0 overflow-hidden rounded-2xl bg-gray-100 lg:col-start-2 lg:row-start-1 lg:self-center [&_img]:aspect-video [&_img]:h-auto ${adimlar.length > 0 ? 'lg:row-span-2' : ''}`}>
         <RehberKapagi slug={rehber.slug} oncelikli />
         <figcaption className="absolute bottom-2 right-2 rounded-full bg-white/90 px-2.5 py-0.5 text-xs font-semibold text-gray-700">
           Temsili görsel
         </figcaption>
       </figure>
+      {adimlar.length > 0 && (
       <nav aria-label="Adımlar" className="lg:col-start-1 lg:row-start-2 lg:self-start">
         <ol className="grid grid-cols-2 gap-2">
           {adimlar.map((a) => (
@@ -529,6 +522,7 @@ const IsverenRehberGirisi: React.FC<{ rehber: Rehber }> = ({ rehber }) => {
           ))}
         </ol>
       </nav>
+      )}
     </header>
   );
 };
@@ -652,7 +646,9 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
     /stajyer-nasil-alinir pilotuyla aynı sayfa dili — pilot girişi, açık
     zeminli kısa cevap, adım kartlarının ızgarası, sağ sütun yok (içindekiler
     işini girişteki adım şeridi görüyor), sonda beyaz "Sıradaki adım" kartı.
-    Öğrenci rehberleri eski düzende.
+    Öğrenci rehberleri (21 Ekim 2026) girişi, açık kısa cevabı ve beyaz
+    "Sıradaki adım" kartını paylaşıyor; gövdeleri düz yazı olduğu için
+    beyaz yazı kartı ve sağ sütundaki içindekiler onlarda kalıyor.
   */
   const adimli = rehber.kategori === 'isveren' && Boolean(rehber.adimlar?.length);
 
@@ -670,49 +666,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
           Tüm rehberler
         </button>
 
-        {adimli ? (
-          <IsverenRehberGirisi rehber={rehber} />
-        ) : (
-        <>
-        {/*
-          KAPAK: rehberin kartta görünen fotoğrafı, üstünde başlık.
-          Fotoğraf yüklenemezse gizleniyor; koyu degrade başlığı yine okunur tutuyor.
-        */}
-        <header className="relative mt-2 overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-blue-800 text-white shadow-sm">
-          <div aria-hidden className="absolute inset-0 [&_img]:h-full [&_img]:w-full [&_img]:object-cover [&_picture]:block [&_picture]:h-full">
-            <RehberKapagi slug={rehber.slug} oncelikli />
-          </div>
-          <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-900/60 to-slate-900/10" />
-          <div className="relative flex min-h-[320px] flex-col justify-end gap-4 p-6 sm:min-h-[420px] sm:p-10 lg:p-12">
-            <span className="inline-flex w-fit items-center rounded-full bg-white/15 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white backdrop-blur">
-              {konuEtiketi(rehber.konu)}
-            </span>
-            <h1 className="max-w-4xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-              {rehber.baslik}
-            </h1>
-            {rehber.ozet && <p className="max-w-3xl text-base leading-relaxed text-white/85 sm:text-lg">{rehber.ozet}</p>}
-            <div className="flex flex-wrap items-center gap-2 text-sm font-semibold">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 backdrop-blur">
-                <Clock aria-hidden className="h-4 w-4" />
-                {rehberOkumaDakika(rehber)} dk okuma
-              </span>
-              {tumBasliklar.length > 0 && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 backdrop-blur">
-                  <List aria-hidden className="h-4 w-4" />
-                  {tumBasliklar.length} bölüm
-                </span>
-              )}
-              {rehber.guncelleme && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 backdrop-blur">
-                  <CalendarCheck aria-hidden className="h-4 w-4" />
-                  {tarihMetni(rehber.guncelleme)}
-                </span>
-              )}
-            </div>
-          </div>
-        </header>
-        </>
-        )}
+        <RehberGirisi rehber={rehber} bolumSayisi={tumBasliklar.length} />
 
         {/* İKİ SÜTUN (geniş ekranda): solda yazı, sağda yapışkan içindekiler. */}
         <div className={adimli ? 'mt-8 lg:mt-10' : 'mt-6 lg:mt-10 lg:grid lg:grid-cols-12 lg:gap-10'}>
@@ -725,7 +679,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
           Cevabı bulmak için 1500 kelime okutmak, cevabı vermemekle aynı şey.
           Ayrıntı aşağıda duruyor; kısası burada.
         */}
-        {rehber.hizliCevap && adimli && (
+        {rehber.hizliCevap && (
           /* Pilottaki bilgi kutusu dili: açık zemin, normal boy yazı, bağlantılar gövde renginde. */
           <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-4 sm:p-5" onClick={icBaglantiyiYakala}>
             <p className="flex items-center gap-2 text-sm font-bold text-blue-900">
@@ -734,33 +688,6 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
             </p>
             <p className="mt-1.5 max-w-5xl text-base leading-relaxed text-gray-800">
               <MetinCizimi metin={rehber.hizliCevap} anahtar="hc" />
-            </p>
-          </div>
-        )}
-        {rehber.hizliCevap && !adimli && (
-          <div
-            className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-600 p-6 text-white shadow-sm sm:p-7"
-            onClick={icBaglantiyiYakala}
-          >
-            <Lightbulb aria-hidden className="absolute -right-4 -top-4 h-28 w-28 text-white/10" />
-            <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-blue-100">
-              <Lightbulb aria-hidden className="h-4 w-4" />
-              Kısa cevap
-            </p>
-            {/*
-              Gövde paragraflarıyla AYNI markdown yolundan geçiyor.
-              Düz metin olarak çizildiğinde `[metin](/adres)` yazımı
-              köşeli parantezleriyle ekranda kalıyordu (ölçüldü: 76
-              rehberin 12'sinde, toplam 14 bağlantı). `MetinCizimi`
-              satır içi düğüm döndürüyor, bu yüzden aşağıdaki tek
-              `<p>`'nin içinde duruyor — iç içe `<p>` oluşmuyor.
-            */}
-            <p className="relative mt-2 text-lg font-semibold leading-relaxed sm:text-xl">
-              <MetinCizimi
-                metin={rehber.hizliCevap}
-                anahtar="hc"
-                bagSinifi={HIZLI_CEVAP_BAGLANTISI}
-              />
             </p>
           </div>
         )}
@@ -930,7 +857,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
           var olan bir yere gidiyor; karşılığı olmayan rehberde bu blok
           hiç çizilmiyor.
         */}
-        {rehber.sonrakiAdim && adimli && (
+        {rehber.sonrakiAdim && (
           /* Pilotun "Hazırsanız ilanınızı açın" kartı: beyaz, tek birincil düğme. */
           <section aria-labelledby="sonraki-adim" className="mt-8 space-y-3 rounded-2xl border border-gray-200 bg-white p-5">
             <h2 id="sonraki-adim" className="text-lg font-extrabold text-gray-900">
@@ -952,24 +879,6 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
               <ChevronRight aria-hidden className="h-4 w-4" />
             </a>
           </section>
-        )}
-        {rehber.sonrakiAdim && !adimli && (
-          <button
-            type="button"
-            onClick={() => onNavigate(rehber.sonrakiAdim!.yol)}
-            className="mt-8 w-full flex items-center justify-between gap-3 rounded-2xl bg-blue-600 px-4 py-4 text-left text-white hover:bg-blue-700 transition-colors cursor-pointer"
-          >
-            <span className="min-w-0">
-              <span className="block text-[11px] font-bold uppercase tracking-wide text-blue-100">
-                Sıradaki adım
-              </span>
-              <span className="block font-bold">{rehber.sonrakiAdim.etiket}</span>
-              {rehber.sonrakiAdim.aciklama && (
-                <span className="block text-xs text-blue-100">{rehber.sonrakiAdim.aciklama}</span>
-              )}
-            </span>
-            <ChevronRight className="w-5 h-5 shrink-0" />
-          </button>
         )}
 
         {/*
