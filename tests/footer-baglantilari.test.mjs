@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import url from 'node:url';
 import { SEHIR_SAYFALARI, sehirYolu } from '../src/lib/seo/sehir-sayfalari.mjs';
@@ -57,4 +57,54 @@ test('alt bilgi iki kabukta da; telefonda alt menü payı var', () => {
 test('iç bağlantılar uygulama içinde açılıyor, değiştirici tuşlar tarayıcıda kalıyor', () => {
   assert.match(FOOTER, /e\.metaKey \|\| e\.ctrlKey \|\| e\.shiftKey \|\| e\.altKey/);
   assert.equal((FOOTER.match(/onClick=\{\(e\) => go\(e, /g) || []).length, 3);
+});
+
+/*
+  STAJ TÜRLERİ SÜTUNU VE SOSYAL HESAPLAR (20 Ekim 2026)
+
+  "Şehre Göre Staj" iki satıra inince boş görünüyordu; sütun "Staj Türleri"
+  oldu. Rehber ve bölüm adresleri içerik kayıtlarındaki slug'larla, ilan
+  arşivi adresi App.tsx'teki eşleşmeyle denetleniyor.
+*/
+const slugKumesi = (dosyalar) => new Set(dosyalar.flatMap((d) =>
+  [...oku(d).matchAll(/slug: '([a-z0-9-]+)'/g)].map((m) => m[1])));
+
+test('rehber bağlantıları gerçek rehber yazılarına gidiyor', () => {
+  const klasor = path.join(KOK, 'src/data/rehber-yazilari');
+  const dosyalar = ['src/data/rehberler.tsx', ...readdirSync(klasor).map((d) => `src/data/rehber-yazilari/${d}`)];
+  const slugs = slugKumesi(dosyalar);
+  const rehber = adresler.filter((a) => a.startsWith('/rehber/'));
+  assert.ok(rehber.length >= 15);
+  for (const a of rehber) assert.ok(slugs.has(a.slice('/rehber/'.length)), `${a} rehber yazısı değil`);
+});
+
+test('bölüm bağlantıları gerçek bölüm sayfalarına gidiyor', () => {
+  const slugs = slugKumesi(['src/data/bolumler.ts']);
+  for (const a of adresler.filter((x) => x.startsWith('/bolum/'))) {
+    assert.ok(slugs.has(a.slice('/bolum/'.length)), `${a} bölüm sayfası değil`);
+  }
+});
+
+test('Staj Türleri sütunu istenen sırada; yurt dışı stajı tek yerde', () => {
+  const sutun = FOOTER.slice(FOOTER.indexOf('title: "Staj Türleri"'), FOOTER.indexOf('title: "Bölüme Göre Staj"'));
+  assert.deepEqual([...sutun.matchAll(/href: "([^"]+)"/g)].map((m) => m[1]), [
+    '/staj-ilanlari/istanbul', '/rehber/zorunlu-staj-rehberi', '/rehber/gonullu-staj-rehberi',
+    '/rehber/uzaktan-staj-kabul-edilir-mi', '/rehber/yurtdisinda-staj', '/rehber/erasmus-staj-hareketliligi',
+    '/rehber/iaeste-ile-yurtdisinda-staj', '/staj-ilanlari/sayfa/1', '/staj-ilanlari',
+  ]);
+  assert.match(sutun, /\{ label: "Tüm staj ilanları", href: "\/staj-ilanlari", highlight: true \}/);
+  assert.equal(adresler.filter((a) => a === '/rehber/yurtdisinda-staj').length, 1);
+  assert.ok(adresler.includes('/rehber/staj-ucreti-nasil-hesaplanir'));
+  assert.ok(APP.includes(String.raw`/^\/staj-ilanlari\/sayfa\/([1-9]\d{0,3})$/`), 'ilan arşivi rotası yok');
+});
+
+test('sosyal hesaplar dolu, Telegram boş; başlık ikonlarla görünüyor', () => {
+  const hesap = (ad) => FOOTER.match(new RegExp(`name: "${ad}", href: "([^"]*)"`))?.[1];
+  assert.equal(hesap('Instagram'), 'https://www.instagram.com/stajimvar/');
+  assert.equal(hesap('LinkedIn'), 'https://www.linkedin.com/company/stajimvar/');
+  assert.equal(hesap('X'), 'https://x.com/StajimVar');
+  assert.equal(hesap('TikTok'), 'https://www.tiktok.com/@stajimvar');
+  assert.equal(hesap('YouTube'), 'https://www.youtube.com/@stajimvar');
+  assert.equal(hesap('Telegram'), '');
+  assert.match(FOOTER, /target="_blank" rel="noopener noreferrer"/);
 });
