@@ -101,3 +101,24 @@ test('20 Ekim (ikinci parti): iki şirket, kimlik + ad + boş logo koşulu; dosy
     assert.equal(dosya.readUInt32BE(20), 128);
   });
 });
+
+/*
+  İLAN LOGOLARI — 20 EKİM 2026 TESLİMİ (üçüncü parti)
+
+  Üç şirket (Barilla Group, Festool Group, BMW Group); 128 × 128 PNG.
+*/
+const GOC_EKIM_20C = oku('supabase/migrations/20261219010000_ilan_logolari_barilla_festool_bmw.sql');
+
+test('20 Ekim (üçüncü parti): üç şirket, kimlik + ad + boş logo koşulu; dosyalar 128 × 128 PNG', () => {
+  const satirlar = kod(GOC_EKIM_20C).split(/;\s*/).filter(Boolean);
+  assert.equal(satirlar.length, 3);
+  const beklenen = ['barilla', 'festool', 'bmw-group'];
+  satirlar.forEach((s, i) => {
+    assert.match(s, new RegExp(`^update public\.companies set logo_url = 'https://stajimvar\.com/isveren-logolari/${beklenen[i]}\.png'`));
+    assert.match(s, /where id = '[0-9a-f-]{36}' and name = '[^']+' and nullif\(btrim\(logo_url\), ''\) is null$/);
+    const dosya = readFileSync(path.join(KOK, 'public', 'isveren-logolari', `${beklenen[i]}.png`));
+    assert.equal(dosya.subarray(1, 4).toString('latin1'), 'PNG');
+    assert.equal(dosya.readUInt32BE(16), 128);
+    assert.equal(dosya.readUInt32BE(20), 128);
+  });
+});
