@@ -189,11 +189,16 @@ test('sigorta başlığı soru; kapsam ve koşul görünür özette, ücret ve s
   assert.match(veri, /Bu sayfada tutar, oran ve devlet katkısı payı yazmıyoruz/);
 });
 
-test('işveren rehberi girişi pilot düzeninde: başlık + adım şeridi + kapak; öğrenci rehberi kapakta kalıyor', () => {
+test('rehber girişi pilot düzeninde: başlık + adım şeridi + kapak; öğrenci rehberi de aynı girişte, şeritsiz', () => {
   const sayfa = oku('src/components/GuidePages.tsx');
   assert.match(sayfa, /const adimli = rehber\.kategori === 'isveren' && Boolean\(rehber\.adimlar\?\.length\);/);
-  assert.match(sayfa, /\{adimli \? \(\s*<IsverenRehberGirisi rehber=\{rehber\} \/>/);
-  const giris = sayfa.slice(sayfa.indexOf('const IsverenRehberGirisi'), sayfa.indexOf('export const GuidePage'));
+  /* 21 Ekim 2026: koyu, tam genişlik kapak kalktı; her rehber aynı girişte. */
+  assert.match(sayfa, /<RehberGirisi rehber=\{rehber\} bolumSayisi=\{tumBasliklar\.length\} \/>/);
+  assert.ok(!sayfa.includes('from-slate-950/95'), 'koyu kapak duruyor');
+  const giris = sayfa.slice(sayfa.indexOf('const RehberGirisi'), sayfa.indexOf('export const GuidePage'));
+  /* Şerit yalnız adımı olan rehberde; şeritsiz girişte sayaç bölüm sayıyor. */
+  assert.match(giris, /\{adimlar\.length > 0 && \(\s*<nav aria-label="Adımlar"/);
+  assert.match(giris, /`\$\{bolumSayisi\} bölüm`/);
   /* Pilotla aynı ızgara (EmployerGuide): solda başlık ve şerit, sağda fotoğraf. */
   assert.match(giris, /lg:grid-cols-\[minmax\(0,5fr\)_minmax\(0,7fr\)\]/);
   assert.match(giris, /<RehberKapagi slug=\{rehber\.slug\} oncelikli \/>/);
@@ -209,18 +214,19 @@ test('işveren rehberi girişi pilot düzeninde: başlık + adım şeridi + kapa
   assert.equal((veri.match(/\n        kisaAd: '/g) ?? []).length, 22);
 });
 
-test('işveren rehberi gövdesi pilot dilinde: sağ sütun yok, açık kısa cevap, kart ızgarası, beyaz sonraki adım', () => {
+test('işveren rehberi gövdesi pilot dilinde: sağ sütun yok, kart ızgarası; açık kısa cevap ve beyaz sonraki adım her rehberde', () => {
   const sayfa = oku('src/components/GuidePages.tsx');
   /* Sağ sütun (içindekiler + "Okuduğunu uygula") yalnız öğrenci düzeninde. */
   assert.match(sayfa, /\{!adimli && \(\s*<aside className="hidden lg:col-span-4 lg:block"/);
   assert.match(sayfa, /\{!adimli && <IcindekilerMobil /);
-  /* Kısa cevap açık zeminde; koyu mavi degrade yalnız öğrenci düzeninde. */
-  assert.match(sayfa, /\{rehber\.hizliCevap && adimli && \([\s\S]{0,200}bg-blue-50\/60/);
-  assert.match(sayfa, /\{rehber\.hizliCevap && !adimli && \(\s*<div\s+className="relative overflow-hidden rounded-3xl bg-gradient-to-br/);
+  /* Kısa cevap her rehberde açık zeminde (21 Ekim 2026: koyu degrade kalktı). */
+  assert.match(sayfa, /\{rehber\.hizliCevap && \([\s\S]{0,200}bg-blue-50\/60/);
+  assert.ok(!/hizliCevap && !adimli/.test(sayfa));
   /* Gövde kart değil, adım kartlarının ızgarası. */
   assert.match(sayfa, /'rehber-govde rehber-govde--adimli grid items-start gap-4 lg:grid-cols-2 lg:gap-5'/);
   /* Sonraki adım beyaz kart, gerçek bağlantı. */
-  assert.match(sayfa, /\{rehber\.sonrakiAdim && adimli && \([\s\S]{0,200}rounded-2xl border border-gray-200 bg-white p-5/);
+  assert.match(sayfa, /\{rehber\.sonrakiAdim && \([\s\S]{0,200}rounded-2xl border border-gray-200 bg-white p-5/);
+  assert.ok(!/sonrakiAdim && !adimli/.test(sayfa));
   assert.match(sayfa, /href=\{rehber\.sonrakiAdim\.yol\}/);
 });
 
