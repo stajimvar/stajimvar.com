@@ -58,7 +58,7 @@ const COLUMNS: FooterColumn[] = [
     title: "Öğrenci Rehberi",
     links: [
       { label: "Staj nasıl bulunur?", href: "/rehber/staj-nasil-bulunur" },
-      { label: "Zorunlu staj rehberi", href: "/rehber/zorunlu-staj-rehberi" },
+      { label: "ATS uyumlu CV nasıl hazırlanır?", href: "/rehber/ats-uyumlu-cv" },
       { label: "Staj CV'si nasıl yazılır?", href: "/rehber/staj-cv-nasil-yazilir" },
       { label: "Staj mülakatına hazırlık", href: "/rehber/staj-mulakati" },
       { label: "Staj başvuru e-postası", href: "/rehber/staj-basvuru-epostasi" },
