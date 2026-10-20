@@ -1,0 +1,90 @@
+/* StajımVar footer — renkleri buradan değiştir */
+.sv-footer {
+  --sv-bg: #111827;        /* koyu zemin */
+  --sv-bar: #0b1220;       /* alt şerit */
+  --sv-title: #ffffff;
+  --sv-text: #cbd5e1;
+  --sv-muted: #8b95a7;
+  --sv-accent: #2563eb;    /* marka mavisi (Logo.tsx'teki "Var", Tailwind blue-600) */
+  /* Koyu zeminde #2563eb küçük yazıda 3,4:1 kalıyor (AA 4,5:1 ister); "Tüm ..."
+     bağlantıları aynı mavinin açık tonuyla (blue-400, 7:1) yazılıyor. */
+  --sv-accent-text: #60a5fa;
+  --sv-line: rgba(255, 255, 255, 0.08);
+
+  background: var(--sv-bg);
+  color: var(--sv-text);
+  font-size: 15px;
+  line-height: 1.5;
+  margin-top: 64px;
+}
+
+.sv-footer a { color: inherit; text-decoration: none; transition: color .15s; }
+.sv-footer a:hover { color: var(--sv-title); }
+.sv-footer ul { list-style: none; margin: 0; padding: 0; }
+
+.sv-footer__inner { max-width: 1240px; margin: 0 auto; padding: 0 24px; }
+
+.sv-footer__grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 32px 28px;
+  padding: 56px 0 40px;
+}
+
+.sv-footer__title {
+  color: var(--sv-title);
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0 0 18px;
+}
+.sv-footer__title--spaced { margin-top: 32px; }
+
+.sv-footer__col li + li { margin-top: 10px; }
+.sv-footer__col a.is-highlight { color: var(--sv-accent-text); font-weight: 600; }
+.sv-footer__col a.is-highlight:hover { filter: brightness(1.15); color: var(--sv-accent-text); }
+
+.sv-footer__socials { display: flex; flex-wrap: wrap; gap: 10px; }
+.sv-footer__socials li + li { margin-top: 0; }
+.sv-footer__socials a {
+  display: grid; place-items: center;
+  width: 42px; height: 42px; border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--sv-title);
+}
+.sv-footer__socials a:hover { background: var(--sv-accent); }
+
+.sv-footer__mail { display: inline-flex; align-items: center; gap: 8px; color: var(--sv-title); font-weight: 600; }
+.sv-footer__note { color: var(--sv-muted); font-size: 13px; margin: 6px 0 0; }
+
+/* Çerez tercihleri: bağlantı değil pencere açan düğme, bağlantı gibi görünüyor. */
+.sv-footer__linkbtn { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; transition: color .15s; }
+.sv-footer__linkbtn:hover { color: var(--sv-title); }
+
+.sv-footer__bar { background: var(--sv-bar); border-top: 1px solid var(--sv-line); border-bottom: 1px solid var(--sv-line); }
+.sv-footer__barlinks {
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 10px 28px; padding-top: 18px; padding-bottom: 18px;
+  font-weight: 600; font-size: 14px;
+}
+
+.sv-footer__legal {
+  display: flex; align-items: center; gap: 32px;
+  padding-top: 28px; padding-bottom: 32px;
+}
+.sv-footer__brand { flex-shrink: 0; font-size: 26px; font-weight: 800; color: var(--sv-title); letter-spacing: -0.5px; }
+.sv-footer__brand span { color: var(--sv-accent); }
+.sv-footer__legal p { margin: 0; color: var(--sv-muted); font-size: 13px; }
+
+/* Tablet */
+@media (max-width: 1100px) {
+  .sv-footer__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+/* Mobil */
+@media (max-width: 640px) {
+  .sv-footer__inner { padding: 0 16px; }
+  .sv-footer__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 40px 0 28px; gap: 28px 20px; }
+  .sv-footer__title { font-size: 15px; margin-bottom: 12px; }
+  .sv-footer { font-size: 14px; }
+  .sv-footer__barlinks { justify-content: flex-start; gap: 8px 18px; }
+  .sv-footer__legal { flex-direction: column; align-items: flex-start; gap: 12px; }
+}

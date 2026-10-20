@@ -47,7 +47,7 @@ import { Header } from './components/Header';
 import { MatchedInternshipsView } from './components/MatchedInternshipsView';
 import { useGlobalListingPreferences } from './components/useGlobalListingPreferences';
 
-import { Logo } from './components/Logo';
+import Footer from './components/Footer';
 import { LEGAL_ROUTES } from './lib/yasal-rotalar';
 import { niyetYaz, niyetOku, niyetSil } from './lib/basvuru-niyeti.mjs';
 import { STAJ_ILANLARI_METNI } from './lib/staj-ilanlari-metni.mjs';
@@ -2663,10 +2663,27 @@ export default function App() {
     </div>
   ) : null;
 
+  /*
+    ALT BİLGİ — components/Footer.tsx (20 Ekim 2026)
+
+    Eski alt bilgi yalnız ana kabuktaydı: içerik sayfaları (rehber, bölüm,
+    fırsat, yasal metinler…) alt bilgisiz açılıyordu. Aynı öğe artık iki
+    kabukta da. Eski bağlantıların hepsi Footer'da duruyor (adres
+    doğrulaması orada). Telefondaki sabit alt menü (Header, `lg:hidden`,
+    ~60 px + güvenli alan) iki kabukta da var; son satırı örtmesin diye
+    alt dolgu menü + güvenli alan kadar ve Footer'ın koyu zemininde.
+  */
+  const altBilgi = (
+    <div className="mt-auto shrink-0 bg-[#111827] pb-[calc(88px+env(safe-area-inset-bottom))] lg:pb-0">
+      <Footer onNavigate={navigate} onCookiePreferences={() => setTercihlerAcik(true)} />
+    </div>
+  );
+
   const icerikSayfasi = (icerik: React.ReactNode, zemin = 'bg-[#F9FAFB]') => (
     <div className={`min-h-screen flex flex-col ${zemin}`}>
       {ustCubuk}
       {icerik}
+      {altBilgi}
       {girisModali}
       {adPenceresi}
       {cerezBandi}
@@ -4285,116 +4302,7 @@ export default function App() {
       {girisModali}
       {adPenceresi}
 
-      {/*
-        Alt bilgi.
-
-        Önceki hali sekiz bağlantıyı tek satırda, BÜYÜK HARF ve geniş harf
-        aralığıyla yan yana diziyordu. Telefonda satır ekrana sığmıyor, kök
-        taşma koruması yüzünden de kaydırılamıyordu: kenardaki bağlantılar
-        kırpılıp tıklanamaz hale geliyordu — ekran görüntüsünde "LETİŞİM" ve
-        "ÇE" diye yarım görünen kısım buydu. KVKK aydınlatma metnine mobilden
-        ulaşılamıyor olması yalnızca çirkin değil, yasal olarak da sorun.
-
-        Artık bağlantılar sarabiliyor ve iki gruba ayrıldı: sitenin sayfaları
-        ve yasal metinler. Büyük harf ve geniş aralık kalktı; ikisi de satırı
-        gereksiz uzatıp okumayı zorlaştırıyordu.
-      */}
-      {/*
-        ALT MENÜNÜN ALTINDA KALMIYOR (mobil sadeleştirme, 25 Eylül 2026):
-        telefonda sabit alt menü (`lg:hidden`, ~60 px + güvenli alan) son
-        satırı ("© 2026 StajımVar") örtüyordu (430 px'te ölçüldü: satır
-        menünün 11 px altındaydı). Alt dolgu menü + güvenli alan kadar.
-      */}
-      <footer className="border-t border-gray-200 bg-white mt-auto pt-8 pb-[calc(88px+env(safe-area-inset-bottom))] lg:pb-8 text-xs text-gray-500 shrink-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
-          <nav aria-label="Alt bilgi" className="grid grid-cols-2 gap-x-6 gap-y-8 lg:grid-cols-4 lg:gap-x-10">
-            {[
-              {
-                baslik: 'Staj ara',
-                baglantilar: [
-                  { yol: '/rehber', etiket: 'Staj rehberi' },
-                  { yol: '/bolumler', etiket: 'Bölüme göre staj' },
-                  { yol: '/staj-programlari', etiket: 'Büyük işverenlerde staj' },
-                  { yol: '/universite-kariyer-merkezleri', etiket: 'Kariyer merkezleri' },
-                  { yol: '/araclar', etiket: 'Staj hesaplama araçları' },
-                ],
-              },
-              {
-                baslik: 'İşverenler',
-                baglantilar: [
-                  { yol: '/isveren', etiket: 'İşveren rehberi' },
-                  { yol: '/isveren/ilan-ver', etiket: 'Şirketini sahiplen' },
-                  { yol: '/ilan-kurallari', etiket: 'İlan kuralları' },
-                  { yol: '/ilan-bildir', etiket: 'İlan bildir' },
-                ],
-              },
-              {
-                baslik: 'Kurumsal',
-                baglantilar: [
-                  { yol: '/hakkimizda', etiket: 'Hakkımızda' },
-                  { yol: '/iletisim', etiket: 'İletişim' },
-                ],
-              },
-              {
-                baslik: 'Yasal',
-                baglantilar: [
-                  { yol: '/kvkk-aydinlatma-metni', etiket: 'KVKK aydınlatma metni' },
-                  { yol: '/gizlilik', etiket: 'Gizlilik' },
-                  { yol: '/kullanim-kosullari', etiket: 'Kullanım koşulları' },
-                  { yol: '/cerez-politikasi', etiket: 'Çerezler' },
-                ],
-              },
-            ].map((grup) => (
-              <section key={grup.baslik}>
-                <h2 className="mb-3 text-sm font-extrabold text-gray-900">{grup.baslik}</h2>
-                <div className="flex flex-col items-start gap-2.5">
-                  {grup.baglantilar.map((bag) => (
-                    <a
-                      key={bag.yol}
-                      href={bag.yol}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        navigate(bag.yol);
-                      }}
-                      className="font-semibold leading-relaxed text-gray-600 transition-colors hover:text-blue-600"
-                    >
-                      {bag.etiket}
-                    </a>
-                  ))}
-                  {grup.baslik === 'Yasal' && (
-                    <button
-                      type="button"
-                      onClick={() => setTercihlerAcik(true)}
-                      className="cursor-pointer text-left font-semibold leading-relaxed text-gray-600 transition-colors hover:text-blue-600"
-                    >
-                      Çerez tercihleri
-                    </button>
-                  )}
-                </div>
-              </section>
-            ))}
-          </nav>
-
-          <div className="flex flex-col items-center justify-between gap-3 border-t border-gray-100 pt-5 sm:flex-row">
-            <Logo
-              size="sm"
-              showTagline={false}
-              onClick={() => {
-                setUserRole('student');
-                setActiveTab('internships');
-              }}
-            />
-            {/*
-              "Yetenek Odaklı İş & Stajyer Eşleştirme Platformu" satırı
-              kaldırıldı: anasayfanın tepesinden aynı gerekçeyle çıkardığımız
-              cümlenin ikizi.
-            */}
-            <span className="text-[11px] text-gray-600">
-              &copy; 2026 StajımVar
-            </span>
-          </div>
-        </div>
-      </footer>
+      {altBilgi}
     </div>
   );
 }
