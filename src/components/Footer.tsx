@@ -217,9 +217,14 @@ export default function Footer({ onNavigate, onCookiePreferences }: FooterProps)
           Stajım<span>Var</span>
         </a>
         <p>
-          StajımVar, Türkiye'deki staj ilanlarını şirketlerin kendi kariyer sayfalarından derler.
-          Her ilanda şirketin resmî başvuru bağlantısı bulunur; başvuru şirketin kendi sayfasında
-          tamamlanır. Öğrencilerden hiçbir ad altında ücret alınmaz.
+          {/*
+            21 Ekim 2026 verisiyle örtüşüyor: yayındaki 175 ilanın 76'sı yurt
+            dışında, 172'si resmî kariyer sayfalarından, 3'ü işverenin kendi
+            ilanı. Ödeme/üyelik ücreti yok (Hakkımızda › Ücret).
+          */}
+          StajımVar, Türkiye'den ve yurt dışından staj ilanlarını tek listede toplar. İlanların
+          çoğu şirketlerin kendi kariyer sayfalarından derlenir, bir kısmını işverenler doğrudan
+          StajımVar'da yayımlar. Öğrencilerden hiçbir ad altında ücret alınmaz.
           <br />© {year} StajımVar. Tüm hakları saklıdır.
         </p>
       </div>
