@@ -25,9 +25,16 @@ type FooterColumn = { title: string; links: FooterLink[] };
 
 const COLUMNS: FooterColumn[] = [
   {
-    title: "Şehre Göre Staj",
+    title: "Staj Türleri",
     links: [
-      { label: "İstanbul", href: "/staj-ilanlari/istanbul" },
+      { label: "İstanbul staj ilanları", href: "/staj-ilanlari/istanbul" },
+      { label: "Zorunlu staj", href: "/rehber/zorunlu-staj-rehberi" },
+      { label: "Gönüllü staj", href: "/rehber/gonullu-staj-rehberi" },
+      { label: "Uzaktan staj", href: "/rehber/uzaktan-staj-kabul-edilir-mi" },
+      { label: "Yurt dışında staj", href: "/rehber/yurtdisinda-staj" },
+      { label: "Erasmus+ staj", href: "/rehber/erasmus-staj-hareketliligi" },
+      { label: "IAESTE ile staj", href: "/rehber/iaeste-ile-yurtdisinda-staj" },
+      { label: "Açık ilanların tamamı", href: "/staj-ilanlari/sayfa/1" },
       { label: "Tüm staj ilanları", href: "/staj-ilanlari", highlight: true },
     ],
   },
@@ -58,7 +65,7 @@ const COLUMNS: FooterColumn[] = [
       { label: "Staj defteri nasıl doldurulur?", href: "/rehber/staj-defteri-nasil-doldurulur" },
       { label: "Staj sigortasını kim yapar?", href: "/rehber/staj-sigortasi-kim-yapar" },
       { label: "KYK burs ve kredi", href: "/rehber/kyk-burs-ve-kredi" },
-      { label: "Yurt dışında staj", href: "/rehber/yurtdisinda-staj" },
+      { label: "Staj ücreti nasıl hesaplanır?", href: "/rehber/staj-ucreti-nasil-hesaplanir" },
       { label: "Tüm rehberler", href: "/rehber", highlight: true },
     ],
   },
@@ -94,11 +101,11 @@ const COLUMNS: FooterColumn[] = [
 
 /* Hesap adresini yaz; boş bırakılan hesap footer'da görünmez. */
 const SOCIALS: { name: string; href: string; icon: ReactNode }[] = [
-  { name: "Instagram", href: "", icon: <IconInstagram /> },
-  { name: "LinkedIn", href: "", icon: <IconLinkedin /> },
-  { name: "X", href: "", icon: <IconX /> },
-  { name: "TikTok", href: "", icon: <IconTiktok /> },
-  { name: "YouTube", href: "", icon: <IconYoutube /> },
+  { name: "Instagram", href: "https://www.instagram.com/stajimvar/", icon: <IconInstagram /> },
+  { name: "LinkedIn", href: "https://www.linkedin.com/company/stajimvar/", icon: <IconLinkedin /> },
+  { name: "X", href: "https://x.com/StajimVar", icon: <IconX /> },
+  { name: "TikTok", href: "https://www.tiktok.com/@stajimvar", icon: <IconTiktok /> },
+  { name: "YouTube", href: "https://www.youtube.com/@stajimvar", icon: <IconYoutube /> },
   { name: "Telegram", href: "", icon: <IconTelegram /> },
 ];
 
