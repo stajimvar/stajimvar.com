@@ -114,3 +114,10 @@ test('zorunlu staj rehberi tek yerde (Staj Türleri); Öğrenci Rehberi\'nde ATS
   const sutun = FOOTER.slice(FOOTER.indexOf('title: "Öğrenci Rehberi"'), FOOTER.indexOf('title: "Fırsatlar ve Araçlar"'));
   assert.match(sutun, /\{ label: "ATS uyumlu CV nasıl hazırlanır\?", href: "\/rehber\/ats-uyumlu-cv" \}/);
 });
+
+test('tanıtım cümlesi yurt dışı ilanları ve işveren ilanlarını da söylüyor', () => {
+  const metin = FOOTER.replace(/\s+/g, ' ');
+  assert.ok(metin.includes("StajımVar, Türkiye'den ve yurt dışından staj ilanlarını tek listede toplar."));
+  assert.ok(metin.includes("bir kısmını işverenler doğrudan StajımVar'da yayımlar."));
+  assert.ok(!metin.includes('başvuru şirketin kendi sayfasında tamamlanır'));
+});
