@@ -108,3 +108,9 @@ test('sosyal hesaplar dolu, Telegram boş; başlık ikonlarla görünüyor', () 
   assert.equal(hesap('Telegram'), '');
   assert.match(FOOTER, /target="_blank" rel="noopener noreferrer"/);
 });
+
+test('zorunlu staj rehberi tek yerde (Staj Türleri); Öğrenci Rehberi\'nde ATS CV rehberi', () => {
+  assert.equal(adresler.filter((a) => a === '/rehber/zorunlu-staj-rehberi').length, 1);
+  const sutun = FOOTER.slice(FOOTER.indexOf('title: "Öğrenci Rehberi"'), FOOTER.indexOf('title: "Fırsatlar ve Araçlar"'));
+  assert.match(sutun, /\{ label: "ATS uyumlu CV nasıl hazırlanır\?", href: "\/rehber\/ats-uyumlu-cv" \}/);
+});
