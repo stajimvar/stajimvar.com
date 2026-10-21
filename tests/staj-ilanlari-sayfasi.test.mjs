@@ -31,7 +31,7 @@ test('sayfa üretiliyor: title, H1, description, canonical', () => {
   assert.match(h, /<h1[^>]*>Güncel Staj İlanları<\/h1>/);
   assert.match(
     h,
-    /<meta name="description" content="Türkiye genelindeki güncel staj ilanlarını şehir, bölüm ve staj türüne göre filtrele\./,
+    /<meta name="description" content="Türkiye'den ve yurt dışından güncel staj ilanlarını şehir, bölüm ve staj türüne göre filtrele\./,
   );
   assert.match(h, /<link rel="canonical" href="https:\/\/stajimvar\.com\/staj-ilanlari"/);
 

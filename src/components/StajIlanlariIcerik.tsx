@@ -218,8 +218,7 @@ export const StajIlanlariIcerik: React.FC<
           <h3 className={BASLIK3}>İlanlar nereden geliyor?</h3>
           <p className={`mt-3 ${METIN}`}>
             İlanları aracı sitelerden değil, şirketlerin kendi kariyer sayfalarından
-            derliyoruz. Her ilanda şirketin kendi başvuru bağlantısı var; başvuru
-            StajımVar üzerinden değil, şirketin resmî sayfasında tamamlanıyor.
+            derliyoruz. Çoğu ilanda başvuru şirketin kendi sayfasında tamamlanıyor.
           </p>
           <p className={`mt-2 ${METIN}`}>
             Kaynağı doğrulanmayan kayıt listeye girmiyor. Bir ilan kapandığında

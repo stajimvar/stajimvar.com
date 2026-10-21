@@ -1745,7 +1745,7 @@ async function main() {
   sayfaYaz('/staj-ilanlari', {
     baslik: 'Güncel Staj İlanları 2026 | StajımVar',
     aciklama:
-      'Türkiye genelindeki güncel staj ilanlarını şehir, bölüm ve staj türüne göre filtrele. Şirketlerin resmî başvuru sayfalarına doğrudan ulaş.',
+      "Türkiye'den ve yurt dışından güncel staj ilanlarını şehir, bölüm ve staj türüne göre filtrele. Şirketlerin resmî başvuru sayfalarına doğrudan ulaş.",
     /*
       GÖRÜNÜR GÖVDE ANA SAYFANIN DÜZENİNDE (14 Ekim 2026)
 
@@ -2489,8 +2489,8 @@ async function main() {
   sayfaYaz('/', {
     baslik: 'StajımVar — Şirketlerin staj ilanları, tek listede',
     aciklama:
-      "Türkiye'deki staj ilanlarını şirketlerin kendi kariyer sayfalarından derliyoruz. " +
-      'Her ilanda şirketin kendi başvuru bağlantısı var.',
+      "Türkiye'den ve yurt dışından staj ilanları tek listede. Çoğu şirketlerin kendi " +
+      'kariyer sayfalarından derlenir, bir kısmını işverenler doğrudan yayımlar.',
     /*
       GÖRÜNÜR GÖVDE: JavaScript inmeden ekranda duran içerik.
 
@@ -2571,8 +2571,9 @@ async function main() {
           alternateName: ['Stajım Var', 'stajimvar', 'StajimVar'],
           url: SITE,
           description:
-            "Türkiye'deki staj ilanlarını şirketlerin kendi kariyer sayfalarından derleyen "
-            + 'öğrenci platformu. Her ilanda şirketin kendi başvuru bağlantısı var.',
+            "Türkiye'den ve yurt dışından staj ilanlarını tek listede toplayan öğrenci "
+            + 'platformu. İlanların çoğu şirketlerin kendi kariyer sayfalarından derlenir, '
+            + "bir kısmını işverenler doğrudan StajımVar'da yayımlar.",
           logo: {
             '@type': 'ImageObject',
             url: `${SITE}/icon-512.png`,
