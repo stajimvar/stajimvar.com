@@ -18,6 +18,7 @@ import {
   RehberOrnek,
 } from '../components/RehberGorseller';
 import { OgrenciBolumGorseli } from '../components/RehberBolum';
+import type { OgrenciFotografi } from './rehber-govde';
 
 /**
  * Rehber içerikleri.
@@ -82,6 +83,13 @@ export interface Rehber {
    * kimliği gövdede baştan yazılı, JavaScript beklemiyor.
    */
   adimlar?: { no: number; ad: string }[];
+  /**
+   * Öğrenci rehberinin bölüm fotoğrafları (21 Ekim 2026), yazıdaki sırayla.
+   * `metinRehberi` bloklardan dolduruyor; JSX ile yazılan rehberlerde boş ve
+   * `bolumFotograflari()` içerik ağacından okuyor. Rehber sayfası bunları
+   * girişin altında ızgara olarak çiziyor (işveren adım kartları gibi).
+   */
+  bolumFotograflari?: OgrenciFotografi[];
   /**
    * Sık sorulanlar.
    *
@@ -2674,4 +2682,31 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
 
 export function rehberBul(slug: string): Rehber | undefined {
   return REHBERLER.find((r) => r.slug === slug);
+}
+
+/*
+  JSX İÇİNDEKİ FOTOĞRAFLAR
+
+  Eski rehberler JSX ile yazılı; fotoğraf `<OgrenciBolumGorseli>` olarak
+  metnin arasında duruyor. Ayrı bir liste yazmak, metin değişince sessizce
+  eskiyen ikinci bir kayıt olurdu: liste ağacın kendisinden okunuyor
+  (metniTopla ile aynı yürüyüş).
+*/
+function jsxFotograflari(dugum: unknown, kova: OgrenciFotografi[] = []): OgrenciFotografi[] {
+  if (Array.isArray(dugum)) {
+    for (const d of dugum) jsxFotograflari(d, kova);
+    return kova;
+  }
+  if (!React.isValidElement(dugum)) return kova;
+  const props = dugum.props as { dosya?: string; alt?: string; baslik?: string; ozet?: string; children?: unknown };
+  if (dugum.type === OgrenciBolumGorseli) {
+    kova.push({ dosya: props.dosya!, gorselAlt: props.alt!, baslik: props.baslik!, ozet: props.ozet! });
+    return kova;
+  }
+  return jsxFotograflari(props.children, kova);
+}
+
+/** Rehberin bölüm fotoğrafları, yazıdaki sırayla; yoksa boş dizi. */
+export function bolumFotograflari(rehber: Rehber): OgrenciFotografi[] {
+  return rehber.bolumFotograflari ?? jsxFotograflari(rehber.icerik);
 }

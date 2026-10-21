@@ -439,6 +439,7 @@ export function metinRehberi(t: RehberTaslagi): Rehber {
     sonrakiAdim: t.sonrakiAdim,
     sss: t.sss,
     adimlar: adimSeridi(t.bloklar),
+    bolumFotograflari: t.bloklar.flatMap((b) => [b.bolumFotografi, b.bolumFotografi2].filter((f): f is OgrenciFotografi => Boolean(f))),
     /*
       GÜNCELLEME TARİHİ VARSAYILANI KALDIRILDI
 
