@@ -684,6 +684,23 @@
           },
           true // yakalama aşaması: kaynak hataları balonlanmıyor
         );
+        /*
+          GECİKMELİ PARÇA HATASI (17 Ekim 2026)
+
+          Rehber, bölüm, ilan ve fırsat gövdeleri gecikmeli parça. Bir dağıtım
+          parçanın adını değiştirdiyse dinamik import başarısız oluyor; bu bir
+          öğe `error` olayı değil, Vite onu `vite:preloadError` ile bildiriyor.
+          Aynı tek seferlik `kurtar` çağrılıyor. `preventDefault` YOK: hata
+          uygulamaya ulaşmaya devam ediyor ve parça hatası sınırı
+          (src/lib/parca-hatasi.tsx) ön render kopyasını gösteriyor.
+
+          Sınır da aynı işlevi `window.svVarlikKurtar` üzerinden çağırıyor:
+          bayrak tek, yani iki yol aynı hatada iki kez yenilemiyor.
+        */
+        window.addEventListener('vite:preloadError', function () {
+          kurtar();
+        });
+        window.svVarlikKurtar = kurtar;
       })();
     </script>
   </head>

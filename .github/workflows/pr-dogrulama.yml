@@ -68,6 +68,25 @@ jobs:
       - name: Derleme çıktısı testleri (ilk HTML, harita, canonical)
         run: |
           node --test $(grep -lE "['\"]dist['\"]" tests/*.test.mjs)
+      # DERLENMİŞ SİTEDE TARAYICI TESTİ (17 Ekim 2026)
+      # Gecikmeli parça 404 dönünce sayfa boşalıyordu (canlıda yeniden
+      # üretildi). Yukarıda derlenen dist/, projenin kendi önizlemesiyle
+      # (wrangler pages dev: ön render + functions/ ara katmanı + kenar
+      # önbelleği) sunuluyor ve gerçek DOM ölçülüyor. Yalnız chromium kurulu;
+      # test düşerse iş düşer.
+      - name: Playwright tarayıcısı (chromium)
+        run: npx playwright install --with-deps chromium
+      - name: Derlenmiş site E2E (parça hatası kurtarması)
+        run: npx playwright test -c playwright.dist.config.ts
+      - name: Derlenmiş site E2E raporu
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-dist-raporu
+          path: |
+            playwright-report/dist
+            test-results/dist
+          retention-days: 7
       - name: SEO kapısı özeti
         if: always()
         run: |

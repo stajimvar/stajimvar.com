@@ -166,6 +166,24 @@ export function onbellekAnahtariAdresi(url) {
 }
 
 /**
+ * KURTARMA İSTEĞİ ÖNBELLEKTEN OKUNMUYOR (17 Ekim 2026)
+ *
+ * index.html'deki varlık kurtarması, eksik bir JS/CSS dosyasında sayfayı
+ * `?sv=<zaman>` ile BİR KEZ yeniliyor: amaç güncel varlık adlarını taşıyan
+ * taze HTML'i almak. Anahtar sorgu dizesini attığı için bu istek aynı bayat
+ * kopyaya düşüyordu (canlıda ölçüldü: `x-onbellek: HIT`) ve kurtarma hiçbir
+ * şey onarmadan bitiyordu.
+ *
+ * Anahtar DEĞİŞMİYOR. Yalnız okuma atlanıyor; taze cevap yine aynı anahtara
+ * yazılıyor, yani kurtarma isteği bayat kopyayı herkes için de tazeliyor.
+ */
+export const KURTARMA_PARAMETRESI = 'sv';
+
+export function kurtarmaIstegiMi(url) {
+  return new URL(url).searchParams.has(KURTARMA_PARAMETRESI);
+}
+
+/**
  * Bu istek kenar önbelleğinden okunabilir/yazılabilir mi?
  *
  * Üç koşul: GET olacak, herkese açık bir belge sayfası olacak ve oturum
