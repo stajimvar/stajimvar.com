@@ -1,7 +1,7 @@
 {
   "name": "StajımVar — Staj İlanları",
   "short_name": "StajımVar",
-  "description": "Türkiye'deki staj ilanlarını şirketlerin kendi kariyer sayfalarından derler. Her ilanda şirketin kendi başvuru bağlantısı var.",
+  "description": "Türkiye'den ve yurt dışından staj ilanlarını tek listede toplar. İlanların çoğu şirketlerin kendi kariyer sayfalarından derlenir, bir kısmını işverenler doğrudan StajımVar'da yayımlar.",
   "lang": "tr",
   "dir": "ltr",
   "start_url": "/",
