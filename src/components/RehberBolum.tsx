@@ -82,7 +82,16 @@ const OGRENCI_BOYUTLARI = '(min-width: 1024px) 760px, calc(100vw - 72px)';
  * korunuyor, kırpma yok; gecikmeli iniyor. Görseller yapay zekâyla
  * üretilmiş temsili sahneler: "Temsili görsel" etiketi her zaman görünür,
  * fotoğraftaki kişi ya da kâğıt gerçek bir kayıt değil.
+ *
+ * ÜSTTE TOPLANIYOR (21 Ekim 2026, kullanıcı isteği): işveren rehberinde
+ * fotoğraflı adım kartları girişin hemen altında görünüyor; öğrencide aynı
+ * fotoğraflar uzun yazının içine dağılmıştı (ilki sayfanın ~9000. pikselinde).
+ * Rehber sayfası bu kartları kısa cevabın altında ızgara olarak çiziyor
+ * (GuidePages `OgrenciGorselIzgarasi`) ve gövdeyi `OgrenciGorseliGovdede`
+ * = false ile sarıyor: yazının içindeki kopya çizilmiyor, metin yerinde.
  */
+export const OgrenciGorseliGovdede = React.createContext(true);
+
 export const OgrenciBolumGorseli: React.FC<{
   dosya: string;
   /** Sahneyi tarif eden Türkçe alt metin. */
@@ -91,7 +100,10 @@ export const OgrenciBolumGorseli: React.FC<{
   baslik: string;
   /** Bölümün tek cümlelik özeti (yazının kendi metninden). */
   ozet: string;
-}> = ({ dosya, alt, baslik, ozet }) => (
+}> = ({ dosya, alt, baslik, ozet }) => {
+  const govdede = React.useContext(OgrenciGorseliGovdede);
+  if (!govdede) return null;
+  return (
   <figure className="ogrenci-bolum-gorseli m-0 overflow-hidden rounded-2xl border border-gray-200 bg-white" data-bolum-gorseli={dosya}>
     <div className="relative">
       <picture className="block overflow-hidden bg-gray-100">
@@ -122,7 +134,8 @@ export const OgrenciBolumGorseli: React.FC<{
       <span className="block text-[15px] leading-relaxed text-gray-600">{ozet}</span>
     </figcaption>
   </figure>
-);
+  );
+};
 
 /** Düz ayrıntı satırı: çerçeve yok, yalnız mavi yazı ve ok. Yerel `<details>`. */
 export const SadeAyrinti: React.FC<{ children: React.ReactNode }> = ({ children }) => (

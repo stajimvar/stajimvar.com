@@ -160,3 +160,21 @@ test('reklam sayımı fotoğraf altyazısını saymıyor', async () => {
   assert.doesNotMatch(fotografAltyazisiz(veri), /Yedi|bolumFotografi/);
   assert.match(fotografAltyazisiz(veri), /Başlık burada[\s\S]*Bir iki üç/);
 });
+
+test('öğrenci fotoğrafları rehber girişinin altında ızgara; gövdedeki kopya çizilmiyor', () => {
+  const sayfa = oku('src/components/GuidePages.tsx');
+  /* İşveren adım kartları gibi: kısa cevabın altında, iki sütun. */
+  assert.match(sayfa, /const fotograflar = adimli \? \[\] : bolumFotograflari\(rehber\);/);
+  assert.match(sayfa, /\{gorselUstte && \(\s*<section aria-label="Bölümler" className="grid items-start gap-4 lg:grid-cols-2 lg:gap-5">/);
+  assert.ok(sayfa.indexOf('{rehber.hizliCevap && (') < sayfa.indexOf('{gorselUstte && ('));
+  assert.ok(sayfa.indexOf('{gorselUstte && (') < sayfa.indexOf('{rehber.icerik}'));
+  /* Gövde sarılıyor: üstte çizildiyse yazının içinde yeniden çizilmiyor. */
+  assert.match(sayfa, /<OgrenciGorseliGovdede\.Provider value=\{!gorselUstte\}>[\s\S]{0,400}\{rehber\.icerik\}/);
+  const bolum = oku('src/components/RehberBolum.tsx');
+  assert.match(bolum, /const govdede = React\.useContext\(OgrenciGorseliGovdede\);\s*if \(!govdede\) return null;/);
+  /* Liste iki kaynaktan: blok rehberlerinde veriden, JSX rehberlerinde ağaçtan. */
+  assert.match(oku('src/data/rehber-govde.tsx'), /bolumFotograflari: t\.bloklar\.flatMap\(\(b\) => \[b\.bolumFotografi, b\.bolumFotografi2\]/);
+  const veri = oku('src/data/rehberler.tsx');
+  assert.match(veri, /if \(dugum\.type === OgrenciBolumGorseli\)/);
+  assert.match(veri, /return rehber\.bolumFotograflari \?\? jsxFotograflari\(rehber\.icerik\);/);
+});

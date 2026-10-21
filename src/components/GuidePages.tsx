@@ -21,7 +21,8 @@ import { IcindekilerMobil, IcindekilerYan, OkumaCubugu, REHBER_GOVDE_STILI, useR
 import { RehberdeIlanlar } from './RehberdeIlanlar';
 import { SayfaKabugu } from './SayfaKabugu';
 import { RenkliKart } from './RehberGorseller';
-import { REHBERLER, konuEtiketi, rehberBul, rehberOkumaDakika, type Rehber } from '../data/rehberler';
+import { REHBERLER, bolumFotograflari, konuEtiketi, rehberBul, rehberOkumaDakika, type Rehber } from '../data/rehberler';
+import { OgrenciBolumGorseli, OgrenciGorseliGovdede } from './RehberBolum';
 import { MetinCizimi } from '../data/rehber-govde';
 import { BOLUMLER } from '../data/bolumler';
 import { ARACLAR } from './AraclarListesi';
@@ -651,6 +652,8 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
     beyaz yazı kartı ve sağ sütundaki içindekiler onlarda kalıyor.
   */
   const adimli = rehber.kategori === 'isveren' && Boolean(rehber.adimlar?.length);
+  const fotograflar = adimli ? [] : bolumFotograflari(rehber);
+  const gorselUstte = fotograflar.length > 0;
 
   return (
     <Kabuk onBack={onBack} genis>
@@ -692,8 +695,23 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
           </div>
         )}
 
+        {/*
+          ÖĞRENCİ BÖLÜM FOTOĞRAFLARI ÜSTTE (21 Ekim 2026, kullanıcı isteği):
+          işveren rehberinde fotoğraflı adım kartları kısa cevabın hemen
+          altında; öğrencide aynı kartlar yazının içine dağılmıştı. Burada
+          ızgara olarak çiziliyor, gövdedeki kopyalar aşağıda gizleniyor.
+        */}
+        {gorselUstte && (
+          <section aria-label="Bölümler" className="grid items-start gap-4 lg:grid-cols-2 lg:gap-5">
+            {fotograflar.map((f) => (
+              <OgrenciBolumGorseli key={f.dosya} dosya={f.dosya} alt={f.gorselAlt} baslik={f.baslik} ozet={f.ozet} />
+            ))}
+          </section>
+        )}
+
         {!adimli && <IcindekilerMobil basliklar={basliklar} kendiNumarasiVar={kendiNumarasiVar} />}
         {/* Tıklama yakalayıcının gerekçesi yukarıda, tanımının yanında. */}
+        <OgrenciGorseliGovdede.Provider value={!gorselUstte}>
         <div
           ref={icerikRef}
           className={
@@ -705,6 +723,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({ slug, onBack, onNavigate }
         >
           {rehber.icerik}
         </div>
+        </OgrenciGorseliGovdede.Provider>
 
         {/*
           SIK SORULANLAR
