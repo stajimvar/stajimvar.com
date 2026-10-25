@@ -1215,7 +1215,12 @@
       "careers_url": "https://jobs.smartrecruiters.com/BoschGroup",
       "website": "https://www.bosch.com.tr",
       "urls": [
-        "https://jobs.smartrecruiters.com/BoschGroup/744000154606874-logistics-smart-start"
+        "https://jobs.smartrecruiters.com/BoschGroup/744000154606874-logistics-smart-start",
+        "https://jobs.smartrecruiters.com/BoschGroup/744000147835359-controlling-smart-start",
+        "https://jobs.smartrecruiters.com/BoschGroup/744000150015409-indirect-purchasing-smart-start-recruitment-days",
+        "https://jobs.smartrecruiters.com/BoschGroup/743999977581543-operational-excellence-smart-start",
+        "https://jobs.smartrecruiters.com/BoschGroup/744000120959282-logistics-smart-start",
+        "https://jobs.smartrecruiters.com/BoschGroup/744000124345989-r-d-smart-start"
       ],
       "_not": "Tek ilan; bosch-smartrecruiters-de yalnız Almanya. Microdata okunuyor."
     },
@@ -1232,6 +1237,157 @@
         "https://career.alpla.com/en/jobs/turkey/gebze/long-term-intern-human-resources"
       ],
       "_not": "JSON-LD yok; schema.org JobPosting microdata okunuyor. İlan resmî Türkiye listesinde."
+    },
+    {
+      "id": "otis-tr-official-jsonld",
+      "name": "Otis Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Otis",
+      "careers_url": "https://otis.wd504.myworkdayjobs.com/en-US/REC_Ext_Gateway",
+      "urls": [
+        "https://otis.wd504.myworkdayjobs.com/en-US/REC_Ext_Gateway/job/FABRIKA-STANBUL-Turkey/Intern--Quality-Engrg_20170816"
+      ],
+      "_not": "25 Ekim 2026 kullanıcı CSV teslimi; resmî sayfada JobPosting (JSON-LD/microdata) kuru çalıştırmada doğrulandı."
+    },
+    {
+      "id": "adi-tr-official-jsonld",
+      "name": "Analog Devices Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Analog Devices",
+      "careers_url": "https://analogdevices.wd1.myworkdayjobs.com/External",
+      "urls": [
+        "https://analogdevices.wd1.myworkdayjobs.com/External/job/Turkey-Istanbul-Bilisim-Vadisi/Embedded-Software-Engineering-Intern_R267001"
+      ],
+      "_not": "25 Ekim 2026 kullanıcı CSV teslimi; resmî sayfada JobPosting (JSON-LD/microdata) kuru çalıştırmada doğrulandı."
+    },
+    {
+      "id": "medtronic-tr-official-jsonld",
+      "name": "Medtronic Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Medtronic",
+      "careers_url": "https://medtronic.wd1.myworkdayjobs.com/en-US/MedtronicCareers",
+      "urls": [
+        "https://medtronic.wd1.myworkdayjobs.com/en-US/MedtronicCareers/job/Sales-Operations-Intern_R78959-1"
+      ],
+      "_not": "25 Ekim 2026 kullanıcı CSV teslimi; resmî sayfada JobPosting (JSON-LD/microdata) kuru çalıştırmada doğrulandı."
+    },
+    {
+      "id": "mastercard-tr-official-jsonld",
+      "name": "Mastercard Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Mastercard",
+      "careers_url": "https://mastercard.wd1.myworkdayjobs.com/en-US/CorporateCareers",
+      "website": "https://www.mastercard.com",
+      "urls": [
+        "https://mastercard.wd1.myworkdayjobs.com/en-US/CorporateCareers/job/Associate-Consultant-Intern--Summer-Internship-Program---2027--Istanbul--Trkiye_R-287590-2"
+      ],
+      "_not": "25 Ekim 2026 kullanıcı CSV teslimi; resmî sayfada JobPosting (JSON-LD/microdata) kuru çalıştırmada doğrulandı."
+    },
+    {
+      "id": "scjohnson-tr-official-jsonld",
+      "name": "SC Johnson Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "SC Johnson",
+      "careers_url": "https://scj.wd5.myworkdayjobs.com/External_Career_Site",
+      "urls": [
+        "https://scj.wd5.myworkdayjobs.com/ja-JP/External_Career_Site/job/Intern--Human-Resources_33759"
+      ],
+      "_not": "25 Ekim 2026 kullanıcı CSV teslimi; resmî sayfada JobPosting (JSON-LD/microdata) kuru çalıştırmada doğrulandı."
+    },
+    {
+      "id": "esteelauder-tr-official-jsonld",
+      "name": "Estée Lauder Companies Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Estée Lauder Companies",
+      "careers_url": "https://careers.elcompanies.com",
+      "urls": [
+        "https://careers.elcompanies.com/careers/job/1168274748226"
+      ],
+      "_not": "25 Ekim 2026 kullanıcı CSV teslimi; resmî sayfada JobPosting (JSON-LD/microdata) kuru çalıştırmada doğrulandı."
+    },
+    {
+      "id": "lesaffre-tr-microdata",
+      "name": "Lesaffre Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Lesaffre",
+      "careers_url": "https://jobs.smartrecruiters.com/Lesaffre",
+      "website": "https://www.lesaffre.com",
+      "urls": [
+        "https://jobs.smartrecruiters.com/Lesaffre/744000151000350-boost-2-0-for-supply-chain",
+        "https://jobs.smartrecruiters.com/Lesaffre/744000079891970-boost-internship-program-ceyhan-"
+      ],
+      "_not": "25 Ekim 2026 kullanıcı CSV teslimi; resmî sayfada JobPosting (JSON-LD/microdata) kuru çalıştırmada doğrulandı."
+    },
+    {
+      "id": "experian-tr-microdata",
+      "name": "Experian Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Experian",
+      "careers_url": "https://jobs.smartrecruiters.com/Experian",
+      "website": "https://www.experian.com",
+      "urls": [
+        "https://jobs.smartrecruiters.com/Experian/744000155674789-experian-powercurve-academy-2026-applications-are-now-open-"
+      ],
+      "_not": "25 Ekim 2026 kullanıcı CSV teslimi; resmî sayfada JobPosting (JSON-LD/microdata) kuru çalıştırmada doğrulandı."
+    },
+    {
+      "id": "reload-tr-microdata",
+      "name": "Reload Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Reload",
+      "careers_url": "https://jobs.smartrecruiters.com/Reload1",
+      "urls": [
+        "https://jobs.smartrecruiters.com/Reload1/743999929375898-product-design-intern"
+      ],
+      "_not": "25 Ekim 2026 kullanıcı CSV teslimi; resmî sayfada JobPosting (JSON-LD/microdata) kuru çalıştırmada doğrulandı."
+    },
+    {
+      "id": "wordsmith-tr-microdata",
+      "name": "WordSmith Advertising Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "WordSmith Advertising",
+      "careers_url": "https://jobs.smartrecruiters.com/WordSmithAdvertising",
+      "urls": [
+        "https://jobs.smartrecruiters.com/WordSmithAdvertising/743999678190585-design-internship-at-award-winning-international-independent-agency",
+        "https://jobs.smartrecruiters.com/WordSmithAdvertising/94073245-videographer-intern",
+        "https://jobs.smartrecruiters.com/WordSmithAdvertising/90242308-intern-content-writer-at-us-owned-istanbul-ad-agency",
+        "https://jobs.smartrecruiters.com/WordSmithAdvertising/75558756-web-design-ux-intern",
+        "https://jobs.smartrecruiters.com/WordSmithAdvertising/77266644-strategy-and-marketing-intern"
+      ],
+      "_not": "25 Ekim 2026 kullanıcı CSV teslimi; resmî sayfada JobPosting (JSON-LD/microdata) kuru çalıştırmada doğrulandı."
+    },
+    {
+      "id": "fugo-games-official-jsonld",
+      "name": "Fugo Games Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Fugo Games",
+      "careers_url": "https://fugo-games.breezy.hr",
+      "urls": [
+        "https://fugo-games.breezy.hr/p/1e904966dba9-marketing-artist-motion-designer-intern"
+      ],
+      "_not": "25 Ekim 2026 kullanıcı CSV teslimi; resmî sayfada JobPosting (JSON-LD/microdata) kuru çalıştırmada doğrulandı."
     }
   ],
   "notes": "Only add verified public ATS/API endpoints. Keep credentials in environment variables, never here."
