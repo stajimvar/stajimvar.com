@@ -282,6 +282,59 @@ class ScraperFixtureTests(unittest.TestCase):
         self.assertEqual(jobs[0].title, "Intern – Kalite")
         self.assertEqual(jobs[0].city, "İstanbul - Çamlıca")
 
+    def _kuresel(self, get, adres_json, baslik="Intern - Demand Fulfilment Planning"):
+        response = Mock()
+        response.text = ('<script type="application/ld+json">{"@type":"JobPosting","title":"%s","description":"x",'
+                         '"jobLocation":{"address":%s}}</script>') % (baslik, adres_json)
+        response.raise_for_status.return_value = None
+        get.return_value = response
+        return list(scraper.official_jsonld({"name": "Organon Kariyer", "type": "official_jsonld", "country": "GLOBAL",
+                                             "urls": ["https://example.com/j"], "company_name": "Organon"}))
+
+    @patch("scraper.requests.get")
+    def test_kuresel_kaynak_ilanin_ulkesini_kendi_adresinden_aliyor(self, get):
+        """GLOBAL: Singapur ilanı alınıyor, ülke yapısal adresten (yerel dildeki ad "Singapur")."""
+        jobs = self._kuresel(get, '{"addressLocality":"SGP - Singapore - Singapore","addressCountry":"Singapur"}')
+        self.assertEqual([(j.title, j.country_code) for j in jobs], [("Intern - Demand Fulfilment Planning", "SG")])
+
+    @patch("scraper.requests.get")
+    def test_kuresel_kaynakta_ulke_belirsiz_ya_da_celiskiliyse_ilan_alinmiyor(self, get):
+        """Ülke çıkarılamayan (tanınmayan ad, adres yok) ya da şehirle çelişen ilan alınmıyor."""
+        self.assertEqual(self._kuresel(get, '{"addressLocality":"Gotham","addressCountry":"Atlantis"}'), [])
+        self.assertEqual(self._kuresel(get, '{}'), [])
+        self.assertEqual(self._kuresel(get, '{"addressLocality":"Istanbul","addressCountry":"Germany"}'), [])
+
+    @patch("scraper.requests.get")
+    def test_kuresel_kaynakta_staj_terimi_basliktan(self, get):
+        """GLOBAL: başlıkta staj terimi yoksa ilan alınmıyor."""
+        self.assertEqual(self._kuresel(get, '{"addressCountry":"Netherlands"}', baslik="Senior Engineer"), [])
+
+    @patch("scraper.requests.get")
+    def test_workable_kuresel_ulke_ilanin_konumundan_dogrulanmis_kimlikle(self, get):
+        """Workable GLOBAL: ülke ilanın countryCode'undan; doğrulanmış kip yalnız verilen kimliği bırakıyor."""
+        response = Mock()
+        response.raise_for_status.return_value = None
+        response.json.return_value = {"jobs": [
+            {"title": "R&D Intern - Mechatronics", "description": "x", "url": "https://apply.workable.com/j/9FCEA64742",
+             "locations": [{"country": "Singapore", "countryCode": "SG", "city": "Singapore"}]},
+            {"title": "Marketing Intern", "description": "x", "url": "https://apply.workable.com/j/954D87625C",
+             "locations": [{"country": "Malaysia", "countryCode": "MY", "city": "Kuala Lumpur"}]},
+            {"title": "Office Intern", "description": "x", "url": "https://apply.workable.com/j/AAAAAAAAAA", "locations": []},
+        ]}
+        get.return_value = response
+        config = {"name": "Rapsodo", "type": "workable", "account": "rapsodo", "country": "GLOBAL",
+                  "dogrulanmis_ilanlar": ["9FCEA64742", "954D87625C", "AAAAAAAAAA"]}
+        jobs = scraper.dogrulanmis_ilanlarla_sinirla(config, scraper.workable(config))
+        self.assertEqual([(j.title, j.country_code) for j in jobs],
+                         [("R&D Intern - Mechatronics", "SG"), ("Marketing Intern", "MY")])
+
+    def test_kuresel_profil_pano_uyarlayicilarinda_hata(self):
+        """GLOBAL yalnız official_jsonld: pano uyarlayıcısı ülkeyi kaynak düzeyinde varsayıyor."""
+        with self.assertRaises(ValueError):
+            scraper.kaynak_ulkesi({"name": "x", "type": "greenhouse", "country": "GLOBAL"})
+        with self.assertRaises(ValueError):
+            scraper.ulke_etiketi({"name": "x", "type": "official_jsonld", "country": "GLOBAL"})
+
     @patch("scraper.requests.get")
     def test_official_jsonld_tr_kaynaginda_iso_ulke_kodu_kabul(self, get):
         """Ülke yalnız "TR" kodu olarak gelince (Glocalzone) Türkiye ilanı elenmemeli."""

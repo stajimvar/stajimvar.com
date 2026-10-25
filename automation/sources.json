@@ -1414,6 +1414,95 @@
         "https://glocalzone.breezy.hr/p/54c1a5559fb6-frontend-developer-intern-react"
       ],
       "_not": "25 Ekim 2026 kullanıcı CSV teslimi; resmî sayfada JobPosting kuru çalıştırmada doğrulandı (karakter kümesi ve ISO ülke kodu düzeltmesiyle)."
+    },
+    {
+      "id": "organon-global-official-jsonld",
+      "name": "Organon Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "GLOBAL",
+      "company_name": "Organon",
+      "careers_url": "https://organon.wd5.myworkdayjobs.com/SearchJobs",
+      "website": "https://www.organon.com",
+      "urls": [
+        "https://organon.wd5.myworkdayjobs.com/tr-TR/SearchJobs/job/Intern---Demand-Fulfilment-Planning_R542365-2"
+      ],
+      "_not": "25 Ekim 2026 kullanıcı CSV teslimi; kuru çalıştırmada resmî kaynaktan doğrulandı."
+    },
+    {
+      "id": "accor-global-microdata",
+      "name": "Accor Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "GLOBAL",
+      "company_name": "Accor",
+      "careers_url": "https://jobs.smartrecruiters.com/AccorHotel",
+      "website": "https://group.accor.com",
+      "urls": [
+        "https://jobs.smartrecruiters.com/AccorHotel/744000155430337-restaurant-operations-management-intern",
+        "https://jobs.smartrecruiters.com/AccorHotel/744000155282290-hr-talent-acquisition-intern",
+        "https://jobs.smartrecruiters.com/Accor/744000157426129-guest-relations-management-intern"
+      ],
+      "_not": "25 Ekim 2026 kullanıcı CSV teslimi; kuru çalıştırmada resmî kaynaktan doğrulandı."
+    },
+    {
+      "id": "rapsodo-global-workable",
+      "name": "Rapsodo (Global)",
+      "type": "workable",
+      "account": "rapsodo",
+      "enabled": true,
+      "country": "GLOBAL",
+      "company_name": "Rapsodo",
+      "careers_url": "https://apply.workable.com/rapsodo",
+      "dogrulanmis_ilanlar": [
+        "CD768BEABD",
+        "9FCEA64742",
+        "DDE7E05401",
+        "954D87625C"
+      ],
+      "_not": "25 Ekim 2026 kullanıcı CSV teslimi; kuru çalıştırmada resmî kaynaktan doğrulandı."
+    },
+    {
+      "id": "ratehawk-workable",
+      "name": "RateHawk",
+      "type": "workable",
+      "account": "ratehawk",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "RateHawk",
+      "careers_url": "https://apply.workable.com/ratehawk",
+      "dogrulanmis_ilanlar": [
+        "748D23C55C"
+      ],
+      "_not": "25 Ekim 2026 kullanıcı CSV teslimi; kuru çalıştırmada resmî kaynaktan doğrulandı."
+    },
+    {
+      "id": "hiroba-games-workable",
+      "name": "Hiroba Games",
+      "type": "workable",
+      "account": "hiroba-games",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Hiroba Games",
+      "careers_url": "https://apply.workable.com/hiroba-games",
+      "dogrulanmis_ilanlar": [
+        "193F0AED88"
+      ],
+      "_not": "25 Ekim 2026 kullanıcı CSV teslimi; kuru çalıştırmada resmî kaynaktan doğrulandı."
+    },
+    {
+      "id": "complead-workable",
+      "name": "Complead",
+      "type": "workable",
+      "account": "complead",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Sanction Scanner",
+      "careers_url": "https://apply.workable.com/complead",
+      "dogrulanmis_ilanlar": [
+        "CD8087281D"
+      ],
+      "_not": "25 Ekim 2026 kullanıcı CSV teslimi; kuru çalıştırmada resmî kaynaktan doğrulandı."
     }
   ],
   "notes": "Only add verified public ATS/API endpoints. Keep credentials in environment variables, never here."

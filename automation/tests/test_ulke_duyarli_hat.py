@@ -272,9 +272,14 @@ class KaynakKaydi(unittest.TestCase):
         cls.akis = (KOK / ".github" / "workflows" / "stajimvar-automation.yml").read_text(encoding="utf-8")
 
     def test_ulkeler_desteklenen_profillerde(self):
+        """GLOBAL (25 Ekim 2026): ülke ilan başına; yalnız ilan başına ülke
+        veren uyarlayıcılarda ve yalnız doğrulanmış ilanlarla (aşağıdaki test)."""
         for k in self.kaynaklar:
             with self.subTest(kaynak=k["id"]):
-                self.assertIn(k.get("country", "TR"), {"TR", "DE", "FR"})
+                self.assertIn(k.get("country", "TR"), {"TR", "DE", "FR", "GLOBAL"})
+                if k.get("country") == "GLOBAL":
+                    self.assertIn(k["type"], scraper.KURESEL_UYARLAYICILAR)
+                    self.assertEqual(scraper.kaynak_ulkesi(k), "GLOBAL")
 
     def test_turkiye_disi_kaynaklar_yalniz_dogrulanmis_ilanlarla(self):
         """İlk kapsam kuralı: TR dışı kaynak şirketin bütün panosunu değil,
