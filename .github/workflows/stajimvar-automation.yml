@@ -24,8 +24,15 @@ jobs:
     # Üretim anahtarları yalnız `production` ortamında (yalnız main dalı).
     # Ayrıntı: docs/seo/dagitim-akisi.md
     environment: production
-    timeout-minutes: 20
+    # SÜRE SINIRI 40 DK (25 Ekim 2026): kaynak sayısı 99'dan 118'e çıkınca
+    # tarama 20 dakikayı aştı ve iş "maximum execution time" ile kesildi
+    # (koşu 40233643492); kesilen turda hiçbir ilan yayına geçmedi. Önceki
+    # turlar ~15 dk sürüyordu, yani sınır zaten kıyıdaydı.
+    timeout-minutes: 40
     env:
+      # Çıktı tamponlanınca kayıt kesilme anında boş kalıyordu (bütün tablo
+      # tek seferde basıldı); hangi kaynağın uzun sürdüğü görünmüyordu.
+      PYTHONUNBUFFERED: "1"
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       # İki isim de kabul ediliyor, önce yenisi.
       #
