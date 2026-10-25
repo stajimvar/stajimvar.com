@@ -266,6 +266,33 @@ class ScraperFixtureTests(unittest.TestCase):
         jobs = list(scraper.official_jsonld({"name": "Hilti Kariyer", "country": "TR", "urls": ["https://example.com/j"], "company_name": "Hilti"}))
         self.assertEqual(jobs, [])
 
+    @patch("scraper.requests.get")
+    def test_official_jsonld_charset_bildirmeyen_utf8_sayfa_bozulmuyor(self, get):
+        """Workday charset vermiyor; requests ISO-8859-1 sanıyor. Türkçe karakter ve Türkiye süzgeci bozulmamalı (pladis, Otis)."""
+        sayfa = '''<script type="application/ld+json">{"@type":"JobPosting","title":"Intern – Kalite",
+          "description":"Staj","jobLocation":{"address":{"addressLocality":"İstanbul - Çamlıca","addressCountry":"Türkiye"}}}</script>'''
+        response = Mock()
+        response.content = sayfa.encode("utf-8")
+        response.encoding = "ISO-8859-1"
+        response.text = response.content.decode("ISO-8859-1")
+        response.raise_for_status.return_value = None
+        get.return_value = response
+        jobs = list(scraper.official_jsonld({"name": "pladis Kariyer", "country": "TR", "urls": ["https://example.com/j"], "company_name": "pladis"}))
+        self.assertEqual(len(jobs), 1)
+        self.assertEqual(jobs[0].title, "Intern – Kalite")
+        self.assertEqual(jobs[0].city, "İstanbul - Çamlıca")
+
+    @patch("scraper.requests.get")
+    def test_official_jsonld_tr_kaynaginda_iso_ulke_kodu_kabul(self, get):
+        """Ülke yalnız "TR" kodu olarak gelince (Glocalzone) Türkiye ilanı elenmemeli."""
+        response = Mock()
+        response.text = '''<script type="application/ld+json">{"@type":"JobPosting","title":"Frontend Developer Intern",
+          "description":"React","jobLocation":{"address":{"addressCountry":"TR"}}}</script>'''
+        response.raise_for_status.return_value = None
+        get.return_value = response
+        jobs = list(scraper.official_jsonld({"name": "Glocalzone Kariyer", "country": "TR", "urls": ["https://example.com/j"], "company_name": "Glocalzone"}))
+        self.assertEqual([j.title for j in jobs], ["Frontend Developer Intern"])
+
     MIKRO_SAYFA = '''
       <header><nav>Skip to main content Search jobs</nav></header>
       <article itemscope itemtype="http://schema.org/JobPosting">

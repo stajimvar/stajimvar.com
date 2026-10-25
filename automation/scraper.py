@@ -394,6 +394,23 @@ def _basvuru_ulkesi(item: dict[str, Any]) -> str | None:
     return next(iter(adlar)) if len(adlar) == 1 else None
 
 
+def _sayfa_metni(response: Any) -> str:
+    """Yanıt metni; karakter kümesi bildirilmemiş UTF-8 sayfa bozulmadan.
+
+    `requests`, Content-Type'ta charset yoksa metni ISO-8859-1 sayıyor.
+    Workday sayfaları charset vermiyor ve UTF-8 gönderiyor: "İSTANBUL"
+    "Ä°STANBUL", "Türkiye" "TÃ¼rkiye" oluyordu; Türkiye süzgeci de bu
+    yüzden pladis ilanını eliyordu (ölçüldü, 25 Ekim 2026). Baytlar geçerli
+    UTF-8 ise o okunuyor; değilse eski davranış.
+    """
+    icerik = getattr(response, "content", None)
+    if getattr(response, "encoding", None) == "ISO-8859-1" and isinstance(icerik, bytes):
+        try:
+            return icerik.decode("utf-8")
+        except UnicodeDecodeError:
+            pass
+    return response.text
+
 def official_jsonld(config: dict[str, Any]) -> Iterable[Job]:
     """İzinli resmî kariyer sayfalarındaki schema.org JobPosting verisini okur."""
     for requested_url in config.get("urls", []):
@@ -401,8 +418,9 @@ def official_jsonld(config: dict[str, Any]) -> Iterable[Job]:
             requested_url, timeout=25, headers={"User-Agent": "StajimVarJobs/1.0"}
         )
         response.raise_for_status()
+        sayfa = _sayfa_metni(response)
         parser = _JsonLdScripts()
-        parser.feed(response.text)
+        parser.feed(sayfa)
 
         bloklar: list[list[dict[str, Any]]] = []
         for block in parser.scripts:
@@ -414,7 +432,7 @@ def official_jsonld(config: dict[str, Any]) -> Iterable[Job]:
         # birden varsa JSON-LD kazanıyor: mevcut kaynakların davranışı aynı.
         if not any("JobPosting" in str(i.get("@type")) for b in bloklar for i in b):
             mikro = _MikroVeriIlani()
-            mikro.feed(response.text)
+            mikro.feed(sayfa)
             bulunan = mikro.ilan()
             if bulunan:
                 bloklar.append([bulunan])
@@ -451,7 +469,9 @@ def official_jsonld(config: dict[str, Any]) -> Iterable[Job]:
                 if not title:
                     continue
                 if kaynak_ulkesi(config) == "TR":
-                    if not is_turkey_location(location_label):
+                    # Ülke yalnız ISO kodu olarak da gelebiliyor ("TR",
+                    # Glocalzone); "tr" metin olarak şehir listesinde yok.
+                    if not (is_turkey_location(location_label) or structured_country_code(country) == "TR"):
                         continue
                 elif city or country:
                     if not konum_eslesiyor(config, city, country):
