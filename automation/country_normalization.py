@@ -55,6 +55,60 @@ LOCATION_COUNTRIES = {
 
 REMOTE_ONLY = {'remote', 'global', 'worldwide', 'anywhere'}
 
+# YAPISAL ÜLKE ALANININ ADLARI (25 Ekim 2026, küresel kaynak profili)
+#
+# Yalnız ATS'nin yapısal `addressCountry` alanında aranıyor; serbest konum
+# metninde ARANMIYOR ("Georgia", "Jordan" gibi adlar metinde başka şey
+# olabilir). Kapsam sitenin ülke listesi (src/lib/ulkeler.mjs) ile aynı;
+# İngilizce ve ATS'lerin yerel dil çıktısında görülen adlar ("Singapur").
+# Listede olmayan ad ülke vermiyor ve küresel kaynakta ilan alınmıyor.
+DUNYA_ULKE_ADLARI = {
+    'united arab emirates': 'AE', 'uae': 'AE', 'birlesik arap emirlikleri': 'AE',
+    'austria': 'AT', 'avusturya': 'AT', 'osterreich': 'AT',
+    'azerbaijan': 'AZ', 'azerbaycan': 'AZ',
+    'belgium': 'BE', 'belcika': 'BE', 'belgique': 'BE', 'belgie': 'BE',
+    'bulgaria': 'BG', 'bulgaristan': 'BG',
+    'canada': 'CA', 'kanada': 'CA',
+    'switzerland': 'CH', 'isvicre': 'CH', 'schweiz': 'CH', 'suisse': 'CH',
+    'cyprus': 'CY', 'kibris': 'CY',
+    'czech republic': 'CZ', 'czechia': 'CZ', 'cekya': 'CZ', 'cek cumhuriyeti': 'CZ',
+    'almanya': 'DE',
+    'denmark': 'DK', 'danimarka': 'DK',
+    'estonia': 'EE', 'estonya': 'EE',
+    'spain': 'ES', 'ispanya': 'ES', 'espana': 'ES',
+    'finland': 'FI', 'finlandiya': 'FI',
+    'fransa': 'FR',
+    'uk': 'GB', 'great britain': 'GB', 'birlesik krallik': 'GB', 'ingiltere': 'GB',
+    'georgia': 'GE', 'gurcistan': 'GE',
+    'greece': 'GR', 'yunanistan': 'GR',
+    'croatia': 'HR', 'hirvatistan': 'HR',
+    'hungary': 'HU', 'macaristan': 'HU',
+    'ireland': 'IE', 'irlanda': 'IE',
+    'israel': 'IL', 'israil': 'IL',
+    'italy': 'IT', 'italya': 'IT', 'italia': 'IT',
+    'japan': 'JP', 'japonya': 'JP',
+    'south korea': 'KR', 'korea': 'KR', 'guney kore': 'KR',
+    'kazakhstan': 'KZ', 'kazakistan': 'KZ',
+    'lithuania': 'LT', 'litvanya': 'LT',
+    'luxembourg': 'LU', 'luksemburg': 'LU',
+    'latvia': 'LV', 'letonya': 'LV',
+    'malta': 'MT',
+    'hollanda': 'NL', 'nederland': 'NL', 'the netherlands': 'NL',
+    'norway': 'NO', 'norvec': 'NO',
+    'poland': 'PL', 'polonya': 'PL', 'polska': 'PL',
+    'portugal': 'PT', 'portekiz': 'PT',
+    'qatar': 'QA', 'katar': 'QA',
+    'romania': 'RO', 'romanya': 'RO',
+    'serbia': 'RS', 'sirbistan': 'RS',
+    'saudi arabia': 'SA', 'suudi arabistan': 'SA',
+    'sweden': 'SE', 'isvec': 'SE',
+    'singapore': 'SG', 'singapur': 'SG',
+    'slovenia': 'SI', 'slovenya': 'SI',
+    'slovakia': 'SK', 'slovakya': 'SK',
+    'ukraine': 'UA', 'ukrayna': 'UA',
+    'usa': 'US', 'united states of america': 'US', 'amerika birlesik devletleri': 'US', 'abd': 'US',
+}
+
 
 def _fold(value):
     text = unicodedata.normalize('NFKD', str(value or '').casefold())
@@ -79,7 +133,9 @@ def structured_country_code(value):
     raw = str(value or '').strip()
     if re.fullmatch(r'[A-Za-z]{2}', raw):
         return raw.upper()
-    return COUNTRY_NAMES.get(_fold(raw))
+    folded = _fold(raw)
+    # NFKD noktasız ı'yı ayırmıyor ("Kıbrıs"); ad tablosu düz i ile yazılı.
+    return COUNTRY_NAMES.get(folded) or DUNYA_ULKE_ADLARI.get(folded.replace('ı', 'i'))
 
 
 def infer_country_code(*, structured_country=None, location=None, title=None):
