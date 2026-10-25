@@ -1388,6 +1388,32 @@
         "https://fugo-games.breezy.hr/p/1e904966dba9-marketing-artist-motion-designer-intern"
       ],
       "_not": "25 Ekim 2026 kullanıcı CSV teslimi; resmî sayfada JobPosting (JSON-LD/microdata) kuru çalıştırmada doğrulandı."
+    },
+    {
+      "id": "pladis-tr-official-jsonld",
+      "name": "pladis Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "pladis",
+      "careers_url": "https://pladis.wd3.myworkdayjobs.com/tr-TR/pladis_Careers",
+      "urls": [
+        "https://pladis.wd3.myworkdayjobs.com/tr-TR/pladis_Careers/job/stanbul---amlca/Intern_JR30204"
+      ],
+      "_not": "25 Ekim 2026 kullanıcı CSV teslimi; resmî sayfada JobPosting kuru çalıştırmada doğrulandı (karakter kümesi ve ISO ülke kodu düzeltmesiyle)."
+    },
+    {
+      "id": "glocalzone-official-jsonld",
+      "name": "Glocalzone Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Glocalzone",
+      "careers_url": "https://glocalzone.breezy.hr",
+      "urls": [
+        "https://glocalzone.breezy.hr/p/54c1a5559fb6-frontend-developer-intern-react"
+      ],
+      "_not": "25 Ekim 2026 kullanıcı CSV teslimi; resmî sayfada JobPosting kuru çalıştırmada doğrulandı (karakter kümesi ve ISO ülke kodu düzeltmesiyle)."
     }
   ],
   "notes": "Only add verified public ATS/API endpoints. Keep credentials in environment variables, never here."
