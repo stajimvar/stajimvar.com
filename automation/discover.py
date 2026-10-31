@@ -161,6 +161,13 @@ def process_source(db, config: dict, source_id: str, *, write: bool, allow_deact
     # --- Kaybolanlar --------------------------------------------------
     # Yalnızca SAĞLIKLI taramada sayaç ilerler. Kaynak çökmüşse ilanları
     # kaybolmuş saymak, kaynak düzelince hepsini yeniden açmak demek olurdu.
+    #
+    # Varsayılan KAPALI ve blok dışında tanımlı (31 Ekim 2026): değişken
+    # yalnız aşağıdaki blokta atanıyordu, tur özetindeki uyarı ise her
+    # yazma turunda okuyordu. Sağlıksız ama hata fırlatmamış tek bir kaynak
+    # UnboundLocalError ile BÜTÜN taramayı düşürüyordu (29–31 Ekim
+    # zamanlanmış koşuları); sıradaki kaynaklar hiç taranmıyordu.
+    deactivation_allowed = False
     if write and run_health is Health.HEALTHY:
         known = (
             db.table("raw_listings")
