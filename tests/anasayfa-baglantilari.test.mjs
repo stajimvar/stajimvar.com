@@ -127,6 +127,35 @@ test('konum: ülke adı şehir gibi basılmıyor; normalize il/ilçe önce', () 
   assert.equal(ilanKonumEtiketi({ city: 'Berlin' }), 'Berlin');
 });
 
+test('konum: çok parçalı metindeki ülke adı, ülke kodu ve çalışma notu basılmıyor (canlı biçimler)', () => {
+  /* 31 Ekim 2026'da yayındaki ilanların şehir alanından, birebir. */
+  const beklenen = {
+    'Istanbul, Turkey': 'İstanbul',
+    'FABRIKA, İSTANBUL, Turkey': 'FABRIKA, İstanbul',
+    'Besiktas, Istanbul Turkey': 'Besiktas, İstanbul',
+    'Turkey, Istanbul, Bilisim Vadisi': 'Bilisim Vadisi, İstanbul',
+    'TUR - Istanbul': 'İstanbul',
+    'TUR-34 Istanbul Umraniye': 'Umraniye, İstanbul',
+    'İstanbul - Çamlıca': 'Çamlıca, İstanbul',
+    'Berlin, DE | Germany (REMOTE)': 'Berlin',
+    'SGP - Singapore - Singapore': 'Singapore',
+    /* Değişmemesi gerekenler: tireli şehir adı, ülke olmayan kısaltma, ilçe → il. */
+    'Neuilly-sur-Seine': 'Neuilly-sur-Seine',
+    'Golden, CO': 'Golden, CO',
+    'Kuala Lumpur': 'Kuala Lumpur',
+    Gebze: 'Gebze, Kocaeli',
+    'Paris, France': 'Paris',
+    'Ankara, TR': 'Ankara',
+  };
+  for (const [ham, etiket] of Object.entries(beklenen)) assert.equal(konumEtiketi(ham), etiket, ham);
+  /* Yalnız ülke kalırsa Türkçe ülke adı; kod da ülke sayılıyor. */
+  assert.equal(konumEtiketi('TUR'), 'Türkiye');
+  assert.equal(konumEtiketi('Germany (Remote)'), 'Almanya');
+  /* Kartın kullandığı yol: doğrulanmış il varken ham metindeki ülke yine basılmıyor. */
+  assert.equal(ilanKonumEtiketi({ il: 'İstanbul', city: 'Istanbul, Turkey' }), 'İstanbul');
+  assert.equal(ilanKonumEtiketi({ il: null, city: 'FABRIKA, İSTANBUL, Turkey' }), 'FABRIKA, İstanbul');
+});
+
 test('konum: bütün ilan kartları ve ilan ekranları aynı yardımcıdan', () => {
   for (const dosya of ['src/components/InternshipCard.tsx', 'src/components/InternshipDetailModal.tsx', 'src/components/ListingPage.tsx']) {
     const k = kodu(oku(dosya));
