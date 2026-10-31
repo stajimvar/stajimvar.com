@@ -50,25 +50,110 @@ const ULKE_ADLARI: Record<string, string> = {
   'united kingdom': 'Birleşik Krallık',
   uk: 'Birleşik Krallık',
   england: 'Birleşik Krallık',
+  netherlands: 'Hollanda',
+  hollanda: 'Hollanda',
+  'united states': 'ABD',
+  usa: 'ABD',
 };
+
+/*
+  ÜLKE ADI ÇOK PARÇALI METNİN İÇİNDE (31 Ekim 2026)
+
+  Yalnız ülke adı yazan alan yukarıda çözülmüştü; ama kariyer
+  sistemleri ülkeyi şehrin yanına da yazıyor. Canlıdaki biçimler
+  (ölçüldü, 50 farklı değer):
+
+    "Istanbul, Turkey"            → kart "Turkey, İstanbul" basıyordu
+    "FABRIKA, İSTANBUL, Turkey"   → "FABRIKA, Turkey, İstanbul"
+    "Besiktas, Istanbul Turkey"   → "Besiktas, Istanbul Turkey, İstanbul"
+    "TUR - Istanbul"              → "TUR - Istanbul, İstanbul"
+    "TUR-34 Istanbul Umraniye"    → "TUR-34 Istanbul Umraniye, İstanbul"
+    "Berlin, DE | Germany (REMOTE)" ve "SGP - Singapore - Singapore"
+                                  → olduğu gibi
+
+  Kural şehre değil biçime bakıyor, yani İstanbul'a özel değil: metin
+  parçalara ayrılıyor (virgül, |, / ve boşluklu tire — "Neuilly-sur-Seine"
+  bölünmüyor), her parçadan ülke adı, BÜYÜK harfle yazılmış ülke kodu,
+  il plaka kodu ("TUR-34") ve çalışma biçimi notu ("(REMOTE)") atılıyor,
+  tekrar eden parça bir kez kalıyor. Geriye yalnız ülke kalırsa Türkçe
+  ülke adı yazılıyor ("Turkey" → "Türkiye"). Tanınmayan parça
+  ("FABRIKA", "Golden, CO") uydurma bir şeyle değiştirilmiyor; kalıyor.
+*/
+const ULKE_KODLARI: Record<string, string> = {
+  TR: 'Türkiye',
+  TUR: 'Türkiye',
+  DE: 'Almanya',
+  DEU: 'Almanya',
+  FR: 'Fransa',
+  FRA: 'Fransa',
+  GB: 'Birleşik Krallık',
+  GBR: 'Birleşik Krallık',
+  NL: 'Hollanda',
+  NLD: 'Hollanda',
+  SG: 'Singapur',
+  SGP: 'Singapur',
+  AE: 'Birleşik Arap Emirlikleri',
+  ARE: 'Birleşik Arap Emirlikleri',
+  MY: 'Malezya',
+  MYS: 'Malezya',
+  US: 'ABD',
+  USA: 'ABD',
+};
+
+const PARCA_AYRACI = /\s*[,|/]\s*|\s+[-–]\s+/;
+const CALISMA_NOTU = /\(\s*(remote|uzaktan|hybrid|hibrit|on-?site|ofisten)\s*\)/gi;
+const PLAKA_ONEKI = /^[A-Z]{2,3}-\d{1,3}\s+/;
+
+/** Parçayı ülke bilgisinden arındırır; parça yalnız ülkeyse boş döner, ülkeyi `ulkeler`e ekler. */
+function ulkesizParca(parca: string, ulkeler: string[]): string {
+  const p = parca.replace(CALISMA_NOTU, ' ').replace(PLAKA_ONEKI, '').replace(/\s+/g, ' ').trim();
+  if (!p) return '';
+  const kod = ULKE_KODLARI[p];
+  if (kod) {
+    ulkeler.push(kod);
+    return '';
+  }
+  const ad = ULKE_ADLARI[katla(p)];
+  if (ad) {
+    ulkeler.push(ad);
+    return '';
+  }
+  /* "Istanbul Turkey": baştaki ya da sondaki ülke kelimesi. */
+  const kelimeler = p.split(' ');
+  while (kelimeler.length > 1 && ULKE_ADLARI[katla(kelimeler[kelimeler.length - 1])]) {
+    ulkeler.push(ULKE_ADLARI[katla(kelimeler.pop() as string)]);
+  }
+  while (kelimeler.length > 1 && ULKE_ADLARI[katla(kelimeler[0])]) {
+    ulkeler.push(ULKE_ADLARI[katla(kelimeler.shift() as string)]);
+  }
+  return kelimeler.join(' ');
+}
 
 export function konumEtiketi(ham: string | null | undefined): string {
   if (!ham) return 'Konum belirtilmemiş';
 
   const temiz = String(ham).replace(ONEK, '').trim();
-  const ulke = ULKE_ADLARI[katla(temiz)];
-  if (ulke) return ulke;
-  const il = ilBul(temiz);
-  if (!il) return temiz;
+  const ulkeler: string[] = [];
+  const parcalar: string[] = [];
+  for (const parca of temiz.split(PARCA_AYRACI)) {
+    const p = ulkesizParca(parca, ulkeler);
+    if (p && !parcalar.some((x) => katla(x) === katla(p))) parcalar.push(p);
+  }
+  if (!parcalar.length) return ulkeler[0] ?? temiz;
 
-  /* Metin zaten ilin kendisiyse tekrar etme. */
-  if (katla(temiz) === katla(il)) return il;
+  const il = ilBul(parcalar.join(', '));
+  if (!il) return parcalar.join(', ');
 
-  /* "Zincirlikuyu, Istanbul" → "Zincirlikuyu, İstanbul" */
-  const ilceler = temiz
-    .split(/[,/|]+/)
-    .map((p) => p.trim())
-    .filter((p) => p && katla(p) !== katla(il));
+  /* "Zincirlikuyu, Istanbul" → "Zincirlikuyu, İstanbul"; ilin adı parçanın içindeyse ("Istanbul Umraniye") ad atılıyor. */
+  const ilceler = parcalar
+    .map((p) =>
+      p
+        .split(' ')
+        .filter((k) => katla(k) !== katla(il))
+        .join(' ')
+        .trim()
+    )
+    .filter(Boolean);
 
   return ilceler.length > 0 ? `${ilceler.join(', ')}, ${il}` : il;
 }

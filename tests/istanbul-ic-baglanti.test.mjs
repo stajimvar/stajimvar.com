@@ -194,7 +194,12 @@ test('dist: ana sayfa ve İstanbul ilanları şehir sayfasına bağlanıyor; şe
     const h = fs.readFileSync(path.join(DIST, 'ilan', f), 'utf8');
     const kok = h.slice(h.indexOf('<div id="root">'));
     const bag = kok.includes(BAG);
-    if (/<title>[^<]*\(İstanbul\)/.test(h)) { ist++; if (bag) istBag++; } else if (bag) digerBag++;
+    /*
+      Başlıktaki konum "(İstanbul)" ya da ilçesiyle "(Üsküdar, İstanbul)"
+      (lib/sehir konumEtiketi). İlçeli olanlar da İstanbul ilanı: onlar da
+      bağlanmak ZORUNDA (31 Ekim 2026; önceden yalnız ilçesizler sayılıyordu).
+    */
+    if (/<title>[^<]*\((?:[^()<]*, )?İstanbul\)/.test(h)) { ist++; if (bag) istBag++; } else if (bag) digerBag++;
   }
   assert.ok(ist > 0);
   assert.equal(istBag, ist, 'her İstanbul ilanı bağlanmalı');
