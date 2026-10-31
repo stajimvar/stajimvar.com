@@ -128,10 +128,12 @@ test('süresi geçen fırsatın SAYFASI duruyor, yalnız haritadan düşüyor', 
   /*
     Eskiden `continue` ile atlanıyordu ve adres 404 dönüyordu. `/ilan/`
     ailesindeki kural: sayfa 200 kalır, metninde kapandığı yazar,
-    haritaya girmez.
+    haritaya girmez. Tek istisna yapılı açıklamalı kayıt (31 Ekim 2026,
+    lib/firsat-aciklama): koşulları ve takvimi anlatan kalıcı sayfa,
+    haritada kalıyor.
   */
   assert.doesNotMatch(ONRENDER, /if \(!firsatSayfasiVar\(f\)\) continue;/);
-  assert.match(ONRENDER, /if \(suresiGecti\) HARITADAN_DISLANAN\.add\(firsatYolu\);/);
+  assert.match(ONRENDER, /if \(suresiGecti && !yapili\) HARITADAN_DISLANAN\.add\(firsatYolu\);/);
 });
 
 test('sorgu expired kayıtları da çekiyor', () => {
