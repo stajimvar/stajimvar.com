@@ -143,6 +143,38 @@ def download_icon(url: str) -> tuple[bytes, str] | None:
     return data, ext
 
 
+WIKIMEDIA_SVG = re.compile(
+    r"^https://upload\.wikimedia\.org/wikipedia/commons/([0-9a-f])/([0-9a-f]{2})/([^/]+\.svg)$", re.I
+)
+
+
+def kurator_adaylari(config: dict) -> list[str]:
+    """KÜRATÖRÜN VERDİĞİ LOGO ADRESLERİ — ÖNCE `logo_url`, SONRA `fallback_logo_url`.
+
+    Kullanıcı ilan teslimlerinde şirket başına iki adres veriyor (1 Kasım
+    2026). Bunlar tahmin değil, açık beyan; sitenin simgesinden önce
+    deneniyor. İkisi de inmezse eski yol (şirketin kendi sitesi) devam
+    ediyor; o da olmazsa arayüz baş harfleri gösteriyor.
+
+    SVG depoya alınmıyor (EXT_BY_TYPE'ta yok: içinde betik taşıyabilir).
+    Wikimedia her SVG için hazır PNG küçük resmi sunuyor; o adrese
+    çevriliyor (250 px: Wikimedia yalnız standart genişlikleri veriyor,
+    256 px 400 dönüyor — ölçüldü). Başka bir yerdeki SVG indirilemez ve sıradaki adaya geçilir.
+    """
+    adaylar = []
+    for alan in ("logo_url", "fallback_logo_url"):
+        adres = str(config.get(alan) or "").strip()
+        if not adres.startswith("https://"):
+            continue
+        svg = WIKIMEDIA_SVG.match(adres)
+        if svg:
+            a, ab, ad = svg.groups()
+            adres = f"https://upload.wikimedia.org/wikipedia/commons/thumb/{a}/{ab}/{ad}/250px-{ad}.png"
+        if adres not in adaylar:
+            adaylar.append(adres)
+    return adaylar
+
+
 def upload_logo(slug: str, data: bytes, ext: str) -> str:
     """Supabase Storage'a yükler ve herkese açık adresi döndürür."""
     url = os.environ["SUPABASE_URL"].rstrip("/")
@@ -188,11 +220,41 @@ def main() -> None:
 
         if not company:
             continue
-        if not website:
-            print(f"  {company_name:<28} atlandı — sources.json'da website yok")
+        if company.get("logo_url") and not args.force:
             skipped += 1
             continue
-        if company.get("logo_url") and not args.force:
+
+        # Önce küratörün adresleri; inen ilk görsel kullanılıyor.
+        downloaded = None
+        used_url = ""
+        for candidate in kurator_adaylari(config):
+            if args.dry_run:
+                downloaded, used_url = (b"", "dry"), candidate
+                break
+            result = download_icon(candidate)
+            if result:
+                downloaded, used_url = result, candidate
+                break
+        if downloaded:
+            if args.dry_run:
+                print(f"  {company_name:<28} OK (küratör) -> {used_url[:66]}")
+                ok += 1
+                continue
+            data, ext = downloaded
+            try:
+                public_url = upload_logo(company["slug"], data, ext)
+            except Exception as error:
+                detail = getattr(getattr(error, "response", None), "text", "")[:120]
+                print(f"  {company_name:<28} yüklenemedi — {detail or error}")
+                failed += 1
+                continue
+            db.table("companies").update({"logo_url": public_url}).eq("id", company["id"]).execute()
+            print(f"  {company_name:<28} OK (küratör, {len(data) // 1024} KB, .{ext})")
+            ok += 1
+            continue
+
+        if not website:
+            print(f"  {company_name:<28} atlandı — sources.json'da website yok")
             skipped += 1
             continue
 
