@@ -529,8 +529,9 @@ test('site metinleri yeni akışı anlatıyor; eski "her ilan incelenir / doğru
     ]) {
       assert.doesNotMatch(kod, eski, `${ad}: ${eski}`);
     }
-    assert.match(kod, /otomatik\s+(olarak\s+)?kontrol ediliyor|otomatik\s+olarak\s+kontrol\s+edilir/, `${ad}: yeni akış`);
-    assert.match(kod, /incelemesine\s+(gider|gidiyor)/, `${ad}: şüpheli ilan incelemeye`);
+    /* 2 Kasım 2026: SSS kullanıcının metniyle "otomatik kontrol edilir … şüpheliyse incelemede kalır". */
+    assert.match(kod, /otomatik\s+(olarak\s+)?kontrol ediliyor|otomatik\s+(olarak\s+)?kontrol\s+edilir/, `${ad}: yeni akış`);
+    assert.match(kod, /incelemesine\s+(gider|gidiyor)|incelemede\s+kalır/, `${ad}: şüpheli ilan incelemeye`);
   }
   assert.match(SITE.CorporatePages, /Ekibimiz gerektiğinde yayındaki bir ilanı yayından\s+kaldırabiliyor/);
   assert.match(SITE.CorporatePages, /Ekibimiz gerektiğinde yayındaki bir ilanı yayından kaldırabilir/);
