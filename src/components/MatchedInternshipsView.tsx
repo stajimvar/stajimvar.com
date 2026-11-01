@@ -17,6 +17,7 @@ import {
   Award,
   Zap,
   ChevronDown,
+  ArrowUpDown,
   ChevronLeft,
   ChevronRight,
   Send,
@@ -75,7 +76,14 @@ import { donukKure, kureDokunusu, kureSayisi } from '../lib/kure-donusu.mjs';
 import { ILAN_KAYNAGI_PARCALI } from '../lib/urun-metni';
 import { ListingCountrySelector } from './ListingCountrySelector';
 import { gosterilecekIlanSayisi } from '../lib/ilan-sayisi.mjs';
-import { ilanlariDondur } from '../lib/ilan-donusu.mjs';
+import {
+  SIRALAMA_SECENEKLERI,
+  VARSAYILAN_SIRALAMA,
+  ilanKarsilastirici,
+  siralamaDegeri,
+  tamKatalogGerekir,
+  type SiralamaDegeri,
+} from '../lib/ilan-siralama.mjs';
 import { guvenSatiri } from '../lib/guven-satiri.mjs';
 import { LISTE_BASLIGI, LISTE_BASLIGI_NOTU, LISTE_BASLIGI_YAZISI, LISTE_BLOGU, YUZEY } from '../ui/tokens';
 
@@ -510,27 +518,32 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   */
   const [ilanTipleri, setIlanTipleri] = useState<string[]>([]);
   const [minMatchScore, setMinMatchScore] = useState<number>(0);
-  const [sortBy, setSortBy] = useState<
-    | 'match'
-    | 'core_skills'
-    | 'applicants_asc'
-    | 'applicants_desc'
-    | 'deadline_asc'
-    | 'rating_desc'
-    | 'paid_first'
-    | 'company_asc'
-    | 'company_desc'
-    | 'city_asc'
-    | 'newest'
-    | 'oldest'
-    /*
-      Kaynağı en son doğrulanan önce. Sözleşmenin istediği üçüncü
-      sıralama: "bugün doğrulanan". `source_verified_at` damgası
-      başvuru sayfasının çağrılıp ÇALIŞTIĞI an — ilanın yeniden
-      görülmesi değil.
-    */
-    | 'verified_desc'
-  >('match');
+  /*
+    SIRALAMA (1 Kasım 2026): listenin üstündeki seçici; dört seçenek,
+    varsayılan "En yeni". Kurallar lib/ilan-siralama.mjs'te.
+
+    Eskiden on üç değerli bir durumdu ama 26 Eylül'de menü kalktığından
+    beri hiçbir yerden değiştirilemiyordu; liste fiilen hep "eşleşme +
+    döndürme" sırasındaydı. Yeni varsayılan sunucu kataloğunun kendi
+    sırası (posted_at, en yeni önce), ön render ile de aynı.
+
+    Durum yalnız bileşende: adrese yazılmıyor. `?siralama=` gibi bir
+    parametre aynı ilan kümesini başka adreslerde yeniden üretip
+    dizinlenebilir kopya sayfalar açardı; canonical ve süzgeç adresleri
+    olduğu gibi kalıyor.
+  */
+  const [sortBy, setSortBy] = useState<SiralamaDegeri>(VARSAYILAN_SIRALAMA);
+  const siralamaCubuguRef = useRef<HTMLDivElement>(null);
+  /*
+    Sıralama değişince listenin başına: kişi aşağıdaysa yeni sıranın
+    ilk kartını görmeli. Çubuk zaten görünürse kaydırılmıyor (ekran
+    sıçramasın). İstek yok, sayfa yenilenmiyor; yalnız durum değişiyor.
+  */
+  const siralamaDegistir = (deger: string) => {
+    setSortBy(siralamaDegeri(deger));
+    const cubuk = siralamaCubuguRef.current;
+    if (cubuk && cubuk.getBoundingClientRect().top < 0) cubuk.scrollIntoView({ block: 'start' });
+  };
 
   const categoryScrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -852,55 +865,10 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
 
   // Filter & sort
   const filteredListings = useMemo(() => {
+    const karsilastir = ilanKarsilastirici(sortBy);
     const sirali = matchedData
       .filter(({ listing, match }) => gecer(listing, match))
-      .sort((a, b) => {
-        if (sortBy === 'match') {
-          return b.match.overallScore - a.match.overallScore;
-        }
-        if (sortBy === 'core_skills') {
-          return b.match.coreSkillsMatchScore - a.match.coreSkillsMatchScore;
-        }
-        if (sortBy === 'applicants_asc') {
-          return a.listing.applicantsCount - b.listing.applicantsCount;
-        }
-        if (sortBy === 'applicants_desc') {
-          return b.listing.applicantsCount - a.listing.applicantsCount;
-        }
-        if (sortBy === 'verified_desc') {
-          /* Damgası olmayan sona: "doğrulanmadı" ile "en eski" aynı şey değil. */
-          const av = a.listing.lastSeenAt ? new Date(a.listing.lastSeenAt).getTime() : -1;
-          const bv = b.listing.lastSeenAt ? new Date(b.listing.lastSeenAt).getTime() : -1;
-          return bv - av;
-        }
-        if (sortBy === 'deadline_asc') {
-          return new Date(a.listing.applicationDeadline).getTime() - new Date(b.listing.applicationDeadline).getTime();
-        }
-        if (sortBy === 'rating_desc') {
-          return b.listing.companyRating - a.listing.companyRating;
-        }
-        if (sortBy === 'paid_first') {
-          const aPaid = a.listing.stipend.isPaid ? 1 : 0;
-          const bPaid = b.listing.stipend.isPaid ? 1 : 0;
-          if (bPaid !== aPaid) return bPaid - aPaid;
-          return b.match.overallScore - a.match.overallScore;
-        }
-        if (sortBy === 'company_asc') {
-          return a.listing.companyName.localeCompare(b.listing.companyName, 'tr');
-        }
-        if (sortBy === 'company_desc') {
-          return b.listing.companyName.localeCompare(a.listing.companyName, 'tr');
-        }
-        if (sortBy === 'city_asc') {
-          return a.listing.city.localeCompare(b.listing.city, 'tr');
-        }
-        if (sortBy === 'newest' || sortBy === 'oldest') {
-          const at = eklenmeZamani(a.listing.postedAt);
-          const bt = eklenmeZamani(b.listing.postedAt);
-          return sortBy === 'newest' ? bt - at : at - bt;
-        }
-        return 0;
-      });
+      .sort((a, b) => karsilastir(a.listing, b.listing));
     /*
       AĞIRLIKLI BÖLÜM SIRALAMASI — FİLTRELEMEZ
 
@@ -917,30 +885,25 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
       aşağıda, `gosterilecekIlanSayisi` ile yapılıyor. Yalnız görünen
       sayfayı sıralamak, "daha fazla göster"e basınca sıranın değişmesi
       demekti.
+
+      YALNIZ VARSAYILAN SIRALAMADA (1 Kasım 2026): kullanıcı "Şirket
+      adına göre A–Z" ya da bir son başvuru sırası seçtiyse bölüm
+      ağırlığı o sırayı bozmuyor; seçtiği şeyi görüyor. "En yeni"de
+      alanına uyan ilanlar kendi aralarında en yeniden eskiye öne geçiyor.
+
+      DÖNDÜRME KALKTI: varsayılan artık "En yeni" (kullanıcı kararı,
+      1 Kasım 2026). Eski varsayılan `match`ta profili olmayan
+      ziyaretçide sıra sabitleniyordu (23 Eylül şikâyeti) ve her
+      yüklemede kaydırılıyordu; en yeni sırası her gün gelen ilanlarla
+      kendiliğinden değişiyor ve ön render ile aynı.
     */
-    const alanaGore = bolumeGoreSirala(
-      sirali,
-      bolumAlani,
-      (x: { listing: InternshipListing }) => x.listing,
-    );
-
-    /*
-      HER YENİLEMEDE BAŞKA İLANLAR ÜSTTE
-
-      Ölçülen sorun (kullanıcı, 23 Eylül 2026): "3 gündür siteye
-      giriyorum, hep aynı ilan en üstte." Varsayılan sıralama `match` ve
-      profili olmayan ziyaretçide puanlar birbirine çok yakın çıkıyor;
-      sıra pratikte sabitleniyor, 188 ilanın hep aynı ilk beşi
-      görünüyordu.
-
-      Dönüş yalnız VARSAYILAN sıralamada: kullanıcı "en yeni" ya da "son
-      başvuru" seçtiyse o sırayı bozmak başka bir şey olurdu.
-
-      Bölüm tercihi dönüşten SONRA değil ÖNCE uygulanıyor (yukarıda):
-      alanına uyan ilanlar kendi aralarında öne geçiyor, dönüş de o
-      listeyi kaydırıyor.
-    */
-    return sortBy === 'match' ? ilanlariDondur(alanaGore) : alanaGore;
+    return sortBy === VARSAYILAN_SIRALAMA
+      ? bolumeGoreSirala(
+          sirali,
+          bolumAlani,
+          (x: { listing: InternshipListing }) => x.listing,
+        )
+      : sirali;
   }, [matchedData, gecer, sortBy, bolumAlani]);
 
   const topMatch = matchedData.sort((a, b) => b.match.overallScore - a.match.overallScore)[0];
@@ -1388,11 +1351,18 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
       sayfalar gelmeden görünür sayı kesin olamıyor ve "N ilan
       gösteriliyor · devamı var" yazıyordu. Katalog birkaç sayfa.
     */
-    if (!sayiIcinYukle && !kayitlilarAcik && !alanAcik && !daraltmaVar && (!yurtdisiSecili || countrySelection !== 'all')) return;
+    /*
+      "En yeni" dışındaki sıralamada da (1 Kasım 2026): sunucu yalnız
+      tarih sırasıyla sayfalıyor; son başvuru ya da şirket adı sırası
+      ancak bütün kayıtlar elde iken doğru. Sıralama sayfalamadan önce
+      uygulanıyor. "En yeni"de istek yok: sunucunun sırası zaten o.
+    */
+    const siralamaTumu = tamKatalogGerekir(sortBy);
+    if (!sayiIcinYukle && !kayitlilarAcik && !alanAcik && !daraltmaVar && !siralamaTumu && (!yurtdisiSecili || countrySelection !== 'all')) return;
     if (yurtdisiIstenenUzunluk.current === allListings.length) return;
     yurtdisiIstenenUzunluk.current = allListings.length;
     onLoadMoreCountriesPage?.();
-  }, [yurtdisiSecili, sayiIcinYukle, subTab, seciliAlanlar.length, countrySelection, hasMoreCountriesPage, allListings.length, onLoadMoreCountriesPage, daraltmaVar]);
+  }, [yurtdisiSecili, sayiIcinYukle, subTab, seciliAlanlar.length, countrySelection, hasMoreCountriesPage, allListings.length, onLoadMoreCountriesPage, daraltmaVar, sortBy]);
 
   const gosterilecekToplam = gosterilecekIlanSayisi({
     catalogTotal,
@@ -2650,6 +2620,42 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                 şeridiyle hizalı. Kart tasarımı değişmedi; aralarında
                 küçük boşluk kaldı.
               */}
+              {/*
+                SIRALAMA ÇUBUĞU (1 Kasım 2026)
+
+                İlk kartın hemen üstünde: solda ilan sayısı (şeridin
+                "Tümü — N ilan"ıyla aynı `gosterilecekToplam`), sağda tek
+                bir seçici. Çip satırı değil: aynı kontrolü ikinci kez
+                çizmiyoruz. Yerel `<select>` telefonda sistemin kendi
+                listesini açıyor; dokunma alanı 44 px.
+              */}
+              <div
+                ref={siralamaCubuguRef}
+                className="flex scroll-mt-24 items-center justify-between gap-3 pt-3 sm:pt-0"
+              >
+                <p className="text-sm font-semibold text-slate-700" aria-live="polite">
+                  {gosterilecekToplam} ilan
+                </p>
+                <div className="relative">
+                  <label htmlFor="ilan-siralama" className="sr-only">
+                    İlanları sırala
+                  </label>
+                  <ArrowUpDown aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <select
+                    id="ilan-siralama"
+                    value={sortBy}
+                    onChange={(e) => siralamaDegistir(e.target.value)}
+                    className="min-h-11 max-w-[15.5rem] cursor-pointer appearance-none truncate rounded-xl border border-gray-200 bg-white py-2 pl-9 pr-8 text-sm font-medium text-gray-900 focus:border-blue-600 focus:outline-none"
+                  >
+                    {SIRALAMA_SECENEKLERI.map((s) => (
+                      <option key={s.deger} value={s.deger}>
+                        {s.etiket}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown aria-hidden className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                </div>
+              </div>
               <div className="flex flex-col gap-1.5 sm:gap-3">
                 {filteredListings.map(({ listing, match, hasApplied }, index) => (
                 <React.Fragment key={listing.id}>

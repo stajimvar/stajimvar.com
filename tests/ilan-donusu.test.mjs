@@ -56,20 +56,20 @@ test('tohum sayfa yuklenirken bir kez uretiliyor', () => {
   assert.ok(DONUS_TOHUMU >= 0 && DONUS_TOHUMU < 1);
 });
 
-test('secilmis siralama dondurulmuyor', () => {
-  /*
-    Kullanıcı "en yeni" ya da "son başvuru" seçtiyse o sırayı kaydırmak
-    istediği şeyi vermemek olurdu. Dönüş yalnız varsayılanda.
-  */
-  assert.match(GORUNUM, /sortBy === 'match' \? ilanlariDondur\(alanaGore\) : alanaGore/);
+/*
+  1 KASIM 2026: VARSAYILAN "EN YENİ", GÖRÜNÜM DÖNDÜRMÜYOR
+
+  Kullanıcı listenin üstüne sıralama seçicisi istedi ve varsayılanı "En
+  yeni" koydu. Döndürme yalnız eski varsayılan `match` içindi; en yeni
+  sırası her gün gelen ilanlarla kendiliğinden değişiyor ve ön render ile
+  aynı. Kütüphane (yukarıdaki saf testler) yerinde duruyor.
+*/
+test('gorunum dondurmuyor; varsayilan siralama en yeni', () => {
+  assert.doesNotMatch(GORUNUM, /ilanlariDondur/);
+  assert.match(GORUNUM, /useState<SiralamaDegeri>\(VARSAYILAN_SIRALAMA\)/);
 });
 
-test('bolum tercihi donusten once uygulaniyor', () => {
-  /*
-    Alanına uyan ilanlar kendi aralarında öne geçiyor, dönüş o listeyi
-    kaydırıyor. Ters sırada olsaydı bölüm tercihi dönüşü ezerdi.
-  */
-  const bas = GORUNUM.indexOf('const alanaGore = bolumeGoreSirala(');
-  const son = GORUNUM.indexOf('ilanlariDondur(alanaGore)');
-  assert.ok(bas > 0 && son > bas, 'bölüm sıralaması dönüşten önce gelmeli');
+test('bolum agirligi yalniz varsayilan siralamada', () => {
+  /* Seçilmiş "A–Z" ya da son başvuru sırasını bölüm ağırlığı bozmamalı. */
+  assert.match(GORUNUM, /return sortBy === VARSAYILAN_SIRALAMA\s*\?\s*bolumeGoreSirala\(\s*sirali,\s*bolumAlani/);
 });
