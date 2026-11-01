@@ -536,8 +536,9 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
   const siralamaCubuguRef = useRef<HTMLDivElement>(null);
   /*
     Sıralama değişince listenin başına: kişi aşağıdaysa yeni sıranın
-    ilk kartını görmeli. Çubuk zaten görünürse kaydırılmıyor (ekran
-    sıçramasın). İstek yok, sayfa yenilenmiyor; yalnız durum değişiyor.
+    ilk kartını görmeli. Hedef şerit (seçici onun içinde); şerit zaten
+    görünürse kaydırılmıyor (ekran sıçramasın). İstek yok, sayfa
+    yenilenmiyor; yalnız durum değişiyor.
   */
   const siralamaDegistir = (deger: string) => {
     setSortBy(siralamaDegeri(deger));
@@ -2468,7 +2469,46 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
               </button>
             </div>
           )}
+          {/*
+            SIRALAMA ŞERİDİN İÇİNDE (2 Kasım 2026, kullanıcı çizimi)
+
+            Seçici bölge haplarıyla aynı satırda, sağda; listenin üstündeki
+            "N ilan" sayacı kalktı (toplam yan sütunda ve "Tüm ilanlar"
+            hapının erişilebilir adında). Telefonda üç hap ile tam genişlikte
+            bir seçici aynı satıra sığmıyor: orada yalnız simge görünen
+            44×44'lük bir düğme, dokununca sistemin listesi açılıyor; seçim
+            varsayılandan farklıysa simge mavi. Geniş ekranda seçili seçeneğin
+            adı yazılı.
+          */}
+          <div ref={siralamaCubuguRef} className="scroll-mt-24">
           <SirketSeridi
+            sagda={
+              <div className="relative">
+                <label htmlFor="ilan-siralama" className="sr-only">
+                  İlanları sırala
+                </label>
+                <ArrowUpDown
+                  aria-hidden
+                  className={`pointer-events-none absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 sm:left-3 sm:translate-x-0 ${
+                    sortBy === VARSAYILAN_SIRALAMA ? 'text-gray-500' : 'text-blue-600'
+                  }`}
+                />
+                <select
+                  id="ilan-siralama"
+                  value={sortBy}
+                  onChange={(e) => siralamaDegistir(e.target.value)}
+                  title={SIRALAMA_SECENEKLERI.find((x) => x.deger === sortBy)?.etiket}
+                  className="h-11 w-11 cursor-pointer appearance-none truncate rounded-xl border border-gray-200 bg-white px-0 text-sm font-medium text-transparent focus:border-blue-600 focus:outline-none sm:w-auto sm:max-w-[15.5rem] sm:pl-9 sm:pr-8 sm:text-gray-900"
+                >
+                  {SIRALAMA_SECENEKLERI.map((x) => (
+                    <option key={x.deger} value={x.deger} className="text-gray-900">
+                      {x.etiket}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown aria-hidden className="pointer-events-none absolute right-3 top-1/2 hidden h-4 w-4 -translate-y-1/2 text-gray-400 sm:block" />
+              </div>
+            }
             sirketler={seritSirketleri}
             secili={selectedCompanies}
             toplam={gosterilecekToplam}
@@ -2479,6 +2519,7 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
             donukSayi={donukSayi}
             onCevir={kureCevir}
           />
+          </div>
 
           {/*
             YURTDIŞI GÖRÜNÜMÜNDE MEVCUT REHBERLER — yalnız sitede gerçekten
@@ -2620,42 +2661,6 @@ export const MatchedInternshipsView: React.FC<MatchedInternshipsViewProps> = ({
                 şeridiyle hizalı. Kart tasarımı değişmedi; aralarında
                 küçük boşluk kaldı.
               */}
-              {/*
-                SIRALAMA ÇUBUĞU (1 Kasım 2026)
-
-                İlk kartın hemen üstünde: solda ilan sayısı (şeridin
-                "Tümü — N ilan"ıyla aynı `gosterilecekToplam`), sağda tek
-                bir seçici. Çip satırı değil: aynı kontrolü ikinci kez
-                çizmiyoruz. Yerel `<select>` telefonda sistemin kendi
-                listesini açıyor; dokunma alanı 44 px.
-              */}
-              <div
-                ref={siralamaCubuguRef}
-                className="flex scroll-mt-24 items-center justify-between gap-3 pt-3 sm:pt-0"
-              >
-                <p className="text-sm font-semibold text-slate-700" aria-live="polite">
-                  {gosterilecekToplam} ilan
-                </p>
-                <div className="relative">
-                  <label htmlFor="ilan-siralama" className="sr-only">
-                    İlanları sırala
-                  </label>
-                  <ArrowUpDown aria-hidden className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <select
-                    id="ilan-siralama"
-                    value={sortBy}
-                    onChange={(e) => siralamaDegistir(e.target.value)}
-                    className="min-h-11 max-w-[15.5rem] cursor-pointer appearance-none truncate rounded-xl border border-gray-200 bg-white py-2 pl-9 pr-8 text-sm font-medium text-gray-900 focus:border-blue-600 focus:outline-none"
-                  >
-                    {SIRALAMA_SECENEKLERI.map((s) => (
-                      <option key={s.deger} value={s.deger}>
-                        {s.etiket}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown aria-hidden className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                </div>
-              </div>
               <div className="flex flex-col gap-1.5 sm:gap-3">
                 {filteredListings.map(({ listing, match, hasApplied }, index) => (
                 <React.Fragment key={listing.id}>
