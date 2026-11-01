@@ -13,7 +13,6 @@ import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
 import { basvuruKapanisNedeni, ETIKET_ILAN_KAPALI, ETIKET_SURE_DOLDU } from '../lib/basvuru-devam.mjs';
 import { istanbulGunBaslangici } from '../lib/kontrol-nabzi.mjs';
 import { ilanHedefi } from '../lib/ilan-hedefi.mjs';
-import { IlanDurumEtiketleri, ilanDurumuSorunlu } from './IlanDurumEtiketleri';
 import { tarihMetni } from '../lib/tarih.mjs';
 import { sayfaMetaAyarla } from '../lib/sayfa-meta';
 import { ilanSayfaBasligi, ilanMetaAciklamasi } from '../lib/seo/ilan-sayfasi.mjs';
@@ -369,8 +368,8 @@ export const ListingPage: React.FC<ListingPageProps> = ({
     TELEFONDA BOŞ BAŞVURU KARTI ÇİZİLMİYOR
 
     Telefonda kartın düğme bloğu gizli (eylemler sabit çubukta). Geriye
-    son başvuru, açıklama kutusu ve durum etiketleri kalıyor. Kapanmış
-    bir iç ilanda tarih de yoksa üçü de boş düşüyor ve içeriğin altında
+    son başvuru ve açıklama kutusu kalıyor. Kapanmış
+    bir iç ilanda tarih de yoksa ikisi de boş düşüyor ve içeriğin altında
     40 piksellik boş bir beyaz kutu kalırdı; o durumda kart yalnız
     masaüstünde (düğme yerine kapanış durumu) çiziliyor.
   */
@@ -378,8 +377,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
     listing
       && yol.teslimEdiliyor
       && kapanis
-      && !sonBasvuru
-      && !ilanDurumuSorunlu(listing),
+      && !sonBasvuru,
   );
 
   return (
@@ -801,21 +799,6 @@ export const ListingPage: React.FC<ListingPageProps> = ({
             aria-label="Başvuru seçenekleri"
           >
             <div className="rounded-2xl border border-gray-200 bg-white p-5 flex flex-col gap-4">
-            {/*
-              DURUM UYARISI BAŞVURU SEÇENEKLERİNİN BAŞINDA
-
-              Bu etiketler kartta ve ilan önizlemesinde vardı ama BURADA
-              YOKTU. Oysa arama motorundan gelen kişi doğrudan bu sayfaya
-              düşüyor ve kartı hiç görmüyor: yani "kaynak doğrulanamadı"
-              ya da "başvuru bağlantısı çalışmıyor" uyarısını görmeden
-              başvuru düğmesine basıyordu.
-
-              Kartla aynı bileşen; iki kopya er geç ayrışır ve iki ekran
-              aynı ilan için farklı şey söylerdi. Sorun yoksa `null`
-              dönüyor ve kartta boşluk bırakmıyor (`gap` boş öğeye
-              uygulanmıyor).
-            */}
-            {listing && <IlanDurumEtiketleri listing={listing} />}
 
             {/*
               Bu blok MASAÜSTÜ eylem alanı. Telefonda gizleniyor: aynı
@@ -977,18 +960,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
           role="region"
           aria-label="Başvuru"
         >
-          {/*
-            DURUM UYARISI ÇUBUĞUN İÇİNDE — TELEFONDA KARAR BURADA
-
-            Uyarı sayfanın "Başvuru seçenekleri" sütununda da var ama o
-            sütun telefonda içeriğin ALTINA düşüyor: ölçüldü, 375px'te
-            başvuru düğmesi uyarının 772 piksel ÜSTÜNDE kalıyordu. Yani
-            kullanıcı uyarıya hiç ulaşmadan başvuruyordu.
-
-            Çubuğu birkaç piksel büyütüyor; "başvuru bağlantısı
-            çalışmıyor" bilgisinin düğmenin yanında durması buna değer.
-          */}
-          <IlanDurumEtiketleri listing={listing} className="mb-2" />
+          
 
           {yol.resmiAdres && yol.anaEylem === 'resmi-site' ? (
             /*
