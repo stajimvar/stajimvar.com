@@ -27,6 +27,7 @@ import { BursUyumMiniBlok } from './BursCakismaMatrisi';
 import { kurumEslestir } from '../lib/burs-cakisma.mjs';
 import { sayfaMetaAyarla } from '../lib/sayfa-meta';
 import { tarihMetni } from '../lib/tarih.mjs';
+import { aciklamaBloklari, aciklamaYapili } from '../lib/firsat-aciklama.mjs';
 
 /**
  * Fırsat detay sayfası.
@@ -65,6 +66,71 @@ const ADIMLAR: { anahtar: string; etiket: string }[] = [
   { anahtar: 'form', etiket: 'Başvuru formu dolduruldu' },
   { anahtar: 'tamamlandi', etiket: 'Başvuru tamamlandı' },
 ];
+
+/*
+  YAPILI AÇIKLAMA (lib/firsat-aciklama, 31 Ekim 2026)
+
+  Ön render ile aynı ayrıştırıcı: başlık, paragraf, madde ve bağlantı.
+  Dış bağlantı sayfanın "Resmî kaynak" bağlantısıyla aynı kapıdan geçiyor
+  (`DisBaglanti`); site içi bağlantı düz `<a href>`.
+*/
+type Parca = { metin: string; adres?: string; disari?: boolean };
+const AciklamaSatiri: React.FC<{ parcalar: Parca[]; girisGerekli: boolean; onGirisGerekli: () => void }> = ({
+  parcalar,
+  girisGerekli,
+  onGirisGerekli,
+}) => (
+  <>
+    {parcalar.map((p, i) =>
+      !p.adres ? (
+        <React.Fragment key={i}>{p.metin}</React.Fragment>
+      ) : p.disari ? (
+        <DisBaglanti
+          key={i}
+          href={p.adres}
+          girisGerekli={girisGerekli}
+          onGirisGerekli={onGirisGerekli}
+          kapiEtiketi="Kaynağa gitmek için giriş yap"
+          className="font-semibold text-blue-700 underline decoration-blue-200 underline-offset-2 hover:decoration-blue-700"
+        >
+          {p.metin}
+        </DisBaglanti>
+      ) : (
+        <a key={i} href={p.adres} className="font-semibold text-blue-700 underline decoration-blue-200 underline-offset-2 hover:decoration-blue-700">
+          {p.metin}
+        </a>
+      )
+    )}
+  </>
+);
+
+const YapiliAciklama: React.FC<{ metin: string; girisGerekli: boolean; onGirisGerekli: () => void }> = ({
+  metin,
+  girisGerekli,
+  onGirisGerekli,
+}) => (
+  <div className="mt-6 space-y-3 leading-relaxed text-gray-700">
+    {aciklamaBloklari(metin).map((b: { tur: string; parcalar?: Parca[]; maddeler?: Parca[][] }, i: number) =>
+      b.tur === 'baslik' ? (
+        <h2 key={i} className="pt-3 text-lg font-extrabold text-gray-900">
+          <AciklamaSatiri parcalar={b.parcalar!} girisGerekli={girisGerekli} onGirisGerekli={onGirisGerekli} />
+        </h2>
+      ) : b.tur === 'liste' ? (
+        <ul key={i} className="list-disc space-y-1.5 pl-5">
+          {b.maddeler!.map((m, j) => (
+            <li key={j}>
+              <AciklamaSatiri parcalar={m} girisGerekli={girisGerekli} onGirisGerekli={onGirisGerekli} />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p key={i}>
+          <AciklamaSatiri parcalar={b.parcalar!} girisGerekli={girisGerekli} onGirisGerekli={onGirisGerekli} />
+        </p>
+      )
+    )}
+  </div>
+);
 
 const Bilgi: React.FC<{ baslik: string; children: React.ReactNode }> = ({ baslik, children }) => (
   <div className="rounded-xl border border-gray-200 p-3.5">
@@ -437,10 +503,14 @@ export const OpportunityDetailPage: React.FC<{
             Başvuru kurumun kendi sayfasında yapılıyor. StajımVar üzerinden başvuru alınmıyor.
           </p>
 
-          {(item.description || item.shortDescription) && (
-            <p className="mt-6 whitespace-pre-line leading-relaxed text-gray-700">
-              {item.description || item.shortDescription}
-            </p>
+          {aciklamaYapili(item.description) ? (
+            <YapiliAciklama metin={item.description} girisGerekli={!userId} onGirisGerekli={onRequireLogin} />
+          ) : (
+            (item.description || item.shortDescription) && (
+              <p className="mt-6 whitespace-pre-line leading-relaxed text-gray-700">
+                {item.description || item.shortDescription}
+              </p>
+            )
           )}
         </div>
       </article>
@@ -457,9 +527,12 @@ export const OpportunityDetailPage: React.FC<{
         söylüyoruz.
       */}
       <div className="grid gap-3 sm:grid-cols-2">
-        <Bilgi baslik="Kimler başvurabilir?">
-          {item.eligibility || 'Koşullar resmî kaynakta belirtiliyor.'}
-        </Bilgi>
+        {/* Yapılı açıklama koşulları kendi bölümünde yazıyor; kutu tekrar etmiyor (ön render ile aynı). */}
+        {!aciklamaYapili(item.description) && (
+          <Bilgi baslik="Kimler başvurabilir?">
+            {item.eligibility || 'Koşullar resmî kaynakta belirtiliyor.'}
+          </Bilgi>
+        )}
         {seviyeVeBolum.length > 0 && (
           <Bilgi baslik="Eğitim seviyesi ve bölümler">{seviyeVeBolum.join(', ')}</Bilgi>
         )}

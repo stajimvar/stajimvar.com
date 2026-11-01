@@ -46,6 +46,7 @@ import { kunye, YAZAR } from '../src/lib/rehber-kunye.mjs';
 */
 import { kacir, duzMetin, ozetle, ilanYolu as ortakIlanYolu } from '../src/lib/seo/metin.mjs';
 import { STAJ_ILANLARI_METNI } from '../src/lib/staj-ilanlari-metni.mjs';
+import { aciklamaYapili, aciklamaHtml } from '../src/lib/firsat-aciklama.mjs';
 import { seritFirsatlari as seritFirsatlariSec, ANASAYFA_BOLUMLERI, ANASAYFA_ILK_KART, anaSayfaSehirBaglantisi } from '../src/lib/anasayfa-baglantilari.mjs';
 import { ilanSayfasi, ILAN_SECIMI, istanbulBugun, benzerIlanlariSec } from '../src/lib/seo/ilan-sayfasi.mjs';
 import { sayfaHtml } from '../src/lib/seo/sayfa-html.mjs';
@@ -933,10 +934,15 @@ function sayfaYaz(yol, s) {
   çiziliyor; boş bölüm hiç çizilmiyor, yani "Aranan nitelikler" başlığı
   altında boş liste kalmıyor.
 */
-function govde(baslik, ozet, satirlar = [], bolumler = []) {
+/*
+  `ekHtml` önceden kaçışı yapılmış blok (yapılı fırsat açıklaması,
+  lib/firsat-aciklama). Varsayılanı boş: öteki çağıranların çıktısı aynı.
+*/
+function govde(baslik, ozet, satirlar = [], bolumler = [], ekHtml = '') {
   return (
     `<main><h1>${kacir(baslik)}</h1><p>${kacir(ozet)}</p>` +
     (satirlar.length ? `<ul>${satirlar.map((x) => `<li>${kacir(x)}</li>`).join('')}</ul>` : '') +
+    ekHtml +
     bolumler
       .filter((b) => b && Array.isArray(b.maddeler) && b.maddeler.length)
       .map(
@@ -1358,17 +1364,7 @@ async function main() {
    * geri ödemesiz sandığı bir krediyi önermek olabilirdi.
    */
   const firsatListesi = (kategori, tur = null, bolge = null) => {
-    const kayitlar = firsatlar
-      /*
-        KAPI LİSTELERİ YALNIZ AÇIK KAYITLARI TAŞIYOR
-
-        Süresi geçmiş kaydın sayfası artık DURUYOR (aşağıdaki detay
-        döngüsü onu da yazıyor), ama kategori kapısı "şu an
-        başvurabileceğin fırsatlar" vaadi taşıyor. Kapanmış kaydı o
-        listeye koymak, okuyucuyu kapanmış bir başvuruya yönlendirmek
-        olurdu. Süzgeç arayüzle aynı fonksiyondan.
-      */
-      .filter((f) => !firsatSuresiGectiMi(f))
+    const hepsi = firsatlar
       /*
         BÖLGE SÜZGECİ /yurtdisi-firsatlari İÇİN
 
@@ -1389,12 +1385,32 @@ async function main() {
       .filter((f) => (tur ? f.opportunity_type === tur : true))
       .filter((f) => (f.short_description || '').trim())
       .sort((a, b) => String(a.title || '').localeCompare(String(b.title || ''), 'tr'));
-    if (!kayitlar.length) return '';
+    /*
+      KAPI LİSTELERİ AÇIK KAYITLARI TAŞIYOR
 
-    const satirlar = kayitlar
-      .map((f) => {
+      Süresi geçmiş kaydın sayfası DURUYOR (aşağıdaki detay döngüsü onu
+      da yazıyor), ama kategori kapısının ana listesi "şu an
+      başvurabileceğin fırsatlar" vaadi taşıyor. Kapanmış kaydı o
+      listeye koymak, okuyucuyu kapanmış bir başvuruya yönlendirmek
+      olurdu. Süzgeç arayüzle aynı fonksiyondan.
+
+      KAPANMIŞ AMA AYRINTISI DERLENMİŞ KAYITLAR AYRI BÖLÜMDE (31 Ekim 2026)
+
+      Yapılı açıklaması olan (lib/firsat-aciklama) kapanmış kayıt
+      koşulları, belgeleri ve takvimi anlatan bir sayfa; öğrenci onu
+      bir sonraki dönem için arıyor. Ona hiçbir sayfadan bağlantı
+      verilmiyordu (ölçüldü: dist'te sıfır iç bağlantı). Ana listeye
+      karışmıyor; "Başvuru dönemi kapandı" diye etiketlenmiş ayrı bir
+      bölümde duruyor — arayüzün "Süresi dolanlar" arşiviyle aynı ayrım.
+    */
+    const kayitlar = hepsi.filter((f) => !firsatSuresiGectiMi(f));
+    const kapananlar = hepsi.filter((f) => firsatSuresiGectiMi(f) && aciklamaYapili(f.description));
+    if (!kayitlar.length && !kapananlar.length) return '';
+
+    const satir = (f, kapandi) => {
         const notlar = [];
         if (f.organization_name) notlar.push(kacir(f.organization_name));
+        if (kapandi) notlar.push('Başvuru dönemi kapandı');
         /*
           BOŞ TARİH, "KURUM AÇIKLAMADI" DEMEK DEĞİL
 
@@ -1439,10 +1455,18 @@ async function main() {
           `<li><a href="/firsatlar/${kacir(f.slug)}">${kacir(f.title)}</a>` +
           ` — ${notlar.join(' · ')}<p>${kacir(ozetle(f.short_description, 160))}</p></li>`
         );
-      })
-      .join('');
+      };
 
-    return `<section><h2>${kayitlar.length} kayıt</h2><ul>${satirlar}</ul></section>`;
+    return (
+      (kayitlar.length
+        ? `<section><h2>${kayitlar.length} kayıt</h2><ul>${kayitlar.map((f) => satir(f, false)).join('')}</ul></section>`
+        : '') +
+      (kapananlar.length
+        ? '<section><h2>Başvurusu kapanan, ayrıntısı derlenmiş kayıtlar</h2>' +
+          '<p>Bu dönemin başvuruları kapandı. Koşullar, belgeler ve takvim bir sonraki döneme hazırlanmak için duruyor.</p>' +
+          `<ul>${kapananlar.map((f) => satir(f, true)).join('')}</ul></section>`
+        : '')
+    );
   };
 
   const sabitler = [
@@ -1988,12 +2012,28 @@ async function main() {
 
     const firsatYolu = `/firsatlar/${f.slug}`;
     /*
+      YAPILI AÇIKLAMA (31 Ekim 2026, lib/firsat-aciklama)
+
+      Çok satırlı açıklama başlık, madde ve kaynak bağlantısıyla bölüm
+      bölüm basılıyor; koşullar da onun içinde yazılı olduğu için ayrı
+      "Kimler başvurabilir" bölümü tekrar edilmiyor. Detay sayfası aynı
+      kuralı uyguluyor. Tek satırlık açıklama eski yoldan geçiyor.
+    */
+    const yapili = aciklamaYapili(f.description);
+
+    /*
       Süresi geçmiş fırsat haritaya girmiyor; sayfası duruyor ve görünür
       metninde kapandığı yazıyor. `/ilan/` ailesinde uygulanan kuralın
       aynısı — iki aile ayrı davranırsa hangi adresin haritada olduğu
       tahmin edilemez hale gelirdi.
+
+      İSTİSNA (31 Ekim 2026): yapılı açıklaması olan kayıt. Onun sayfası
+      bir ilan değil, bursun koşullarını, belgelerini ve takvimini
+      anlatan kalıcı bir sayfa; öğrenci onu başvuru dönemi dışında da
+      arıyor ("BTSO burs başvurusu"). Kapı listelerinde de ayrı bölümde
+      bağlanıyor (firsatListesi).
     */
-    if (suresiGecti) HARITADAN_DISLANAN.add(firsatYolu);
+    if (suresiGecti && !yapili) HARITADAN_DISLANAN.add(firsatYolu);
 
     /*
       İÇERİĞİ OLMAYAN FIRSAT HARİTAYA GİRMİYOR (19 Eylül 2026)
@@ -2027,7 +2067,9 @@ async function main() {
           `description` ise kaydın kendi ayrıntısı. İkisi de varken
           yalnız birincisini basmak, elimizdeki metni saklamaktı.
         */
-        [f.short_description || '', duzMetin(f.description)].filter(Boolean).join(' '),
+        (yapili ? [f.short_description || ''] : [f.short_description || '', duzMetin(f.description)])
+          .filter(Boolean)
+          .join(' '),
         [
           f.organization_name,
           /*
@@ -2046,7 +2088,8 @@ async function main() {
             `${suresiGecti ? 'Başvuru dönemi kapandı — son başvuru' : 'Son başvuru'}: ` +
               `${f.application_deadline.slice(0, 10)}`,
         ].filter(Boolean),
-        [{ baslik: 'Kimler başvurabilir', maddeler: [duzMetin(f.eligibility)].filter(Boolean) }]
+        yapili ? [] : [{ baslik: 'Kimler başvurabilir', maddeler: [duzMetin(f.eligibility)].filter(Boolean) }],
+        yapili ? aciklamaHtml(f.description, kacir) : ''
       ),
     });
     sayac++;
