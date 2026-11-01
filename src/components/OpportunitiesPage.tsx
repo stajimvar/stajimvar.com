@@ -626,12 +626,10 @@ export const OpportunitiesPage: React.FC<{
           <div className="hidden lg:block">{suzgecler}</div>
 
           {/*
-            SAYFA BAŞLIĞI YALNIZ EKRAN OKUYUCUDA ve sütunun EN SONUNDA.
-            Önce başlığı saran boş bir <header> sütunun ilk çocuğuydu;
-            `space-y-4` süzgeç kutusunu 16 piksel aşağı itiyor ve küre
-            şeridiyle hizası kayıyordu (canlıda ölçüldü, 17 Eylül 2026).
+            SAYFA BAŞLIĞI ORTA SÜTUNDAKİ BAŞLIK KARTINDA (2 Kasım 2026).
+            Burada yalnız ekran okuyucuya açık bir h1 vardı; görünür kart
+            gelince ikinci bir h1 olmasın diye kaldırıldı.
           */}
-          <h1 className="sr-only">Fırsatlar</h1>
 
           {/*
             AYIRICI KALDIRILDI.
@@ -662,6 +660,28 @@ export const OpportunitiesPage: React.FC<{
             listeye düşen bir margin de yok.
           */}
           <div className="space-y-4">
+          {/*
+            BAŞLIK KARTI — İLANLAR SAYFASIYLA AYNI (2 Kasım 2026, kullanıcı
+            isteği). Sınıflar MatchedInternshipsView'daki kartın aynısı:
+            telefonda düz başlık ve açıklama, geniş ekranda (`lg:`) açık
+            mavi tonlu kart ve sağda simge. Simge süs (`aria-hidden`).
+            Başlık rotaya göre (ROTA_BASLIGI); açıklama sayfanın meta
+            açıklamasıyla aynı.
+          */}
+          <div className="pb-2 pt-3 sm:pb-0 sm:pt-0 lg:relative lg:overflow-hidden lg:rounded-2xl lg:border lg:border-blue-100 lg:bg-gradient-to-r lg:from-blue-50 lg:via-white lg:to-blue-50/80 lg:py-5 lg:px-6 lg:shadow-xs xl:pr-44">
+            <h1 className="text-lg font-extrabold leading-6 tracking-tight text-slate-900 sm:text-xl sm:leading-7 lg:text-[28px] lg:leading-9">
+              {ROTA_BASLIGI[path] ?? 'Bursları ve fırsatları buradan keşfet.'}
+            </h1>
+            <p className="mt-0.5 text-sm leading-5 text-gray-600 lg:mt-1.5">
+              Bursları, öğrenci programlarını, yarışmaları ve kariyer etkinliklerini tek listede topluyoruz; her kaydın kaynağı kurumun kendi sayfası.
+            </p>
+            <div aria-hidden className="pointer-events-none absolute right-8 top-1/2 hidden -translate-y-1/2 xl:block">
+              <span className="absolute -left-6 top-6 h-12 w-10 -rotate-12 rounded-lg border border-blue-100 bg-white shadow-sm" />
+              <span className="relative flex h-20 w-20 rotate-6 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 shadow-lg shadow-blue-600/30">
+                <GraduationCap className="h-10 w-10 text-white" strokeWidth={1.75} />
+              </span>
+            </div>
+          </div>
           {/*
             LİSTE/TAKVİM GEÇİŞİ KALDIRILDI
 
