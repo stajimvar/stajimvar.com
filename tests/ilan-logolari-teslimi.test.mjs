@@ -122,3 +122,22 @@ test('20 Ekim (üçüncü parti): üç şirket, kimlik + ad + boş logo koşulu;
     assert.equal(dosya.readUInt32BE(20), 128);
   });
 });
+
+/*
+  1 KASIM 2026 — Accor (boş logo) ve Siemens (48 × 48 favicon yerine).
+  Siemens yalnız hâlâ eski favicon'u gösteriyorsa değişiyor.
+*/
+const GOC_KASIM_1 = oku('supabase/migrations/20261221010000_ilan_logolari_accor_siemens.sql');
+
+test('1 Kasım: iki şirket, kimlik + ad + korumalı koşul; dosyalar 128 × 128 PNG', () => {
+  const satirlar = kod(GOC_KASIM_1).split(/;\s*/).filter(Boolean);
+  assert.equal(satirlar.length, 2);
+  assert.match(satirlar[0], /^update public\.companies set logo_url = 'https:\/\/stajimvar\.com\/isveren-logolari\/accor\.png'\nwhere id = '[0-9a-f-]{36}' and name = 'Accor' and nullif\(btrim\(logo_url\), ''\) is null$/);
+  assert.match(satirlar[1], /^update public\.companies set logo_url = 'https:\/\/stajimvar\.com\/isveren-logolari\/siemens\.png'\nwhere id = '[0-9a-f-]{36}' and name = 'Siemens' and logo_url = 'https:\/\/gdumgdgwlfnohkaucfow\.supabase\.co\/storage\/v1\/object\/public\/logos\/siemens\.ico'$/);
+  for (const ad of ['accor', 'siemens']) {
+    const dosya = readFileSync(path.join(KOK, 'public', 'isveren-logolari', `${ad}.png`));
+    assert.equal(dosya.subarray(1, 4).toString('latin1'), 'PNG');
+    assert.equal(dosya.readUInt32BE(16), 128);
+    assert.equal(dosya.readUInt32BE(20), 128);
+  }
+});
