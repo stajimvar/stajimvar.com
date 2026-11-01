@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 
 /**
@@ -24,7 +24,6 @@ const GOC = oku('supabase/migrations/20261026010000_katalog_sozlesmesi_v3.sql');
 const API = oku('src/lib/global-listings-api.mjs');
 const MAPPER = oku('src/lib/queries/mappers.ts');
 const KART = oku('src/components/InternshipCard.tsx');
-const ETIKET = oku('src/components/IlanDurumEtiketleri.tsx');
 const DETAY = oku('src/components/InternshipDetailModal.tsx');
 const ILAN_SAYFASI = oku('src/components/ListingPage.tsx');
 
@@ -102,62 +101,27 @@ test('bilinmeyen değer etikete çevrilmiyor', () => {
   assert.match(m, /applyUrlOk: daralt\(row\.apply_url_ok, URL_DURUMLARI\)/);
 });
 
-/* ------------------------------------------- 3. GÖRÜNÜR ETİKETLER */
+/* ------------------------------------------- 3. İLANDA DURUM ETİKETİ YOK */
 
-test('sorunlu durum etiketle söyleniyor', () => {
-  const e = tsYorumsuz(ETIKET);
-  assert.match(e, /listing\.applyUrlOk === 'kirik'/);
-  assert.match(e, /listing\.applyUrlOk === 'dogrulanamadi'/);
-  assert.match(e, /listing\.kaynakDurumu === 'belirsiz'/);
-  assert.match(e, /listing\.kaynakDurumu === 'erisilemedi'/);
-  assert.match(e, /Başvuru bağlantısı çalışmıyor/);
-  assert.match(e, /Kaynak doğrulanamadı/);
-});
-
-test('etiketler kartta, önizlemede ve ilan sayfasında', () => {
-  /*
-    Etiketler kartta vardı ama detayda YOKTU: kartta "başvuru bağlantısı
-    çalışmıyor" uyarısını görüp tıklayan kişi, başvuru kararını verdiği
-    ekranda uyarıyı göremiyordu. Uyarı tam da işe yarayacağı anda
-    kayboluyordu.
-
-    Tek bileşen kullanılıyor; iki kopya er geç ayrışır ve iki ekran aynı
-    ilan için farklı şey söylerdi.
-  */
+/*
+  2 KASIM 2026, KULLANICI KARARI: "Başvuru bağlantısı çalışmıyor" gibi
+  durum etiketleri ilanlara yazılmıyor. Ölçüldü: Alumil'in üç ilanı ve
+  Guess'in ilanı "kırık" işaretliydi ama bağlantılar 200 dönüyordu; otomatik
+  kontrolün yanlış sonucu kullanıcıya kesin bir yargı olarak gösteriliyordu.
+  Alanlar (`apply_url_ok`, `kaynak_durumu`) veride ve iç süreçlerde kalıyor;
+  kart, önizleme ve ilan sayfası onlara göre ne etiket basıyor ne dallanıyor.
+*/
+test('kart, önizleme ve ilan sayfası durum etiketi basmıyor', () => {
+  assert.ok(!existsSync(new URL('../src/components/IlanDurumEtiketleri.tsx', import.meta.url)), 'etiket bileşeni kalktı');
   for (const [ad, kaynak] of [['kart', KART], ['detay', DETAY], ['ilan sayfasi', ILAN_SAYFASI]]) {
     const t = tsYorumsuz(kaynak);
-    assert.match(t, /<IlanDurumEtiketleri listing=\{listing\}/, ad + ' etiketleri göstermeli');
-    assert.match(t, /from '\.\/IlanDurumEtiketleri'/, ad + ' ortak bileşeni kullanmalı');
-  }
-});
-
-test('etiket ilanı listeden çıkarmıyor', () => {
-  /*
-    Kanıtsız gizlemek, açık bir ilanı listeden silmek olur. Etiket durumu
-    söylüyor, kararı kullanıcıya bırakıyor.
-
-    Bu artık YAPISAL olarak garanti: kart ve detay durum alanlarına hiç
-    BAKMIYOR, yalnız ortak etiket bileşenini çiziyorlar. Bakmayan bir
-    bileşen, o alana göre gizleme kararı da veremez.
-
-    Ortak bileşendeki `return null` ilanı değil ROZETİ gizliyor: durum
-    sağlıklıyken rozet basmamak gürültüyü önlüyor.
-  */
-  for (const [ad, kaynak] of [['kart', KART], ['detay', DETAY], ['ilan sayfasi', ILAN_SAYFASI]]) {
-    const t = tsYorumsuz(kaynak);
-    assert.ok(
-      !/kaynakDurumu ===/.test(t),
-      ad + ' durum alanına göre dallanmamalı, etiketi ortak bileşene bırakmalı',
-    );
+    for (const yasak of [/IlanDurumEtiketleri/, /Başvuru bağlantısı çalışmıyor/, /Bağlantı doğrulanamadı/, /Kaynak doğrulanamadı/, /Kaynağa ulaşılamadı/]) {
+      assert.doesNotMatch(t, yasak, `${ad}: ${yasak}`);
+    }
+    /* İlan durum alanına göre gizlenmiyor ya da dallanmıyor. */
+    assert.ok(!/kaynakDurumu ===/.test(t), ad + ' durum alanına göre dallanmamalı');
     assert.ok(!/applyUrlOk ===/.test(t), ad + ' bağlantı durumuna göre dallanmamalı');
   }
-});
-
-test('sağlıklı durumda etiket basılmıyor', () => {
-  /* `gecerli` ve `acik` için rozet yok: her şey yolundayken rozet gürültü. */
-  const k = tsYorumsuz(ETIKET);
-  assert.ok(!/applyUrlOk === 'gecerli'/.test(k), 'geçerli bağlantıya etiket basılmamalı');
-  assert.ok(!/kaynakDurumu === 'acik'/.test(k), 'açık kaynağa etiket basılmamalı');
 });
 
 test('tek ilan sorgusu da normalize alanlari cekiyor', () => {

@@ -18,7 +18,6 @@ import { ListingLogo } from './ListingLogo';
 import { listingSlug } from '../lib/slug';
 import { SIRKET_KENAR_GUCLU, SIRKET_ROZET, SIRKET_VURGU_KOYU } from '../sirket/renk';
 import { calismaEtiketi, ilanKonumEtiketi } from '../lib/sehir';
-import { IlanDurumEtiketleri } from './IlanDurumEtiketleri';
 import { UlkeRozeti } from './UlkeRozeti';
 import { COGRAFYA, ilanCografyasi } from '../lib/ilan-cografyasi.mjs';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
@@ -325,12 +324,6 @@ export const InternshipCard: React.FC<InternshipCardProps> = ({
                 </p>
               )}
 
-              {/*
-                Görünür durum etiketleri ortak bileşende: aynı etiketler ilan
-                detayında da gerekiyor ve iki kopya er geç ayrışırdı. Gerekçesi
-                ve hangi durumda neyin yazıldığı orada.
-              */}
-              <IlanDurumEtiketleri listing={listing} className="mt-1.5" />
             </div>
 
             <div className="relative z-10 ml-auto shrink-0">

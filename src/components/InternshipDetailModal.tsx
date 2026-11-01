@@ -23,7 +23,6 @@ import { InternshipListing, MatchBreakdown, StudentProfile } from '../types';
 import { ListingLogo } from './ListingLogo';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
 import { useModalErisim } from '../lib/modal-erisim';
-import { IlanDurumEtiketleri } from './IlanDurumEtiketleri';
 
 interface InternshipDetailModalProps {
   listing: InternshipListing | null;
@@ -317,18 +316,6 @@ export const InternshipDetailModal: React.FC<InternshipDetailModalProps> = ({
 
         {/* Modal Footer */}
         <div className="sticky bottom-0 bg-gray-50 px-6 py-4 border-t border-gray-200 z-10">
-          {/*
-            DURUM UYARISI BAŞVUR DÜĞMESİNİN YANINDA
-
-            Bu etiketler kartta zaten vardı ama BURADA YOKTU. Yani
-            "başvuru bağlantısı çalışmıyor" uyarısını kartta görüp
-            tıklayan kişi, başvuru kararını verdiği ekranda uyarıyı
-            göremiyordu — uyarı tam da işe yarayacağı anda kayboluyordu.
-
-            Kartla aynı bileşen kullanılıyor; iki kopya er geç ayrışır ve
-            iki ekran aynı ilan için farklı şey söylerdi.
-          */}
-          <IlanDurumEtiketleri listing={listing} className="mb-2.5" />
 
           <div className="flex items-center justify-between gap-3">
           <div className="text-xs text-gray-500">
