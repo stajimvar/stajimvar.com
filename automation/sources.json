@@ -1292,7 +1292,9 @@
         "https://mastercard.wd1.myworkdayjobs.com/en-US/CorporateCareers/job/Associate-Consultant-Intern--Summer-Internship-Program---2027--Istanbul--Trkiye_R-287590-2",
         "https://mastercard.wd1.myworkdayjobs.com/en-US/CorporateCareers/job/Global-Markets--Account-Management---Product-Management--Summer-Internship-Program---2027--Istanbul--Trkiye_R-292561-2"
       ],
-      "_not": "25 Ekim 2026 kullanıcı CSV teslimi; resmî sayfada JobPosting (JSON-LD/microdata) kuru çalıştırmada doğrulandı."
+      "_not": "25 Ekim 2026 kullanıcı CSV teslimi; resmî sayfada JobPosting (JSON-LD/microdata) kuru çalıştırmada doğrulandı.",
+      "logo_url": "https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg",
+      "fallback_logo_url": "https://logo.clearbit.com/mastercard.com"
     },
     {
       "id": "scjohnson-tr-official-jsonld",
