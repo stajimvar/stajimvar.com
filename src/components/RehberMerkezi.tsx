@@ -1,6 +1,6 @@
 import { useSayfaAramasiKaydet } from '../lib/sayfa-aramasi';
 import React from 'react';
-import { ArrowRight, Search, SlidersHorizontal } from 'lucide-react';
+import { ArrowRight, BookOpen, Search, SlidersHorizontal } from 'lucide-react';
 import { FiltreBlogu, SecenekSatiri } from '../ui';
 import { KonuSeridi } from './KonuSeridi';
 import { donukKure, kureDokunusu } from '../lib/kure-donusu.mjs';
@@ -724,7 +724,7 @@ export const RehberMerkezi: React.FC<{
             aynı cümleyi söylüyor — arama motoru ve ekran okuyucu için sayfanın
             başlığı değişmedi.
           */}
-          <h1 className="sr-only">Öğrenci rehberleri, tek listede.</h1>
+          {/* h1 artık orta sütundaki başlık kartında (2 Kasım 2026); aynı cümle. */}
 
           {/*
             TELEFONDA ARAMA VE SÜZGEÇ ÜST ÇUBUKTA
@@ -811,6 +811,28 @@ export const RehberMerkezi: React.FC<{
         {/* --------------------------------------------------- orta: liste */}
         <section aria-label="Rehberler" className="min-w-0 space-y-4 lg:col-span-6">
           {sirketHesabi && sirketRehberKarti}
+          {/*
+            BAŞLIK KARTI — İLANLAR VE FIRSATLAR SAYFASIYLA AYNI (2 Kasım 2026,
+            kullanıcı isteği). Sınıflar MatchedInternshipsView'daki kartın
+            aynısı: telefonda düz başlık ve açıklama, geniş ekranda açık mavi
+            tonlu kart ve sağda simge (süs, `aria-hidden`). h1 metni ön
+            render edilen başlıkla aynı; açıklama sayfanın meta cümlesi.
+            Şirket hesabının rehber kartı ondan önce kalıyor (en üstte).
+          */}
+          <div className="pb-2 pt-3 sm:pb-0 sm:pt-0 lg:relative lg:overflow-hidden lg:rounded-2xl lg:border lg:border-blue-100 lg:bg-gradient-to-r lg:from-blue-50 lg:via-white lg:to-blue-50/80 lg:py-5 lg:px-6 lg:shadow-xs xl:pr-44">
+            <h1 className="text-lg font-extrabold leading-6 tracking-tight text-slate-900 sm:text-xl sm:leading-7 lg:text-[28px] lg:leading-9">
+              Öğrenci rehberleri, tek listede.
+            </h1>
+            <p className="mt-0.5 text-sm leading-5 text-gray-600 lg:mt-1.5">
+              Stajdan bursa, KYK'dan yurda; öğrencilikte ihtiyaç duyacağın bilgiler resmî kaynağıyla, adım adım.
+            </p>
+            <div aria-hidden className="pointer-events-none absolute right-8 top-1/2 hidden -translate-y-1/2 xl:block">
+              <span className="absolute -left-6 top-6 h-12 w-10 -rotate-12 rounded-lg border border-blue-100 bg-white shadow-sm" />
+              <span className="relative flex h-20 w-20 rotate-6 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 shadow-lg shadow-blue-600/30">
+                <BookOpen className="h-10 w-10 text-white" strokeWidth={1.75} />
+              </span>
+            </div>
+          </div>
           {/*
             LİSTE BAŞLIĞI YALNIZ EKRAN OKUYUCUYA — her genişlikte
 
