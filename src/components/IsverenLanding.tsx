@@ -38,9 +38,11 @@ import { sayfaMetaAyarla } from '../lib/sayfa-meta';
  *
  * AKIŞ DÜRÜST ANLATILIYOR
  * -----------------------
- * "Şirket hesabı" diye ayrı bir kayıt yok: kişi kendi adına kayıt oluyor,
- * sonra şirketini sahipleniyor. Bunu gizleyip "şirket hesabı aç" demek,
- * kullanıcıyı beklemediği bir ekrana düşürürdü. Üç adım açıkça yazıyor.
+ * Ayrı bir giriş ekranı yok: öğrenci de işveren de aynı "Giriş Yap"tan
+ * giriyor; kayıtta "İşverenim" seçiliyor ve hesap kişisel kimlikle
+ * açılıyor. Sonra şirket sahipleniliyor, aday erişimi şirket
+ * doğrulamasından sonra açılıyor (metin kayıt penceresiyle aynı,
+ * AuthModal). Üç adım açıkça yazıyor.
  */
 
 const Bolum: React.FC<{
@@ -182,7 +184,7 @@ export const IsverenLanding: React.FC<{
       {/* ------------------------------------------------- nasıl çalışır */}
       <Bolum
         baslik="Nasıl çalışır?"
-        aciklama="Ayrı bir şirket kaydı yok: kendi adınıza hesap açıyor, sonra şirketinizi sahipleniyorsunuz. Böylece aynı şirkette birden çok kişi çalışabiliyor."
+        aciklama="Ayrı bir giriş yok. Kayıtta İşverenim’i seçersiniz; hesap kişisel kimliğinizle açılır ve site işveren hesabına göre şekillenir. Ardından şirketinizi sahiplenirsiniz. Aday erişimi, şirket doğrulamasından sonra açılır. Aynı şirkette birden çok kişi çalışabilir."
       >
         <ol className="grid gap-3 sm:grid-cols-3">
           {[

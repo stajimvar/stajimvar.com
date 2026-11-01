@@ -197,8 +197,8 @@ export const IsverenGirisi: React.FC<{
         {/*
           İŞVEREN KAPILARI
 
-          Sayfa "normal bir hesap açın" diyordu ama hesap açtıran bir düğme
-          sunmuyordu. İki düğme de işveren metinleriyle açılan pencereyi
+          Sayfa ilk adımda hesap açmayı anlatıyordu ama hesap açtıran bir
+          düğme sunmuyordu. İki düğme de işveren metinleriyle açılan pencereyi
           çağırıyor: arkadaki hesap aynı, kullanıcıya öğrenci hesabı
           açtırdığımızı söylemiyoruz.
         */}

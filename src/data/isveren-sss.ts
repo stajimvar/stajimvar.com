@@ -24,12 +24,12 @@ export const ISVEREN_SSS: SssMaddesi[] = [
   {
     soru: 'Şirket hesabı nasıl açılıyor ve nasıl doğrulanıyor?',
     cevap:
-      'Ayrı bir şirket kaydı yok: kendi adınıza hesap açıyor, sonra şirketinizin ' +
-      'StajımVar’daki sayfasını sahipleniyorsunuz. Yayına gönderdiğiniz ilan otomatik ' +
-      'olarak kontrol ediliyor: sorunsuzsa hemen yayına çıkıyor, eksik bilgi varsa ' +
-      'düzeltmeniz için size dönüyor, şüpheli bulunan ilan ekibimizin incelemesine ' +
-      'gidiyor ve o sırada listede görünmüyor. ' +
-      'Aynı şirkette birden çok kişi çalışabiliyor.',
+      'Ayrı bir giriş ekranı yok. Kayıtta İşverenim’i seçin; form kurumsal e-posta ' +
+      'ister ve hesap işveren hesabı olarak açılır. Hesap kişisel kimliğinizle durur. ' +
+      'Sonra şirketinizin sayfasını sahiplenirsiniz. Aday erişimi şirket ' +
+      'doğrulamasından sonra açılır. Yayına gönderdiğiniz ilan otomatik kontrol ' +
+      'edilir: sorunsuzsa hemen çıkar, eksikse düzeltmeniz için döner, şüpheliyse ' +
+      'incelemede kalır ve listede görünmez. Aynı şirkette birden çok kişi çalışabilir.',
   },
   {
     soru: 'Öğrenciler nereden başvuruyor?',

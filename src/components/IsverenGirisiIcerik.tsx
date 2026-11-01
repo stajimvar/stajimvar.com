@@ -44,9 +44,10 @@ export const IsverenGirisiIcerik: React.FC = () => (
     <section className="space-y-4">
       <h2 className="text-xl font-bold text-gray-900">Nasıl işliyor</h2>
       <ol className="space-y-5">
-        <Adim sira={1} baslik="Normal bir hesap açın">
-          Şirket hesabı diye ayrı bir kayıt yok. Kendi adınıza kayıt olun; şirket
-          yetkisi bir sonraki adımda tanımlanıyor.
+        <Adim sira={1} baslik="İşveren hesabı açın">
+          Kayıtta İşverenim’i seçin. Ayrı bir giriş yok; aynı kapıdan girilir, site
+          hesap türüne göre şekillenir. Kurumsal e-postanızla devam edin. Aday bilgisi
+          bu adımda açılmaz.
         </Adim>
         <Adim sira={2} baslik="Şirketinizin sayfasını sahiplenin">
           Şirketinizin StajımVar'da bir sayfası zaten olabilir — ilanları kariyer
@@ -75,12 +76,12 @@ export const IsverenGirisiIcerik: React.FC = () => (
 
         <details className="group rounded-2xl border border-gray-200 bg-white p-4">
           <summary className="font-bold text-gray-900 cursor-pointer list-none">
-            Neden doğrudan şirket hesabı açamıyorum?
+            İşverenim deyince öğrenci bilgilerini görür müyüm?
           </summary>
           <p className="mt-2 text-sm text-gray-600 leading-relaxed">
-            Şirket hesabı, staj arayan öğrencilerin profillerini görebiliyor. Kayıt
-            sırasında "ben şirketim" diyen herkese bu yetkiyi verseydik, formu dolduran
-            herkes öğrenci bilgilerine erişirdi. Bu yüzden yetki elle onaylanıyor.
+            Hayır. Hesap kişisel kimliğinizle açılır. İşverenim demek öğrenci listesini
+            açmaz. Aday kartları ancak şirket doğrulamasından sonra ve yalnızca size
+            başvuran öğrencide görünür.
           </p>
         </details>
 
