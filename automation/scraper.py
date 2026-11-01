@@ -83,7 +83,11 @@ def mode(text: str) -> str | None:
 def email(text: str) -> str | None:
     found = re.search(r"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", text, re.I); return found.group(0).lower() if found else None
 
-EARLY_CAREER = re.compile(r"\b(staj(?:yer)?|intern(?:ship)?|summer\s+intern|winter\s+intern|trainee|co-op)\b", re.I)
+# "Working student" (1 Kasım 2026): kalite kapısı (staj_kalitesi.STAJ_KANITI)
+# ve radar onu zaten staj kanıtı sayıyordu; yalnız bu ilk süzgeç
+# tanımıyordu ve Siemens'in yarı zamanlı öğrenci ilanları kapıya hiç
+# ulaşmıyordu. İki kural artık aynı.
+EARLY_CAREER = re.compile(r"\b(staj(?:yer)?|intern(?:ship)?|summer\s+intern|winter\s+intern|trainee|co-op|working\s+student)\b", re.I)
 # TURKIYE KONUM FILTRESI
 #
 # Once yalnizca alti sehir taniniyordu: istanbul, ankara, izmir, bursa,
@@ -1045,7 +1049,8 @@ KAPANMA_ISARETLERI = re.compile(
 # Sayfa başlığındaki site ekleri. "Praktikum HR: Recruiting (SoSe 27)
 # Stellendetails | Festool Group" ilanın adı değil; ilanın adı + sitenin
 # imzası. İmza atılıyor, uydurma yapılmıyor.
-BASLIK_EKLERI = re.compile(r"\s*(?:stellendetails|stellenangebot|stellenanzeige|job details|job description)\s*$", re.I)
+# Ayraçlı tekil ek de atılıyor: Siemens <title>'ı "… - Job Detail".
+BASLIK_EKLERI = re.compile(r"\s*[-–|]?\s*(?:stellendetails|stellenangebot|stellenanzeige|job details?|job description)\s*$", re.I)
 
 def ilan_sayfasi_basligi(html: str) -> str | None:
     """Önce h1, yoksa <title>. Hiçbiri yoksa None — başlık uydurulmuyor."""

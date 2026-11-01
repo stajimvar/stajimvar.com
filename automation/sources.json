@@ -531,8 +531,9 @@
       "careers_url": "https://careers.bat.com/en",
       "website": "https://www.bat.com",
       "urls": [
-        "https://careers.bat.com/en/job/-/-/1045/44671289984"
-      ]
+        "https://careers.bat.com/en/job/samsun/production-intern/1045/46156420864"
+      ],
+      "_not": "1 Kasım 2026: HR Intern (44671289984) resmî sitede 404, ilan sitede zaten kapalı; adres kaynaktan çıkarıldı (404 bütün kaynağı düşürüyordu)."
     },
     {
       "id": "aboutyou-smartrecruiters-de",
@@ -1260,7 +1261,8 @@
       "company_name": "Analog Devices",
       "careers_url": "https://analogdevices.wd1.myworkdayjobs.com/External",
       "urls": [
-        "https://analogdevices.wd1.myworkdayjobs.com/External/job/Turkey-Istanbul-Bilisim-Vadisi/Embedded-Software-Engineering-Intern_R267001"
+        "https://analogdevices.wd1.myworkdayjobs.com/External/job/Turkey-Istanbul-Bilisim-Vadisi/Embedded-Software-Engineering-Intern_R267001",
+        "https://analogdevices.wd1.myworkdayjobs.com/en-US/External/job/Software-Engineer-Intern_R267005"
       ],
       "_not": "25 Ekim 2026 kullanıcı CSV teslimi; resmî sayfada JobPosting (JSON-LD/microdata) kuru çalıştırmada doğrulandı."
     },
@@ -1287,7 +1289,8 @@
       "careers_url": "https://mastercard.wd1.myworkdayjobs.com/en-US/CorporateCareers",
       "website": "https://www.mastercard.com",
       "urls": [
-        "https://mastercard.wd1.myworkdayjobs.com/en-US/CorporateCareers/job/Associate-Consultant-Intern--Summer-Internship-Program---2027--Istanbul--Trkiye_R-287590-2"
+        "https://mastercard.wd1.myworkdayjobs.com/en-US/CorporateCareers/job/Associate-Consultant-Intern--Summer-Internship-Program---2027--Istanbul--Trkiye_R-287590-2",
+        "https://mastercard.wd1.myworkdayjobs.com/en-US/CorporateCareers/job/Global-Markets--Account-Management---Product-Management--Summer-Internship-Program---2027--Istanbul--Trkiye_R-292561-2"
       ],
       "_not": "25 Ekim 2026 kullanıcı CSV teslimi; resmî sayfada JobPosting (JSON-LD/microdata) kuru çalıştırmada doğrulandı."
     },
@@ -1503,6 +1506,78 @@
         "CD8087281D"
       ],
       "_not": "25 Ekim 2026 kullanıcı CSV teslimi; kuru çalıştırmada resmî kaynaktan doğrulandı."
+    },
+    {
+      "id": "in-vr-tr-official-jsonld",
+      "name": "IN-VR Kariyer",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "IN-VR",
+      "careers_url": "https://jobs.smartrecruiters.com/IN-VR",
+      "website": "in-vr.co",
+      "logo_url": "https://www.google.com/s2/favicons?domain=in-vr.co&sz=128",
+      "fallback_logo_url": "https://logo.clearbit.com/in-vr.co",
+      "urls": [
+        "https://jobs.smartrecruiters.com/IN-VR/744000156007525-business-development-intern-remote-"
+      ],
+      "_not": "1 Kasım 2026 kullanıcı JSON teslimi; resmî sayfada JobPosting (JSON-LD/microdata) kuru çalıştırmada doğrulandı. Aynı şirketin 'Communications and Marketing Intern' ilanı resmî veride Arjantin (Matheu) olduğu için alınmadı."
+    },
+    {
+      "id": "siemens-tr-ilan-sayfasi",
+      "name": "Siemens Türkiye (açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Siemens",
+      "careers_url": "https://jobs.siemens.com/en_US/externaljobs",
+      "aciklik_dogrulanmadi": true,
+      "logo_url": "https://upload.wikimedia.org/wikipedia/commons/3/3c/Siemens_AG_logo.svg",
+      "fallback_logo_url": "https://logo.clearbit.com/siemens.com",
+      "urls": [
+        "https://jobs.siemens.com/en_US/externaljobs/JobDetail/522625",
+        "https://jobs.siemens.com/en_US/externaljobs/JobDetail/527260",
+        "https://jobs.siemens.com/en_US/externaljobs/JobDetail/527065",
+        "https://jobs.siemens.com/en_US/externaljobs/JobDetail/525914",
+        "https://jobs.siemens.com/en_US/externaljobs/JobDetail/524655",
+        "https://jobs.siemens.com/en_US/externaljobs/JobDetail/524645",
+        "https://jobs.siemens.com/en_US/externaljobs/JobDetail/522797",
+        "https://jobs.siemens.com/en_US/externaljobs/JobDetail/511354"
+      ],
+      "_not": "1 Kasım 2026 kullanıcı JSON teslimi. Avature sayfaları makine-okunur JobPosting vermiyor; sayfa ayakta, konum Türkiye (Gebze/Kocaeli/İstanbul/Kartal), başvuru düğmesi var. Açıklık doğrulanamadığı için TASLAK. Kapanan Siemens ilanı /externaljobs/Error'a 403 ile yönleniyor (513581, 511920, 517447 bu yüzden alınmadı)."
+    },
+    {
+      "id": "amazon-tr-ilan-sayfasi",
+      "name": "Amazon Türkiye (açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Amazon",
+      "careers_url": "https://www.amazon.jobs/en/search",
+      "aciklik_dogrulanmadi": true,
+      "city_hint": "İstanbul",
+      "urls": [
+        "https://amazon.jobs/en/jobs/10579683/business-intelligence-engineer-internship-turkey"
+      ],
+      "_not": "1 Kasım 2026 kullanıcı JSON teslimi. Sayfa JobPosting vermiyor; açıklık doğrulanamadığı için TASLAK."
+    },
+    {
+      "id": "ey-tr-ilan-sayfasi",
+      "name": "EY Türkiye (açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "EY Türkiye",
+      "careers_url": "https://careers.ey.com/ey/",
+      "aciklik_dogrulanmadi": true,
+      "city_hint": "Ankara",
+      "website": "ey.com",
+      "logo_url": "https://upload.wikimedia.org/wikipedia/commons/3/34/EY_logo_2019.svg",
+      "fallback_logo_url": "https://logo.clearbit.com/ey.com",
+      "urls": [
+        "https://careers.ey.com/ey/job/Ankara-EY-T%C3%BCrkiye-TAX-Accounting%2C-Compliance-and-Reporting-Intern-Assistant-%28Ankara-Office%29-06510/1437101233/"
+      ],
+      "_not": "1 Kasım 2026 kullanıcı JSON teslimi. JobPosting var ama konum alanı boş; Türkiye konumu yapısal veriyle doğrulanamadığı için TASLAK (başlık ve adres Ankara ofisi diyor)."
     }
   ],
   "notes": "Only add verified public ATS/API endpoints. Keep credentials in environment variables, never here."

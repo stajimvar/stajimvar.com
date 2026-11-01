@@ -141,8 +141,14 @@ class KaynakKaydi(unittest.TestCase):
         cls.belirsiz = [k for k in cls.kaynaklar if k.get("aciklik_dogrulanmadi")]
 
     def test_belirsiz_kapsami_12_ilan(self):
-        self.assertEqual(sum(len(k["urls"]) for k in self.belirsiz), 12)
-        self.assertTrue(all(k["type"] == "resmi_ilan_sayfasi" and k.get("country") == "DE" for k in self.belirsiz))
+        # Almanya teslimi 12 ilan; 1 Kasım 2026 Türkiye teslimi ayrı 10 ilan
+        # (Siemens 8, Amazon 1, EY 1). Başka ülke ya da başka tür yok.
+        de = [k for k in self.belirsiz if k.get("country") == "DE"]
+        tr = [k for k in self.belirsiz if k.get("country") == "TR"]
+        self.assertEqual(sum(len(k["urls"]) for k in de), 12)
+        self.assertEqual(sum(len(k["urls"]) for k in tr), 10)
+        self.assertEqual(len(de) + len(tr), len(self.belirsiz))
+        self.assertTrue(all(k["type"] == "resmi_ilan_sayfasi" for k in self.belirsiz))
 
     def test_dogrulanmis_34_ilan_karismiyor(self):
         dogrulanmis = [k for k in self.kaynaklar
