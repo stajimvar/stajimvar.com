@@ -84,16 +84,28 @@ test('sıralama süzgeçle aynı bellekte, süzgeçten sonra ve sayfalamadan ön
   assert.match(GORUNUM, /!daraltmaVar && !siralamaTumu &&/);
 });
 
-test('çubuk ilk kartın üstünde: solda sayı, sağda etiketli seçici', () => {
-  const cubuk = GORUNUM.indexOf('ref={siralamaCubuguRef}');
+test('seçici şeritte, bölge haplarının sağında; liste üstü sayaç yok', () => {
+  /* 2 Kasım 2026, kullanıcı çizimi: sayaç kalktı, seçici bölge satırına çıktı. */
+  const serit = GORUNUM.indexOf('<SirketSeridi');
   const ilkKart = GORUNUM.indexOf('{filteredListings.map(({ listing, match, hasApplied }, index) => (');
-  assert.ok(cubuk > 0 && ilkKart > cubuk, 'çubuk kart listesinden önce');
-  const parca = GORUNUM.slice(cubuk, ilkKart);
-  assert.match(parca, /\{gosterilecekToplam\} ilan/);
+  const secici = GORUNUM.indexOf('id="ilan-siralama"');
+  assert.ok(serit > 0 && secici > serit && ilkKart > secici, 'seçici şeridin içinde, kartlardan önce');
+  const parca = GORUNUM.slice(serit, GORUNUM.indexOf('sirketler={seritSirketleri}', serit));
+  assert.match(parca, /sagda=\{/);
   assert.match(parca, /<label htmlFor="ilan-siralama" className="sr-only">/);
-  assert.match(parca, /id="ilan-siralama"/);
-  assert.match(parca, /min-h-11/, 'dokunma alanı 44 px');
+  assert.match(parca, /h-11 w-11/, 'telefonda 44×44 dokunma alanı');
+  assert.match(parca, /sm:w-auto/, 'geniş ekranda seçili seçeneğin adı görünüyor');
   assert.match(parca, /SIRALAMA_SECENEKLERI\.map/);
+  /* Liste üstündeki "N ilan" satırı yok. */
+  assert.doesNotMatch(GORUNUM, /\{gosterilecekToplam\} ilan\s*<\/p>/);
+  /* Kaydırma hedefi şeridi saran öğe. */
+  assert.match(GORUNUM, /<div ref=\{siralamaCubuguRef\} className="scroll-mt-24">\s*<SirketSeridi/);
+
+  const SERIT = fs.readFileSync(path.join(KOK, 'src', 'components', 'SirketSeridi.tsx'), 'utf8');
+  assert.match(SERIT, /sagda\?: React\.ReactNode;/);
+  assert.match(SERIT, /\{sagda && <div className="shrink-0 pr-4 sm:pr-3">\{sagda\}<\/div>\}/);
+  /* Haplar kendi alanında kaymaya devam ediyor. */
+  assert.match(SERIT, /<div className="min-w-0 flex-1">\s*<YatayKaydirma className=\{SATIR\}>/);
 });
 
 test('değişimde istek yok, adres yok; görünür değilse listenin başına', () => {

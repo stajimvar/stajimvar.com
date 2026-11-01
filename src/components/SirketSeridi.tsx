@@ -116,7 +116,12 @@ export const SirketSeridi: React.FC<{
   donukSayi?: number | null;
   /** Seçili hapa tekrar dokunuş: filtre değişmiyor, yalnız sayı görünüyor. */
   onCevir?: (anahtar: string) => void;
-}> = ({ sirketler, secili, toplam, onSec, bolge, onBolge, donuk = null, donukSayi = null, onCevir }) => (
+  /**
+   * Bölge satırının sağında duran kontrol (ilan sıralaması, 2 Kasım 2026).
+   * Haplar kendi alanında kaymaya devam ediyor; bu öğe kaymıyor.
+   */
+  sagda?: React.ReactNode;
+}> = ({ sirketler, secili, toplam, onSec, bolge, onBolge, donuk = null, donukSayi = null, onCevir, sagda }) => (
   /*
     Telefonda ekranın iki kenarına yaslı bant; altındaki ince çizgi
     ilanların başladığı yeri gösteriyor. Geniş ekranda sütunun içinde
@@ -126,6 +131,9 @@ export const SirketSeridi: React.FC<{
     aria-label="İlanları daralt"
     className="-mx-4 border-b border-gray-200 bg-white py-1 sm:mx-0 sm:rounded-2xl sm:border"
   >
+    <div className="flex items-center">
+    {/* YatayKaydirma kendi dış kabını çiziyor; büyüyen ve daralabilen kap burada. */}
+    <div className="min-w-0 flex-1">
     <YatayKaydirma className={SATIR}>
       <ul aria-label="Bölge" className={HAP_SERIDI}>
         {BOLGELER.map((b) => {
@@ -157,6 +165,9 @@ export const SirketSeridi: React.FC<{
         })}
       </ul>
     </YatayKaydirma>
+    </div>
+    {sagda && <div className="shrink-0 pr-4 sm:pr-3">{sagda}</div>}
+    </div>
 
     {(sirketler.length > 0 || secili.length > 0) && (
       <YatayKaydirma className={SATIR}>
