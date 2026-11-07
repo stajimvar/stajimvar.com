@@ -6,6 +6,7 @@
  */
 
 import { supabase } from './supabase';
+import { kayitSonucu } from './kayit-mevcut-hesap.mjs';
 import type { CompanyAccount, StudentProfile } from '../types';
 
 /** KVKK aydınlatma metni sürümü. Metin değişince burayı artır —
@@ -38,6 +39,13 @@ export interface AuthResult {
    * Giriş ve kayıt dönüşlerinde gelmeyebilir; o zaman karşılama açılmıyor.
    */
   hesapOlusturmaAni?: string;
+  /**
+   * Kayıtta seçilen niyet ("İşverenim"). Yetki DEĞİL — rol tetikleyicide
+   * yine 'student'; yalnız ilk girişte nereye gidileceğini söylüyor.
+   * E-posta doğrulamasıyla dönen kişide de okunabilsin diye kullanıcı
+   * üst verisinde (`kayit_niyeti`) duruyor.
+   */
+  kayitNiyeti?: 'isveren';
 }
 
 // ---------------------------------------------------------------------------
@@ -52,6 +60,13 @@ function translateError(message: string): string {
     [/user already registered|already been registered/i, 'Bu e-posta ile zaten bir hesap var. Giriş yapmayı dene.'],
     [/password should be at least/i, 'Şifre en az 8 karakter olmalı.'],
     [/rate limit|too many requests/i, 'Çok fazla deneme yapıldı. Birkaç dakika sonra tekrar dene.'],
+    /*
+      Aynı adrese 30 saniye içinde ikinci doğrulama postası (429,
+      over_email_send_rate_limit). Ölçüldü (7 Kasım 2026): ilk kayıt
+      BAŞARILIYDI, ikinci basış bu hatayı aldı ve ekran "Bir sorun
+      oluştu" dedi; kişi hesabın açılmadığını sandı.
+    */
+    [/only request this after|for security purposes/i, 'Doğrulama e-postası az önce gönderildi. Gelen kutunu ve spam klasörünü kontrol et; yeniden göndermek için yarım dakika bekle.'],
     [/invalid email/i, 'Geçerli bir e-posta adresi gir.'],
     [/network|fetch/i, 'Bağlantı kurulamadı. İnternetini kontrol et.'],
 
@@ -134,6 +149,8 @@ export interface StudentSignUpInput {
   /** KVKK açık rızası. Onaysız kayıt yapılmaz. */
   /** Kayıt anında aydınlatma metninin gösterildiği damgalanır. */
   marketingConsent?: boolean;
+  /** Kayıtta seçilen niyet; yalnız yönlendirme için (bkz. AuthResult.kayitNiyeti). */
+  niyet?: 'ogrenci' | 'isveren';
 }
 
 export async function signUpStudent(input: StudentSignUpInput): Promise<AuthResult> {
@@ -164,6 +181,7 @@ export async function signUpStudent(input: StudentSignUpInput): Promise<AuthResu
         kvkk_consent: true,
         kvkk_consent_version: KVKK_VERSION,
         marketing_consent: input.marketingConsent ?? false,
+        ...(input.niyet === 'isveren' ? { kayit_niyeti: 'isveren' } : {}),
       },
     },
   });
@@ -178,7 +196,12 @@ export async function signUpStudent(input: StudentSignUpInput): Promise<AuthResu
     role: 'student',
     displayName: input.fullName.trim(),
     needsEmailConfirmation: !data.session,
-  } as AuthResult & { needsEmailConfirmation: boolean };
+    /*
+      E-posta zaten kayıtlıysa Supabase hata dönmüyor; yeni hesap açılmamış
+      olabilir. Ekran "Hesabın oluşturuldu" dememeli (lib/kayit-mevcut-hesap).
+    */
+    mevcutHesap: kayitSonucu(data.user),
+  } as AuthResult & { needsEmailConfirmation: boolean; mevcutHesap: ReturnType<typeof kayitSonucu> };
 }
 
 // ---------------------------------------------------------------------------
@@ -377,6 +400,7 @@ export async function getCurrentUser(): Promise<AuthResult | null> {
     role: profile.role as UserRole,
     displayName: profile.full_name || session.user.email?.split('@')[0] || '',
     hesapOlusturmaAni: session.user.created_at,
+    ...(session.user.user_metadata?.kayit_niyeti === 'isveren' ? { kayitNiyeti: 'isveren' as const } : {}),
   };
 }
 
