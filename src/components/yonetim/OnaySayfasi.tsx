@@ -25,6 +25,8 @@ import {
   yenidenDenemeSagligi,
 } from '../../lib/ilan-kontrol-gorunumu.mjs';
 import { GerekceliKarar } from './GerekceliKarar';
+import { YeniSirketTalepleri } from '../AdminClaimsView';
+import { bekleyenSirketTalepleri } from '../../lib/isveren-baslangic';
 import { sayi } from '../../lib/yonetim-bicim.mjs';
 import { BosDurum, Iskelet } from './Grafikler';
 
@@ -557,7 +559,20 @@ export const OnaySayfasi: React.FC<{
 }> = ({ kuyrukGetir = fetchOnayKuyrugu }) => {
   const [kuyruk, setKuyruk] = React.useState<OnayKuyrugu | null>(null);
   const [durum, setDurum] = React.useState<'yukleniyor' | 'hazir' | 'hata'>('yukleniyor');
-  const [sekme, setSekme] = React.useState<'ilan' | 'dogrulama' | 'sahiplenme' | 'bolum'>('ilan');
+  const [sekme, setSekme] = React.useState<'ilan' | 'dogrulama' | 'sahiplenme' | 'yeni-sirket' | 'bolum'>('ilan');
+  /*
+    YENİ ŞİRKET TALEPLERİ (7 Kasım 2026)
+
+    Listede olmayan şirketi ekleme talepleri yalnız eski /yonetim/talepler
+    ekranındaydı; bu panelde sekmesi yoktu ve Modmere talebi görünmeden
+    bekledi. Sayı sekme açılmadan da görünsün diye ayrıca okunuyor.
+  */
+  const [yeniSirketSayisi, setYeniSirketSayisi] = React.useState(0);
+  React.useEffect(() => {
+    bekleyenSirketTalepleri()
+      .then((t) => setYeniSirketSayisi(t.length))
+      .catch(() => undefined);
+  }, []);
   const [redEdilen, setRedEdilen] = React.useState<string | null>(null);
   const [redSebebi, setRedSebebi] = React.useState('');
   const [islemdeki, setIslemdeki] = React.useState<string | null>(null);
@@ -685,6 +700,12 @@ export const OnaySayfasi: React.FC<{
           etiket="Sahiplenme"
           adet={sahiplenmeler.length}
           tikla={() => setSekme('sahiplenme')}
+        />
+        <Sekme
+          etkin={sekme === 'yeni-sirket'}
+          etiket="Yeni şirket"
+          adet={yeniSirketSayisi}
+          tikla={() => setSekme('yeni-sirket')}
         />
         <Sekme etkin={sekme === 'bolum'} etiket="Bölüm" adet={bolumler.length} tikla={() => setSekme('bolum')} />
       </div>
@@ -900,6 +921,10 @@ export const OnaySayfasi: React.FC<{
         ) : (
           <BosDurum mesaj="Bekleyen sahiplenme talebi yok" />
         )
+      )}
+
+      {sekme === 'yeni-sirket' && (
+        <YeniSirketTalepleri onToast={setBilgi} onSayi={setYeniSirketSayisi} />
       )}
 
       {durum === 'hazir' && sekme === 'bolum' && (

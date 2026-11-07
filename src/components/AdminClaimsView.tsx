@@ -252,7 +252,14 @@ const guvenliWeb = (u: string | null) => (u && /^https?:\/\/[^/\s]+\.[^/\s]+/i.t
 const guvenliLogo = (u: string | null) =>
   u && /^https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/object\/public\/logos\//.test(u) ? u : null;
 
-const YeniSirketTalepleri: React.FC<{ onToast: (m: string) => void }> = ({ onToast }) => {
+/*
+  Yeni paneldeki onay ekranı (yonetim/OnaySayfasi · "Yeni şirket" sekmesi)
+  da bu bileşeni kullanıyor; `onSayi` sekme başlığındaki sayıyı güncel tutuyor.
+*/
+export const YeniSirketTalepleri: React.FC<{ onToast: (m: string) => void; onSayi?: (n: number) => void }> = ({
+  onToast,
+  onSayi,
+}) => {
   const [talepler, setTalepler] = useState<YeniSirketTalebi[]>([]);
   const [durum, setDurum] = useState<'yukleniyor' | 'hazir' | 'hata'>('yukleniyor');
   const [islemde, setIslemde] = useState<string | null>(null);
@@ -269,6 +276,9 @@ const YeniSirketTalepleri: React.FC<{ onToast: (m: string) => void }> = ({ onToa
       .catch(() => setDurum('hata'));
   }, []);
   useEffect(yukle, [yukle]);
+  useEffect(() => {
+    if (durum === 'hazir') onSayi?.(talepler.length);
+  }, [durum, talepler.length, onSayi]);
 
   const onayla = async (t: YeniSirketTalebi) => {
     setIslemde(t.id);
