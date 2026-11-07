@@ -157,3 +157,15 @@ test('yönetici ekranı yalnız güvenli bağlantı ve görsel çiziyor', () => 
   assert.match(y, /<img src=\{logo\}/);
   assert.doesNotMatch(y, /href=\{t\.webSitesi\}|src=\{t\.logoUrl\}/);
 });
+
+/*
+  Yeni paneldeki onay ekranında yeni şirket sekmesi yoktu; Modmere talebi
+  yöneticinin baktığı ekranda görünmedi (7 Kasım 2026).
+*/
+test('yeni panelin onay ekranında "Yeni şirket" sekmesi talepleri gösteriyor', () => {
+  const onay = oku('src/components/yonetim/OnaySayfasi.tsx');
+  assert.match(onay, /etiket="Yeni şirket"/);
+  assert.match(onay, /<YeniSirketTalepleri onToast=\{setBilgi\} onSayi=\{setYeniSirketSayisi\} \/>/);
+  assert.match(onay, /bekleyenSirketTalepleri\(\)/);
+  assert.match(oku('src/components/AdminClaimsView.tsx'), /export const YeniSirketTalepleri/);
+});
