@@ -249,6 +249,9 @@ const BolumTalepleri = React.lazy(() =>
 const StajProgramlariSayfasi = React.lazy(() =>
   import('./components/StajProgramlari').then((m) => ({ default: m.StajProgramlariSayfasi }))
 );
+const IsverenBaslangic = React.lazy(() =>
+  import('./components/IsverenBaslangic').then((m) => ({ default: m.IsverenBaslangic }))
+);
 const IsverenGirisi = React.lazy(() =>
   import('./components/IsverenGirisi').then((m) => ({ default: m.IsverenGirisi }))
 );
@@ -1197,7 +1200,8 @@ export default function App() {
     */
     if (niyet === 'isveren' && !sirketeUye) {
       setActiveTab('internships');
-      navigate('/isveren/ilan-ver');
+      /* Şirket profili sayfası (7 Kasım 2026): ara → sahiplen ya da ekle → onaya gönder. */
+      navigate('/isveren/baslangic');
       showToast(`Hoş geldiniz, ${name}. Şimdi şirketini bulalım.`);
       return;
     }
@@ -1568,7 +1572,7 @@ export default function App() {
         return;
       }
       if (uye) return;
-      navigate('/isveren/ilan-ver');
+      navigate('/isveren/baslangic');
       showToast(`Hoş geldiniz${session.displayName ? `, ${session.displayName}` : ''}. Şimdi şirketini bulalım.`);
     })();
     return () => {
@@ -2096,6 +2100,37 @@ export default function App() {
     burası küçük tutuldu.
   */
   const kabukRolu: 'student' | 'company' = session?.role === 'company' ? 'company' : 'student';
+
+  /*
+    ONAY BEKLEYEN İŞVEREN (7 Kasım 2026, kullanıcı kararı)
+
+    "İşverenim" diye kaydolup şirketi henüz onaylanmamış hesap işveren
+    görünümünde: üst çubukta "İşveren hesabı", öğrenci profili (/cv) yerine
+    şirket profili sayfası. Yetki DEĞİŞMİYOR — RLS'e göre hâlâ öğrenci
+    hesabı; değişen yalnız gösterilen yüz. Niyet kullanıcı üst verisinde
+    (kayit_niyeti), şirket profili gönderilince de yazılıyor.
+  */
+  const bekleyenIsveren = Boolean(session && session.kayitNiyeti === 'isveren' && !sirketUyesi && kabukRolu !== 'company');
+  const [isverenTalepDurumu, setIsverenTalepDurumu] = useState<'bekliyor' | 'onaylandi' | 'reddedildi' | null>(null);
+  const [isverenTalepSurumu, setIsverenTalepSurumu] = useState(0);
+  React.useEffect(() => {
+    if (!bekleyenIsveren || !session) {
+      setIsverenTalepDurumu(null);
+      return;
+    }
+    let iptal = false;
+    import('./lib/isveren-baslangic')
+      .then((m) => m.benimSonTalebim(session.userId))
+      .then((t) => !iptal && setIsverenTalepDurumu(t?.durum ?? null))
+      .catch(() => !iptal && setIsverenTalepDurumu(null));
+    return () => {
+      iptal = true;
+    };
+  }, [bekleyenIsveren, session?.userId, isverenTalepSurumu]);
+  React.useEffect(() => {
+    if (!bekleyenIsveren) return;
+    if (temizYol === '/cv' || temizYol === '/cv/yazdir') navigate('/isveren/baslangic', { degistir: true });
+  }, [bekleyenIsveren, temizYol]);
   React.useEffect(() => {
     if (kabukRolu !== 'company') return;
     if (temizYol === '/' || temizYol === '/sirket') navigate('/sirket/ilanlar', { degistir: true });
@@ -2415,6 +2450,13 @@ export default function App() {
   const ustCubuk = (
     <>
     <Header
+      hesapEtiketi={
+        bekleyenIsveren
+          ? isverenTalepDurumu === 'bekliyor'
+            ? 'İşveren hesabı · onay bekleniyor'
+            : 'İşveren hesabı'
+          : undefined
+      }
       activeTab={safeTab}
       setActiveTab={(sekme) => {
         // Alt sayfadayken sekmeye basılırsa önce ana sayfaya dönülüyor.
@@ -3817,6 +3859,19 @@ export default function App() {
     yukaridaki kosul tam esitlik ariyor ve bu bloktan sonra kalsaydi
     /isveren/ilan-ver bilinmeyen adrese dusup 404 uretirdi.
   */
+  if (temizYol === '/isveren/baslangic') {
+    return icerikSayfasi(
+      <IsverenBaslangic
+        onBack={goHome}
+        onNavigate={navigate}
+        userId={session?.userId ?? null}
+        userEmail={activeStudent?.email ?? ''}
+        adSoyad={session?.displayName ?? ''}
+        onGirisGerekli={AUTH_ENABLED ? () => isverenGirisiAc('login', '/isveren/baslangic') : undefined}
+        onDurumDegisti={() => setIsverenTalepSurumu((n) => n + 1)}
+      />
+    );
+  }
   if (temizYol === '/isveren/ilan-ver') {
     return icerikSayfasi(
       <IsverenGirisi

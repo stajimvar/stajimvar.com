@@ -33,6 +33,12 @@ import { KullaniciAramaSonuclari } from './sosyal/KullaniciArama';
 import { ProfilFotografi } from './sosyal/ProfilFotografi';
 
 interface HeaderProps {
+  /**
+   * Profil düğmesindeki hesap türü yazısı. Verilmezse "Öğrenci hesabı".
+   * İşveren niyetiyle kaydolup şirketi henüz onaylanmamış hesapta
+   * "İşveren hesabı · onay bekleniyor" (7 Kasım 2026).
+   */
+  hesapEtiketi?: string;
   activeTab: 'internships' | 'badges' | 'applications' | 'profile' | 'company-portal';
   setActiveTab: (
     tab: 'internships' | 'badges' | 'applications' | 'profile' | 'company-portal'
@@ -225,6 +231,7 @@ function baglantiTiklamasi(calistir: () => void) {
 }
 
 export const Header: React.FC<HeaderProps> = ({
+  hesapEtiketi = 'Öğrenci hesabı',
   activeTab,
   setActiveTab,
   activeSubTab,
@@ -1666,7 +1673,7 @@ export const Header: React.FC<HeaderProps> = ({
                       <span className="truncate text-sm font-bold text-gray-900">
                         {adYazimi(activeStudent.fullName)}
                       </span>
-                      <span className="truncate text-[11px] text-gray-600">Öğrenci hesabı</span>
+                      <span className="truncate text-[11px] text-gray-600">{hesapEtiketi}</span>
                     </span>
                   </a>
                 )}

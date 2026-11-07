@@ -130,7 +130,8 @@ export interface StudentProfile {
   university: string;
   faculty: string;
   department: string;
-  gradeLevel: '1. Sınıf' | '2. Sınıf' | '3. Sınıf' | '4. Sınıf' | 'Yüksek Lisans / Mezun';
+  /** Boş: öğrenci sınıfını henüz girmedi (uydurulmuyor). */
+  gradeLevel: '1. Sınıf' | '2. Sınıf' | '3. Sınıf' | '4. Sınıf' | 'Yüksek Lisans / Mezun' | '';
   graduationYear: number;
   gpa: number;
   avatarUrl: string;

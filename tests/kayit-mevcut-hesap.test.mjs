@@ -76,8 +76,9 @@ test('işverene CV karşılaması yok; doğrulamadan dönünce bir kez sahiplenm
   assert.match(govde, /stajimvar_isveren_ilk_giris:\$\{session\.userId\}/);
   assert.match(govde, /sirketBaglami\(session\.userId, false\)/);
   /* Şirketi olan hesap sahiplenmeye gönderilmiyor; işaret yönlendirmeden önce yazılıyor. */
-  assert.ok(govde.indexOf("depo.setItem(anahtar, '1')") < govde.indexOf("navigate('/isveren/ilan-ver')"));
-  assert.match(govde, /if \(uye\) return;\s*navigate\('\/isveren\/ilan-ver'\);/);
+  /* 7 Kasım 2026: hedef şirket profili sayfası (/isveren/baslangic). */
+  assert.ok(govde.indexOf("depo.setItem(anahtar, '1')") < govde.indexOf("navigate('/isveren/baslangic')"));
+  assert.match(govde, /if \(uye\) return;\s*navigate\('\/isveren\/baslangic'\);/);
 });
 
 test('aynı adrese ikinci posta (429) "Bir sorun oluştu" demiyor', () => {

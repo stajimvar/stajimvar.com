@@ -1,6 +1,7 @@
 import React from 'react';
 import { Building2, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { webAdresi } from '../lib/isveren-profil-formu.mjs';
 
 /**
  * "Şirketimi ekle" formu.
@@ -67,6 +68,18 @@ export const SirketEklemeFormu: React.FC<{
       return;
     }
 
+    /*
+      Adres veritabanında da yalnız http(s) kabul ediliyor (20261223010000);
+      aynı kural burada, kişi anlaşılmaz bir veritabanı hatası görmesin diye.
+    */
+    const web = webAdresi(deger.webSitesi);
+    const kariyer = webAdresi(deger.kariyerSayfasi);
+    if (web === null || kariyer === null) {
+      setHata('Web adreslerini https:// ile başlayan biçimde yaz (ör. https://ornek.com).');
+      setDurum('hata');
+      return;
+    }
+
     setDurum('gonderiliyor');
     setHata('');
     try {
@@ -76,8 +89,8 @@ export const SirketEklemeFormu: React.FC<{
         }
       ).insert({
         sirket_adi: deger.sirketAdi.trim(),
-        web_sitesi: deger.webSitesi.trim() || null,
-        kariyer_sayfasi: deger.kariyerSayfasi.trim() || null,
+        web_sitesi: web || null,
+        kariyer_sayfasi: kariyer || null,
         yetkili_adi: deger.yetkiliAdi.trim(),
         kurumsal_eposta: deger.eposta.trim(),
         gorev: deger.gorev.trim() || null,

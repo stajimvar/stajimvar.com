@@ -58,7 +58,8 @@ test('isveren secen sahiplenmeye gidiyor', () => {
   */
   assert.match(PENCERE, /onSuccess\('student', result\.displayName, result\.userId, kayitTuru\)/);
   assert.match(UYGULAMA, /if \(niyet === 'isveren' && !sirketeUye\) \{/);
-  assert.match(UYGULAMA, /navigate\('\/isveren\/ilan-ver'\)/);
+  /* 7 Kasım 2026: önce şirket profili (ara → sahiplen ya da ekle → onaya gönder). */
+  assert.match(UYGULAMA, /navigate\('\/isveren\/baslangic'\)/);
 });
 
 test('sirketi olan hesap yine panele gidiyor', () => {

@@ -465,8 +465,13 @@ export function toStudentProfile(row: StudentRowBundle): StudentProfile {
     department: row.department ?? '',
     /* İkamet ili; NULL kalabilir. pref_cities ile karıştırma — o tercih. */
     city: row.city ?? '',
-    // grade_level nullable; arayüz tipi zorunlu, en yaygın değere düş.
-    gradeLevel: row.grade_level ?? '3. Sınıf',
+    /*
+      grade_level boşsa BOŞ kalıyor (7 Kasım 2026). Önce en yaygın değere
+      ('3. Sınıf') düşülüyordu: kayıtta sınıf sorulmadığı için her yeni
+      hesap profilinde, CV'sinde ve şirketin gördüğü kartta girmediği bir
+      sınıfla görünüyordu (ölçüldü: işveren niyetli yeni hesapta '3. Sınıf').
+    */
+    gradeLevel: row.grade_level ?? '',
     graduationYear: row.graduation_year ?? new Date().getFullYear() + 1,
     gpa: num(row.gpa),
     avatarUrl: p?.avatar_url ?? '',
@@ -600,7 +605,7 @@ export function splitStudentUpdate(patch: Partial<StudentProfile>) {
     tek bir değerle anlatılmalı — cv_path'te olduğu gibi.
   */
   if (patch.city !== undefined) studentPatch.city = patch.city || null;
-  if (patch.gradeLevel !== undefined) studentPatch.grade_level = patch.gradeLevel;
+  if (patch.gradeLevel !== undefined) studentPatch.grade_level = patch.gradeLevel || null;
   if (patch.graduationYear !== undefined) studentPatch.graduation_year = patch.graduationYear;
   if (patch.gpa !== undefined) studentPatch.gpa = patch.gpa;
   if (patch.bio !== undefined) studentPatch.bio = patch.bio;

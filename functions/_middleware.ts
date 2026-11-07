@@ -123,6 +123,12 @@ const UYGULAMA_ADRESLERI = new Set([
   */
   '/baglantilar',
   /*
+    /isveren/baslangic (7 Kasım 2026): işverenin şirket profili sayfası.
+    Ön render edilmiyor (içerik oturuma bağlı); e-posta doğrulamasından
+    dönüşte ve yenilemede doğrudan açılıyor, kabuk 200 ile gelmeli.
+  */
+  '/isveren/baslangic',
+  /*
     /takip: /baglantilar ile aynı sebep ve aynı gün eklendi. Profildeki
     "takip" sayacı da artık gerçek bir <a href> ve yeni sekmede
     açılabiliyor; liste burada olmasaydı orta tuşla açılan sekme 404
