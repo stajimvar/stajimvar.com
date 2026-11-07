@@ -45,7 +45,8 @@ test('etiketler alanlara bağlı; seçim şeritleri adlı grup', () => {
     assert.match(FORM, new RegExp(`id=\\{\`\\$\\{k\\}-${alan}\`\\}`));
   }
   assert.match(FORM, /role="group" aria-labelledby=\{etiketId\}/);
-  assert.equal((FORM.match(/etiketId=\{`\$\{k\}-/g) ?? []).length, 3);
+  /* 4: çalışma şekli, staj türü, ücret + şirkete göre pozisyon önerileri (7 Kasım 2026). */
+  assert.equal((FORM.match(/etiketId=\{`\$\{k\}-/g) ?? []).length, 4);
   /* Yalnız son başvuru isteğe bağlı. */
   assert.equal((FORM.match(/ istegeBagli>/g) ?? []).length, 1);
 });

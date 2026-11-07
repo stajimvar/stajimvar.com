@@ -13,6 +13,7 @@ import {
 } from '../lib/ilan-formu.mjs';
 import { ilanBaslangicDurumu, ilanBayraklari } from '../lib/sirket-kademe.mjs';
 import { POZISYONLAR, pozisyonAlani, pozisyonAra } from '../lib/pozisyonlar.mjs';
+import { ilkSablonMetni, sehirOnerisi, sirketeGorePozisyonlar } from '../lib/ilan-onerileri.mjs';
 import {
   ilanKontrolDurumu,
   ilanOku,
@@ -238,6 +239,10 @@ const EKRANLI_DURUMLAR: IlanKontrolDurumu[] = ['yayinda', 'inceleme_gerekiyor', 
 export const IlanFormu: React.FC<{
   kademe: number;
   sirketAdi: string;
+  /** Şirket profilinden öneriler için (yalnız yeni ilanda kullanılıyor). */
+  sirketSektoru?: string | null;
+  sirketSehri?: string | null;
+  sirketTanitimi?: string | null;
   siteUrl?: string | null;
   eposta?: string | null;
   /**
@@ -267,6 +272,9 @@ export const IlanFormu: React.FC<{
 }> = ({
   kademe,
   sirketAdi,
+  sirketSektoru,
+  sirketSehri,
+  sirketTanitimi,
   siteUrl,
   eposta,
   onKaydet,
@@ -276,7 +284,18 @@ export const IlanFormu: React.FC<{
   ilanOkuyucu,
 }) => {
   const oku = ilanOkuyucu ?? ilanOku;
-  const [deger, setDeger] = React.useState<IlanFormDegeri>(BOS);
+  /*
+    ŞİRKETE GÖRE HAZIR FORM (7 Kasım 2026): yeni ilanda şehir profildeki
+    şehirle açılıyor; pozisyon önerileri profildeki sektör ve tanıtımdan.
+    Düzenlemede hiçbiri yok — kayıtlı ilanın değeri okunuyor.
+  */
+  const [deger, setDeger] = React.useState<IlanFormDegeri>(() =>
+    duzenlenenId ? BOS : { ...BOS, sehir: sehirOnerisi(sirketSehri, TR_CITIES) || BOS.sehir },
+  );
+  const onerilenPozisyonlar = React.useMemo(
+    () => (duzenlenenId ? [] : sirketeGorePozisyonlar({ sektor: sirketSektoru, tanitim: sirketTanitimi })),
+    [duzenlenenId, sirketSektoru, sirketTanitimi],
+  );
   const [yukleniyor, setYukleniyor] = React.useState(Boolean(duzenlenenId));
   const [okumaHatasi, setOkumaHatasi] = React.useState('');
   const [okumaDenemesi, setOkumaDenemesi] = React.useState(0);
@@ -436,6 +455,14 @@ export const IlanFormu: React.FC<{
   React.useEffect(() => {
     setOnayBekleyen(null);
   }, [alanId]);
+
+  /* Öneri seçilince pozisyon yazılıyor; iş tanımı BOŞSA ilk şablonu da. */
+  const oneriSec = (unvan: string) =>
+    setDeger((o) => ({
+      ...o,
+      unvan,
+      aciklama: o.aciklama.trim() ? o.aciklama : ilkSablonMetni(unvan) || o.aciklama,
+    }));
 
   const sablonSec = (s: { id: string; etiket: string; metin: string }) => {
     const mevcut = deger.aciklama.trim();
@@ -971,6 +998,19 @@ export const IlanFormu: React.FC<{
                 olmayan kendi başlığını da yazabiliyor. Seçim yalnız bu
                 alanı dolduruyor.
               */}
+              {onerilenPozisyonlar.length > 0 && (
+                <div className="mb-2">
+                  <p id={`${k}-oneri-baslik`} className="mb-1.5 text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+                    <b style={{ color: SIRKET_METIN }}>{sirketAdi}</b> için öneriler — seçince iş tanımı da hazır gelir
+                  </p>
+                  <SecimSeridi
+                    etiketId={`${k}-oneri-baslik`}
+                    secenekler={onerilenPozisyonlar.map((p) => ({ id: p, etiket: p.replace(/ Stajyeri$/, '') }))}
+                    deger={deger.unvan}
+                    onSec={oneriSec}
+                  />
+                </div>
+              )}
               <AutocompleteField
                 id={`${k}-unvan`}
                 value={deger.unvan}
