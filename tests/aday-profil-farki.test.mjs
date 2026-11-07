@@ -95,11 +95,15 @@ test('değişen tekil alan önce/şimdi ile geliyor, değişmeyen gelmiyor', () 
   assert.equal(f.bolumler.yetenekler, false);
 });
 
-test('güncel sınıf boşsa fark sayılmıyor (eşleyicinin varsayılanı)', () => {
+test('güncel sınıf boşsa fark sayılmıyor (eşleyici boş bırakıyor)', () => {
   const f = adayProfilFarki(basvuru(), guncel({ sinif: null }));
   assert.equal(f.alanlar.some((a) => a.anahtar === 'sinif'), false);
-  /* Kural bir yorumdan değil koddan geliyor: eşleyici gerçekten varsayıyor. */
-  assert.match(oku('src/lib/queries/mappers.ts'), /gradeLevel: row\.grade_level \?\? '3\. Sınıf'/);
+  /*
+    7 Kasım 2026: eşleyici artık '3. Sınıf' UYDURMUYOR, boş bırakıyor.
+    Boş güncel sınıf yine fark sayılmıyor: öğrencinin bilgiyi sildiği değil,
+    hiç girmediği anlamına geliyor.
+  */
+  assert.match(oku('src/lib/queries/mappers.ts'), /gradeLevel: row\.grade_level \?\? '',/);
 });
 
 test('öteki alan boşalırsa fark sayılıyor', () => {

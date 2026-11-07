@@ -6,6 +6,12 @@ import {
   rejectCompanyClaim,
   type CompanyClaim,
 } from '../lib/queries';
+import {
+  bekleyenSirketTalepleri,
+  sirketTalebiniOnayla,
+  sirketTalebiniReddet,
+  type YeniSirketTalebi,
+} from '../lib/isveren-baslangic';
 
 /**
  * Yönetici onay kuyruğu.
@@ -222,6 +228,180 @@ export const AdminClaimsView: React.FC<AdminClaimsViewProps> = ({ onToast }) => 
           </div>
         );
       })}
+
+      <YeniSirketTalepleri onToast={onToast} />
     </div>
+  );
+};
+
+/**
+ * YENİ ŞİRKET TALEPLERİ (7 Kasım 2026)
+ *
+ * "Şirketim listede yok" diyen işverenin talebi. Önceden hiçbir ekranda
+ * onaylanamıyordu: talep tabloya düşüyor, şirkete dönüşmüyordu. Onay
+ * (approve_sirket_talebi) şirketi açıyor, kişiyi sahip yapıyor; aynı adlı
+ * şirket varsa işlev duruyor — o durumda kişiye var olan şirketi
+ * sahiplenmesi söylenmeli.
+ */
+const YeniSirketTalepleri: React.FC<{ onToast: (m: string) => void }> = ({ onToast }) => {
+  const [talepler, setTalepler] = useState<YeniSirketTalebi[]>([]);
+  const [durum, setDurum] = useState<'yukleniyor' | 'hazir' | 'hata'>('yukleniyor');
+  const [islemde, setIslemde] = useState<string | null>(null);
+  const [redEden, setRedEden] = useState<string | null>(null);
+  const [redSebebi, setRedSebebi] = useState('');
+
+  const yukle = useCallback(() => {
+    setDurum('yukleniyor');
+    bekleyenSirketTalepleri()
+      .then((t) => {
+        setTalepler(t);
+        setDurum('hazir');
+      })
+      .catch(() => setDurum('hata'));
+  }, []);
+  useEffect(yukle, [yukle]);
+
+  const onayla = async (t: YeniSirketTalebi) => {
+    setIslemde(t.id);
+    try {
+      await sirketTalebiniOnayla(t.id);
+      onToast(`${t.sirketAdi} açıldı ve talep sahibine verildi.`);
+      setTalepler((p) => p.filter((x) => x.id !== t.id));
+    } catch (error) {
+      onToast(error instanceof Error ? error.message : 'Onaylanamadı.');
+    } finally {
+      setIslemde(null);
+    }
+  };
+
+  const reddet = async (t: YeniSirketTalebi) => {
+    setIslemde(t.id);
+    try {
+      await sirketTalebiniReddet(t.id, redSebebi.trim() || 'Belirtilmedi');
+      onToast(`${t.sirketAdi} talebi reddedildi.`);
+      setTalepler((p) => p.filter((x) => x.id !== t.id));
+      setRedEden(null);
+      setRedSebebi('');
+    } catch (error) {
+      onToast(error instanceof Error ? error.message : 'Reddedilemedi.');
+    } finally {
+      setIslemde(null);
+    }
+  };
+
+  return (
+    <section className="space-y-3 pt-4" aria-labelledby="yeni-sirket-baslik">
+      <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
+        <h2 id="yeni-sirket-baslik" className="text-lg font-bold text-gray-900">Yeni şirket talepleri</h2>
+        <p className="text-xs text-gray-500 mt-1">
+          Listede olmayan şirketi ekleme talepleri. Onayladığında şirket açılır ve talep sahibi yetkilisi olur.
+          Aynı adlı şirket zaten varsa onay durur; kişiye o şirketi sahiplenmesini söyle.
+        </p>
+      </div>
+
+      {durum === 'yukleniyor' && (
+        <div className="h-24 rounded-2xl bg-gray-100 animate-pulse" role="status" aria-label="Yükleniyor" />
+      )}
+      {durum === 'hata' && (
+        <div className="bg-white rounded-2xl border border-rose-200 p-5 text-center space-y-2">
+          <p className="font-bold text-rose-800">Talepler yüklenemedi</p>
+          <button type="button" onClick={yukle} className="px-4 py-2 rounded-xl text-sm font-bold text-white bg-blue-600 cursor-pointer">
+            Tekrar dene
+          </button>
+        </div>
+      )}
+      {durum === 'hazir' && talepler.length === 0 && (
+        <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center">
+          <p className="text-sm text-gray-500">Bekleyen yeni şirket talebi yok.</p>
+        </div>
+      )}
+
+      {talepler.map((t) => {
+        const uyum = alanAdiUyuyor(t.eposta, t.webSitesi ?? undefined);
+        const bilgiler = [t.sektor, t.calisanSayisi && `${t.calisanSayisi} çalışan`, t.sehir, t.vkn && `VKN ${t.vkn}`].filter(Boolean);
+        return (
+          <div key={t.id} className="bg-white rounded-2xl border border-gray-200 p-4 space-y-3">
+            <div className="flex items-start gap-3">
+              {t.logoUrl ? (
+                <img src={t.logoUrl} alt="" className="w-10 h-10 shrink-0 rounded-full border border-gray-200 object-contain" />
+              ) : (
+                <span className="w-10 h-10 shrink-0 rounded-full bg-gray-100 flex items-center justify-center">
+                  <Building2 className="w-5 h-5 text-gray-500" />
+                </span>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-gray-900">{t.sirketAdi}</p>
+                {t.webSitesi && (
+                  <a href={t.webSitesi} target="_blank" rel="noreferrer noopener" className="text-xs text-blue-600 hover:underline inline-flex items-center gap-1">
+                    {t.webSitesi.replace(/^https?:\/\//, '')}
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+                {bilgiler.length > 0 && <p className="text-xs text-gray-600 mt-0.5">{bilgiler.join(' · ')}</p>}
+              </div>
+            </div>
+            {t.tanitim && <p className="text-sm text-gray-700">{t.tanitim}</p>}
+            <div className="text-sm space-y-1">
+              <p className="font-semibold text-gray-900">
+                {t.yetkiliAdi}
+                {t.gorev && <span className="font-normal text-gray-500"> · {t.gorev}</span>}
+              </p>
+              <p className="text-gray-600 flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5 text-gray-400" />
+                {t.eposta}
+              </p>
+              {t.telefon && (
+                <p className="text-gray-600 flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5 text-gray-400" />
+                  {t.telefon}
+                </p>
+              )}
+            </div>
+            {uyum === false && (
+              <p className="text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                E-posta alan adı şirketin sitesiyle eşleşmiyor. Onaylamadan önce doğrula.
+              </p>
+            )}
+            {!t.hesapVar && (
+              <p className="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
+                Talep girişsiz bırakılmış; bir hesaba bağlı olmadığı için onaylanamaz. Kişiyle e-postadan iletişime geç.
+              </p>
+            )}
+            {redEden === t.id ? (
+              <div className="space-y-2">
+                <input
+                  value={redSebebi}
+                  onChange={(e) => setRedSebebi(e.target.value)}
+                  placeholder="Ret gerekçesi (talep sahibi görecek)"
+                  className="w-full p-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-blue-600"
+                />
+                <div className="flex gap-2">
+                  <button type="button" disabled={islemde === t.id} onClick={() => reddet(t)} className="px-4 py-2 rounded-xl text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-40 cursor-pointer">
+                    Reddet
+                  </button>
+                  <button type="button" onClick={() => setRedEden(null)} className="px-3 py-2 rounded-xl text-sm font-semibold text-gray-500 cursor-pointer">
+                    Vazgeç
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={islemde === t.id || !t.hesapVar}
+                  onClick={() => onayla(t)}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 cursor-pointer"
+                >
+                  <Check className="w-4 h-4" /> Onayla
+                </button>
+                <button type="button" onClick={() => setRedEden(t.id)} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-gray-600 border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                  <X className="w-4 h-4" /> Reddet
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </section>
   );
 };
