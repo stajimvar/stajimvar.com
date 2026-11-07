@@ -448,6 +448,9 @@ export const SirketPaneli: React.FC<{
       <IlanFormu
         kademe={baglam.kademe}
         sirketAdi={baglam.ad}
+        sirketSektoru={baglam.sektor}
+        sirketSehri={baglam.sehir}
+        sirketTanitimi={baglam.tanitim}
         siteUrl={baglam.siteUrl}
         eposta={baglam.hrEmail}
         duzenlenenId={duzenlenenId}

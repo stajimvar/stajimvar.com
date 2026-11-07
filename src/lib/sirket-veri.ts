@@ -78,6 +78,13 @@ export interface SirketBaglami {
    * ikinci sorgu yok. Yoksa çip genel bina simgesine düşüyor.
    */
   logoUrl?: string | null;
+  /**
+   * Profildeki sektör, şehir ve tanıtım — yeni ilan formunun önerileri
+   * (lib/ilan-onerileri, 7 Kasım 2026). Herkese açık sütunlar; aynı okuma.
+   */
+  sektor?: string | null;
+  sehir?: string | null;
+  tanitim?: string | null;
   siteUrl: string | null;
   hrEmail: string | null;
   vkn: string | null;
@@ -141,7 +148,7 @@ export async function sirketBaglami(
 
     const { data: sirket } = await db
       .from('companies')
-      .select('id, name, slug, website_url, verified, logo_url')
+      .select('id, name, slug, website_url, verified, logo_url, industry, location, description')
       .eq('id', companyId)
       .maybeSingle();
 
@@ -159,6 +166,9 @@ export async function sirketBaglami(
       ad: sirket.name ?? '',
       slug: sirket.slug ?? '',
       logoUrl: (sirket as { logo_url?: string | null }).logo_url?.trim() || null,
+      sektor: (sirket as { industry?: string | null }).industry?.trim() || null,
+      sehir: (sirket as { location?: string | null }).location?.trim() || null,
+      tanitim: (sirket as { description?: string | null }).description?.trim() || null,
       siteUrl: sirket.website_url ?? null,
       hrEmail: ozel?.hrEmail ?? null,
       vkn: ozel?.vkn ?? null,
