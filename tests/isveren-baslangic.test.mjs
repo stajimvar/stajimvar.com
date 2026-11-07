@@ -134,3 +134,26 @@ test('sınıf uydurulmuyor: boşsa boş, kaydederken null', () => {
   assert.doesNotMatch(m, /grade_level \?\? '3\. Sınıf'/);
   assert.match(m, /studentPatch\.grade_level = patch\.gradeLevel \|\| null;/);
 });
+
+/*
+  GÜVENLİK İNCELEMESİ (7 Kasım 2026): adres biçimi yalnız formdaydı; API'ye
+  doğrudan yazan biri `javascript:` adresi bırakabilirdi. Kural veritabanında
+  ve yönetici ekranında da var.
+*/
+test('web ve logo adresi veritabanında da denetleniyor; logo yalnız kendi klasöründen', () => {
+  assert.match(kod, /sirket_talepleri_web_sitesi_http[\s\S]*?web_sitesi ~\* '\^https\?:\/\//);
+  assert.match(kod, /sirket_talepleri_kariyer_sayfasi_http/);
+  assert.match(kod, /sirket_talepleri_logo_depo[\s\S]*?user_id is not null[\s\S]*?\/storage\/v1\/object\/public\/logos\/'\s*\|\|\s*user_id::text\s*\|\|\s*'\/talep-\[0-9\]\+\\.\(png\|jpg\|webp\)\$'/);
+  /* Kısıt talepLogosuYukle'nin yazdığı adla birebir uyuşuyor. */
+  const ornek = 'https://gdumgdgwlfnohkaucfow.supabase.co/storage/v1/object/public/logos/a610d880-1dde-4413-8551-b4f56c1e526b/talep-1793568457658.png';
+  assert.match(ornek, /^https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/object\/public\/logos\/a610d880-1dde-4413-8551-b4f56c1e526b\/talep-[0-9]+\.(png|jpg|webp)$/);
+});
+
+test('yönetici ekranı yalnız güvenli bağlantı ve görsel çiziyor', () => {
+  const y = oku('src/components/AdminClaimsView.tsx');
+  assert.match(y, /const web = guvenliWeb\(t\.webSitesi\);/);
+  assert.match(y, /const logo = guvenliLogo\(t\.logoUrl\);/);
+  assert.match(y, /<a href=\{web\}/);
+  assert.match(y, /<img src=\{logo\}/);
+  assert.doesNotMatch(y, /href=\{t\.webSitesi\}|src=\{t\.logoUrl\}/);
+});

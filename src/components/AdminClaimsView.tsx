@@ -243,6 +243,15 @@ export const AdminClaimsView: React.FC<AdminClaimsViewProps> = ({ onToast }) => 
  * şirket varsa işlev duruyor — o durumda kişiye var olan şirketi
  * sahiplenmesi söylenmeli.
  */
+/*
+  Yalnız güvenli adres çiziliyor: veritabanı kısıtı da aynı kuralı koyuyor
+  (20261223010000), ama ekran tek başına da `javascript:` bağlantı ya da
+  dış görsel çizmiyor.
+*/
+const guvenliWeb = (u: string | null) => (u && /^https?:\/\/[^/\s]+\.[^/\s]+/i.test(u) ? u : null);
+const guvenliLogo = (u: string | null) =>
+  u && /^https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/object\/public\/logos\//.test(u) ? u : null;
+
 const YeniSirketTalepleri: React.FC<{ onToast: (m: string) => void }> = ({ onToast }) => {
   const [talepler, setTalepler] = useState<YeniSirketTalebi[]>([]);
   const [durum, setDurum] = useState<'yukleniyor' | 'hazir' | 'hata'>('yukleniyor');
@@ -317,13 +326,15 @@ const YeniSirketTalepleri: React.FC<{ onToast: (m: string) => void }> = ({ onToa
       )}
 
       {talepler.map((t) => {
-        const uyum = alanAdiUyuyor(t.eposta, t.webSitesi ?? undefined);
+        const web = guvenliWeb(t.webSitesi);
+        const logo = guvenliLogo(t.logoUrl);
+        const uyum = alanAdiUyuyor(t.eposta, web ?? undefined);
         const bilgiler = [t.sektor, t.calisanSayisi && `${t.calisanSayisi} çalışan`, t.sehir, t.vkn && `VKN ${t.vkn}`].filter(Boolean);
         return (
           <div key={t.id} className="bg-white rounded-2xl border border-gray-200 p-4 space-y-3">
             <div className="flex items-start gap-3">
-              {t.logoUrl ? (
-                <img src={t.logoUrl} alt="" className="w-10 h-10 shrink-0 rounded-full border border-gray-200 object-contain" />
+              {logo ? (
+                <img src={logo} alt="" className="w-10 h-10 shrink-0 rounded-full border border-gray-200 object-contain" />
               ) : (
                 <span className="w-10 h-10 shrink-0 rounded-full bg-gray-100 flex items-center justify-center">
                   <Building2 className="w-5 h-5 text-gray-500" />
@@ -331,9 +342,9 @@ const YeniSirketTalepleri: React.FC<{ onToast: (m: string) => void }> = ({ onToa
               )}
               <div className="min-w-0 flex-1">
                 <p className="font-bold text-gray-900">{t.sirketAdi}</p>
-                {t.webSitesi && (
-                  <a href={t.webSitesi} target="_blank" rel="noreferrer noopener" className="text-xs text-blue-600 hover:underline inline-flex items-center gap-1">
-                    {t.webSitesi.replace(/^https?:\/\//, '')}
+                {web && (
+                  <a href={web} target="_blank" rel="noreferrer noopener" className="text-xs text-blue-600 hover:underline inline-flex items-center gap-1">
+                    {web.replace(/^https?:\/\//, '')}
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 )}

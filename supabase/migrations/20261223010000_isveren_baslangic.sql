@@ -73,6 +73,41 @@ begin
     alter table public.sirket_talepleri
       add constraint sirket_talepleri_tanitim_uzunluk check (tanitim is null or char_length(tanitim) <= 1200);
   end if;
+  /*
+    ADRESLER VERİTABANINDA DA DENETLENİYOR (güvenlik incelemesi, 7 Kasım 2026)
+
+    Biçim denetimi yalnız formdaydı (lib/isveren-profil-formu). API'ye
+    doğrudan yazan biri `javascript:` adresi bırakabilir, adres yönetici
+    ekranında bağlantı olarak, onaydan sonra companies.website_url olarak
+    şirket sayfasında çizilirdi. Web adresleri yalnız http(s); logo yalnız
+    bu projenin `logos` kovasında, talep sahibinin KENDİ klasöründe ve
+    talepLogosuYukle'nin yazdığı adla. Tablo bu göç anında boş (ölçüldü).
+  */
+  if not exists (select 1 from pg_constraint where conname = 'sirket_talepleri_web_sitesi_http') then
+    alter table public.sirket_talepleri
+      add constraint sirket_talepleri_web_sitesi_http
+      check (web_sitesi is null or web_sitesi ~* '^https?://[^/[:space:]]+\.[^/[:space:]]+');
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'sirket_talepleri_kariyer_sayfasi_http') then
+    alter table public.sirket_talepleri
+      add constraint sirket_talepleri_kariyer_sayfasi_http
+      check (kariyer_sayfasi is null or kariyer_sayfasi ~* '^https?://[^/[:space:]]+\.[^/[:space:]]+');
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'sirket_talepleri_logo_depo') then
+    alter table public.sirket_talepleri
+      add constraint sirket_talepleri_logo_depo
+      check (
+        logo_url is null
+        or (
+          user_id is not null
+          and logo_url ~ (
+            '^https://[a-z0-9]+\.supabase\.co/storage/v1/object/public/logos/'
+            || user_id::text
+            || '/talep-[0-9]+\.(png|jpg|webp)$'
+          )
+        )
+      );
+  end if;
 end $$;
 
 /*
