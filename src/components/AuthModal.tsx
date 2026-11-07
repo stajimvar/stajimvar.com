@@ -1,4 +1,5 @@
 import { sendPasswordReset, sifreSorunu, signIn, signUpStudent, signUpCompany } from '../lib/auth';
+import { mevcutHesapMetni } from '../lib/kayit-mevcut-hesap.mjs';
 import { OAuthDugmeleri } from './OAuthDugmeleri';
 import React, { useState } from 'react';
 import {
@@ -207,7 +208,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           password,
           fullName: fullName.trim(),
           marketingConsent: bildirimIzni,
+          niyet: kayitTuru,
         });
+        /*
+          E-POSTA ZATEN KAYITLI (7 Kasım 2026): Supabase hata dönmüyor; yeni
+          hesap açılmadı. "Hesabın oluşturuldu" demek, işveren hesabı açtığını
+          sanan kişiyi eski öğrenci hesabına sokuyordu (ölçüldü). Durum
+          açıkça söyleniyor; işveren bağlamında sahiplenme yolu da.
+        */
+        const mevcut = (result as any).mevcutHesap;
+        if (mevcut === 'dogrulanmis') {
+          setAuthError(mevcutHesapMetni(mevcut, kayitTuru === 'isveren'));
+          return;
+        }
+        if (mevcut === 'dogrulanmamis') {
+          setInfoMessage(mevcutHesapMetni(mevcut, kayitTuru === 'isveren'));
+          return;
+        }
         if ((result as any).needsEmailConfirmation) {
           setInfoMessage(
             'Hesabın oluşturuldu. Giriş yapabilmek için e-postana gönderdiğimiz doğrulama bağlantısına tıkla.'

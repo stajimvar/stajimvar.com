@@ -1502,6 +1502,8 @@ export default function App() {
     const yol = window.location.pathname;
     if (yol.startsWith('/sirket') || yol.startsWith('/ilan/') || yol.startsWith('/cv/yazdir')) return;
     if (niyetOku(window.sessionStorage)) return;
+    /* "İşverenim" diye kaydolan kişiye öğrenci CV karşılaması gösterilmiyor (7 Kasım 2026). */
+    if (session.kayitNiyeti === 'isveren') return;
     let depo: Storage | null = null;
     try {
       depo = window.localStorage;
@@ -1522,6 +1524,58 @@ export default function App() {
     setCvAkisi({ baslangic: 'karsilama', ilan: null });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionReady, session?.userId, session?.hesapOlusturmaAni, student?.id]);
+
+  /*
+    E-POSTA DOĞRULAMASINDAN DÖNEN İŞVEREN (7 Kasım 2026)
+
+    "İşverenim" diye kaydolan kişi, oturum kayıtta hemen açılırsa
+    handleAuthSuccess ile "şirketini bul" adımına gidiyordu. E-posta
+    doğrulaması gerektiğinde ise niyet kayboluyor, bağlantıyla ana sayfaya
+    dönen kişi öğrenci CV karşılamasını görüyordu (ölçüldü). Niyet artık
+    kullanıcı üst verisinde; burada bir kez, yalnız ana sayfaya düşüldüyse
+    ve şirket üyeliği yoksa sahiplenme adımına götürülüyor. İşaret
+    yazılamıyorsa (kapalı depo) hiç yönlendirilmiyor, her açılışta tekrar
+    etmesin diye.
+  */
+  React.useEffect(() => {
+    if (!sessionReady || !session || session.kayitNiyeti !== 'isveren') return;
+    if (window.location.pathname !== '/') return;
+    let depo: Storage | null = null;
+    try {
+      depo = window.localStorage;
+    } catch {
+      depo = null;
+    }
+    const anahtar = `stajimvar_isveren_ilk_giris:${session.userId}`;
+    try {
+      if (!depo || depo.getItem(anahtar)) return;
+    } catch {
+      return;
+    }
+    let iptal = false;
+    (async () => {
+      let uye = false;
+      try {
+        const m = await import('./lib/sirket-veri');
+        uye = Boolean((await m.sirketBaglami(session.userId, false)).companyId);
+      } catch {
+        /* Okunamadı: sahiplenme adımı yine doğru yer. */
+      }
+      if (iptal) return;
+      try {
+        depo.setItem(anahtar, '1');
+      } catch {
+        return;
+      }
+      if (uye) return;
+      navigate('/isveren/ilan-ver');
+      showToast(`Hoş geldiniz${session.displayName ? `, ${session.displayName}` : ''}. Şimdi şirketini bulalım.`);
+    })();
+    return () => {
+      iptal = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionReady, session?.userId, session?.kayitNiyeti]);
 
   /**
    * Profil güncelleme. Önce ekranda gösterir, sonra Supabase'e yazar.
