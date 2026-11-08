@@ -74,7 +74,8 @@ test('taklide karşı: benzer ad ve ad–alan adı uyumu otomatik onayı durduru
   assert.match(f, /ham_etiket := split_part\(public\.kayitli_alan_adi\(public\.site_alan_adi\(new\.web_sitesi\)\), '\.', 1\);\s*etiket := public\.ad_katla\(ham_etiket\);/);
   assert.match(f, /'ELLE_INCELE:ALAN_ADI_SIRKET_ADIYLA_ESLESMIYOR'/);
   /* Yalnız alan adı → ad yönü; tireli alan adı elle. */
-  assert.match(f, /or position\('-' in coalesce\(ham_etiket, ''\)\) > 0\s*or position\(etiket in yeni_ad\) = 0 then/);
+  assert.match(f, /or position\('-' in coalesce\(ham_etiket, ''\)\) > 0\s*or not \(etiket = yeni_ad or etiket = ilk_kelime\) then/);
+  assert.doesNotMatch(f, /position\(etiket in yeni_ad\)/);
   assert.doesNotMatch(f, /position\(yeni_ad in etiket\)/);
   assert.match(f, /'yonetici_sirket_otomatik'/);
   /* Sıra: benzer ad kontrolü alan adı kararından ÖNCE. */
@@ -85,7 +86,8 @@ test('taklide karşı: benzer ad ve ad–alan adı uyumu otomatik onayı durduru
 const katla = (p) => p.toLocaleLowerCase('tr').replace(/[ıi̇]/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ö/g, 'o').replace(/ç/g, 'c').replace(/[^a-z0-9]/g, '');
 const uyuyor = (ad, etiket) => {
   const a = katla(ad); const e = katla(etiket);
-  return e.length >= 3 && a.length >= 3 && !etiket.includes('-') && a.includes(e);
+  const ilk = katla(ad.trim().split(' ')[0]);
+  return e.length >= 3 && a.length >= 3 && !etiket.includes('-') && (e === a || e === ilk);
 };
 test('ad–alan adı uyumu: gerçek eşleşme geçer, taklit geçmez', () => {
   assert.ok(uyuyor('Modmere', 'modmere'));
@@ -95,4 +97,7 @@ test('ad–alan adı uyumu: gerçek eşleşme geçer, taklit geçmez', () => {
   /* Ters yön ve tire: marka sitede yokken bile taklit onaylanmıyor. */
   assert.ok(!uyuyor('Aselsan', 'aselsankariyer'));
   assert.ok(!uyuyor('Aselsan', 'aselsan-kariyer'));
+  /* Kısa alan adı uzun adın içinde: eşitlik şart. */
+  assert.ok(!uyuyor('Aselsan', 'sel'));
+  assert.ok(uyuyor('Modmere Tekstil', 'modmere'));
 });

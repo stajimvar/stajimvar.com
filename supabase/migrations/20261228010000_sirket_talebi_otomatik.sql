@@ -33,10 +33,11 @@
      Otomatik onaydan önce:
        · BENZER AD: var olan bir şirketin adına benziyorsa (trigram
          benzerliği >= 0.5 ya da biri ötekiyle başlıyorsa) → yöneticiye.
-       · AD–ALAN ADI: alan adının ilk parçası şirket adının İÇİNDE olmalı
-         (modmere.com ↔ "Modmere" geçer). Ters yön kabul edilmiyor:
-         "Aselsan" adı aselsan-kariyer.com'un içinde geçiyor diye onay
-         verilmiyor. Alan adında tire varsa (marka-kariyer, marka-hr)
+       · AD–ALAN ADI: alan adının ilk parçası şirket adının TAMAMINA ya da
+         İLK KELİMESİNE EŞİT olmalı (modmere.com ↔ "Modmere", "Modmere
+         Tekstil"; biggergames.com ↔ "Bigger Games"). İçerme yetmiyor:
+         sel.com "Aselsan"ın içinde, "Aselsan" aselsan-kariyer.com'un
+         içinde geçiyor. Alan adında tire varsa (marka-kariyer, marka-hr)
          her zaman yöneticiye.
        · Otomatik onaylanan her yeni şirket yöneticiye BİLGİ olarak da
          bildiriliyor: kaçan bir taklit görülebilsin.
@@ -191,6 +192,7 @@ declare
   yeni_ad text := public.ad_katla(new.sirket_adi);
   etiket text;
   ham_etiket text;
+  ilk_kelime text := public.ad_katla(split_part(btrim(new.sirket_adi), ' ', 1));
 begin
   if new.durum is distinct from 'yeni' then
     return null;
@@ -217,7 +219,7 @@ begin
       etiket := public.ad_katla(ham_etiket);
       if length(etiket) < 3 or length(yeni_ad) < 3
          or position('-' in coalesce(ham_etiket, '')) > 0
-         or position(etiket in yeni_ad) = 0 then
+         or not (etiket = yeni_ad or etiket = ilk_kelime) then
         karar := 'ELLE_INCELE:ALAN_ADI_SIRKET_ADIYLA_ESLESMIYOR';
       end if;
     end if;
