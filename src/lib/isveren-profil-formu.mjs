@@ -109,3 +109,29 @@ export function isverenDurumu({ niyet, uye, talepDurumu }) {
   if (niyet === 'isveren') return 'baslamadi';
   return null;
 }
+
+/*
+  OTOMATİK DEĞERLENDİRME GEREKÇESİ (20261228010000)
+
+  Yeni şirket ve sahiplenme talepleri hesabın DOĞRULANMIŞ e-postasıyla
+  otomatik değerlendiriliyor; onaylanmayan talep yöneticiye bu gerekçeyle
+  kalıyor. Metinler veritabanındaki `otomatik_karar_metni` ile aynı.
+*/
+export const OTOMATIK_KARAR_METINLERI = {
+  HESAP_YOK: 'talep bir hesaba bağlı değil',
+  EPOSTA_DOGRULANMAMIS: 'hesabın e-postası doğrulanmamış',
+  EPOSTA_OKUNAMADI: 'hesabın e-posta adresi okunamadı',
+  TEST_ALAN_ADI: 'test ya da örnek alan adı',
+  TEK_KULLANIMLIK_EPOSTA: 'tek kullanımlık e-posta adresi',
+  KURUMSAL_EPOSTA_DEGIL: 'hesap e-postası kurumsal değil (Gmail, Hotmail vb.)',
+  SIRKET_SITESI_YOK: 'şirketin web sitesi yok ya da okunamadı',
+  ALAN_ADI_SITEYLE_ESLESMIYOR: 'hesap e-postasının alan adı şirketin web sitesiyle eşleşmiyor',
+  AYNI_ADLI_SIRKET_VAR: 'bu adla bir şirket zaten var; sahiplenme talebi olmalı',
+  OTOMATIK_UYGULANAMADI: 'otomatik onay uygulanırken hata oluştu',
+};
+
+/** Bekleyen talebin otomatik onaylanmama gerekçesi; kod yoksa null. */
+export function otomatikKararMetni(kod) {
+  if (!kod) return null;
+  return OTOMATIK_KARAR_METINLERI[kod] ?? null;
+}
