@@ -1,0 +1,48 @@
+name: Öğrenci ilan bildirimleri
+
+# Günde bir: kaydedilen ilanın son başvurusuna 3 gün / 1 gün kala ve
+# bölümüne uygun yeni ilan bildirimleri (20261226010000,
+# `ogrenci_ilan_bildirimleri`). Her bildirim dedupe_key ile bir kez; iş
+# iki kez çalışsa da öğrenciye ikinci bildirim gitmiyor.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 06:00 UTC = 09:00 İstanbul
+    - cron: "0 6 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ogrenci-ilan-bildirimleri
+  cancel-in-progress: false
+
+jobs:
+  bildir:
+    runs-on: ubuntu-latest
+    # Üretim anahtarları yalnız `production` ortamında (yalnız main dalı).
+    environment: production
+    timeout-minutes: 5
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Sırları doğrula
+        run: |
+          eksik=""
+          [ -z "$SUPABASE_URL" ] && eksik="$eksik SUPABASE_URL"
+          [ -z "$SUPABASE_SERVICE_ROLE_KEY" ] && eksik="$eksik SUPABASE_SERVICE_ROLE_KEY"
+          if [ -n "$eksik" ]; then
+            echo "::error::Depo sırları eksik:$eksik"
+            exit 1
+          fi
+          echo "Sırlar tanımlı."
+
+      - name: Bildirimleri üret
+        run: node scripts/ogrenci-ilan-bildirimleri.mjs
