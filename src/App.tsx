@@ -994,8 +994,14 @@ export default function App() {
   /* Üst çubuktaki hesap bağlantısı için; aynı okumadan, ikinci sorgu yok. */
   const [sirketAdi, setSirketAdi] = useState<string | null>(null);
   const [sirketLogosu, setSirketLogosu] = useState<string | null>(null);
+  /* Üyelik okundu mu: okunmadan "üye değil" sayıp yönlendirmek, şirketi olan
+     hesabı bir anlığına şirket profili sayfasına atardı. */
+  const [uyelikOkundu, setUyelikOkundu] = useState(false);
+  /* Şirket profili gönderildi/otomatik onaylandı: üyelik yeniden okunsun. */
+  const [isverenTalepSurumu, setIsverenTalepSurumu] = useState(0);
   React.useEffect(() => {
     const kullanici = session?.userId;
+    setUyelikOkundu(false);
     if (!kullanici) {
       setSirketUyesi(false);
       setKendiSirketId(null);
@@ -1012,14 +1018,16 @@ export default function App() {
         setKendiSirketId(b.companyId);
         setSirketAdi(b.ad || null);
         setSirketLogosu(b.logoUrl ?? null);
+        setUyelikOkundu(true);
       })
       .catch(() => {
         /* Okunamazsa uye degil sayiliyor; kapi zaten arkada. */
+        if (!iptal) setUyelikOkundu(true);
       });
     return () => {
       iptal = true;
     };
-  }, [session?.userId]);
+  }, [session?.userId, isverenTalepSurumu]);
 
   const sirketDunyasinaGec = () => {
     if (!dunyaEsigiGosterildi.current) {
@@ -1177,12 +1185,17 @@ export default function App() {
       const istenen = authDonusYolu;
       setAuthDonusYolu(null);
       setAuthBaglam('ogrenci');
-      const hedef = istenen.startsWith('/sirket') && !sirketeUye ? '/isveren/ilan-ver' : istenen;
+      /* Tek işveren kapısı (9 Kasım 2026): şirketi olmayan işveren hangi
+         yoldan gelirse gelsin şirket profili sayfasına. */
+      const hedef =
+        (istenen.startsWith('/sirket') || istenen === '/isveren/ilan-ver') && !sirketeUye
+          ? '/isveren/baslangic'
+          : istenen;
       if (hedef !== window.location.pathname) navigate(hedef);
       showToast(
         hedef === istenen
           ? `Hoş geldiniz, ${name}!`
-          : `Hoş geldiniz, ${name}. İlan vermek için önce şirketini sahiplen.`,
+          : `Hoş geldiniz, ${name}. Şimdi şirketini bulalım.`,
       );
       return;
     }
@@ -2112,7 +2125,6 @@ export default function App() {
   */
   const bekleyenIsveren = Boolean(session && session.kayitNiyeti === 'isveren' && !sirketUyesi && kabukRolu !== 'company');
   const [isverenTalepDurumu, setIsverenTalepDurumu] = useState<'bekliyor' | 'onaylandi' | 'reddedildi' | null>(null);
-  const [isverenTalepSurumu, setIsverenTalepSurumu] = useState(0);
   React.useEffect(() => {
     if (!bekleyenIsveren || !session) {
       setIsverenTalepDurumu(null);
@@ -2131,6 +2143,28 @@ export default function App() {
     if (!bekleyenIsveren) return;
     if (temizYol === '/cv' || temizYol === '/cv/yazdir') navigate('/isveren/baslangic', { degistir: true });
   }, [bekleyenIsveren, temizYol]);
+  /*
+    TEK İŞVEREN KAPISI (9 Kasım 2026)
+
+    Şirketi olmayan giriş yapmış hesap eski sahiplenme sayfasına
+    (/isveren/ilan-ver) ya da boş panele düşmüyor: şirket profili sayfası
+    tek kapı. Şirketi olan hesap o sayfaya gelirse panele geçiyor.
+    Üyelik okunmadan karar verilmiyor.
+  */
+  React.useEffect(() => {
+    if (!session || !uyelikOkundu || isAdmin) return;
+    if (temizYol === '/isveren/baslangic' && sirketUyesi) {
+      navigate('/sirket/ilanlar', { degistir: true });
+      return;
+    }
+    if (sirketUyesi) return;
+    if (
+      temizYol === '/isveren/ilan-ver' ||
+      SIRKET_PANEL_YOLLARI.some((p) => temizYol === p || temizYol.startsWith(`${p}/`))
+    ) {
+      navigate('/isveren/baslangic', { degistir: true });
+    }
+  }, [session, uyelikOkundu, sirketUyesi, isAdmin, temizYol]);
   React.useEffect(() => {
     if (kabukRolu !== 'company') return;
     if (temizYol === '/' || temizYol === '/sirket') navigate('/sirket/ilanlar', { degistir: true });
@@ -2587,7 +2621,9 @@ export default function App() {
       onCreateCompany={handleCreateCompany}
       onSuccess={handleAuthSuccess}
       baglam={authBaglam}
-      oauthDonusYolu={authDonusYolu ?? undefined}
+      /* İşveren penceresinden Google/Microsoft: dönüş şirket profili sayfası;
+         niyet orada hesaba yazılıyor (IsverenBaslangic). Şirketi olan oradan panele geçer. */
+      oauthDonusYolu={authBaglam === 'isveren' && !sirketUyesi ? '/isveren/baslangic' : authDonusYolu ?? undefined}
     />
     </Suspense>
   );
@@ -3865,6 +3901,7 @@ export default function App() {
         onBack={goHome}
         onNavigate={navigate}
         userId={session?.userId ?? null}
+        niyetKayitli={session?.kayitNiyeti === 'isveren'}
         userEmail={activeStudent?.email ?? ''}
         adSoyad={session?.displayName ?? ''}
         onGirisGerekli={AUTH_ENABLED ? () => isverenGirisiAc('login', '/isveren/baslangic') : undefined}

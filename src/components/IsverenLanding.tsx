@@ -184,14 +184,14 @@ export const IsverenLanding: React.FC<{
       {/* ------------------------------------------------- nasıl çalışır */}
       <Bolum
         baslik="Nasıl çalışır?"
-        aciklama="Ayrı bir giriş yok. Kayıtta İşverenim’i seçersiniz; hesap kişisel kimliğinizle açılır ve site işveren hesabına göre şekillenir. Ardından şirketinizi sahiplenirsiniz. Aday erişimi, şirket doğrulamasından sonra açılır. Aynı şirkette birden çok kişi çalışabilir."
+        aciklama="Ayrı bir giriş yok. Kayıtta İşverenim’i seçer, e-postanızı doğrularsınız. Ardından şirketinizi bulur ya da eklersiniz: hesabınızın kurumsal e-postası şirketinizin web sitesiyle eşleşiyorsa şirket hesabınız hemen açılır, eşleşmiyorsa ekibimiz kontrol edip onaylar. Aynı şirkette birden çok kişi çalışabilir."
       >
         <ol className="grid gap-3 sm:grid-cols-3">
           {[
-            ['Hesap açın', 'Kurumsal e-postanızla bir dakikada kayıt olun. Kredi kartı istenmiyor.'],
+            ['Hesap açın', 'Kurumsal e-postanızla bir dakikada kayıt olun; kurumsal e-posta şirket hesabınızı beklemeden açar. Kredi kartı istenmiyor.'],
             [
-              'Şirketinizi sahiplenin',
-              'Şirketinizin StajımVar’da sayfası zaten olabilir — ilanları kariyer sayfanızdan derliyoruz. Sayfayı bulup yetkili olduğunuzu bildirin.',
+              'Şirketinizi ekleyin',
+              'Şirketinizin StajımVar’da sayfası zaten olabilir — ilanları kariyer sayfanızdan derliyoruz. Bulup sahiplenin; listede yoksa sektör, şehir ve tanıtımla birlikte ekleyin.',
             ],
             [
               'İlanınızı yayınlayın',
@@ -229,8 +229,9 @@ export const IsverenLanding: React.FC<{
             bakmadan önce şirketi tanıyor.
           </Kart>
           <Kart ikon={<ShieldCheck className="h-5 w-5" />} baslik="Doğrulama">
-            Kurumsal e-posta ve VKN ile doğrulanan şirketler rozet alıyor. Doğrulanmamış hiçbir
-            şirkete rozet gösterilmiyor.
+            Onaylanan şirket doğrulanmış sayılır ve rozet alır: kurumsal e-postanız web
+            sitenizle eşleşiyorsa kendiliğinden, eşleşmiyorsa ekibimizin kontrolüyle.
+            Doğrulanmamış hiçbir şirkete rozet gösterilmiyor.
           </Kart>
           <Kart ikon={<Lock className="h-5 w-5" />} baslik="Öğrenci verisi korunuyor">
             İlan vermek öğrenci bilgisi görmek demek değil. Aday kartları yalnızca doğrulanmış
@@ -240,9 +241,10 @@ export const IsverenLanding: React.FC<{
             İlan paketi, kontenjan ya da abonelik yok. İlan vermek ücretsiz.
           </Kart>
           <Kart ikon={<Users className="h-5 w-5" />} baslik="Aday süreci panelde">
-            Başvuru panele düşüyor: adayın özgeçmişini görüyor, durumunu
-            güncelliyor, görüşmeye davet ediyor ve teklif gönderiyorsunuz. Öğrenci
-            aynı süreci kendi tarafında adım adım izliyor.
+            Başvuru panele düşüyor: adayın profilini ve özgeçmişini görüyor, durumunu
+            güncelliyorsunuz. Öğrencinin paylaşmayı onayladığı telefon ve e-postayla
+            görüşmeyi doğrudan siz yürütüyorsunuz; öğrenci başvurusunun durumunu kendi
+            tarafında izliyor.
           </Kart>
         </div>
       </Bolum>
@@ -256,9 +258,9 @@ export const IsverenLanding: React.FC<{
           {[
             'İlan asmak ile öğrenci bilgisi görmek ayrı iki yetki. İlan verebilirsiniz; aday kartları doğrulama sonrası açılıyor.',
             'Öğrencinin profili ve özgeçmişi size yalnızca sizin ilanınıza başvurduğunda ve başvuru sırasında bunu onayladığında ulaşıyor. Başka şirketin ilanına yapılan başvuruyu göremezsiniz.',
-            'Başvuruya bağlanan kopyada e-posta ve telefon yok. İletişim bilgileri yalnızca teklifinizi öğrenci kabul ettiğinde ve karşılıklı açılıyor.',
+            'Öğrencinin telefonu ve e-postası yalnız başvururken paylaşmayı onayladıysa ve yalnız doğrulanmış şirketin yetkili ekip üyelerine açılıyor. Öğrenci bu onayı sonradan kapatabilir.',
             'Başvurmamış öğrencilerin listesi diye bir ekran yok.',
-            'Şahıs şirketlerinden TC kimlik numarası istenmiyor; doğrulama için VKN yeterli.',
+            'Şahıs şirketlerinden TC kimlik numarası istenmiyor; VKN isteğe bağlı.',
           ].map((satir) => (
             <li key={satir} className="flex gap-2.5 text-sm leading-relaxed text-gray-700">
               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />

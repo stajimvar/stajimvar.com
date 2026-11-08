@@ -40,12 +40,14 @@ export const IsverenBaslangic: React.FC<{
   onBack: () => void;
   onNavigate: (yol: string) => void;
   userId: string | null;
+  /** Hesapta işveren niyeti yazılı mı (Google ile gelen işverende yok). */
+  niyetKayitli?: boolean;
   userEmail?: string;
   adSoyad?: string;
   onGirisGerekli?: () => void;
   /** Talep gönderildi ya da durum değişti: üst çubuk etiketini yenilemek için. */
   onDurumDegisti?: () => void;
-}> = ({ onBack, onNavigate, userId, userEmail = '', adSoyad = '', onGirisGerekli, onDurumDegisti }) => {
+}> = ({ onBack, onNavigate, userId, niyetKayitli = false, userEmail = '', adSoyad = '', onGirisGerekli, onDurumDegisti }) => {
   const [talep, setTalep] = useState<IsverenTalebi | null>(null);
   const [yukleniyor, setYukleniyor] = useState(Boolean(userId));
   const [adim, setAdim] = useState<Adim>({ tur: 'ara' });
@@ -63,6 +65,19 @@ export const IsverenBaslangic: React.FC<{
 
   const yaz = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setD((o) => ({ ...o, [k]: e.target.value }));
+
+  /*
+    NİYET BU SAYFADA DA YAZILIYOR (9 Kasım 2026): Google/Microsoft ile
+    işveren penceresinden gelen hesapta kayıt niyeti yok; yazılmazsa site
+    onu öğrenci sanıp CV ekranı gösteriyordu. Bu sayfa yalnız işveren
+    kapısından açılıyor.
+  */
+  useEffect(() => {
+    if (!userId || niyetKayitli) return;
+    isverenNiyetiniKaydet()
+      .then(() => onDurumDegisti?.())
+      .catch(() => undefined);
+  }, [userId, niyetKayitli]);
 
   useEffect(() => {
     if (!userId) return;
@@ -388,7 +403,8 @@ export const IsverenBaslangic: React.FC<{
               {gonderiliyor ? 'Gönderiliyor…' : 'Onaya gönder'}
             </button>
             <p className="text-xs leading-5 text-gray-500">
-              Talebi biz inceliyoruz; onaylanana kadar ilan girilemez ve aday bilgisi açılmaz.
+              Hesabının kurumsal e-postası şirketin web sitesiyle eşleşiyorsa şirket hesabın hemen açılır;
+              eşleşmiyorsa ekibimiz kontrol edip onaylar. Onaylanana kadar ilan girilemez ve aday bilgisi açılmaz.
             </p>
           </form>
         )}
