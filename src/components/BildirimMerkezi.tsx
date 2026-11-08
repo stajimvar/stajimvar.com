@@ -51,7 +51,9 @@ function turSimgesi(tur: string) {
     /* Ret ve kaldırma kararları, yönetici kuyruğu (20261226010000). */
     : tur.startsWith('ilan_yonetici_') || tur === 'ilan_degisiklik_ret' || tur === 'sirket_reddedildi' || tur === 'sahiplenme_reddedildi' ? AlertCircle
     : tur.startsWith('yonetici_') ? Inbox
-    : tur === 'son_basvuru_yaklasiyor' ? CalendarClock
+    : tur === 'son_basvuru_yaklasiyor' || tur === 'firsat_son_basvuru' || tur === 'ilan_suresi_doluyor' ? CalendarClock
+    : tur === 'sirket_dogrulandi' ? CheckCircle2
+    : tur === 'sirket_dogrulama_reddedildi' || tur === 'kayitli_ilan_kapandi' || tur === 'ilan_kapandi' ? AlertCircle
     : tur === 'uygun_yeni_ilan' ? Briefcase
     : tur === 'yeni_basvuru' ? Briefcase
     /* Takip de kişiye dair bir olay: belge simgesine düşüyordu, oysa ortada belge yok. */
