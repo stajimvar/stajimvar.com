@@ -1,0 +1,56 @@
+name: Şirket talebi e-postası
+
+# Yeni şirket talebi gelince yöneticiye e-posta (20261229010000, kullanıcı
+# isteği). 10 dakikada bir: talep yöneticinin onayını bekliyorsa gecikme
+# kısa olsun. Kuyruk çoğu koşuda boş; tek istek kendi veritabanımıza.
+
+on:
+  workflow_dispatch:
+    inputs:
+      kuru:
+        description: "Hiçbir e-posta göndermeden kuyruğu raporla"
+        type: boolean
+        default: false
+  schedule:
+    - cron: "*/10 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sirket-talebi-epostasi
+  cancel-in-progress: false
+
+jobs:
+  kuyruk:
+    runs-on: ubuntu-latest
+    # Üretim anahtarları yalnız `production` ortamında (yalnız main dalı).
+    environment: production
+    timeout-minutes: 5
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      RESEND_FROM: ${{ secrets.RESEND_FROM }}
+      ILAN_BILDIRIM_ALICI: ${{ secrets.ILAN_BILDIRIM_ALICI }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Sırları doğrula
+        run: |
+          eksik=""
+          [ -z "$SUPABASE_URL" ] && eksik="$eksik SUPABASE_URL"
+          [ -z "$SUPABASE_SERVICE_ROLE_KEY" ] && eksik="$eksik SUPABASE_SERVICE_ROLE_KEY"
+          [ -z "$RESEND_API_KEY" ] && eksik="$eksik RESEND_API_KEY"
+          [ -z "$ILAN_BILDIRIM_ALICI" ] && eksik="$eksik ILAN_BILDIRIM_ALICI"
+          if [ -n "$eksik" ]; then
+            echo "::error::Depo sırları eksik:$eksik"
+            exit 1
+          fi
+          echo "Sırlar tanımlı."
+
+      - name: Kuyruğu işle
+        run: node scripts/sirket-talebi-epostasi.mjs ${{ inputs.kuru && '--kuru' || '' }}
