@@ -99,3 +99,20 @@ create trigger sirket_talebi_onay_bildirimi
 
 revoke all on function public.ilan_yayinda_bildir() from public, anon, authenticated;
 revoke all on function public.sirket_talebi_onay_bildir() from public, anon, authenticated;
+
+/*
+  GERİYE DÖNÜK TEK BİLDİRİM: bu göçten önce yönetici onayıyla yayına giren
+  Modmere ilanı (993341d7-…, 9 Kasım 00:34). Yalnız bu ilan; hâlâ yayında
+  ise ve şirket üyelerine. Anahtar sabit: göç yeniden çalışsa ikinci kez
+  yazılmıyor.
+*/
+insert into public.notifications (recipient_id, type, title, body, target_url, dedupe_key)
+select m.user_id, 'ilan_yayinda', 'İlanın yayında',
+       coalesce(nullif(trim(l.title), ''), 'İlan') || ' onaylandı; öğrenciler artık görebilir ve başvurabilir.',
+       '/sirket/ilanlar',
+       'ilan-yayinda:' || l.id::text || ':' || m.user_id::text || ':geriye-donuk'
+  from public.listings l
+  join public.company_members m on m.company_id = l.company_id
+ where l.id = '993341d7-66eb-481b-a78e-492cd842395a'
+   and l.status = 'published'
+on conflict (dedupe_key) where dedupe_key is not null do nothing;

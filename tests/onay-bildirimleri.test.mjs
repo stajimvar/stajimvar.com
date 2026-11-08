@@ -29,7 +29,12 @@ test('şirket talebi onaylanınca talep sahibine bir kez bildirim', () => {
 
 test('bildirim yazılamazsa onay durmuyor; tekrar yok; işlevler dışarıya kapalı', () => {
   assert.equal((GOC.match(/exception when others then\s*raise warning/g) ?? []).length, 2);
-  assert.equal((GOC.match(/on conflict \(dedupe_key\) where dedupe_key is not null do nothing/g) ?? []).length, 2);
+  assert.equal((GOC.match(/on conflict \(dedupe_key\) where dedupe_key is not null do nothing/g) ?? []).length, 3);
   assert.match(GOC, /revoke all on function public\.ilan_yayinda_bildir\(\) from public, anon, authenticated;/);
   assert.match(oku('src/components/BildirimMerkezi.tsx'), /tur === 'ilan_yayinda' \|\| tur === 'sirket_onaylandi' \? CheckCircle2/);
+});
+
+test('geriye dönük bildirim yalnız onaylanmış Modmere ilanına', () => {
+  assert.match(GOC, /where l\.id = '993341d7-66eb-481b-a78e-492cd842395a'\s*and l\.status = 'published'/);
+  assert.match(GOC, /':geriye-donuk'/);
 });
