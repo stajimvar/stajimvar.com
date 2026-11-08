@@ -33,8 +33,13 @@
      Otomatik onaydan önce:
        · BENZER AD: var olan bir şirketin adına benziyorsa (trigram
          benzerliği >= 0.5 ya da biri ötekiyle başlıyorsa) → yöneticiye.
-       · AD–ALAN ADI: alan adının ilk parçası şirket adının içinde değilse
-         (ya da tersi) → yöneticiye (modmere.com ↔ "Modmere" geçer).
+       · AD–ALAN ADI: alan adının ilk parçası şirket adının İÇİNDE olmalı
+         (modmere.com ↔ "Modmere" geçer). Ters yön kabul edilmiyor:
+         "Aselsan" adı aselsan-kariyer.com'un içinde geçiyor diye onay
+         verilmiyor. Alan adında tire varsa (marka-kariyer, marka-hr)
+         her zaman yöneticiye.
+       · Otomatik onaylanan her yeni şirket yöneticiye BİLGİ olarak da
+         bildiriliyor: kaçan bir taklit görülebilsin.
 
   4. EKİP ROLÜ (hata düzeltmesi)
      approve_sirket_talebi kişinin yazdığı unvanı ("Şirket Sahibi")
@@ -185,6 +190,7 @@ declare
   kod text;
   yeni_ad text := public.ad_katla(new.sirket_adi);
   etiket text;
+  ham_etiket text;
 begin
   if new.durum is distinct from 'yeni' then
     return null;
@@ -207,9 +213,11 @@ begin
   else
     karar := public.sirket_otomatik_karar(new.user_id, new.web_sitesi);
     if split_part(karar, ':', 1) = 'OTOMATIK_ONAY' then
-      etiket := public.ad_katla(split_part(public.kayitli_alan_adi(public.site_alan_adi(new.web_sitesi)), '.', 1));
+      ham_etiket := split_part(public.kayitli_alan_adi(public.site_alan_adi(new.web_sitesi)), '.', 1);
+      etiket := public.ad_katla(ham_etiket);
       if length(etiket) < 3 or length(yeni_ad) < 3
-         or not (position(etiket in yeni_ad) > 0 or position(yeni_ad in etiket) > 0) then
+         or position('-' in coalesce(ham_etiket, '')) > 0
+         or position(etiket in yeni_ad) = 0 then
         karar := 'ELLE_INCELE:ALAN_ADI_SIRKET_ADIYLA_ESLESMIYOR';
       end if;
     end if;
@@ -219,6 +227,14 @@ begin
   if split_part(karar, ':', 1) = 'OTOMATIK_ONAY' then
     begin
       perform public.sirket_talebini_uygula(new.id, 'OTOMATIK:' || kod);
+      perform public.yoneticilere_bildir(
+        'yonetici_sirket_otomatik',
+        'Yeni şirket otomatik onaylandı',
+        coalesce(nullif(trim(new.sirket_adi), ''), 'Bir şirket') || ' · '
+          || coalesce(public.kayitli_alan_adi(public.site_alan_adi(new.web_sitesi)), 'alan adı yok')
+          || ' — hesabın kurumsal e-postası web sitesiyle eşleşti. Taklit görürsen şirketi düzenleyebilirsin.',
+        '/yonetim/sirketler',
+        'yonetici-sirket-otomatik:' || new.id::text);
       return null;
     exception when others then
       /* Uygulanamadıysa (ör. eşzamanlı aynı ad) yöneticiye kalıyor. */
