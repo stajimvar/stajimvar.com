@@ -63,11 +63,12 @@ test('sirketi olmayan hesap bos panele gonderilmiyor', () => {
   /*
     İşveren sayfasındaki düğmeden gelen dönüş yolu /sirket/... oluyor.
     Hesabın şirketi yoksa o panel boş bir ekran; oradaki doğru adım
-    şirketi sahiplenmek.
+    şirketi sahiplenmek. 9 Kasım 2026: o adım artık tek kapı olan şirket
+    profili sayfası (/isveren/baslangic); eski sahiplenme sayfası değil.
   */
   assert.match(
     UYGULAMA,
-    /istenen\.startsWith\('\/sirket'\) && !sirketeUye \? '\/isveren\/ilan-ver' : istenen/,
+    /\(istenen\.startsWith\('\/sirket'\) \|\| istenen === '\/isveren\/ilan-ver'\) && !sirketeUye\s*\? '\/isveren\/baslangic'\s*: istenen/,
   );
 });
 

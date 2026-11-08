@@ -186,3 +186,28 @@ test('yönetici onayı şirketi doğruluyor (yeni şirket ve sahiplenme)', () =>
   assert.match(g, /revoke all on function public\.approve_company_claim\(uuid\) from public, anon;/);
   assert.match(g, /where durum = 'onaylandi' and sirket_id is not null/);
 });
+
+/*
+  TEK İŞVEREN KAPISI (9 Kasım 2026, uçtan uca denetim): Google ile gelen
+  işverende niyet yazılmıyor, dönüş eski sahiplenme sayfasına gidiyordu.
+*/
+test('tek kapı: Google dönüşü, giriş dönüşü ve panel yolları şirket profili sayfasına', () => {
+  const app = oku('src/App.tsx');
+  assert.match(app, /oauthDonusYolu=\{authBaglam === 'isveren' && !sirketUyesi \? '\/isveren\/baslangic' : authDonusYolu \?\? undefined\}/);
+  assert.match(app, /if \(!session \|\| !uyelikOkundu \|\| isAdmin\) return;/);
+  assert.match(app, /if \(temizYol === '\/isveren\/baslangic' && sirketUyesi\) \{\s*navigate\('\/sirket\/ilanlar', \{ degistir: true \}\);/);
+  assert.match(app, /temizYol === '\/isveren\/ilan-ver' \|\|\s*SIRKET_PANEL_YOLLARI\.some/);
+  assert.match(app, /\}, \[session\?\.userId, isverenTalepSurumu\]\);/);
+  const sayfa = oku('src/components/IsverenBaslangic.tsx');
+  assert.match(sayfa, /if \(!userId \|\| niyetKayitli\) return;\s*isverenNiyetiniKaydet\(\)/);
+});
+
+test('işveren sayfası ve SSS bugünkü akışı anlatıyor: görüşme/teklif ve teklif-kabulü iletişimi yok', () => {
+  const inis = oku('src/components/IsverenLanding.tsx');
+  const sss = oku('src/data/isveren-sss.ts');
+  for (const kod of [inis, sss]) {
+    assert.doesNotMatch(kod, /teklifinizi öğrenci kabul|görüşmeye davet ediyor|Görüşmeye davet ' \+/);
+  }
+  assert.match(inis, /paylaşmayı onayladığı telefon ve e-postayla/);
+  assert.match(sss, /salt okunur üyeler göremez/);
+});

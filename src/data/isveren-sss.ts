@@ -24,10 +24,11 @@ export const ISVEREN_SSS: SssMaddesi[] = [
   {
     soru: 'Şirket hesabı nasıl açılıyor ve nasıl doğrulanıyor?',
     cevap:
-      'Ayrı bir giriş ekranı yok. Kayıtta İşverenim’i seçin; form kurumsal e-posta ' +
-      'ister ve hesap işveren hesabı olarak açılır. Hesap kişisel kimliğinizle durur. ' +
-      'Sonra şirketinizin sayfasını sahiplenirsiniz. Aday erişimi şirket ' +
-      'doğrulamasından sonra açılır. Yayına gönderdiğiniz ilan otomatik kontrol ' +
+      'Ayrı bir giriş ekranı yok. Kayıtta İşverenim’i seçin ve e-postanızı doğrulayın. ' +
+      'Ardından şirketinizi bulup sahiplenir ya da listede yoksa eklersiniz. Hesabınızın ' +
+      'kurumsal e-postası şirketinizin web sitesiyle eşleşiyorsa şirket hesabınız hemen ' +
+      'açılır ve doğrulanmış sayılır; eşleşmiyorsa (ör. Gmail) ekibimiz kontrol edip ' +
+      'onaylar. Yayına gönderdiğiniz ilan otomatik kontrol ' +
       'edilir: sorunsuzsa hemen çıkar, eksikse düzeltmeniz için döner, şüpheliyse ' +
       'incelemede kalır ve listede görünmez. Aynı şirkette birden çok kişi çalışabilir.',
   },
@@ -50,17 +51,17 @@ export const ISVEREN_SSS: SssMaddesi[] = [
   {
     soru: 'Öğrencinin iletişim bilgileri ne zaman açılıyor?',
     cevap:
-      'Yalnızca öğrenci teklifinizi kabul ettiğinde ve karşılıklı olarak. Başvuruya ' +
-      'bağlanan kopyada e-posta ve telefon bulunmuyor. Öğrenci teklifi reddederse ya ' +
-      'da başvurusunu geri çekerse iletişim bilgileri açılmıyor.',
+      'Öğrenci başvururken telefonunu ve e-postasını paylaşmayı onayladıysa, başvuru ' +
+      'panelinizde görünür. Yalnız doğrulanmış şirketin yetkili ekip üyeleri görebilir; ' +
+      'salt okunur üyeler göremez. Öğrenci bu onayı sonradan kapatabilir.',
   },
   {
     soru: 'Aday sürecini panelden nasıl yürütüyorum?',
     cevap:
-      'Başvuruyu inceliyor, durumunu güncelliyorsunuz. Görüşmeye davet ' +
-      'gönderebiliyor, öğrencinin yanıtını görebiliyor ve ardından teklif ' +
-      'iletebiliyorsunuz. Öğrenci aynı süreci kendi başvuru sayfasında adım adım ' +
-      'izliyor. Site içinde mesajlaşma yok.',
+      'Başvuruyu inceliyor, durumunu güncelliyorsunuz; uygun olmayan başvuruyu ' +
+      'olumsuz olarak işaretleyebiliyorsunuz. Görüşme ve sonrasını öğrencinin ' +
+      'paylaştığı telefon ya da e-postayla doğrudan siz yürütüyorsunuz. Öğrenci ' +
+      'başvurusunun durumunu kendi sayfasında izliyor.',
   },
   {
     soru: 'Kariyer sayfamdan derlenen ilanlarla StajımVar ilanı arasındaki fark ne?',

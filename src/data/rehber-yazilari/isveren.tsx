@@ -507,10 +507,9 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
         },
         paragraflar: [
           'Kararı bir hafta içinde verin; öğrenci aynı anda birkaç yere başvuruyor ve zorunlu ' +
-            'staj için tarih baskısı var. Teklifte başlangıç tarihi, süre, haftalık gün sayısı, ' +
-            'ücret durumu ve ilk gün kime geleceği yazsın. Bu bilgilerin hepsi Başvuranlar ' +
-            'ekranındaki teklif alanında var; oradan gönderilen teklif öğrencinin başvurularım ' +
-            'listesine düşüyor.',
+            'staj için tarih baskısı var. Teklifi öğrencinin paylaştığı telefon ya da e-postayla ' +
+            'yazılı iletin; başlangıç tarihi, süre, haftalık gün sayısı, ücret durumu ve ilk gün ' +
+            'kime geleceği yazsın.',
           'Teklifi kabul eden öğrenciden okulun staj belgelerini isteyin; [hangi belgelerin ' +
             'gerektiği](/rehber/zorunlu-staj-isverenin-yukumlulukleri) ayrı rehberde.',
         ],
@@ -537,7 +536,7 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
             'kalmıyor ve şirketinizi düzgün hatırlıyor.',
       },
     ],
-    sonrakiAdim: { etiket: 'Başvuranları gör', yol: '/sirket/basvuranlar', aciklama: 'Kısa liste, davet ve teklif aynı ekranda.' },
+    sonrakiAdim: { etiket: 'Başvuranları gör', yol: '/sirket/basvuranlar', aciklama: 'Başvurular, adayların profili ve durumları aynı ekranda.' },
   }),
 
   metinRehberi({
@@ -771,8 +770,8 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
         baslik: 'Teklif: dört seçenek',
         kisaAd: 'Teklif',
         ozet:
-          'Stajyerden memnunsanız ilişkiyi kapatmayın; dört seçeneğin hepsi Başvuranlar ekranındaki teklif ' +
-          'alanından gönderilebiliyor.',
+          'Stajyerden memnunsanız ilişkiyi kapatmayın; dört seçenek var, hangisini seçerseniz ' +
+          'öğrenciye yazılı iletin.',
         /*
           Adımın görseli: teslim paketindeki 22-staj-sonu-secenekler
           karşılaştırmasının HTML hâli. Satırlar aşağıdaki listeden; yarı
@@ -807,8 +806,8 @@ export const ISVEREN_REHBERLERI: Rehber[] = [
           ],
         },
         paragraflar: [
-          'Stajyerden memnunsanız ilişkiyi kapatmayın; dört yol var ve hepsi Başvuranlar ' +
-            'ekranındaki teklif alanından gönderilebiliyor.',
+          'Stajyerden memnunsanız ilişkiyi kapatmayın; dört yol var. Hangisini seçerseniz ' +
+            'öğrenciye yazılı iletin.',
         ],
         liste: [
           'Yarı zamanlı devam: okul dönemi boyunca haftada belirli günler. Öğrencinin en çok ' +
