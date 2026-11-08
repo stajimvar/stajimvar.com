@@ -26,6 +26,16 @@
      Artık otomatik değerlendirmeden SONRAKİ durum okunuyor; onaylandıysa
      yöneticiye bildirim yok, kaldıysa gerekçesiyle.
 
+  2b. TAKLİDE KARŞI İKİ KORUMA (güvenlik incelemesi, 9 Kasım 2026)
+     Alan adı eşleşmesi yalnız "bu kişi bu alan adını yönetiyor" der; şirket
+     adının o alan adına ait olduğunu söylemez. Biri siemens-kariyer.com
+     alıp "Siemens Türkiye" adıyla talep verseydi şirket doğrulanmış açılırdı.
+     Otomatik onaydan önce:
+       · BENZER AD: var olan bir şirketin adına benziyorsa (trigram
+         benzerliği >= 0.5 ya da biri ötekiyle başlıyorsa) → yöneticiye.
+       · AD–ALAN ADI: alan adının ilk parçası şirket adının içinde değilse
+         (ya da tersi) → yöneticiye (modmere.com ↔ "Modmere" geçer).
+
   4. EKİP ROLÜ (hata düzeltmesi)
      approve_sirket_talebi kişinin yazdığı unvanı ("Şirket Sahibi")
      recruiter_role'e yazıyordu; sirket_rolum tanımadığı değeri en dar
@@ -79,8 +89,17 @@ as $$
     when 'SIRKET_SITESI_YOK' then 'şirketin web sitesi yok ya da okunamadı'
     when 'ALAN_ADI_SITEYLE_ESLESMIYOR' then 'hesap e-postasının alan adı şirketin web sitesiyle eşleşmiyor'
     when 'AYNI_ADLI_SIRKET_VAR' then 'bu adla bir şirket zaten var; sahiplenme talebi olmalı'
+    when 'BENZER_ADLI_SIRKET_VAR' then 'adı var olan bir şirkete benziyor; taklit olmadığını kontrol et'
+    when 'ALAN_ADI_SIRKET_ADIYLA_ESLESMIYOR' then 'web sitesinin alan adı şirket adıyla uyuşmuyor'
     else coalesce(p_kod, 'bilinmiyor')
   end;
+$$;
+
+/* Karşılaştırma için ad: küçük harf, Türkçe harf katlanmış, yalnız harf/rakam. */
+create or replace function public.ad_katla(p text)
+returns text language sql immutable set search_path to 'public'
+as $$
+  select regexp_replace(lower(translate(coalesce(p, ''), 'ıİIşŞğĞüÜöÖçÇâîû', 'iiissgguuooccaiu')), '[^a-z0-9]', '', 'g');
 $$;
 
 -- 1) Yeni şirket talebini uygulayan iç işlev + yönetici onayı -----------------
@@ -164,6 +183,8 @@ as $$
 declare
   karar text;
   kod text;
+  yeni_ad text := public.ad_katla(new.sirket_adi);
+  etiket text;
 begin
   if new.durum is distinct from 'yeni' then
     return null;
@@ -174,8 +195,24 @@ begin
      where c.name_normalized = lower(regexp_replace(new.sirket_adi, '[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ]+', '', 'g'))
   ) then
     karar := 'ELLE_INCELE:AYNI_ADLI_SIRKET_VAR';
+  elsif exists (
+    select 1 from public.companies c
+     where length(public.ad_katla(c.name)) >= 4
+       and length(yeni_ad) >= 4
+       and (extensions.similarity(public.ad_katla(c.name), yeni_ad) >= 0.5
+            or yeni_ad like public.ad_katla(c.name) || '%'
+            or public.ad_katla(c.name) like yeni_ad || '%')
+  ) then
+    karar := 'ELLE_INCELE:BENZER_ADLI_SIRKET_VAR';
   else
     karar := public.sirket_otomatik_karar(new.user_id, new.web_sitesi);
+    if split_part(karar, ':', 1) = 'OTOMATIK_ONAY' then
+      etiket := public.ad_katla(split_part(public.kayitli_alan_adi(public.site_alan_adi(new.web_sitesi)), '.', 1));
+      if length(etiket) < 3 or length(yeni_ad) < 3
+         or not (position(etiket in yeni_ad) > 0 or position(yeni_ad in etiket) > 0) then
+        karar := 'ELLE_INCELE:ALAN_ADI_SIRKET_ADIYLA_ESLESMIYOR';
+      end if;
+    end if;
   end if;
   kod := split_part(karar, ':', 2);
 
@@ -299,6 +336,7 @@ update public.company_members m
 -- Yetkiler ------------------------------------------------------------------------
 
 revoke all on function public.sirket_otomatik_karar(uuid, text) from public, anon, authenticated;
+revoke all on function public.ad_katla(text) from public, anon, authenticated;
 revoke all on function public.sirket_talebini_uygula(uuid, text) from public, anon, authenticated;
 revoke all on function public.sirket_talebi_otomatik_degerlendir() from public, anon, authenticated;
 revoke all on function public.approve_sirket_talebi(uuid) from public, anon;

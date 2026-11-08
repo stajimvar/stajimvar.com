@@ -61,3 +61,31 @@ test('gerekçe metinleri veritabanı ve arayüzde aynı; yönetici ekranında g�
   assert.match(y, /<b>Otomatik onaylanmadı:<\/b> \{otomatikKararMetni\(t\.otomatikGerekce\)\}/);
   assert.match(oku('src/lib/isveren-baslangic.ts'), /created_at,karar_gerekcesi'\)/);
 });
+
+/*
+  GÜVENLİK İNCELEMESİ (9 Kasım 2026): alan adı eşleşmesi şirket adını
+  kanıtlamıyor; siemens-kariyer.com ile "Siemens Türkiye" doğrulanmış
+  açılabilirdi. Benzer ad ve ad–alan adı uyumu otomatik onayı durduruyor.
+*/
+test('taklide karşı: benzer ad ve ad–alan adı uyumu otomatik onayı durduruyor', () => {
+  const f = GOC.slice(GOC.indexOf('function public.sirket_talebi_otomatik_degerlendir'));
+  assert.match(f, /extensions\.similarity\(public\.ad_katla\(c\.name\), yeni_ad\) >= 0\.5/);
+  assert.match(f, /'ELLE_INCELE:BENZER_ADLI_SIRKET_VAR'/);
+  assert.match(f, /etiket := public\.ad_katla\(split_part\(public\.kayitli_alan_adi\(public\.site_alan_adi\(new\.web_sitesi\)\), '\.', 1\)\);/);
+  assert.match(f, /'ELLE_INCELE:ALAN_ADI_SIRKET_ADIYLA_ESLESMIYOR'/);
+  /* Sıra: benzer ad kontrolü alan adı kararından ÖNCE. */
+  assert.ok(f.indexOf('BENZER_ADLI_SIRKET_VAR') < f.indexOf('sirket_otomatik_karar(new.user_id'));
+});
+
+/* Ad–alan adı kuralının JS kopyası: kenar durumları belgeliyor. */
+const katla = (p) => p.toLocaleLowerCase('tr').replace(/[ıi̇]/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ö/g, 'o').replace(/ç/g, 'c').replace(/[^a-z0-9]/g, '');
+const uyuyor = (ad, etiket) => {
+  const a = katla(ad); const e = katla(etiket);
+  return e.length >= 3 && a.length >= 3 && (a.includes(e) || e.includes(a));
+};
+test('ad–alan adı uyumu: gerçek eşleşme geçer, taklit geçmez', () => {
+  assert.ok(uyuyor('Modmere', 'modmere'));
+  assert.ok(uyuyor('Bigger Games', 'biggergames'));
+  assert.ok(!uyuyor('Siemens Türkiye', 'siemens-kariyer'));
+  assert.ok(!uyuyor('Acme', 'xyz'));
+});

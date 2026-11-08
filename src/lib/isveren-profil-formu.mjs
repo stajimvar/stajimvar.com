@@ -127,6 +127,8 @@ export const OTOMATIK_KARAR_METINLERI = {
   SIRKET_SITESI_YOK: 'şirketin web sitesi yok ya da okunamadı',
   ALAN_ADI_SITEYLE_ESLESMIYOR: 'hesap e-postasının alan adı şirketin web sitesiyle eşleşmiyor',
   AYNI_ADLI_SIRKET_VAR: 'bu adla bir şirket zaten var; sahiplenme talebi olmalı',
+  BENZER_ADLI_SIRKET_VAR: 'adı var olan bir şirkete benziyor; taklit olmadığını kontrol et',
+  ALAN_ADI_SIRKET_ADIYLA_ESLESMIYOR: 'web sitesinin alan adı şirket adıyla uyuşmuyor',
   OTOMATIK_UYGULANAMADI: 'otomatik onay uygulanırken hata oluştu',
 };
 
