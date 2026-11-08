@@ -169,3 +169,20 @@ test('yeni panelin onay ekranında "Yeni şirket" sekmesi talepleri gösteriyor'
   assert.match(onay, /bekleyenSirketTalepleri\(\)/);
   assert.match(oku('src/components/AdminClaimsView.tsx'), /export const YeniSirketTalepleri/);
 });
+
+/*
+  ONAY = DOĞRULAMA (9 Kasım 2026, kullanıcı kararı): Modmere onaylandı ama
+  doğrulanmamış açıldı; ilanı incelemeye düştü. Yönetici onayı artık
+  şirketi doğruluyor.
+*/
+test('yönetici onayı şirketi doğruluyor (yeni şirket ve sahiplenme)', () => {
+  const g = oku('supabase/migrations/20261225010000_onay_dogrulama.sql').replace(/\/\*[\s\S]*?\*\//g, '');
+  const yeni = g.slice(g.indexOf('function public.approve_sirket_talebi'), g.indexOf('function public.approve_company_claim'));
+  assert.match(yeni, /'manual', true, t\.user_id/);
+  assert.match(yeni, /if not public\.is_admin\(\) then/);
+  const sah = g.slice(g.indexOf('function public.approve_company_claim'));
+  assert.match(sah, /verified = true/);
+  assert.match(sah, /if not public\.is_admin\(\) then/);
+  assert.match(g, /revoke all on function public\.approve_company_claim\(uuid\) from public, anon;/);
+  assert.match(g, /where durum = 'onaylandi' and sirket_id is not null/);
+});
