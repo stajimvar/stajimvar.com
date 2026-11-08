@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { otomatikKararMetni } from '../lib/isveren-profil-formu.mjs';
 import { Building2, Check, ExternalLink, Mail, Phone, X } from 'lucide-react';
 import {
   approveCompanyClaim,
@@ -361,6 +362,11 @@ export const YeniSirketTalepleri: React.FC<{ onToast: (m: string) => void; onSay
                 {bilgiler.length > 0 && <p className="text-xs text-gray-600 mt-0.5">{bilgiler.join(' · ')}</p>}
               </div>
             </div>
+            {otomatikKararMetni(t.otomatikGerekce) && (
+              <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                <b>Otomatik onaylanmadı:</b> {otomatikKararMetni(t.otomatikGerekce)}.
+              </p>
+            )}
             {t.tanitim && <p className="text-sm text-gray-700">{t.tanitim}</p>}
             <div className="text-sm space-y-1">
               <p className="font-semibold text-gray-900">

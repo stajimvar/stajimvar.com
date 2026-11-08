@@ -212,7 +212,9 @@ export const IsverenBaslangic: React.FC<{
             </p>
             <button
               type="button"
-              onClick={() => onNavigate('/sirket/ilanlar')}
+              /* Tam yükleme: otomatik onayla AYNI oturumda üye olan kişinin
+                 uygulama durumu (şirket üyeliği) eski kalmasın. */
+              onClick={() => window.location.assign('/sirket/ilanlar')}
               className="mt-3 min-h-11 cursor-pointer rounded-xl bg-blue-600 px-4 text-sm font-bold text-white hover:bg-blue-700"
             >
               İşveren paneline git

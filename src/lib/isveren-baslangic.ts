@@ -176,11 +176,13 @@ export interface YeniSirketTalebi {
   telefon: string | null;
   hesapVar: boolean;
   olusturma: string;
+  /** Otomatik değerlendirmenin onaylamama kodu (20261228010000). */
+  otomatikGerekce: string | null;
 }
 
 export async function bekleyenSirketTalepleri(): Promise<YeniSirketTalebi[]> {
   const { data, error } = await tablo('sirket_talepleri')
-    .select('id,sirket_adi,web_sitesi,sektor,calisan_sayisi,sehir,vkn,tanitim,logo_url,yetkili_adi,kurumsal_eposta,gorev,telefon,user_id,created_at')
+    .select('id,sirket_adi,web_sitesi,sektor,calisan_sayisi,sehir,vkn,tanitim,logo_url,yetkili_adi,kurumsal_eposta,gorev,telefon,user_id,created_at,karar_gerekcesi')
     .in('durum', ['yeni', 'inceleniyor'])
     .order('created_at', { ascending: true });
   if (error) hata('Yeni şirket talepleri okunamadı', error);
@@ -200,6 +202,7 @@ export async function bekleyenSirketTalepleri(): Promise<YeniSirketTalebi[]> {
     telefon: t.telefon,
     hesapVar: Boolean(t.user_id),
     olusturma: t.created_at,
+    otomatikGerekce: t.karar_gerekcesi ?? null,
   }));
 }
 
