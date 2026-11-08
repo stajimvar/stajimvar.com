@@ -44,6 +44,8 @@ export type BasvuruGorseli = SirketGorseli | AdayGorseli;
 function turSimgesi(tur: string) {
   return tur === 'gorusme_daveti' || tur === 'gorusme_guncellendi' ? CalendarClock
     : tur === 'teklif' || tur === 'teklif_kabul' ? CheckCircle2
+    /* Yönetici onayı: ilan yayında, şirket hesabı açıldı (20261224010000). */
+    : tur === 'ilan_yayinda' || tur === 'sirket_onaylandi' ? CheckCircle2
     : tur === 'yeni_basvuru' ? Briefcase
     /* Takip de kişiye dair bir olay: belge simgesine düşüyordu, oysa ortada belge yok. */
     : tur === 'baglanti_istegi' || tur === 'baglanti_kabul' || tur === 'takip' ? UserPlus
