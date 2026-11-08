@@ -1,6 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import {
+  AlertCircle,
   Bell,
   Briefcase,
   CalendarClock,
@@ -9,6 +10,7 @@ import {
   Eye,
   FileText,
   Heart,
+  Inbox,
   Loader2,
   Trash2,
   UserPlus,
@@ -45,7 +47,12 @@ function turSimgesi(tur: string) {
   return tur === 'gorusme_daveti' || tur === 'gorusme_guncellendi' ? CalendarClock
     : tur === 'teklif' || tur === 'teklif_kabul' ? CheckCircle2
     /* Yönetici onayı: ilan yayında, şirket hesabı açıldı (20261224010000). */
-    : tur === 'ilan_yayinda' || tur === 'sirket_onaylandi' ? CheckCircle2
+    : tur === 'ilan_yayinda' || tur === 'sirket_onaylandi' || tur === 'sahiplenme_onaylandi' ? CheckCircle2
+    /* Ret ve kaldırma kararları, yönetici kuyruğu (20261226010000). */
+    : tur.startsWith('ilan_yonetici_') || tur === 'ilan_degisiklik_ret' || tur === 'sirket_reddedildi' || tur === 'sahiplenme_reddedildi' ? AlertCircle
+    : tur.startsWith('yonetici_') ? Inbox
+    : tur === 'son_basvuru_yaklasiyor' ? CalendarClock
+    : tur === 'uygun_yeni_ilan' ? Briefcase
     : tur === 'yeni_basvuru' ? Briefcase
     /* Takip de kişiye dair bir olay: belge simgesine düşüyordu, oysa ortada belge yok. */
     : tur === 'baglanti_istegi' || tur === 'baglanti_kabul' || tur === 'takip' ? UserPlus
