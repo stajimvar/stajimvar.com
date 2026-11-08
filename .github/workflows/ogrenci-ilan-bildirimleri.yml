@@ -1,6 +1,6 @@
 name: Öğrenci ilan bildirimleri
 
-# Günde bir: kaydedilen ilanın son başvurusuna 3 gün / 1 gün kala ve
+# Günde bir `gunluk_bildirimler` (20261227010000): kaydedilen ilanın son başvurusuna 3 gün / 1 gün kala ve
 # bölümüne uygun yeni ilan bildirimleri (20261226010000,
 # `ogrenci_ilan_bildirimleri`). Her bildirim dedupe_key ile bir kez; iş
 # iki kez çalışsa da öğrenciye ikinci bildirim gitmiyor.

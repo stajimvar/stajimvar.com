@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 /**
- * ÖĞRENCİ İLAN BİLDİRİMLERİ (20261226010000)
+ * GÜNLÜK BİLDİRİMLER (20261226010000, 20261227010000)
+ *
+ * `gunluk_bildirimler` öğrenci ilan bildirimlerini (aşağıda) ve kalanları
+ * üretiyor: fırsat son başvurusu, yanıt bekleyen başvuru, profil tamamlama,
+ * pazartesi haftalık özet, şirket ilanının süresi doluyor.
  *
  * Günde bir `ogrenci_ilan_bildirimleri` çağrılıyor: kaydedilen ilanın son
  * başvurusu yaklaşıyor (3 gün / 1 gün) ve bölümüne uygun yeni ilan (günde
@@ -15,7 +19,7 @@ if (!ADRES || !ANAHTAR) {
   process.exit(1);
 }
 
-const y = await fetch(`${ADRES}/rest/v1/rpc/ogrenci_ilan_bildirimleri`, {
+const y = await fetch(`${ADRES}/rest/v1/rpc/gunluk_bildirimler`, {
   method: 'POST',
   headers: {
     apikey: ANAHTAR,
@@ -26,9 +30,9 @@ const y = await fetch(`${ADRES}/rest/v1/rpc/ogrenci_ilan_bildirimleri`, {
 });
 
 if (!y.ok) {
-  console.error(`ogrenci_ilan_bildirimleri: HTTP ${y.status} ${(await y.text()).slice(0, 300)}`);
+  console.error(`gunluk_bildirimler: HTTP ${y.status} ${(await y.text()).slice(0, 300)}`);
   process.exit(1);
 }
 
 const sonuc = await y.json();
-console.log(`Son başvuru bildirimi: ${sonuc.son_basvuru} · Uygun yeni ilan bildirimi: ${sonuc.uygun_yeni_ilan}`);
+console.log(Object.entries(sonuc).map(([k, v]) => `${k}: ${v}`).join(' · '));

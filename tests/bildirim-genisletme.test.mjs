@@ -55,8 +55,9 @@ test('günlük iş: GitHub Actions ve betik aynı RPC; arayüzde simgeler', () =
   const yml = oku('.github/workflows/ogrenci-ilan-bildirimleri.yml');
   assert.match(yml, /cron: "0 6 \* \* \*"/);
   assert.match(yml, /environment: production/);
-  assert.match(oku('scripts/ogrenci-ilan-bildirimleri.mjs'), /rpc\/ogrenci_ilan_bildirimleri/);
+  /* Betik artık ogrenci_ilan_bildirimleri'ni de çağıran gunluk_bildirimler'i çağırıyor (20261227010000). */
+  assert.match(oku('scripts/ogrenci-ilan-bildirimleri.mjs'), /rpc\/gunluk_bildirimler/);
   const b = oku('src/components/BildirimMerkezi.tsx');
-  assert.match(b, /tur === 'son_basvuru_yaklasiyor' \? CalendarClock/);
+  assert.match(b, /tur === 'son_basvuru_yaklasiyor'[^?]*\? CalendarClock/);
   assert.match(b, /tur === 'uygun_yeni_ilan' \? Briefcase/);
 });
