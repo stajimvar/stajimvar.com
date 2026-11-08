@@ -403,7 +403,8 @@ export const IsverenBaslangic: React.FC<{
               {gonderiliyor ? 'Gönderiliyor…' : 'Onaya gönder'}
             </button>
             <p className="text-xs leading-5 text-gray-500">
-              Talebi biz inceliyoruz; onaylanana kadar ilan girilemez ve aday bilgisi açılmaz.
+              Hesabının kurumsal e-postası şirketin web sitesiyle eşleşiyorsa şirket hesabın hemen açılır;
+              eşleşmiyorsa ekibimiz kontrol edip onaylar. Onaylanana kadar ilan girilemez ve aday bilgisi açılmaz.
             </p>
           </form>
         )}
