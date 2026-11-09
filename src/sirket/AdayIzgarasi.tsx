@@ -174,6 +174,51 @@ export const AdayIzgarasi: React.FC<{
     kaldığını görüyor.
   */
   const [secili, setSecili] = React.useState<string | null>(null);
+  /*
+    TOPLU İŞLEM (9 Kasım 2026, rakip analizi #4): birden çok başvuruyu
+    tek seferde "İnceleniyor" ya da "Olumsuz" yapma. Her başvuru aynı
+    `onDurum` yolundan (sunucu kuralları ve öğrenciye giden bildirim
+    aynı). Salt okunur üyede ve geri çekilmiş başvuruda seçim yok.
+  */
+  const [toplu, setToplu] = React.useState<Set<string>>(new Set());
+  const [topluIsleniyor, setTopluIsleniyor] = React.useState(false);
+  const [topluSonuc, setTopluSonuc] = React.useState('');
+  const topluAcik = Boolean(onDurum) && !saltOkunur;
+  const seciliMi = (id: string) => toplu.has(id);
+  const secimDegistir = (id: string) =>
+    setToplu((o) => {
+      const y = new Set(o);
+      if (y.has(id)) y.delete(id);
+      else y.add(id);
+      return y;
+    });
+  const topluUygula = async (durum: 'under_review' | 'rejected') => {
+    if (!onDurum || toplu.size === 0 || topluIsleniyor) return;
+    const adet = toplu.size;
+    if (
+      durum === 'rejected' &&
+      !window.confirm(`${adet} başvuru olumsuz olarak işaretlensin mi? Adaylara "Başvurun sonuçlandı" bildirimi gidecek.`)
+    ) {
+      return;
+    }
+    setTopluIsleniyor(true);
+    setTopluSonuc('');
+    let basarisiz = 0;
+    for (const id of toplu) {
+      try {
+        await onDurum(id, durum);
+      } catch {
+        basarisiz += 1;
+      }
+    }
+    setTopluIsleniyor(false);
+    setToplu(new Set());
+    setTopluSonuc(
+      basarisiz === 0
+        ? `${adet} başvuru güncellendi.`
+        : `${adet - basarisiz} başvuru güncellendi, ${basarisiz} başvuru güncellenemedi.`,
+    );
+  };
   /* Filtreler alanı varsayılan kapalı; etkin filtre düğmede sayıyla belli. */
   const [filtrelerAcik, setFiltrelerAcik] = React.useState(false);
 
@@ -649,13 +694,70 @@ export const AdayIzgarasi: React.FC<{
           tek bir kabın içinde ince çizgiyle ayrılıyor. Masaüstünde de aynı
           liste — satır genişleyince okul/bölüm ikinci sütuna geçiyor.
         */
+        <>
+        {topluSonuc && toplu.size === 0 && (
+          <p role="status" className="mb-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+            {topluSonuc}
+          </p>
+        )}
+        {topluAcik && toplu.size > 0 && (
+          <div
+            role="region"
+            aria-label="Toplu işlem"
+            className="sticky top-2 z-10 mb-2 flex flex-wrap items-center gap-2 rounded-2xl border p-2.5 shadow-sm"
+            style={{ ...kutuStil, borderColor: SIRKET_KENAR_VURGU, background: SIRKET_ROZET }}
+          >
+            <span className="px-1 text-sm font-bold" style={{ color: SIRKET_VURGU_KOYU }}>
+              {toplu.size} başvuru seçildi
+            </span>
+            <button
+              type="button"
+              disabled={topluIsleniyor}
+              onClick={() => void topluUygula('under_review')}
+              className={IKINCIL_DUGME}
+              style={ikincilStil}
+            >
+              İncelemeye al
+            </button>
+            <button
+              type="button"
+              disabled={topluIsleniyor}
+              onClick={() => void topluUygula('rejected')}
+              className={`${IKINCIL_DUGME} text-rose-700`}
+              style={ikincilStil}
+            >
+              Olumsuz
+            </button>
+            <button
+              type="button"
+              disabled={topluIsleniyor}
+              onClick={() => setToplu(new Set())}
+              className="min-h-11 cursor-pointer px-2 text-sm font-semibold underline-offset-2 hover:underline"
+              style={{ color: SIRKET_METIN_IKINCIL }}
+            >
+              {topluIsleniyor ? 'Uygulanıyor…' : 'Seçimi temizle'}
+            </button>
+          </div>
+        )}
         <ul
           aria-label="Başvurular"
           className="divide-y overflow-hidden rounded-2xl border p-1.5"
           style={{ ...kutuStil, borderColor: SIRKET_KENAR }}
         >
           {gosterilen.map((k, i) => (
-            <li key={k.id} className="py-0.5" style={{ borderColor: SIRKET_KENAR }}>
+            <li key={k.id} className="flex items-center gap-1 py-0.5" style={{ borderColor: SIRKET_KENAR }}>
+              {topluAcik && k.durum !== 'withdrawn' && (
+                <label className="flex h-11 w-9 shrink-0 cursor-pointer items-center justify-center">
+                  <input
+                    type="checkbox"
+                    checked={seciliMi(k.id)}
+                    onChange={() => secimDegistir(k.id)}
+                    aria-label={`${k.ad ?? 'Aday'} için toplu işlem seçimi`}
+                    className="h-4 w-4 cursor-pointer accent-[#2563EB]"
+                  />
+                </label>
+              )}
+              <div className="min-w-0 flex-1">
               <AdayKarti
                 kart={k as any}
                 secili={k.id === secili}
@@ -665,9 +767,11 @@ export const AdayIzgarasi: React.FC<{
                   adayiAc(k.id);
                 }}
               />
+              </div>
             </li>
           ))}
         </ul>
+        </>
       )}
       {/*
         İnceleme ekranı: lg altında tam ekran, geniş ekranda ortada en
