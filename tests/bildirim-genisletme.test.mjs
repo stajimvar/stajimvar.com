@@ -59,5 +59,5 @@ test('günlük iş: GitHub Actions ve betik aynı RPC; arayüzde simgeler', () =
   assert.match(oku('scripts/ogrenci-ilan-bildirimleri.mjs'), /rpc\/gunluk_bildirimler/);
   const b = oku('src/components/BildirimMerkezi.tsx');
   assert.match(b, /tur === 'son_basvuru_yaklasiyor'[^?]*\? CalendarClock/);
-  assert.match(b, /tur === 'uygun_yeni_ilan' \? Briefcase/);
+  assert.match(b, /tur === 'uygun_yeni_ilan'( \|\| tur === 'takip_ilan')? \? Briefcase/);
 });

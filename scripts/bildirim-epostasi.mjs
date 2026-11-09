@@ -2,7 +2,8 @@
 /**
  * BİLDİRİM E-POSTASI (20261230010000)
  *
- * Seçili site içi bildirimleri (bugün: yeni başvuru) alıcının
+ * Seçili site içi bildirimleri (yeni başvuru; 20270109010000'den beri
+ * takip edilen şirketin yeni ilanı da) alıcının
  * doğrulanmış hesap e-postasına gönderiyor. Düzen
  * scripts/sirket-talebi-epostasi.mjs ile aynı: önce gönder, sonra
  * işaretle; Idempotency-Key bildirim kimliği.
@@ -42,16 +43,21 @@ export function konuKur(b) {
   return String(b.baslik ?? 'StajımVar bildirimi').replace(/[\r\n\t]+/g, ' ').slice(0, 120);
 }
 
+/* Takip edilen şirketin yeni ilanı (20270109010000): öğrenciye giden e-posta. */
+const takipIlaniMi = (b) => b.tur === 'takip_ilan';
+
 export function govdeKur(b) {
   const baglanti = guvenliBaglanti(b.hedef);
-  const dugme = 'Başvuruyu panelde aç';
+  const dugme = takipIlaniMi(b) ? 'İlanı gör' : 'Başvuruyu panelde aç';
   return [
     '<div style="font:15px/1.5 system-ui;color:#111827;max-width:520px">',
     `<p style="font-weight:700;margin:0 0 8px">${kacir(b.baslik)}</p>`,
     b.govde ? `<p style="margin:0 0 16px">${kacir(b.govde)}</p>` : '',
     `<p style="margin:0 0 20px"><a href="${kacir(baglanti)}" style="display:inline-block;background:#2563EB;color:#fff;text-decoration:none;font-weight:700;padding:10px 16px;border-radius:10px">${dugme}</a></p>`,
     '<p style="font-size:12px;color:#6B7280;margin:0">Bu e-posta StajımVar hesabındaki bildirimin kopyası. ',
-    'Aday bilgileri yalnız şirket panelinde görünür.</p>',
+    takipIlaniMi(b)
+      ? `Bu şirketi takip ettiğin için gönderildi; <a href="${SITE}/ayarlar/bildirimler" style="color:#6B7280">Bildirim ayarları</a>ndan kapatabilirsin.</p>`
+      : 'Aday bilgileri yalnız şirket panelinde görünür.</p>',
     '</div>',
   ]
     .filter(Boolean)

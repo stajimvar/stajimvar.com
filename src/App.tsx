@@ -314,6 +314,9 @@ const CompanyPortalView = React.lazy(() =>
 const SkillQuizzesView = React.lazy(() =>
   import('./components/SkillQuizzesView').then((m) => ({ default: m.SkillQuizzesView }))
 );
+const EpostaTercihAnahtari = React.lazy(() =>
+  import('./sirket/EpostaTercihleri').then((m) => ({ default: m.EpostaTercihAnahtari }))
+);
 const KayitliAramalar = React.lazy(() =>
   import('./components/KayitliAramalar').then((m) => ({ default: m.KayitliAramalar }))
 );
@@ -3344,6 +3347,21 @@ export default function App() {
                 />
               </React.Suspense>
             </section>
+            {/*
+              TAKİP EDİLEN ŞİRKETİN YENİ İLANI (20270109010000): zil
+              bildirimi her zaman; e-postası buradan kapatılabiliyor.
+              İşveren hesabında yok — şirket takip etmiyor.
+            */}
+            {activeStudent && session.userId && (
+              <section className="space-y-2">
+                <h2 className="text-base font-bold text-gray-900">Takip ettiğin şirketler</h2>
+                <div className="rounded-2xl border border-gray-200 bg-white p-4">
+                  <React.Suspense fallback={<div className="h-11 rounded-xl bg-gray-100 animate-pulse" />}>
+                    <EpostaTercihAnahtari userId={session.userId} alan="takip_ilan_eposta" />
+                  </React.Suspense>
+                </div>
+              </section>
+            )}
           </>
         ) : (
           <p className="rounded-2xl border border-gray-200 bg-white p-6 text-center text-sm text-gray-600">
