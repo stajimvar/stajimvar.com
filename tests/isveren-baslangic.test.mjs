@@ -211,3 +211,12 @@ test('işveren sayfası ve SSS bugünkü akışı anlatıyor: görüşme/teklif 
   assert.match(inis, /paylaşmayı onayladığı telefon ve e-postayla/);
   assert.match(sss, /salt okunur üyeler göremez/);
 });
+
+test('panel sekme başlığı sayfanın adını söylüyor; "başvurmamış öğrenci listesi yok" iddiası kalktı', () => {
+  const p = oku('src/sirket/SirketPaneli.tsx');
+  assert.match(p, /document\.title = sirketSekmeBasligi\(yol\);/);
+  assert.match(p, /: 'İlanlarım';/);
+  for (const dosya of ['src/components/IsverenLanding.tsx', 'src/data/isveren-sss.ts']) {
+    assert.doesNotMatch(oku(dosya), /listesi diye bir ekran yok/, dosya);
+  }
+});

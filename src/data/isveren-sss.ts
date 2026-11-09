@@ -46,7 +46,8 @@ export const ISVEREN_SSS: SssMaddesi[] = [
       'Öğrenci ilanınıza başvurduğunda. Başvuruya, öğrencinin o anki profilinin ve ' +
       'yüklediği özgeçmiş dosyasının bir kopyası bağlanıyor; öğrenci sonradan ' +
       'profilini değiştirse bile sizin gördüğünüz belge değişmiyor. Başvurmamış ' +
-      'öğrencilerin listesi diye bir ekran yok.',
+      'öğrencileri yalnız kendileri profillerinde “Staj arıyorum” ya da “İş arıyorum” ' +
+      'anahtarını açtıysa Adaylar ekranında görebilirsiniz.',
   },
   {
     soru: 'Öğrencinin iletişim bilgileri ne zaman açılıyor?',
