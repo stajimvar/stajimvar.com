@@ -793,7 +793,19 @@ export const SirketIlanlarSekmesi: React.FC<{
       genişlikleri 320 px için ölçülmüş. Altıncı öğe o ölçümü bozardı;
       giriş Başvuranlar ekranının üstünden veriliyor.
     */
-    return <SirketAdaylar onNavigate={onNavigate} />;
+    return (
+      <SirketAdaylar
+        onNavigate={onNavigate}
+        ilanlar={ilanlar
+          .filter((i) => i.status === 'published')
+          .map((i) => ({
+            id: String(i.id),
+            title: String(i.title ?? ''),
+            city: (i.city as string | null) ?? null,
+            work_type: (i.work_type as string | null) ?? null,
+          }))}
+      />
+    );
   }
 
   if (gorunum === 'basvuranlar') {

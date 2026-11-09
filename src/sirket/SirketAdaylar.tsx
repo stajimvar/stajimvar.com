@@ -2,6 +2,13 @@ import React from 'react';
 import { Briefcase, FileText, GraduationCap, MessageCircle } from 'lucide-react';
 import { fetchArayanOgrenciler, type ArayanListesi, type ArayanOgrenci } from '../lib/queries';
 import { ProfilFotografi } from '../components/sosyal/ProfilFotografi';
+import { secenekler, suzgeceUyar } from '../lib/basvuran-suzgecleri.mjs';
+import { uygunAdaylar } from '../lib/aday-uygunlugu.mjs';
+import { ALAN, SIRKET_METIN_IKINCIL, alanStil } from './renk';
+
+/** "İlanıma uygun" seçimi için ilanın gereken alanları. */
+export type AdayIlani = { id: string; title: string; city?: string | null; work_type?: string | null };
+type Uygunluk = { puan: number; sozcukler: string[]; sehir: boolean };
 
 /**
  * ADAYLAR — İŞ / STAJ ARAYAN ÖĞRENCİLER
@@ -45,7 +52,9 @@ const AdaySatiri: React.FC<{
   ogrenci: ArayanOgrenci;
   onProfil: (id: string) => void;
   onMesaj: (kullaniciAdi: string) => void;
-}> = ({ ogrenci, onProfil, onMesaj }) => {
+  /** Seçili ilana uygunluğun nedeni; yalnız ilan seçiliyken. */
+  uygunluk?: Uygunluk;
+}> = ({ ogrenci, onProfil, onMesaj, uygunluk }) => {
   const roller = ogrenci.hedefRoller ?? [];
   const gorunen = roller.slice(0, ETIKET_SINIRI);
   const kalan = roller.length - gorunen.length;
@@ -160,6 +169,13 @@ const AdaySatiri: React.FC<{
         )}
       </div>
 
+      {uygunluk && (
+        <p className="mt-2 text-[11px] font-semibold text-blue-800">
+          İlanla eşleşen: {uygunluk.sozcukler.join(', ')}
+          {uygunluk.sehir ? ' · aynı şehir' : ''}
+        </p>
+      )}
+
       {ogrenci.cvVar && (
         <p className="mt-2 flex items-center gap-1 text-[11px] font-semibold text-gray-500">
           <FileText aria-hidden className="h-3 w-3" />
@@ -172,7 +188,9 @@ const AdaySatiri: React.FC<{
 
 export const SirketAdaylar: React.FC<{
   onNavigate: (yol: string) => void;
-}> = ({ onNavigate }) => {
+  /** Şirketin YAYINDAKİ ilanları ("İlanıma uygun adaylar" seçimi). */
+  ilanlar?: AdayIlani[];
+}> = ({ onNavigate, ilanlar = [] }) => {
   /*
     BAŞLANGIÇ SEKMESİ ADRESTEN
 
@@ -219,7 +237,29 @@ export const SirketAdaylar: React.FC<{
     };
   }, [tur]);
 
-  const ogrenciler = veri?.ogrenciler ?? [];
+  /*
+    SÜZGEÇLER (9 Kasım 2026, rakip analizi #9): bölüm, şehir, sınıf ve
+    "İlanıma uygun". Seçenekler listeden türüyor; boş seçenek yok.
+    Yatay çip satırı değil, select (süzgeç-çip kararı).
+  */
+  const [ilanId, setIlanId] = React.useState('');
+  const [suzgec, setSuzgec] = React.useState({ bolum: '', sinif: '', sehir: '' });
+  const tumu = veri?.ogrenciler ?? [];
+  const seciliIlan = ilanlar.find((i) => i.id === ilanId);
+  const alanSecenekleri = {
+    bolum: secenekler(tumu, 'bolum'),
+    sinif: secenekler(tumu, 'sinif'),
+    sehir: secenekler(tumu, 'sehir'),
+  };
+  const suzulen = tumu.filter((o) => suzgeceUyar(o, suzgec));
+  const satirlar: { ogrenci: ArayanOgrenci; uygunluk?: Uygunluk }[] = seciliIlan
+    ? uygunAdaylar(seciliIlan, suzulen).map((x: { aday: ArayanOgrenci; uygunluk: Uygunluk }) => ({
+        ogrenci: x.aday,
+        uygunluk: x.uygunluk,
+      }))
+    : suzulen.map((o) => ({ ogrenci: o }));
+  const suzgecVar = !!ilanId || Object.values(suzgec).some(Boolean);
+  const ogrenciler = satirlar.map((x) => x.ogrenci);
   const sekmeler = [
     { deger: 'staj' as const, etiket: 'Staj arıyor', adet: veri?.stajArayan, ikon: GraduationCap },
     { deger: 'is' as const, etiket: 'İş arıyor', adet: veri?.isArayan, ikon: Briefcase },
@@ -266,6 +306,66 @@ export const SirketAdaylar: React.FC<{
         })}
       </div>
 
+      {asama === 'hazir' && tumu.length > 0 && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {ilanlar.length > 0 && (
+            <label className="block sm:col-span-2">
+              <span className="mb-1 block text-xs font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
+                İlanıma uygun adaylar
+              </span>
+              <select
+                value={ilanId}
+                onChange={(e) => setIlanId(e.target.value)}
+                className={ALAN}
+                style={alanStil}
+              >
+                <option value="">İlan seçilmedi</option>
+                {ilanlar.map((i) => (
+                  <option key={i.id} value={i.id}>
+                    {i.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          {(
+            [
+              ['bolum', 'Bölüm', 'Tüm bölümler'],
+              ['sinif', 'Sınıf', 'Tüm sınıflar'],
+              ['sehir', 'Şehir', 'Tüm şehirler'],
+            ] as const
+          ).map(([alan, etiket, hepsi]) =>
+            alanSecenekleri[alan].length > 0 ? (
+              <label key={alan} className="block">
+                <span className="mb-1 block text-xs font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
+                  {etiket}
+                </span>
+                <select
+                  value={suzgec[alan]}
+                  onChange={(e) => setSuzgec((o) => ({ ...o, [alan]: e.target.value }))}
+                  aria-label={`${etiket} süzgeci`}
+                  className={ALAN}
+                  style={alanStil}
+                >
+                  <option value="">{hepsi}</option>
+                  {alanSecenekleri[alan].map((d: string) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null,
+          )}
+          {seciliIlan && (
+            <p className="text-[11px] leading-relaxed sm:col-span-2" style={{ color: SIRKET_METIN_IKINCIL }}>
+              Uygunluk, ilan başlığındaki sözcüklerin adayın hedef rolleri, becerileri ya da bölümüyle
+              eşleşmesinden çıkıyor; aynı şehir sıralamayı öne alıyor.
+            </p>
+          )}
+        </div>
+      )}
+
       {asama === 'yukleniyor' && (
         <div className="h-40 animate-pulse rounded-2xl border border-gray-200 bg-gray-50" />
       )}
@@ -279,10 +379,11 @@ export const SirketAdaylar: React.FC<{
       {asama === 'hazir' && (
         ogrenciler.length ? (
           <ul className="space-y-3">
-            {ogrenciler.map((o) => (
+            {satirlar.map(({ ogrenci: o, uygunluk }) => (
               <AdaySatiri
                 key={o.id}
                 ogrenci={o}
+                uygunluk={uygunluk}
                 onProfil={(id) => onNavigate(`/sirket/aday/${id}`)}
                 onMesaj={(ad) => onNavigate(`/mesajlar/${encodeURIComponent(ad)}`)}
               />
@@ -291,10 +392,12 @@ export const SirketAdaylar: React.FC<{
         ) : (
           <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center">
             <p className="font-bold text-gray-900">
-              {tur === 'staj' ? 'Staj arayan öğrenci yok' : 'İş arayan öğrenci yok'}
+              {suzgecVar && tumu.length
+                ? 'Bu seçime uyan aday yok'
+                : tur === 'staj' ? 'Staj arayan öğrenci yok' : 'İş arayan öğrenci yok'}
             </p>
             <p className="mx-auto mt-1 max-w-md text-sm leading-relaxed text-gray-600">
-              {BOS_ACIKLAMA}
+              {suzgecVar && tumu.length ? 'Süzgeçleri gevşetmeyi ya da başka bir ilan seçmeyi dene.' : BOS_ACIKLAMA}
             </p>
           </div>
         )
