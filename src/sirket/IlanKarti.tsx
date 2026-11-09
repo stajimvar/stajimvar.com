@@ -1,5 +1,7 @@
 import React from 'react';
-import { Bookmark, Eye, MapPin, Pencil, Plus, User, Users } from 'lucide-react';
+import { BarChart3, Bookmark, Eye, MapPin, Pencil, Plus, User, Users } from 'lucide-react';
+import { IlanIstatistikAyrintisi } from './IlanIstatistikAyrintisi';
+import { donusumOrani, oranMetni } from '../lib/ilan-istatistik.mjs';
 import {
   IKINCIL_DUGME,
   SIRKET_METIN,
@@ -265,6 +267,9 @@ const Avatar: React.FC<{ aday: AdayOzeti }> = ({ aday }) =>
     </span>
   );
 
+/** Kart istatistik satırı (20270101010000); `basvuru` dönüşüm oranı için. */
+type IlanKartIstatistigi = { goruntulenme: number; sonYediGun: number; kaydeden: number; basvuru?: number };
+
 export const IlanKarti: React.FC<{
   ilan: Record<string, unknown>;
   /**
@@ -291,8 +296,9 @@ export const IlanKarti: React.FC<{
    * Ölçülen görüntülenme ve kaydetme (20270101010000). Verilmezse satır
    * çizilmiyor; taslakta da yok (öğrenciye görünmüyor).
    */
-  istatistik?: { goruntulenme: number; sonYediGun: number; kaydeden: number };
+  istatistik?: IlanKartIstatistigi;
 }> = ({ ilan, basvurular, onNavigate, ekEylemler, ekRozet, altNot, sirketAdi, logoUrl, simdi, istatistik }) => {
+  const [ayrintiAcik, setAyrintiAcik] = React.useState(false);
   const id = String(ilan.id);
   const rozet = ilanDurumRozeti(ilan, simdi);
   const degisiklik = ilan.status === 'published' ? bekleyenOku(ilan.bekleyen) : null;
@@ -500,8 +506,22 @@ export const IlanKarti: React.FC<{
                 <Bookmark aria-hidden className="h-3.5 w-3.5" />
                 {istatistik.kaydeden} kaydeden
               </span>
+              {istatistik.basvuru !== undefined && donusumOrani(istatistik.basvuru, istatistik.goruntulenme) !== null && (
+                <span>dönüşüm {oranMetni(donusumOrani(istatistik.basvuru, istatistik.goruntulenme))}</span>
+              )}
+              <button
+                type="button"
+                onClick={() => setAyrintiAcik((a) => !a)}
+                aria-expanded={ayrintiAcik}
+                className="inline-flex min-h-11 cursor-pointer items-center gap-1 font-bold underline-offset-2 hover:underline"
+                style={{ color: SIRKET_METIN }}
+              >
+                <BarChart3 aria-hidden className="h-3.5 w-3.5" />
+                {ayrintiAcik ? 'Ayrıntıyı gizle' : 'Günlük ayrıntı'}
+              </button>
             </p>
           )}
+          {istatistik && !taslak && ayrintiAcik && <IlanIstatistikAyrintisi ilanId={String(ilan.id)} />}
         </div>
 
         {/* ------------------------------------------------------ sağ */}
