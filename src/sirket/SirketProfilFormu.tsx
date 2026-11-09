@@ -20,6 +20,7 @@ import {
   kutuStil,
 } from './renk';
 import { vknGecerli } from '../lib/sirket-kademe.mjs';
+import { baglantiHatasi, yanHaklarHatasi } from '../lib/sirket-sayfasi-ek.mjs';
 import { AutocompleteField } from '../components/AutocompleteField';
 import { FORM_ALAN, UzayanMetin } from './form-parcalari';
 import { TR_CITIES } from '../data/turkeyData';
@@ -47,9 +48,10 @@ import {
  * YEDİ ALAN, FAZLASI DEĞİL
  * ------------------------
  * Form yalnızca `companies` tablosunda GERÇEKTEN olan sütunları soruyor.
- * "Çalışma kültürü", "yan haklar", "departmanlar", "sosyal medya" gibi
- * alanlar tabloda yok; form onları sorsaydı doldurulan bilgi kaydedilmeden
- * kaybolurdu.
+ * "Çalışma kültürü", "departmanlar" gibi alanlar tabloda yok; form onları
+ * sorsaydı doldurulan bilgi kaydedilmeden kaybolurdu. Yan haklar, LinkedIn,
+ * Instagram ve tanıtım videosu 9 Kasım 2026'da eklendi (20270108010000);
+ * tamamlanma oranına girmiyorlar.
  *
  * TAMAMLANMA ORANI HESAPLANIYOR
  * -----------------------------
@@ -234,7 +236,15 @@ export const SirketProfilFormu: React.FC<{
 
   const oran = profilTamamlanmaOrani(deger);
   const eksikler = PROFIL_ALANLARI.filter((a) => !String(deger[a] ?? '').trim());
-  const kaydedilebilir = durum !== 'kaydediliyor' && degisti;
+  /* Yeni alanların biçim hataları (sunucu kısıtıyla aynı kural). */
+  const ekHatalar = {
+    yanHaklar: yanHaklarHatasi(deger.yanHaklar),
+    linkedinUrl: baglantiHatasi('linkedin', deger.linkedinUrl),
+    instagramUrl: baglantiHatasi('instagram', deger.instagramUrl),
+    videoUrl: baglantiHatasi('video', deger.videoUrl),
+  };
+  const ekHataVar = Object.values(ekHatalar).some(Boolean);
+  const kaydedilebilir = durum !== 'kaydediliyor' && degisti && !ekHataVar;
 
   return (
     /* Alt boşluk sabit çubuğa göre: çubuk çizilmiyorken fazladan boşluk
@@ -368,6 +378,50 @@ export const SirketProfilFormu: React.FC<{
                 {deger.description.trim().length} karakter
               </p>
             </div>
+
+            {/*
+              YAN HAKLAR, SOSYAL HESAPLAR, VİDEO (rakip analizi #12)
+              Şirket sayfasının Hakkımızda sekmesinde çiziliyor; boşsa bölüm yok.
+            */}
+            <div className="mt-4 grid gap-4 border-t pt-4 sm:grid-cols-2 xl:col-start-1" style={{ borderColor: SIRKET_KENAR }}>
+              <div className="sm:col-span-2">
+                <Alan etiket="Yan haklar" htmlFor={`${kimlik}-yanhak`} not="Her satıra bir tane, en fazla 12.">
+                  <textarea
+                    id={`${kimlik}-yanhak`}
+                    rows={4}
+                    value={deger.yanHaklar}
+                    onChange={(e) => yaz('yanHaklar')(e.target.value)}
+                    placeholder={'Ör. Yemek kartı\nEsnek çalışma saatleri\nUlaşım desteği'}
+                    aria-invalid={!!ekHatalar.yanHaklar}
+                    className={FORM_ALAN}
+                  />
+                </Alan>
+                {ekHatalar.yanHaklar && <p role="alert" className="mt-1 text-xs font-semibold text-rose-700">{ekHatalar.yanHaklar}</p>}
+              </div>
+              {(
+                [
+                  ['linkedinUrl', 'LinkedIn sayfası', 'https://www.linkedin.com/company/…'],
+                  ['instagramUrl', 'Instagram', 'https://www.instagram.com/…'],
+                  ['videoUrl', 'Tanıtım videosu (YouTube)', 'https://www.youtube.com/watch?v=…'],
+                ] as const
+              ).map(([alan, etiket, ornek]) => (
+                <div key={alan} className={alan === 'videoUrl' ? 'sm:col-span-2' : undefined}>
+                  <Alan etiket={etiket} htmlFor={`${kimlik}-${alan}`}>
+                    <input
+                      id={`${kimlik}-${alan}`}
+                      type="url"
+                      inputMode="url"
+                      value={deger[alan]}
+                      onChange={(e) => yaz(alan)(e.target.value)}
+                      placeholder={ornek}
+                      aria-invalid={!!ekHatalar[alan]}
+                      className={FORM_ALAN}
+                    />
+                  </Alan>
+                  {ekHatalar[alan] && <p role="alert" className="mt-1 text-xs font-semibold text-rose-700">{ekHatalar[alan]}</p>}
+                </div>
+              ))}
+            </div>
             </div>
 
             {/*
@@ -433,6 +487,10 @@ const ALAN_ADLARI: Record<keyof SirketProfilDegeri, string> = {
   websiteUrl: 'web sitesi',
   description: 'hakkımızda',
   hrEmail: 'İK e-postası',
+  yanHaklar: 'yan haklar',
+  linkedinUrl: 'LinkedIn',
+  instagramUrl: 'Instagram',
+  videoUrl: 'tanıtım videosu',
 };
 
 /* --------------------------------------------------------- üst özet */

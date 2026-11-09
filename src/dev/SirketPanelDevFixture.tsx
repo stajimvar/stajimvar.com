@@ -791,6 +791,10 @@ const PROFIL_TAM: SirketProfilDegeri = {
   websiteUrl: 'https://ornek.com',
   description: 'Örnek açıklama.',
   hrEmail: 'ik@ornek.com',
+  yanHaklar: 'Yemek kartı\nEsnek çalışma saatleri',
+  linkedinUrl: 'https://www.linkedin.com/company/ornek',
+  instagramUrl: '',
+  videoUrl: '',
 };
 const PROFIL_EKSIK: SirketProfilDegeri = {
   ...PROFIL_TAM,

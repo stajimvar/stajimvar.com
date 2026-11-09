@@ -150,6 +150,10 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
       siteUrl: veri.company.websiteUrl ?? null,
       aciklama: veri.company.description?.trim() || null,
       dogrulandi: veri.company.verified === true,
+      yanHaklar: veri.company.yanHaklar ?? [],
+      linkedinUrl: veri.company.linkedinUrl ?? null,
+      instagramUrl: veri.company.instagramUrl ?? null,
+      videoUrl: veri.company.videoUrl ?? null,
     };
     const git = (yol: string) => (e: React.MouseEvent<HTMLAnchorElement>) => {
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;

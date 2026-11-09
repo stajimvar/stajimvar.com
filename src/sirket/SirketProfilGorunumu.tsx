@@ -5,6 +5,7 @@ import { guvenliDisAdres } from '../lib/guvenli-url.mjs';
 import type { SosyalPaylasim } from '../lib/queries/sosyal';
 import type { SirketAcikKimlik } from '../lib/sirket-veri';
 import { PaylasimIzgarasi } from '../components/sosyal/PaylasimIzgarasi';
+import { SirketSayfasiEkleri } from './SirketSayfasiEkleri';
 import {
   AVATAR_BINMESI,
   AVATAR_SATIRI,
@@ -976,6 +977,8 @@ export const SirketProfilGorunumu: React.FC<GorunumProps> = ({
               )}
             </dl>
           )}
+
+          <SirketSayfasiEkleri kimlik={kimlik} />
 
           {/*
             Eksik alanı olan sahibe hangi alanın eksik olduğu ve düzenleme
