@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Eye, ImagePlus, LogOut, Pencil, Plus } from 'lucide-react';
+import { ArrowLeft, Eye, ImagePlus, LogOut, Pencil, Plus, Users } from 'lucide-react';
 import {
   IKINCIL_DUGME,
   KUTU,
@@ -13,6 +13,7 @@ import { GenelBakis } from './GenelBakis';
 import { SirketProfilFormu } from './SirketProfilFormu';
 import { SirketProfilGorunumu, type SayacDurumu } from './SirketProfilGorunumu';
 import { SirketSayfasi } from './SirketSayfasi';
+import { SirketEkibi } from './SirketEkibi';
 import { KapakFotografiYukleme } from '../components/sosyal/KapakFotografiYukleme';
 import { ProfilAyarlarSayfasi, type AyarBolumu } from '../components/ProfilAyarlarSayfasi';
 import { ProfilSayfaDuzeni } from '../components/sosyal/ProfilSayfaDuzeni';
@@ -88,6 +89,8 @@ const PROFIL_YOLU = '/sirket/profil';
 const DUZENLE_YOLU = '/sirket/profil/duzenle';
 const KAPAK_YOLU = '/sirket/profil/kapak';
 const ONIZLE_YOLU = '/sirket/profil/onizle';
+/* Ekip ve davetler (20261231010000). */
+const EKIP_YOLU = '/sirket/profil/ekip';
 const ILAN_OLUSTUR_YOLU = '/sirket/ilan/yeni';
 const ADAYLAR_YOLU = '/sirket/adaylar';
 
@@ -263,6 +266,26 @@ export const SirketProfili: React.FC<{
     </a>
   );
 
+  /* ---------------------------------------------------------------- ekip */
+  if (yol.startsWith(EKIP_YOLU) && baglam.companyId) {
+    return (
+      <ProfilSayfaDuzeni>
+      <div className="space-y-3">
+        {geriSatiri}
+        <h1 className="text-xl font-extrabold tracking-tight" style={{ color: SIRKET_METIN }}>
+          Ekip
+        </h1>
+        <SirketEkibi
+          sirketId={baglam.companyId}
+          sahipMi={baglam.rol === 'Owner'}
+          dogrulandi={baglam.dogrulandi}
+          kendiId={userId}
+        />
+      </div>
+      </ProfilSayfaDuzeni>
+    );
+  }
+
   /* ---------------------------------------------------- kapak fotoğrafı */
   if (yol.startsWith(KAPAK_YOLU) && baglam.companyId && userId) {
     return (
@@ -404,6 +427,15 @@ export const SirketProfili: React.FC<{
           onClick: () => {
             setAyarlarAcik(false);
             onNavigate(KAPAK_YOLU);
+          },
+        },
+        {
+          anahtar: 'ekip',
+          etiket: 'Ekip ve davetler',
+          ikon: <Users aria-hidden className="h-5 w-5" />,
+          onClick: () => {
+            setAyarlarAcik(false);
+            onNavigate(EKIP_YOLU);
           },
         },
         {

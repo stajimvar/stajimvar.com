@@ -170,7 +170,7 @@ export function sirketSekmeBasligi(yol: string): string {
   const e = sirketEkrani(yol);
   const ad =
     e.tur === 'form' ? (e.duzenlenenId ? 'İlanı düzenle' : 'Yeni ilan')
-    : e.tur === 'profil' ? 'Şirketim'
+    : e.tur === 'profil' ? (yol.startsWith('/sirket/profil/ekip') ? 'Ekip' : 'Şirketim')
     : e.tur === 'adayProfili' ? 'Aday'
     : e.tur === 'adaylar' ? 'Adaylar'
     : e.tur === 'basvuranlar' ? 'Başvuranlar'

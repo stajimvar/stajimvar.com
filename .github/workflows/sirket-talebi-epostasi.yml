@@ -54,3 +54,7 @@ jobs:
 
       - name: Kuyruğu işle
         run: node scripts/sirket-talebi-epostasi.mjs ${{ inputs.kuru && '--kuru' || '' }}
+
+      # Ekip daveti e-postası (20261231010000): alıcı davetin kendi adresi.
+      - name: Ekip davetleri
+        run: node scripts/ekip-daveti-epostasi.mjs ${{ inputs.kuru && '--kuru' || '' }}

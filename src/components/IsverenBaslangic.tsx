@@ -12,6 +12,7 @@ import {
   type IsverenTalebi,
 } from '../lib/isveren-baslangic';
 import { CALISAN_SAYILARI, TANITIM_UST_SINIR, profilFormunuDogrula } from '../lib/isveren-profil-formu.mjs';
+import { benimDavetlerim, davetKabul, rolEtiketi, type GelenDavet } from '../lib/ekip-davetleri';
 
 /**
  * İŞVEREN BAŞLANGICI — "ŞİRKET PROFİLİNİ TAMAMLA" (7 Kasım 2026)
@@ -51,6 +52,31 @@ export const IsverenBaslangic: React.FC<{
   const [talep, setTalep] = useState<IsverenTalebi | null>(null);
   const [yukleniyor, setYukleniyor] = useState(Boolean(userId));
   const [adim, setAdim] = useState<Adim>({ tur: 'ara' });
+  /* Ekip davetleri (20261231010000): bu hesabın doğrulanmış e-postasına gelenler. */
+  const [davetler, setDavetler] = useState<GelenDavet[]>([]);
+  const [davetleriGec, setDavetleriGec] = useState(false);
+  const [kabulEdilen, setKabulEdilen] = useState<string | null>(null);
+  const [davetHatasi, setDavetHatasi] = useState('');
+  useEffect(() => {
+    if (!userId) return;
+    let iptal = false;
+    benimDavetlerim().then((d) => !iptal && setDavetler(d));
+    return () => {
+      iptal = true;
+    };
+  }, [userId]);
+  const kabulEt = async (d: GelenDavet) => {
+    setKabulEdilen(d.id);
+    setDavetHatasi('');
+    try {
+      await davetKabul(d.id);
+      /* Tam yükleme: üyelik ve üst çubuk yeni rolle yeniden okunsun. */
+      window.location.assign('/sirket/ilanlar');
+    } catch (h) {
+      setDavetHatasi(h instanceof Error ? h.message : 'Davet kabul edilemedi.');
+      setKabulEdilen(null);
+    }
+  };
 
   const [terim, setTerim] = useState('');
   const [sonuclar, setSonuclar] = useState<Sonuc[]>([]);
@@ -192,6 +218,40 @@ export const IsverenBaslangic: React.FC<{
     return (
       <SayfaKabugu onBack={onBack}>
         <div className="h-32 animate-pulse rounded-2xl bg-gray-100" role="status" aria-label="Yükleniyor" />
+      </SayfaKabugu>
+    );
+  }
+
+  if (davetler.length > 0 && !davetleriGec) {
+    return (
+      <SayfaKabugu onBack={onBack}>
+        <div className="space-y-4">
+          {baslik}
+          {davetler.map((d) => (
+            <div key={d.id} className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
+              <p className="text-base font-bold text-blue-950">
+                <strong>{d.sirketAdi}</strong> seni ekibine davet etti
+              </p>
+              <p className="mt-1 text-sm text-blue-900">Rol: {rolEtiketi(d.rol)}</p>
+              <button
+                type="button"
+                disabled={kabulEdilen !== null}
+                onClick={() => void kabulEt(d)}
+                className="mt-3 min-h-11 cursor-pointer rounded-xl bg-blue-600 px-4 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-60"
+              >
+                {kabulEdilen === d.id ? 'Katılıyorsun…' : 'Daveti kabul et'}
+              </button>
+            </div>
+          ))}
+          {davetHatasi && <p role="alert" className="text-sm text-rose-700">{davetHatasi}</p>}
+          <button
+            type="button"
+            onClick={() => setDavetleriGec(true)}
+            className="min-h-11 cursor-pointer text-sm font-semibold text-gray-600 underline-offset-2 hover:underline"
+          >
+            Davet yerine kendi şirketimi ekleyeceğim
+          </button>
+        </div>
       </SayfaKabugu>
     );
   }
