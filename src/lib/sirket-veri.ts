@@ -769,7 +769,20 @@ export async function basvuruIletisimi(id: string) {
   const { data, error } = await db.rpc('basvuru_iletisimi', { p_basvuru: id });
   if (error) throw new Error('İletişim bilgileri şu anda yüklenemedi.');
   const satir = (data ?? [])[0];
-  return satir ? { ad: satir.ad, eposta: satir.eposta, telefon: satir.telefon, unvan: satir.unvan } : null;
+  if (!satir) return null;
+  /*
+    Site içi mesaj için adayın kullanıcı adı (20270104010000): yalnız
+    yazabilen üyeye ve rıza açıksa. Okunamazsa düğme çizilmiyor; iletişim
+    satırı yine dönüyor.
+  */
+  const { data: kullaniciAdi } = await db.rpc('basvuru_aday_kullanici_adi' as never, { p_basvuru: id } as never);
+  return {
+    ad: satir.ad,
+    eposta: satir.eposta,
+    telefon: satir.telefon,
+    unvan: satir.unvan,
+    kullaniciAdi: typeof kullaniciAdi === 'string' && kullaniciAdi ? kullaniciAdi : null,
+  };
 }
 
 /**

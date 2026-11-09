@@ -213,8 +213,9 @@ test('rotalar bağlı; şirket ve öğrenci olmayan için dürüst ekran', () =>
   /* Sekmeler gerçek <a href>, adresleri yardımcıdan. */
   assert.match(liste, /yol: kutuYolu\('istekler'\)/);
   assert.match(liste, /href=\{s\.yol\}/);
-  assert.match(sayfa, /setUygunluk\(satir && !satir\.sirketId \? 'ogrenci' : 'degil'\);/);
-  assert.match(sayfa, /Mesajlaşma şimdilik yalnız öğrenciler arasında açık\./);
+  /* 9 Kasım 2026: şirket hesabı da açık (işveren → aday, 20261116010000); karar sunucuda. */
+  assert.match(sayfa, /setUygunluk\(satir \? 'ogrenci' : 'degil'\);/);
+  assert.doesNotMatch(yorumsuz(sayfa), /yalnız öğrenciler arasında açık/);
   assert.match(sayfa, /onGirisGerekli\?\.\(\);/);
 });
 

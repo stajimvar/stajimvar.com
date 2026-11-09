@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import {
+import { MessageCircle,
   CalendarDays,
   CheckCircle2,
   ChevronDown,
@@ -118,6 +118,8 @@ export type Iletisim = {
   eposta: string | null;
   telefon: string | null;
   unvan: string | null;
+  /** Site içi mesaj için (20270104010000); yoksa düğme çizilmiyor. */
+  kullaniciAdi?: string | null;
 };
 
 export type { GuncelProfilYukleyici, PaylasimYukleyici };
@@ -709,12 +711,28 @@ saltOkunur ? (
                     </p>
                   )}
                   <div className="mt-2.5 flex flex-wrap gap-2">
+                    {/*
+                      SİTE İÇİ MESAJ (9 Kasım 2026): başvurana mesaj rakiplerin
+                      hepsinde var. İlk mesaj adaya İSTEK olarak düşer; aday
+                      reddedebilir (mesaj_gonder kuralları).
+                    */}
+                    {iletisim.kullaniciAdi && (
+                      <a
+                        href={`/mesajlar/${encodeURIComponent(iletisim.kullaniciAdi)}`}
+                        aria-label={`${iletisim.ad ?? 'Adaya'} StajımVar'da mesaj gönder`}
+                        className={BIRINCIL_DUGME}
+                        style={birincilStil}
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        Mesaj gönder
+                      </a>
+                    )}
                     {iletisim.eposta && (
                       <a
                         href={`mailto:${iletisim.eposta}`}
                         aria-label={`${iletisim.ad ?? 'Adaya'} e-posta gönder`}
-                        className={BIRINCIL_DUGME}
-                        style={birincilStil}
+                        className={iletisim.kullaniciAdi ? IKINCIL_DUGME : BIRINCIL_DUGME}
+                        style={iletisim.kullaniciAdi ? ikincilStil : birincilStil}
                       >
                         <Mail className="h-4 w-4" />
                         E-posta gönder

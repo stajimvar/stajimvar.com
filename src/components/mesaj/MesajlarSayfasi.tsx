@@ -32,8 +32,8 @@ import { useMesajSayaclari } from './mesajDinleme';
  * ayrıca kaymıyor ve yazma kutusu alt çubuğun üstünde duruyor.
  *
  * YETKİ: oturum yoksa giriş kartı ve mevcut giriş akışı. Oturum sahibinin
- * kendi sosyal satırı yoksa ya da şirket hesabıysa (`sirketId` dolu)
- * mesajlaşma ekranı açılmıyor, sebebi yazılı. Asıl kapı sunucuda
+ * kendi sosyal satırı yoksa mesajlaşma ekranı açılmıyor, sebebi yazılı.
+ * Şirket hesabı (`sirketId` dolu) 9 Kasım 2026'dan beri açık. Asıl kapı sunucuda
  * ('yalniz-ogrenciler'); burası yalnız boş bir ekran göstermiyor.
  */
 
@@ -83,7 +83,14 @@ export const MesajlarSayfasi: React.FC<{
     kendiSosyalProfiliGetir(kullaniciId)
       .then((satir) => {
         if (iptal) return;
-        setUygunluk(satir && !satir.sirketId ? 'ogrenci' : 'degil');
+        /*
+          ŞİRKET HESABI DA AÇIK (9 Kasım 2026): işveren → aday mesajlaşması
+          sunucuda 20261116010000'den beri açık (doğrulanmış şirket, açık
+          arayan aday; aday yalnız yanıt verebilir). Bu ekran şirket satırını
+          (`sirketId` dolu) geri çeviriyordu; Adaylar'daki "Mesaj gönder"
+          çıkmaza düşüyordu. Yetki kararı sunucuda kalıyor.
+        */
+        setUygunluk(satir ? 'ogrenci' : 'degil');
       })
       .catch(() => {
         if (!iptal) setUygunluk('hata');
@@ -138,7 +145,7 @@ export const MesajlarSayfasi: React.FC<{
     return kabuk(
       <div className={`${KART} mx-4 space-y-2 sm:mx-0`}>
         <h1 className="text-lg font-extrabold text-gray-900">Mesajlar</h1>
-        <p className="text-sm leading-relaxed text-gray-700">Mesajlaşma şimdilik yalnız öğrenciler arasında açık.</p>
+        <p className="text-sm leading-relaxed text-gray-700">Mesajlaşma için sosyal profilin henüz hazır değil. Biraz sonra yeniden dene.</p>
       </div>,
     );
   }
