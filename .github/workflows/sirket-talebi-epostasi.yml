@@ -54,3 +54,8 @@ jobs:
 
       - name: Kuyruğu işle
         run: node scripts/sirket-talebi-epostasi.mjs ${{ inputs.kuru && '--kuru' || '' }}
+
+      # Aynı 10 dakikalık iş: seçili bildirimlerin (yeni başvuru, ekip daveti)
+      # e-postası. Alıcı RPC'nin döndürdüğü doğrulanmış hesap e-postası (20261230010000).
+      - name: Bildirim e-postaları
+        run: node scripts/bildirim-epostasi.mjs ${{ inputs.kuru && '--kuru' || '' }}
