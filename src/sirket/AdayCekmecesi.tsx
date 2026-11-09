@@ -1699,6 +1699,27 @@ saltOkunur ? (
             </section>
           )}
 
+          {Array.isArray(kart.onElemeCevaplari) && kart.onElemeCevaplari.length > 0 && (
+            <section aria-labelledby="aday-on-eleme" className="space-y-2">
+              <BolumBasligi id="aday-on-eleme">Ön eleme cevapları</BolumBasligi>
+              <dl
+                className="space-y-2.5 rounded-2xl border p-3 text-sm"
+                style={{ borderColor: SIRKET_KENAR, background: SIRKET_YUZEY }}
+              >
+                {kart.onElemeCevaplari.map((c: { soru: string; cevap: string }, i: number) => (
+                  <div key={i}>
+                    <dt className="text-xs font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
+                      {c.soru}
+                    </dt>
+                    <dd className="mt-0.5 whitespace-pre-line break-words" style={{ color: SIRKET_METIN }}>
+                      {c.cevap || '—'}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          )}
+
           {kart.onYazi && (
             <section aria-labelledby="aday-on-yazi" className="space-y-2">
               <BolumBasligi id="aday-on-yazi">Ön yazı</BolumBasligi>

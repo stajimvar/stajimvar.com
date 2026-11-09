@@ -245,6 +245,8 @@ export interface InternshipListing {
   city: string;
   countryCode?: string;
   originalLanguage?: string;
+  /** Başvuruda sorulan 0–3 soru (şirket ilanı). */
+  onElemeSorulari?: string[];
   internationalApplicants?: boolean;
   visaSponsorship?: boolean;
   /*

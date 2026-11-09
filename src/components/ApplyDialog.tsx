@@ -29,7 +29,7 @@ interface ApplyDialogProps {
    * (20261121010000). Yalnız kutu gösterildiyse ve işaretlendiyse true;
    * başvuru oluşturulduktan sonra `basvuruPaylasimIzni` ile yazılıyor.
    */
-  onSubmit: (consent: boolean, paylasimIzni: boolean) => Promise<void>;
+  onSubmit: (consent: boolean, paylasimIzni: boolean, onElemeCevaplari?: { soru: string; cevap: string }[]) => Promise<void>;
   /**
    * CV'si olmayan öğrenci için ikincil seçenek. Yalnız şirket sitesinden
    * başvurulan ilanda çiziliyor; birincil eylem yine "Şirket sayfasında
@@ -89,6 +89,13 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
     görüntülemeye onay toplamak olurdu.
   */
   const paylasimKutusu = rizaGerekli && listing.applicationMethod === 'internal';
+  /*
+    ÖN ELEME SORULARI (20270105010000): yalnız şirkete iletilen başvuruda.
+    Hepsi cevaplanmadan gönderilmiyor; cevap 1000 karakterle sınırlı.
+  */
+  const sorular = rizaGerekli ? (listing.onElemeSorulari ?? []).slice(0, 3) : [];
+  const [cevaplar, setCevaplar] = useState<string[]>([]);
+  const cevaplarTamam = sorular.every((_, i) => (cevaplar[i] ?? '').trim().length > 0);
 
   /* Odak yönetimi, ESC, focus trap ve arka plan kilidi. */
   const kutuRef = useModalErisim<HTMLDivElement>(true, onClose);
@@ -113,7 +120,11 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
     setError(null);
     setBusy(true);
     try {
-      await onSubmit(consent, paylasimKutusu && paylasimIzni);
+      await onSubmit(
+        consent,
+        paylasimKutusu && paylasimIzni,
+        sorular.length ? sorular.map((soru, i) => ({ soru, cevap: (cevaplar[i] ?? '').trim() })) : undefined,
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Başvuru gönderilemedi.');
     } finally {
@@ -313,6 +324,30 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
                 </div>
               )}
 
+              {sorular.length > 0 && (
+                <div className="space-y-3 rounded-2xl border border-gray-200 p-4">
+                  <p className="text-sm font-bold text-gray-900">{listing.companyName} soruyor</p>
+                  {sorular.map((soru, i) => (
+                    <label key={i} className="block">
+                      <span className="block text-sm text-gray-700">{soru}</span>
+                      <textarea
+                        value={cevaplar[i] ?? ''}
+                        onChange={(e) =>
+                          setCevaplar((o) => {
+                            const y = [...o];
+                            y[i] = e.target.value;
+                            return y;
+                          })
+                        }
+                        maxLength={1000}
+                        rows={2}
+                        className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+                      />
+                    </label>
+                  ))}
+                </div>
+              )}
+
               {/* KVKK açık rızası — yalnızca gerçekten aktarım yapılıyorsa */}
               {rizaGerekli && (
               <label className="flex gap-3 items-start cursor-pointer rounded-2xl border border-gray-200 p-4 hover:border-blue-300 transition-colors">
@@ -406,7 +441,7 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={(rizaGerekli && !consent) || busy}
+              disabled={(rizaGerekli && !consent) || !cevaplarTamam || busy}
               className={`inline-flex min-h-12 items-center justify-center gap-1.5 rounded-full px-6 text-sm font-bold transition-colors disabled:bg-gray-300 disabled:text-white disabled:cursor-not-allowed ${
                 rizaGerekli
                   ? 'text-white bg-blue-600 hover:bg-blue-700 shadow-sm'

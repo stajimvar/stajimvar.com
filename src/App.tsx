@@ -51,6 +51,9 @@ import Footer from './components/Footer';
 import { LEGAL_ROUTES } from './lib/yasal-rotalar';
 import { niyetYaz, niyetOku, niyetSil } from './lib/basvuru-niyeti.mjs';
 import { UYELIK_NOTLARI } from './lib/uyelik-notu.mjs';
+
+/** Başvuruda ön eleme sorusu ve cevabı (20270105010000). */
+type OnElemeCevabi = { soru: string; cevap: string };
 import { STAJ_ILANLARI_METNI } from './lib/staj-ilanlari-metni.mjs';
 import { basvuruKarari, basvuruyaAcikMi } from './lib/basvuru-devam.mjs';
 import { istanbulGunBaslangici } from './lib/kontrol-nabzi.mjs';
@@ -1917,7 +1920,11 @@ export default function App() {
     }
   };
 
-  const submitApplication = async (consent: boolean, paylasimIzni = false) => {
+  const submitApplication = async (
+    consent: boolean,
+    paylasimIzni = false,
+    onElemeCevaplari?: OnElemeCevabi[],
+  ) => {
     if (!applyTarget || !activeStudent) return;
 
     /*
@@ -1960,6 +1967,7 @@ export default function App() {
           rıza verilmediyse queries katmanında yazılmıyor.
         */
         profileSnapshot: basvuruKopyasi(activeStudent),
+        onElemeCevaplari,
       });
     } catch (hata) {
       /*

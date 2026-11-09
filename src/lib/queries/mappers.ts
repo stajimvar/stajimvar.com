@@ -104,6 +104,7 @@ export const LISTING_COLUMNS = [
   'city',
   'country_code',
   'original_language',
+  'on_eleme_sorulari',
   'international_applicants',
   'visa_sponsorship',
   'mandatory_staj_accepted',
@@ -212,6 +213,10 @@ export function toInternshipListing(row: ListingRowWithCompany): InternshipListi
     city: row.city ?? '',
     countryCode: row.country_code ?? undefined,
     originalLanguage: row.original_language ?? undefined,
+    /* Ön eleme soruları (20270105010000). */
+    onElemeSorulari: Array.isArray((row as unknown as { on_eleme_sorulari?: unknown }).on_eleme_sorulari)
+      ? ((row as unknown as { on_eleme_sorulari: string[] }).on_eleme_sorulari).filter(Boolean)
+      : [],
     internationalApplicants: row.international_applicants ?? undefined,
     visaSponsorship: row.visa_sponsorship ?? undefined,
     /* `?? null` şart: `|| null` false'u da null yapar ve açık RET kaybolur. */

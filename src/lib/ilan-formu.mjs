@@ -109,6 +109,15 @@ function istanbulBugun(bugun) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul' }).format(new Date());
 }
 
+/** Ön eleme soruları: boşlar atılıyor, en çok 3. */
+export const ON_ELEME_EN_FAZLA = 3;
+export function onElemeSorulariTemizle(liste) {
+  return (Array.isArray(liste) ? liste : [])
+    .map((x) => String(x ?? '').trim())
+    .filter(Boolean)
+    .slice(0, ON_ELEME_EN_FAZLA);
+}
+
 export function ilanSorunlari(deger) {
   const s = {};
   const metin = (x) => String(x ?? '').trim();
@@ -140,6 +149,12 @@ export function ilanSorunlari(deger) {
     s.aciklama = `İş tanımı en az ${ACIKLAMA_EN_AZ} karakter olmalı (şu an ${aciklama.length}).`;
   else if (aciklama.length > ACIKLAMA_EN_FAZLA)
     s.aciklama = `İş tanımı en fazla ${ACIKLAMA_EN_FAZLA} karakter (şu an ${aciklama.length}).`;
+
+  /* Ön eleme soruları (20270105010000): isteğe bağlı, en çok 3, her biri 3–200 karakter. */
+  const sorular = onElemeSorulariTemizle(deger.onElemeSorulari);
+  if ((deger.onElemeSorulari ?? []).some((x) => metin(x) && metin(x).length < 3))
+    s.onElemeSorulari = 'Her soru en az 3 karakter olmalı.';
+  else if (sorular.some((x) => x.length > 200)) s.onElemeSorulari = 'Bir soru en fazla 200 karakter olabilir.';
 
   /*
     Son başvuru OPSİYONEL (boş = süresiz/yıl boyu); yazıldıysa geçmişte
@@ -231,6 +246,10 @@ export function ilanSatiri(deger, { companyId, durum }) {
       gönderilseydi istek "permission denied for column" ile düşerdi.
     */
     description: metin(deger.aciklama),
+    /* Boş liste `null`: sorusuz ilan (veritabanı kısıtı 1–3 istiyor). */
+    on_eleme_sorulari: onElemeSorulariTemizle(deger.onElemeSorulari).length
+      ? onElemeSorulariTemizle(deger.onElemeSorulari)
+      : null,
     application_deadline: metin(deger.sonBasvuru) || null,
     origin: 'employer_posted',
     status: durum,
@@ -304,6 +323,7 @@ export function ilanFormDegeri(satir) {
     aciklama: metin(satir?.description),
     /* `date` sütunu; form `yyyy-aa-gg` bekliyor. */
     sonBasvuru: metin(satir?.application_deadline).slice(0, 10),
+    onElemeSorulari: onElemeSorulariTemizle(satir?.on_eleme_sorulari),
   };
 }
 
