@@ -2,6 +2,8 @@ import React from 'react';
 import {
   AlertCircle,
   Archive,
+  CalendarPlus,
+  Copy,
   ArrowRight,
   Briefcase,
   Building2,
@@ -28,6 +30,8 @@ import {
 } from './renk';
 import { IlanKarti, KontrolNotu, type AdayOzeti } from './IlanKarti';
 import { ilanEylemleri } from '../lib/ilan-formu.mjs';
+import { uzatilmisTarih } from '../lib/ilan-uzatma.mjs';
+import { tarihMetni } from '../lib/tarih.mjs';
 import { YAYIN_SONUCU_METNI } from '../lib/ilan-kontrol-gorunumu.mjs';
 import { adayGorebilir } from '../lib/sirket-kademe.mjs';
 import type { BekleyenAday, IlanKontrolSonucu, SirketBaglami, SirketProfilDegeri } from '../lib/sirket-veri';
@@ -113,6 +117,8 @@ export const GenelBakis: React.FC<{
   onDurum?: (id: string, d: 'published' | 'closed') => Promise<IlanKontrolSonucu | void>;
   /** Arşivle ya da sil. Verilmezse taşma menüsü çizilmiyor. */
   onKaldir?: (id: string, arsivle: boolean) => Promise<void>;
+  /** Son başvuruyu uzatır (rakip analizi #6). Verilmezse menüde yok. */
+  onSonBasvuruUzat?: (id: string, tarih: string) => Promise<void>;
   simdi?: Date;
   /**
    * İlanlar sayfasındaki sıra (IlanSiralamasi). İlan yokken ilk eylem
@@ -137,6 +143,7 @@ export const GenelBakis: React.FC<{
   onNavigate,
   onDurum,
   onKaldir,
+  onSonBasvuruUzat,
   simdi,
   siralama,
   onBekleyenAdaylar = ilanBekleyenAdaylar,
@@ -166,6 +173,7 @@ export const GenelBakis: React.FC<{
   const [kaldiriliyor, setKaldiriliyor] = React.useState(false);
   const [acikMenu, setAcikMenu] = React.useState<string | null>(null);
   const [kaldirmaHatasi, setKaldirmaHatasi] = React.useState('');
+  const [uzatmaSonucu, setUzatmaSonucu] = React.useState('');
 
   /*
     DURUM EYLEMİNİN SONUCU KARTTA
@@ -369,6 +377,11 @@ export const GenelBakis: React.FC<{
         </div>
       )}
 
+      {uzatmaSonucu && (
+        <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+          {uzatmaSonucu}
+        </p>
+      )}
       <ul className="space-y-3">
         {ilanlar.map((ilan) => {
           const id = String(ilan.id);
@@ -484,7 +497,12 @@ export const GenelBakis: React.FC<{
                     Düzenle ve Yayınla/Kapat görünür kalıyor; seyrek ve
                     geri alınamaz olan kaldırma menüye giriyor.
                   */}
-                  {onKaldir && eylem.kaldirilabilir && (
+                  {/*
+                    MENÜ HER İLANDA (9 Kasım 2026): Çoğalt ve Son başvuruyu
+                    uzat eklendi; kaldırma yalnız kaldırılabilir ilanda.
+                  */}
+                  {(
+
                     <div className="relative">
                       <button
                         type="button"
@@ -514,6 +532,41 @@ export const GenelBakis: React.FC<{
                               type="button"
                               onClick={() => {
                                 setAcikMenu(null);
+                                onNavigate(`/sirket/ilan/yeni?kopya=${encodeURIComponent(id)}`);
+                              }}
+                              className="flex min-h-11 w-full cursor-pointer items-center gap-2 px-3 text-left text-sm font-bold hover:bg-gray-50"
+                              style={{ color: SIRKET_METIN }}
+                            >
+                              <Copy className="h-4 w-4" aria-hidden />
+                              Çoğalt
+                            </button>
+                            {onSonBasvuruUzat && uzatilmisTarih(ilan.application_deadline as string | null) && (
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  setAcikMenu(null);
+                                  const yeni = uzatilmisTarih(ilan.application_deadline as string | null);
+                                  if (!yeni) return;
+                                  setUzatmaSonucu('');
+                                  try {
+                                    await onSonBasvuruUzat(id, yeni);
+                                    setUzatmaSonucu(`“${String(ilan.title ?? 'İlan')}” için son başvuru ${tarihMetni(yeni)} oldu.`);
+                                  } catch (h) {
+                                    setUzatmaSonucu(h instanceof Error ? h.message : 'Son başvuru uzatılamadı.');
+                                  }
+                                }}
+                                className="flex min-h-11 w-full cursor-pointer items-center gap-2 px-3 text-left text-sm font-bold hover:bg-gray-50"
+                                style={{ color: SIRKET_METIN }}
+                              >
+                                <CalendarPlus className="h-4 w-4" aria-hidden />
+                                Son başvuruyu 30 gün uzat
+                              </button>
+                            )}
+                            {onKaldir && eylem.kaldirilabilir && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAcikMenu(null);
                                 setKaldirilacak({
                                   id,
                                   baslik: String(ilan.title ?? ''),
@@ -531,6 +584,7 @@ export const GenelBakis: React.FC<{
                               )}
                               {eylem.arsivlenecek ? 'Arşivle' : 'Sil'}
                             </button>
+                            )}
                           </div>
                         </>
                       )}

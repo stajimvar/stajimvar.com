@@ -595,6 +595,11 @@ export const SirketPaneli: React.FC<{
         else await ilanSil(id);
         await yukle();
       }}
+      /* Yayındaki ilanda tarih içerik değişikliği: otomatik kontrolden geçiyor. */
+      onSonBasvuruUzat={async (id, tarih) => {
+        await ilanGuncelle(id, { application_deadline: tarih });
+        await yukle();
+      }}
       onBasvuruDurumu={async (id, d) => {
         await basvuruDurumuDegistir(id, d);
         await yukle();
@@ -700,6 +705,7 @@ export const SirketIlanlarSekmesi: React.FC<{
   onNavigate: (y: string) => void;
   onDurum: (id: string, d: 'published' | 'closed') => Promise<IlanKontrolSonucu | void>;
   onKaldir: (id: string, arsivle: boolean) => Promise<void>;
+  onSonBasvuruUzat?: (id: string, tarih: string) => Promise<void>;
   onBasvuruDurumu: (id: string, d: string) => Promise<void>;
   ekip: EkipUyesi[];
   isYuku: IsYukuSatiri[];
@@ -750,6 +756,7 @@ export const SirketIlanlarSekmesi: React.FC<{
   onNavigate,
   onDurum,
   onKaldir,
+  onSonBasvuruUzat,
   onBasvuruDurumu,
   ekip,
   isYuku,
@@ -885,6 +892,7 @@ export const SirketIlanlarSekmesi: React.FC<{
         onNavigate={onNavigate}
         onDurum={onDurum}
         onKaldir={onKaldir}
+        onSonBasvuruUzat={onSonBasvuruUzat}
         simdi={simdi}
         /* Öğrencinin ilanlar sayfasındaki sıra: kendi ilanının hangi şirketlerle, kaçıncı sırada durduğu. */
         siralama={

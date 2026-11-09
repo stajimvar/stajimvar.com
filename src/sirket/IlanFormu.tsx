@@ -344,6 +344,31 @@ export const IlanFormu: React.FC<{
   */
   const [onayBekleyen, setOnayBekleyen] = React.useState<{ id: string; etiket: string; metin: string } | null>(null);
 
+  /*
+    ÇOĞALT (9 Kasım 2026, rakip analizi #6): `?kopya=<ilan>` ile açılan YENİ
+    ilan formu o ilanın bilgileriyle doluyor; son başvuru boş (eski tarih
+    geçmiş olabilir). Kaydedilene kadar hiçbir şey yazılmıyor, yeni bir
+    ilan olarak kaydediliyor.
+  */
+  const [kopyaKaynagi, setKopyaKaynagi] = React.useState('');
+  React.useEffect(() => {
+    if (duzenlenenId || typeof window === 'undefined') return;
+    const kopya = new URLSearchParams(window.location.search).get('kopya');
+    if (!kopya || !/^[0-9a-f-]{36}$/i.test(kopya)) return;
+    let iptal = false;
+    void oku(kopya)
+      .then((satir) => {
+        if (iptal) return;
+        setDeger({ ...ilanFormDegeri(satir), sonBasvuru: '' });
+        setKopyaKaynagi(String(satir.title ?? 'ilan'));
+      })
+      .catch(() => undefined);
+    return () => {
+      iptal = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [duzenlenenId]);
+
   /* Düzenlemede kayıtlı satır forma çevriliyor (ilanFormDegeri,
      ilanSatiri'nin tersi). Okunamazsa form HİÇ çizilmiyor (aşağıda
      `okumaHatasi`): boş form, kullanıcıya var olan ilanı boş sandırıp
@@ -849,6 +874,11 @@ export const IlanFormu: React.FC<{
         </h1>
         <p className="text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
           {sirketAdi}
+          {kopyaKaynagi && (
+            <span className="mt-1 block text-xs font-semibold" style={{ color: SIRKET_VURGU_KOYU }}>
+              “{kopyaKaynagi}” ilanından kopyalandı; kaydedince yeni bir ilan olur. Son başvuru tarihini yeniden seç.
+            </span>
+          )}
           {durumEtiketi ? ` · ${durumEtiketi}` : ''}
         </p>
       </div>
