@@ -1,4 +1,5 @@
 import React from 'react';
+import type { DegerlendirmeOlcutu } from '../lib/sirket-veri';
 import { SIRALAMALAR, secenekler, sirala, suzgeceUyar } from '../lib/basvuran-suzgecleri.mjs';
 import { Check, Copy, Search, Share2, SlidersHorizontal, Users } from 'lucide-react';
 import { AdayKarti } from './AdayKarti';
@@ -115,6 +116,8 @@ export const AdayIzgarasi: React.FC<{
   yerelGorselAdresi?: (yol: string) => string | null;
   /** Yazma yetkisi olmayan üye: çekmece açılır, işlem sütunu çizilmez. */
   saltOkunur?: boolean;
+  /** Ekip içi değerlendirme ölçütleri; verilirse aday kartında bölüm. */
+  degerlendirmeOlcutleri?: DegerlendirmeOlcutu[];
   /*
     ADAY AYRINTISI BAŞARIYLA AÇILDI.
 
@@ -143,6 +146,7 @@ export const AdayIzgarasi: React.FC<{
   onPaylasimlar,
   yerelGorselAdresi,
   saltOkunur,
+  degerlendirmeOlcutleri,
   onGoruntulendi,
 }) => {
   const [onyargisiz, setOnyargisiz] = React.useState(false);
@@ -867,6 +871,7 @@ export const AdayIzgarasi: React.FC<{
       */}
       <AdayHataSiniri onKapat={adayiKapat}>
         <AdayCekmecesi
+          degerlendirmeOlcutleri={degerlendirmeOlcutleri}
           kart={acik}
           kaydediliyor={kaydediliyor}
           onKapat={adayiKapat}

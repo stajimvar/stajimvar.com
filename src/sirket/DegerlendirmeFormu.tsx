@@ -96,8 +96,8 @@ export const DegerlendirmeFormu: React.FC<{
               bakmadığı bir şeye bakıyormuş gibi göstermek olurdu.
             */
             <p className="text-sm leading-relaxed" style={{ color: SIRKET_METIN_IKINCIL }}>
-              Henüz değerlendirme ölçütü tanımlanmamış. Şirket sahibi Şirketim
-              ekranından ölçüt ekleyebilir; o zamana kadar yalnızca not yazılabilir.
+              Henüz değerlendirme ölçütü tanımlanmamış. Şirket sahibi Şirketim → Ayarlar →
+              Ekip ve davetler ekranından ölçüt ekleyebilir; o zamana kadar yalnızca not yazılabilir.
             </p>
           ) : (
             <ul className="space-y-2">
