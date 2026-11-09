@@ -28,8 +28,8 @@ test('ilan oluşturma tek: etiketli "İlan oluştur", "+" ve "Yeni ilan" kartı 
 test("Şirketim masaüstünde öğrenci profiliyle aynı 600 px'lik sütunda; telefonda sınıf eklemiyor", () => {
   const sahip = oku('src/sirket/SirketProfili.tsx');
   assert.match(sahip, /import \{ ProfilSayfaDuzeni \} from '\.\.\/components\/sosyal\/ProfilSayfaDuzeni';/);
-  /* Ana görünüm, kapak ve önizleme dalları üçü de sütunda. */
-  assert.equal((yorumsuz(sahip).match(/<ProfilSayfaDuzeni[\s>]/g) ?? []).length, 3);
+  /* Ana görünüm, kapak, önizleme ve ekip (9 Kasım 2026) dalları dördü de sütunda. */
+  assert.equal((yorumsuz(sahip).match(/<ProfilSayfaDuzeni[\s>]/g) ?? []).length, 4);
   /*
     27 Eylül 2026: ana görünüm öğrencinin /cv ekranı gibi üç sütun — sol
     şirket paneli, sağ son başvurular + işveren rehberi (SirketYanSutunlari).

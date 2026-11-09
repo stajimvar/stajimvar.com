@@ -55,7 +55,11 @@ jobs:
       - name: Kuyruğu işle
         run: node scripts/sirket-talebi-epostasi.mjs ${{ inputs.kuru && '--kuru' || '' }}
 
-      # Aynı 10 dakikalık iş: seçili bildirimlerin (yeni başvuru, ekip daveti)
+      # Ekip daveti e-postası (20261231010000): alıcı davetin kendi adresi.
+      - name: Ekip davetleri
+        run: node scripts/ekip-daveti-epostasi.mjs ${{ inputs.kuru && '--kuru' || '' }}
+
+      # Aynı 10 dakikalık iş: seçili bildirimlerin (bugün: yeni başvuru)
       # e-postası. Alıcı RPC'nin döndürdüğü doğrulanmış hesap e-postası (20261230010000).
       - name: Bildirim e-postaları
         run: node scripts/bildirim-epostasi.mjs ${{ inputs.kuru && '--kuru' || '' }}
