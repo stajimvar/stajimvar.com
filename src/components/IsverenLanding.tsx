@@ -259,7 +259,7 @@ export const IsverenLanding: React.FC<{
             'İlan asmak ile öğrenci bilgisi görmek ayrı iki yetki. İlan verebilirsiniz; aday kartları doğrulama sonrası açılıyor.',
             'Öğrencinin profili ve özgeçmişi size yalnızca sizin ilanınıza başvurduğunda ve başvuru sırasında bunu onayladığında ulaşıyor. Başka şirketin ilanına yapılan başvuruyu göremezsiniz.',
             'Öğrencinin telefonu ve e-postası yalnız başvururken paylaşmayı onayladıysa ve yalnız doğrulanmış şirketin yetkili ekip üyelerine açılıyor. Öğrenci bu onayı sonradan kapatabilir.',
-            'Başvurmamış öğrencilerin listesi diye bir ekran yok.',
+            'Başvurmamış öğrenciyi yalnız kendisi profilinde “Staj arıyorum” ya da “İş arıyorum” anahtarını açtıysa Adaylar ekranında görürsünüz; anahtarı kapattığı anda listeden düşer.',
             'Şahıs şirketlerinden TC kimlik numarası istenmiyor; VKN isteğe bağlı.',
           ].map((satir) => (
             <li key={satir} className="flex gap-2.5 text-sm leading-relaxed text-gray-700">

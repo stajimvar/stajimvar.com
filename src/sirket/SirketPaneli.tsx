@@ -160,6 +160,24 @@ export function sirketEkrani(
   return { tur: 'ilanlar' };
 }
 
+/*
+  SEKME BAŞLIĞI (9 Kasım 2026, uçtan uca denetim): panelin her sayfasında
+  sekme "Stajyer İlanı Ver | Ücretsiz Şirket Hesabı" diyordu (giriş
+  sayfasının ön render başlığı). Panel dizine girmiyor (useNoindex);
+  yalnız sekmede ne olduğu yazsın.
+*/
+export function sirketSekmeBasligi(yol: string): string {
+  const e = sirketEkrani(yol);
+  const ad =
+    e.tur === 'form' ? (e.duzenlenenId ? 'İlanı düzenle' : 'Yeni ilan')
+    : e.tur === 'profil' ? 'Şirketim'
+    : e.tur === 'adayProfili' ? 'Aday'
+    : e.tur === 'adaylar' ? 'Adaylar'
+    : e.tur === 'basvuranlar' ? 'Başvuranlar'
+    : 'İlanlarım';
+  return `${ad} | StajımVar`;
+}
+
 export const SirketPaneli: React.FC<{
   yol: string;
   userId: string | null;
@@ -173,6 +191,9 @@ export const SirketPaneli: React.FC<{
   onCikis?: () => void;
 }> = ({ yol, userId, yoneticiMi, onNavigate, acilacakAday, adayAramasi, onAdayAcildi, onCikis }) => {
   useNoindex();
+  React.useEffect(() => {
+    document.title = sirketSekmeBasligi(yol);
+  }, [yol]);
 
   const [baglam, setBaglam] = React.useState<SirketBaglami | null>(null);
   const [ilanlar, setIlanlar] = React.useState<Record<string, unknown>[]>([]);
