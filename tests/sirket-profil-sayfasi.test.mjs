@@ -39,7 +39,11 @@ test('herkese açık kimlik tipi İK e-postasını tanımıyor; öğrenci sorgus
     okuduğu herkese açık sütun (öğrenciye ve anon'a açık; `hr_email`
     kapalı, yerelde 42501 ile doğrulandı).
   */
-  assert.match(sorgu, /\.select\('id, name, slug, logo_url, industry, size, location, website_url, description, verified'\)/);
+  /* 9 Kasım 2026: şirket sayfası ekleri (yan haklar, sosyal, video) açık sütunlar olarak eklendi. */
+  assert.match(
+    sorgu,
+    /\.select\(\s*'id, name, slug, logo_url, industry, size, location, website_url, description, verified, ' \+\s*'yan_haklar, linkedin_url, instagram_url, tanitim_video_url',?\s*\)/,
+  );
   assert.doesNotMatch(sorgu, /hr_email/);
   /* Görünüm bileşeni de bu alanları hiç anmıyor. */
   assert.doesNotMatch(kod(GORUNUM), /hrEmail|hr_email|vkn/i);

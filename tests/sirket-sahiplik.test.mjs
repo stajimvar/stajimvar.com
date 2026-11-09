@@ -26,7 +26,7 @@ test('sahiplenme ve doğrulama ayrı alanlardan okunuyor', () => {
   assert.match(sorgu, /sahiplenilmis: company\.claimed_at != null/);
   assert.match(
     sorgu,
-    /select\('id,name,slug,logo_url,website_url,industry,location,size,description,verified,claimed_at'\)/,
+    /select\(\s*'id,name,slug,logo_url,website_url,industry,location,size,description,verified,claimed_at,'/,
     'claimed_at sorguya girmeli',
   );
   assert.match(sayfa, /veri\.company\.sahiplenilmis/);

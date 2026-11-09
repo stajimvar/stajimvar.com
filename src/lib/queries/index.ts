@@ -269,16 +269,28 @@ export async function fetchCompanyPage(slug: string): Promise<{
   */
   company: { id: string; name: string; slug: string; logoUrl?: string; websiteUrl?: string;
              industry?: string; location?: string; size?: string; description?: string;
-             verified: boolean; sahiplenilmis: boolean };
+             verified: boolean; sahiplenilmis: boolean;
+             /* Şirket sayfası ekleri (20270108010000). */
+             yanHaklar?: string[]; linkedinUrl?: string; instagramUrl?: string; videoUrl?: string };
   listings: InternshipListing[];
   /** Aynı sektör ya da aynı şehirdeki, yayında ilanı olan şirketler. */
   benzerler: { slug: string; name: string; logoUrl?: string; industry?: string }[];
 } | null> {
-  const { data: company, error } = await supabase
+  /* Ek sütunlar (20270108010000) üretilmiş tiplerde henüz yok; satır tipi açık. */
+  type SirketSatiri = {
+    id: string; name: string; slug: string; logo_url: string | null; website_url: string | null;
+    industry: string | null; location: string | null; size: string | null; description: string | null;
+    verified: boolean; claimed_at: string | null; yan_haklar: string[] | null;
+    linkedin_url: string | null; instagram_url: string | null; tanitim_video_url: string | null;
+  };
+  const { data: company, error } = (await supabase
     .from('companies')
-    .select('id,name,slug,logo_url,website_url,industry,location,size,description,verified,claimed_at')
+    .select(
+      'id,name,slug,logo_url,website_url,industry,location,size,description,verified,claimed_at,' +
+        'yan_haklar,linkedin_url,instagram_url,tanitim_video_url',
+    )
     .eq('slug', slug)
-    .maybeSingle();
+    .maybeSingle()) as unknown as { data: SirketSatiri | null; error: Parameters<typeof fail>[1] };
 
   if (error) fail('Şirket yüklenemedi', error);
   if (!company) return null;
@@ -368,6 +380,10 @@ export async function fetchCompanyPage(slug: string): Promise<{
       description: company.description ?? undefined,
       verified: company.verified,
       sahiplenilmis: company.claimed_at != null,
+      yanHaklar: Array.isArray(company.yan_haklar) ? company.yan_haklar : undefined,
+      linkedinUrl: company.linkedin_url ?? undefined,
+      instagramUrl: company.instagram_url ?? undefined,
+      videoUrl: company.tanitim_video_url ?? undefined,
     },
     listings: (rows as unknown as ListingRowWithCompany[]).map(toInternshipListing),
   };

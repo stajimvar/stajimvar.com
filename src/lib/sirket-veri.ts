@@ -14,6 +14,7 @@
  * ekranı göstermek için — arayüz kandırılabilir, RLS kandırılamaz.
  */
 
+import { yanHaklarAyir } from './sirket-sayfasi-ek.mjs';
 import { kademeHesapla } from './sirket-kademe.mjs';
 
 /* --------------------------------------------------------- ekip rolü */
@@ -827,11 +828,12 @@ export async function basvuruNotuKaydet(id: string, metin: string) {
  *
  * YALNIZCA VAR OLAN SÜTUNLAR
  * --------------------------
- * "Çalışma kültürü", "yan haklar", "departmanlar", "sosyal medya" gibi
- * alanlar `companies` tablosunda YOK. Onları eklemek bir göç ve bir
- * yönetim ekranı demek; buradaki form yalnızca bugün gerçekten
- * kaydedilebilen yedi alanı soruyor. Boş bir alanı formda göstermek,
- * doldurulunca kaybolan bir alan üretirdi.
+ * "Çalışma kültürü", "departmanlar" gibi alanlar `companies` tablosunda
+ * YOK; form yalnızca gerçekten kaydedilebilen alanları soruyor.
+ *
+ * 9 Kasım 2026 (20270108010000): yan haklar, LinkedIn, Instagram ve
+ * tanıtım videosu eklendi. Tamamlanma oranına (PROFIL_ALANLARI) girmiyor:
+ * isteğe bağlılar, oranı düşürüp şirketi zorlamasın.
  */
 export interface SirketProfilDegeri {
   logoUrl: string;
@@ -841,6 +843,11 @@ export interface SirketProfilDegeri {
   websiteUrl: string;
   description: string;
   hrEmail: string;
+  /** Her satır bir yan hak (kayıtta text[]). */
+  yanHaklar: string;
+  linkedinUrl: string;
+  instagramUrl: string;
+  videoUrl: string;
 }
 
 export const PROFIL_ALANLARI: (keyof SirketProfilDegeri)[] = [
@@ -865,20 +872,25 @@ export async function sirketProfiliOku(companyId: string): Promise<SirketProfilD
   const [{ data }, ozel] = await Promise.all([
     db
       .from('companies')
-      .select('logo_url, industry, size, location, website_url, description')
+      .select('logo_url, industry, size, location, website_url, description, yan_haklar, linkedin_url, instagram_url, tanitim_video_url' as never)
       .eq('id', companyId)
-      .maybeSingle(),
+      .maybeSingle() as unknown as Promise<{ data: Record<string, unknown> | null }>,
     sirketOzelBilgileri(companyId),
   ]);
+  const yazi = (x: unknown) => (typeof x === 'string' ? x : '');
 
   return {
-    logoUrl: data?.logo_url ?? '',
-    industry: data?.industry ?? '',
-    size: data?.size ?? '',
-    location: data?.location ?? '',
-    websiteUrl: data?.website_url ?? '',
-    description: data?.description ?? '',
+    logoUrl: yazi(data?.logo_url),
+    industry: yazi(data?.industry),
+    size: yazi(data?.size),
+    location: yazi(data?.location),
+    websiteUrl: yazi(data?.website_url),
+    description: yazi(data?.description),
     hrEmail: ozel?.hrEmail ?? '',
+    yanHaklar: Array.isArray(data?.yan_haklar) ? (data.yan_haklar as string[]).join('\n') : '',
+    linkedinUrl: yazi(data?.linkedin_url),
+    instagramUrl: yazi(data?.instagram_url),
+    videoUrl: yazi(data?.tanitim_video_url),
   };
 }
 
@@ -941,7 +953,11 @@ export async function sirketProfiliKaydet(companyId: string, deger: SirketProfil
       website_url: temiz(deger.websiteUrl),
       description: temiz(deger.description),
       hr_email: temiz(deger.hrEmail),
-    })
+      yan_haklar: yanHaklarAyir(deger.yanHaklar).length ? yanHaklarAyir(deger.yanHaklar) : null,
+      linkedin_url: temiz(deger.linkedinUrl),
+      instagram_url: temiz(deger.instagramUrl),
+      tanitim_video_url: temiz(deger.videoUrl),
+    } as never)
     .eq('id', companyId);
   if (error) throw new Error('Şirket profili kaydedilemedi.');
 }
@@ -975,6 +991,11 @@ export interface SirketAcikKimlik {
    * (26 Eylül 2026). Uydurulmuyor: yalnız sunucu true derse rozet var.
    */
   dogrulandi: boolean;
+  /** Şirket sayfası ekleri (20270108010000); yoksa bölüm çizilmiyor. */
+  yanHaklar?: string[];
+  linkedinUrl?: string | null;
+  instagramUrl?: string | null;
+  videoUrl?: string | null;
 }
 
 const bosNull = (x: string | null | undefined): string | null => {
@@ -998,6 +1019,10 @@ export function sirketAcikKimligi(
     siteUrl: bosNull(profil?.websiteUrl) ?? bosNull(baglam.siteUrl),
     aciklama: bosNull(profil?.description),
     dogrulandi: baglam.dogrulandi === true,
+    yanHaklar: yanHaklarAyir(profil?.yanHaklar ?? ''),
+    linkedinUrl: bosNull(profil?.linkedinUrl),
+    instagramUrl: bosNull(profil?.instagramUrl),
+    videoUrl: bosNull(profil?.videoUrl),
   };
 }
 
@@ -1013,9 +1038,12 @@ export async function sirketAcikKimliginiOku(companyId: string): Promise<SirketA
   const db = await istemci();
   const { data, error } = await db
     .from('companies')
-    .select('id, name, slug, logo_url, industry, size, location, website_url, description, verified')
+    .select(
+      'id, name, slug, logo_url, industry, size, location, website_url, description, verified, ' +
+        'yan_haklar, linkedin_url, instagram_url, tanitim_video_url',
+    )
     .eq('id', companyId)
-    .maybeSingle();
+    .maybeSingle() as unknown as { data: Record<string, any> | null; error: unknown };
   if (error) throw new Error('Şirket bilgileri alınamadı.');
   if (!data) return null;
   return {
@@ -1029,6 +1057,10 @@ export async function sirketAcikKimliginiOku(companyId: string): Promise<SirketA
     siteUrl: bosNull(data.website_url),
     aciklama: bosNull(data.description),
     dogrulandi: data.verified === true,
+    yanHaklar: Array.isArray(data.yan_haklar) ? data.yan_haklar : [],
+    linkedinUrl: bosNull(data.linkedin_url),
+    instagramUrl: bosNull(data.instagram_url),
+    videoUrl: bosNull(data.tanitim_video_url),
   };
 }
 
