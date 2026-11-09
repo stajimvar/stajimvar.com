@@ -1,7 +1,8 @@
 import React from 'react';
 import type { DegerlendirmeOlcutu } from '../lib/sirket-veri';
 import { SIRALAMALAR, secenekler, sirala, suzgeceUyar } from '../lib/basvuran-suzgecleri.mjs';
-import { Check, Copy, Search, Share2, SlidersHorizontal, Users } from 'lucide-react';
+import { Check, Copy, Download, Search, Share2, SlidersHorizontal, Users } from 'lucide-react';
+import { adaylarCsv, csvDosyaAdi } from '../lib/aday-csv.mjs';
 import { AdayKarti } from './AdayKarti';
 import {
   AdayCekmecesi,
@@ -725,6 +726,32 @@ export const AdayIzgarasi: React.FC<{
               Filtreleri temizle
             </button>
           )}
+        </div>
+      )}
+
+      {/*
+        CSV İNDİR (rakip analizi #10): ekrandaki liste ne ise dosya o —
+        süzgeç, sıralama, önyargısız kip aynen. İletişim bilgisi dosyada yok.
+      */}
+      {gosterilen.length > 0 && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => {
+              const blob = new Blob([adaylarCsv(gosterilen)], { type: 'text/csv;charset=utf-8' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = csvDosyaAdi();
+              a.click();
+              setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }}
+            className={IKINCIL_DUGME}
+            style={ikincilStil}
+          >
+            <Download aria-hidden className="h-4 w-4" />
+            CSV indir ({gosterilen.length})
+          </button>
         </div>
       )}
 
