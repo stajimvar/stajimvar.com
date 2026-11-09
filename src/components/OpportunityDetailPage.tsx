@@ -375,7 +375,7 @@ export const OpportunityDetailPage: React.FC<{
       className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-bold text-white transition-colors hover:bg-blue-700 sm:w-auto"
     >
       {!userId
-        ? 'Başvurmak için giriş yap'
+        ? 'Başvurmak için ücretsiz üye ol'
         : item.applicationUrl
           ? 'Resmî sitede başvur'
           : 'Resmî kaynağa git'}

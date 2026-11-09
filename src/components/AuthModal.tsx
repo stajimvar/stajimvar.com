@@ -68,6 +68,11 @@ interface AuthModalProps {
   baglam?: 'ogrenci' | 'isveren';
   /** OAuth dönüşünde gidilecek site içi adres. */
   oauthDonusYolu?: string;
+  /**
+   * Dış başvuruya basan misafire neden üye olması gerektiği (lib/uyelik-notu).
+   * Verilmezse pencere eskisi gibi.
+   */
+  uyelikNotu?: { baslik: string; aciklama: string; maddeler: string[] } | null;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -75,6 +80,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   allowCompanySignUp = false,
   baglam = 'ogrenci',
   oauthDonusYolu,
+  uyelikNotu = null,
   onClose,
   initialMode = 'login',
   allCompanies,
@@ -388,6 +394,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           değil. İlan yayınlama ve aday erişimi sahiplenme onayına bağlı
           kalmaya devam ediyor.
         */}
+        {uyelikNotu && mode !== 'sifirla' && (
+          <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50 p-3 text-left">
+            <p className="text-sm font-bold text-blue-900">{uyelikNotu.baslik}</p>
+            <p className="mt-1 text-xs leading-relaxed text-blue-900">{uyelikNotu.aciklama}</p>
+            <ul className="mt-1.5 space-y-0.5 text-xs leading-relaxed text-blue-900">
+              {uyelikNotu.maddeler.map((m) => (
+                <li key={m} className="flex gap-1.5">
+                  <span aria-hidden>•</span>
+                  {m}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         {mode !== 'sifirla' && (
           <div className="mb-4">
             <OAuthDugmeleri

@@ -32,31 +32,25 @@ test('DIŞ BAŞVURU: adres doğrudan resmî siteye, giriş kapısı yok', () => 
   assert.equal(yol.teslimEdiliyor, false, 'dış başvuru şirkete iletilmiyor; öyle denmemeli');
 });
 
-test('dış başvuru düğmesi DisBaglanti (giriş kapısı) kullanmıyor', () => {
-  /*
-    Kapı buradaydı: misafir düğmeye basınca ilana değil kayıt ekranına
-    gidiyordu. Kart ve ilan detayında dış bağlantı artık düz bir <a>.
-  */
-  /* Yorumlar atılıyor: eski kapıyı ANLATAN yorum, kapının kendisi değil. */
-  /*
-    DIŞ BAŞVURU KARTTAN İLAN SAYFASINA TAŞINDI (onaylanan tasarım).
-    Kart tek tip ve tek eylemi var: "İlanı incele". Başvuru düğmesi —
-    ve dolayısıyla bu güvence — ilan sayfasında.
-  */
+/*
+  KARAR DEĞİŞTİ (9 Kasım 2026, kullanıcı isteği): "üye olmayanları şirket
+  sayfasına yönlendirme, kayıt olmaya yönlendir ve bunu açıkla." 7 Eylül'de
+  kaldırılan kapı geri geldi; bu kez kayıt penceresi NEDENİNİ anlatıyor
+  (lib/uyelik-notu) ve kayıt bitince başvuru sayfası kendiliğinden açılıyor
+  (lib/basvuru-niyeti). Giriş yapmış kullanıcı için bağlantı aynı: gerçek
+  hedef etiketi, yeni sekme, noopener (ui/DisBaglanti).
+*/
+test('dış başvuru düğmesi misafirde kayda, üyede resmî adrese gidiyor', () => {
   const kod = detay.replace(/\/\*[\s\S]*?\*\//g, '');
-  const disDal = kod.slice(kod.indexOf("resmiAdres"));
-  const govde = disDal.slice(0, disDal.indexOf('</a>'));
-  assert.match(govde, /href=\{yol\.resmiAdres\}/);
-  assert.match(govde, /target="_blank"/);
-  assert.match(govde, /rel="noopener noreferrer nofollow"/);
-  assert.doesNotMatch(govde, /DisBaglanti|girisGerekli|onGirisGerekli/);
-  assert.doesNotMatch(kod, /import .*DisBaglanti/);
-  /* Kartta dış başvuru hiç yok: detay önce (25 Eylül 2026 kararı yeniden teyit edildi). */
+  assert.match(kod, /import \{ DisBaglanti \} from '\.\.\/ui\/DisBaglanti';/);
+  assert.equal((kod.match(/<DisBaglanti\s+href=\{yol\.resmiAdres\}\s+girisGerekli=\{girisGerekli\}/g) ?? []).length, 2);
+  assert.match(kod, /tur: 'dis',\s*ilanId: listing\.id,\s*yol: window\.location\.pathname,\s*disAdres: yol\.resmiAdres/);
+  assert.match(oku('src/ui/DisBaglanti.tsx'), /rel="noopener noreferrer nofollow"/);
+  /* Kartta dış başvuru hiç yok: detay önce (25 Eylül 2026 kararı). */
   assert.doesNotMatch(kart, /target="_blank"/);
-  /* Detaydaki dış düğmenin yazısı gerçek hedefi söylüyor. */
+  /* Üyede düğmenin yazısı gerçek hedefi söylüyor. */
   assert.match(detay, /const hedef = ilanHedefi\(listing \?\? \{\}\);/);
-  assert.match(detay, /\{yol\.anaEylem === 'resmi-site' \? hedef\.etiket : 'İlana git'\}/);
-  assert.match(kod, /\{hedef\.etiket\}\s*<ExternalLink/);
+  assert.match(detay, /yol\.anaEylem === 'resmi-site' \? hedef\.etiket : 'İlana git'/);
 });
 
 test('ADRESİ OLMAYAN İLANDA sahte dış CTA basılmıyor', () => {
@@ -278,12 +272,11 @@ test('masaüstü görünümü değişmedi: eski eylem satırı lg üstünde duru
   assert.match(detay, /lg:col-span-4 lg:sticky lg:top-6/);
 });
 
-test('sabit çubuktaki dış başvuru da giriş istemeden resmî adrese gidiyor', () => {
+test('sabit çubuktaki dış başvuru da misafirde kayda gidiyor (9 Kasım 2026)', () => {
   const cubuk = detay.slice(detay.indexOf('MOBİL SABİT BAŞVURU ÇUBUĞU'));
   assert.match(cubuk, /yol\.resmiAdres && yol\.anaEylem === 'resmi-site'/);
-  assert.match(cubuk, /href=\{yol\.resmiAdres\}/);
-  assert.match(cubuk, /rel="noopener noreferrer nofollow"/);
-  assert.doesNotMatch(cubuk, /DisBaglanti|girisGerekli/);
+  assert.match(cubuk, /<DisBaglanti\s+href=\{yol\.resmiAdres\}\s+girisGerekli=\{girisGerekli\}/);
+  assert.match(cubuk, /girisGerekli && onGirisGerekli \? 'Başvurmak için ücretsiz üye ol' : hedef\.etiket/);
 });
 
 test('adresi de olmayan ilanda çubuk BOŞ bir kabuk olarak çizilmiyor', () => {

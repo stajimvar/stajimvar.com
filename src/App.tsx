@@ -50,6 +50,7 @@ import { useGlobalListingPreferences } from './components/useGlobalListingPrefer
 import Footer from './components/Footer';
 import { LEGAL_ROUTES } from './lib/yasal-rotalar';
 import { niyetYaz, niyetOku, niyetSil } from './lib/basvuru-niyeti.mjs';
+import { UYELIK_NOTLARI } from './lib/uyelik-notu.mjs';
 import { STAJ_ILANLARI_METNI } from './lib/staj-ilanlari-metni.mjs';
 import { basvuruKarari, basvuruyaAcikMi } from './lib/basvuru-devam.mjs';
 import { istanbulGunBaslangici } from './lib/kontrol-nabzi.mjs';
@@ -1064,14 +1065,29 @@ export default function App() {
    * `donusYolu` da veriliyor ki OAuth kullanıcıyı doğrudan ilanın sayfasına
    * getirsin — böylece dönüş anında zaten doğru sayfadayız.
    */
+  /* Dış başvuruya basan misafire kayıt penceresinde neden üye olması gerektiği. */
+  const [uyelikNotu, setUyelikNotu] = useState<(typeof UYELIK_NOTLARI)['ilan'] | null>(null);
   const handleOpenLogin = (niyet?: {
     tur: 'dis' | 'ic';
     ilanId: string;
     yol: string;
     disAdres?: string;
     baslik?: string;
-  }) => {
+  }, not?: 'ilan' | 'burs') => {
     setAuthBaglam('ogrenci');
+    /*
+      ÜYE OLMAYAN DIŞARI GİTMİYOR, KAYDA GİDİYOR (9 Kasım 2026): dış
+      başvuru niyetinde ya da açık bir notla pencere KAYIT kipinde ve
+      nedenini anlatan notla açılıyor.
+    */
+    const notTuru = not ?? (niyet?.tur === 'dis' ? 'ilan' : null);
+    setUyelikNotu(notTuru ? UYELIK_NOTLARI[notTuru] : null);
+    if (!niyet && notTuru) {
+      setAuthDonusYolu(window.location.pathname);
+      setAuthModalMode('register');
+      setIsAuthModalOpen(true);
+      return;
+    }
     if (niyet && niyetYaz(window.sessionStorage, niyet)) {
       setAuthDonusYolu(niyet.yol);
       /* Kayıt modu: başvurmak isteyen misafirin çoğu henüz üye değil. */
@@ -1085,6 +1101,7 @@ export default function App() {
   };
 
   const handleOpenRegister = () => {
+    setUyelikNotu(null);
     setAuthBaglam('ogrenci');
     setAuthDonusYolu(null);
     setAuthModalMode('register');
@@ -2624,6 +2641,7 @@ export default function App() {
       /* İşveren penceresinden Google/Microsoft: dönüş şirket profili sayfası;
          niyet orada hesaba yazılıyor (IsverenBaslangic). Şirketi olan oradan panele geçer. */
       oauthDonusYolu={authBaglam === 'isveren' && !sirketUyesi ? '/isveren/baslangic' : authDonusYolu ?? undefined}
+      uyelikNotu={authBaglam === 'ogrenci' ? uyelikNotu : null}
     />
     </Suspense>
   );
@@ -3226,7 +3244,7 @@ export default function App() {
   }
   if (temizYol.startsWith('/firsatlar/')) {
     const slug = temizYol.slice('/firsatlar/'.length);
-    if (slug) return icerikSayfasi(<OpportunityDetailPage slug={slug} userId={session?.userId ?? null} onBack={() => navigate('/firsatlar')} onRequireLogin={handleOpenLogin} />);
+    if (slug) return icerikSayfasi(<OpportunityDetailPage slug={slug} userId={session?.userId ?? null} onBack={() => navigate('/firsatlar')} onRequireLogin={() => handleOpenLogin(undefined, 'burs')} />);
   }
 
   /* Yönetim → Instagram bağlantı durumu. Uç yönetici jetonu istiyor. */
@@ -3348,6 +3366,8 @@ export default function App() {
             onNavigate={navigate}
             onApply={(ilan) => handleApplyToJob(ilan, 0)}
             onTrack={handleTrackApplication}
+            girisGerekli={!session}
+            onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
           />
           {basvuruPenceresi}
         </>,

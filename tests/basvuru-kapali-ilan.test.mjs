@@ -89,7 +89,7 @@ test('dış ilan yolu etkilenmiyor', () => {
   const disDal = arasi(sayfa, "{yol.resmiAdres && yol.anaEylem === 'resmi-site' ? (", ') : kapanis ? (');
   assert.ok(!/kapanis/.test(disDal), 'dış ilan dalı kapanış kuralına bağlanmış');
   assert.match(disDal, /onClick=\{\(\) => onTrack\(listing\)\}/);
-  assert.match(disDal, /\{hedef\.etiket\}/);
+  assert.match(disDal, /hedef\.etiket\}/);
 });
 
 /* ------------------------------------------- 2. sunucu kapıları duruyor */
