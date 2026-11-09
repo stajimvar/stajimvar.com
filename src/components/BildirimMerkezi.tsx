@@ -54,7 +54,8 @@ function turSimgesi(tur: string) {
     : tur === 'son_basvuru_yaklasiyor' || tur === 'firsat_son_basvuru' || tur === 'ilan_suresi_doluyor' ? CalendarClock
     : tur === 'sirket_dogrulandi' ? CheckCircle2
     : tur === 'sirket_dogrulama_reddedildi' || tur === 'kayitli_ilan_kapandi' || tur === 'ilan_kapandi' ? AlertCircle
-    : tur === 'uygun_yeni_ilan' ? Briefcase
+    /* Takip edilen şirketin yeni ilanı (20270109010000). */
+    : tur === 'uygun_yeni_ilan' || tur === 'takip_ilan' ? Briefcase
     : tur === 'yeni_basvuru' ? Briefcase
     /* Takip de kişiye dair bir olay: belge simgesine düşüyordu, oysa ortada belge yok. */
     : tur === 'baglanti_istegi' || tur === 'baglanti_kabul' || tur === 'takip' ? UserPlus

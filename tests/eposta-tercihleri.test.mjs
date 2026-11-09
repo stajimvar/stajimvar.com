@@ -26,7 +26,9 @@ test('arayüz: Ayarlar → E-posta tercihleri; satır yoksa açık', () => {
   assert.match(profil, /const EPOSTA_YOLU = '\/sirket\/profil\/eposta';/);
   assert.match(profil, /etiket: 'E-posta tercihleri'/);
   const ekran = oku('src/sirket/EpostaTercihleri.tsx');
-  assert.match(ekran, /yeni_basvuru_eposta \?\? true/);
+  /* 10 Kasım 2026: anahtar iki alan için ortak; satır yoksa yine açık. */
+  assert.match(ekran, /data\?\.\[alan\] \?\? true/);
+  assert.match(ekran, /alan="yeni_basvuru_eposta"/);
   assert.match(ekran, /onConflict: 'user_id'/);
   assert.match(ekran, /yine zil bildirimi olarak gelir/);
 });

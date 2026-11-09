@@ -136,16 +136,19 @@ Deno.serve(async (request) => {
     await gonder(resend, `ekip-daveti-${d.id}`, String(d.eposta), `${tekSatir(d.sirket_adi ?? 'Bir şirket', 80)} seni StajımVar'daki ekibine davet etti`, html);
   });
 
-  /* 3) Yeni başvuru → şirket üyesi */
+  /* 3) Yeni başvuru → şirket üyesi; takip edilen şirketin yeni ilanı → öğrenci (20270109010000) */
   sonuc.bildirim = await kuyruk(rpc, 'bildirim_eposta_kuyruktan_al', 'bildirim_eposta_isaretle', async (b) => {
     const hedef = typeof b.hedef === 'string' && /^\/(?!\/)/.test(b.hedef) ? `${SITE}${b.hedef}` : `${SITE}/`;
+    const takipIlani = b.tur === 'takip_ilan';
     const html = [
       '<div style="font:15px/1.5 system-ui;color:#111827;max-width:520px">',
       `<p style="font-weight:700;margin:0 0 8px">${kacir(b.baslik)}</p>`,
       b.govde ? `<p style="margin:0 0 16px">${kacir(b.govde)}</p>` : '',
-      `<p style="margin:0 0 20px"><a href="${kacir(hedef)}" style="display:inline-block;background:#2563EB;color:#fff;text-decoration:none;font-weight:700;padding:10px 16px;border-radius:10px">Başvuruyu panelde aç</a></p>`,
+      `<p style="margin:0 0 20px"><a href="${kacir(hedef)}" style="display:inline-block;background:#2563EB;color:#fff;text-decoration:none;font-weight:700;padding:10px 16px;border-radius:10px">${takipIlani ? 'İlanı gör' : 'Başvuruyu panelde aç'}</a></p>`,
       '<p style="font-size:12px;color:#6B7280;margin:0">Bu e-posta StajımVar hesabındaki bildirimin kopyası. ',
-      'Aday bilgileri yalnız şirket panelinde görünür.</p>',
+      takipIlani
+        ? `Bu şirketi takip ettiğin için gönderildi; <a href="${SITE}/ayarlar/bildirimler" style="color:#6B7280">Bildirim ayarları</a>ndan kapatabilirsin.</p>`
+        : 'Aday bilgileri yalnız şirket panelinde görünür.</p>',
       '</div>',
     ].filter(Boolean).join('\n');
     await gonder(resend, `bildirim-${b.id}`, String(b.alici), tekSatir(b.baslik ?? 'StajımVar bildirimi', 120), html);
