@@ -98,7 +98,7 @@ export const SirketEkibi: React.FC<{
     <div className="space-y-4">
       <section className={KUTU} style={kutuStil} aria-labelledby="ekip-baslik">
         <h2 id="ekip-baslik" className="text-base font-extrabold" style={{ color: SIRKET_METIN }}>
-          Ekip
+          Ekip üyeleri
         </h2>
         <ul className="mt-3 divide-y" style={{ borderColor: SIRKET_KENAR }}>
           {uyeler.map((u) => (

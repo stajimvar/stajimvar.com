@@ -93,7 +93,8 @@ const AdaySatiri: React.FC<{
           */}
           {ogrenci.acildi && (
             <p className="mt-1 text-[11px] text-gray-400">
-              {tarihYaz(ogrenci.acildi)}’den beri arıyor
+              {/* Ek yıla göre değişirdi (2026’dan, 2030’dan); ek gerektirmeyen kalıp. */}
+              {tarihYaz(ogrenci.acildi)} tarihinden beri arıyor
             </p>
           )}
         </div>
