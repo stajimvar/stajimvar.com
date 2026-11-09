@@ -1,4 +1,5 @@
 import React from 'react';
+import { SIRALAMALAR, secenekler, sirala, suzgeceUyar } from '../lib/basvuran-suzgecleri.mjs';
 import { Check, Copy, Search, Share2, SlidersHorizontal, Users } from 'lucide-react';
 import { AdayKarti } from './AdayKarti';
 import {
@@ -162,6 +163,14 @@ export const AdayIzgarasi: React.FC<{
     window.history.replaceState(window.history.state, '', adres.pathname + adres.search);
   }, [ilanSuzgeci]);
   const [durumSuzgeci, setDurumSuzgeci] = React.useState('');
+  /* Bölüm, okul, sınıf, şehir ve sıralama (9 Kasım 2026, rakip analizi). */
+  const [alanSuzgeci, setAlanSuzgeci] = React.useState<{ bolum: string; universite: string; sinif: string; sehir: string }>({
+    bolum: '',
+    universite: '',
+    sinif: '',
+    sehir: '',
+  });
+  const [siralama, setSiralama] = React.useState('yeni');
   const [yerelArama, setYerelArama] = React.useState('');
   const arama = adayAramasi ? adayAramasi.terim : yerelArama;
   const setArama = adayAramasi ? adayAramasi.degis : setYerelArama;
@@ -243,6 +252,7 @@ export const AdayIzgarasi: React.FC<{
     const terim = arama.trim().toLocaleLowerCase('tr-TR');
     return kartlar.filter((k) => {
       if (ilanSuzgeci && String(k.ilanId ?? '') !== ilanSuzgeci) return false;
+      if (!suzgeceUyar(k, alanSuzgeci)) return false;
       if (!terim) return true;
       /* Ad, okul, bölüm ve yetenekler aranıyor — İK'nın aklında kalan
          şeyler bunlar. */
@@ -252,7 +262,18 @@ export const AdayIzgarasi: React.FC<{
         .toLocaleLowerCase('tr-TR');
       return havuz.includes(terim);
     });
-  }, [kartlar, ilanSuzgeci, arama]);
+  }, [kartlar, ilanSuzgeci, arama, alanSuzgeci]);
+
+  /* Seçenekler gelen başvurulardan; boş seçenek gösterilmiyor. */
+  const alanSecenekleri = React.useMemo(
+    () => ({
+      bolum: secenekler(kartlar, 'bolum'),
+      universite: secenekler(kartlar, 'universite'),
+      sinif: secenekler(kartlar, 'sinif'),
+      sehir: secenekler(kartlar, 'sehir'),
+    }),
+    [kartlar],
+  );
 
   /*
     SADE AKIŞ DURUM SÜZGECİ: Yeni · İnceleniyor · Olumsuz · Geri çekildi.
@@ -261,8 +282,8 @@ export const AdayIzgarasi: React.FC<{
     (basvuru-durumu.mjs `sadeDurumGrubu`).
   */
   const suzulmus = React.useMemo(
-    () => durumHaricSuzulmus.filter((k) => durumSuzgecineUyar(k, durumSuzgeci)),
-    [durumHaricSuzulmus, durumSuzgeci],
+    () => sirala(durumHaricSuzulmus.filter((k) => durumSuzgecineUyar(k, durumSuzgeci)), siralama),
+    [durumHaricSuzulmus, durumSuzgeci, siralama],
   );
   const durumSecenekleri = React.useMemo(
     () => durumSuzgeciSecenekleri(durumHaricSuzulmus, durumSuzgeci),
@@ -496,11 +517,17 @@ export const AdayIzgarasi: React.FC<{
     önyargısız inceleme o alanda; ilan seçimi ve arama ana satırda,
     kendileri görünür olduğu için sayılmıyor.
   */
-  const etkinFiltre = (durumSuzgeci ? 1 : 0) + (onyargisiz ? 1 : 0);
+  const etkinFiltre =
+    (durumSuzgeci ? 1 : 0) +
+    (onyargisiz ? 1 : 0) +
+    Object.values(alanSuzgeci).filter(Boolean).length +
+    (siralama !== 'yeni' ? 1 : 0);
   const suzuluyor = suzulmus.length !== kartlar.length;
   const filtreleriTemizle = () => {
     setDurumSuzgeci('');
     setOnyargisiz(false);
+    setAlanSuzgeci({ bolum: '', universite: '', sinif: '', sehir: '' });
+    setSiralama('yeni');
   };
 
   return (
@@ -612,6 +639,62 @@ export const AdayIzgarasi: React.FC<{
               ))}
             </select>
           </label>
+
+          {/*
+            BÖLÜM · OKUL · SINIF · ŞEHİR · SIRALAMA (9 Kasım 2026). Açılır
+            liste; yatay çip satırı yok (kullanıcı kararı). Seçeneği olmayan
+            süzgeç çizilmiyor.
+          */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            {(
+              [
+                ['bolum', 'Bölüm', 'Tüm bölümler'],
+                ['universite', 'Okul', 'Tüm okullar'],
+                ['sinif', 'Sınıf', 'Tüm sınıflar'],
+                ['sehir', 'Şehir', 'Tüm şehirler'],
+              ] as const
+            ).map(([alan, etiket, hepsi]) =>
+              alanSecenekleri[alan].length > 0 ? (
+                <label key={alan} className="block">
+                  <span className="mb-1 block text-xs font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
+                    {etiket}
+                  </span>
+                  <select
+                    value={alanSuzgeci[alan]}
+                    onChange={(e) => setAlanSuzgeci((o) => ({ ...o, [alan]: e.target.value }))}
+                    aria-label={`${etiket} süzgeci`}
+                    className={ALAN}
+                    style={alanStil}
+                  >
+                    <option value="">{hepsi}</option>
+                    {alanSecenekleri[alan].map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null,
+            )}
+            <label className="block">
+              <span className="mb-1 block text-xs font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>
+                Sıralama
+              </span>
+              <select
+                value={siralama}
+                onChange={(e) => setSiralama(e.target.value)}
+                aria-label="Sıralama"
+                className={ALAN}
+                style={alanStil}
+              >
+                {SIRALAMALAR.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.etiket}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
 
           <label className="flex min-h-11 cursor-pointer items-start gap-2.5 text-sm" style={{ color: SIRKET_METIN }}>
             <input
