@@ -2,3 +2,8 @@ project_id = "gdumgdgwlfnohkaucfow"
 
 [functions.opportunity-source-check]
 verify_jwt = true
+
+# Veritabanı tetikleyicisinden çağrılıyor (pg_net); kullanıcı oturumu yok.
+# Yetki Vault'taki anahtarla işlevin içinde (20270103010000).
+[functions.eposta-tetik]
+verify_jwt = false
