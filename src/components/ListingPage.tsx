@@ -29,6 +29,7 @@ import {
   ucretMetniHesapla,
 } from '../lib/staj-turu.mjs';
 import { Logo } from './Logo';
+import { DisBaglanti } from '../ui/DisBaglanti';
 import { slugify } from '../lib/slug';
 import { UlkeRozeti } from './UlkeRozeti';
 
@@ -64,6 +65,9 @@ interface ListingPageProps {
    * göndermediğimiz başvuruyu göndermiş gibi kaydetmek.
    */
   onTrack: (listing: InternshipListing) => void;
+  /** Misafir mi: dış başvuru bağlantısı kayıt penceresini açıyor (ui/DisBaglanti). */
+  girisGerekli?: boolean;
+  onGirisGerekli?: (niyet: { tur: 'dis' | 'ic'; ilanId: string; yol: string; disAdres?: string; baslik?: string }) => void;
   /**
    * Elde hazır duran ilan — verilirse sunucudan OKUNMUYOR.
    *
@@ -131,6 +135,7 @@ const BILGI_IZGARASI = [
 
 export const ListingPage: React.FC<ListingPageProps> = ({
   gomulu = false, idPrefix, onBack, onNavigate, onApply, onTrack, hazirIlan,
+  girisGerekli = false, onGirisGerekli,
 }) => {
   const [listing, setListing] = useState<InternshipListing | null>(null);
   const [durum, setDurum] = useState<'yukleniyor' | 'hazir' | 'yok' | 'hata'>('yukleniyor');
@@ -221,6 +226,21 @@ export const ListingPage: React.FC<ListingPageProps> = ({
     doğrulanmadıkça "başvur" denmiyor (kural lib/ilan-hedefi.mjs).
   */
   const hedef = ilanHedefi(listing ?? {});
+  /*
+    MİSAFİR DIŞARI GİTMİYOR, KAYDA GİDİYOR (9 Kasım 2026, kullanıcı isteği):
+    dış başvuru bağlantısı kayıt penceresini nedenini anlatan notla açıyor;
+    kayıt bitince başvuru sayfası kendiliğinden açılıyor (lib/basvuru-niyeti).
+  */
+  const disKapi = () => {
+    if (!listing || !yol.resmiAdres || !onGirisGerekli) return;
+    onGirisGerekli({
+      tur: 'dis',
+      ilanId: listing.id,
+      yol: window.location.pathname,
+      disAdres: yol.resmiAdres,
+      baslik: listing.title,
+    });
+  };
 
   /*
     KAPANMIŞ İÇ İLANDA "BAŞVUR" DÜĞMESİ YOK
@@ -807,19 +827,21 @@ export const ListingPage: React.FC<ListingPageProps> = ({
             */}
             <div className="hidden lg:flex flex-col gap-2.5">
               {yol.resmiAdres && (
-                <a
+                <DisBaglanti
                   href={yol.resmiAdres}
-                  target="_blank"
-                  rel="noopener noreferrer nofollow"
+                  girisGerekli={girisGerekli}
+                  onGirisGerekli={onGirisGerekli ? disKapi : undefined}
                   className={`inline-flex min-h-12 items-center justify-center gap-2 px-5 rounded-xl text-base font-bold shadow-xs ${RENK_GECISI} ${ODAK_HALKASI} ${
                     yol.anaEylem === 'resmi-site'
                       ? 'text-white bg-blue-600 hover:bg-blue-700'
                       : 'border border-gray-200 bg-white text-gray-800 hover:bg-gray-50'
                   }`}
                 >
-                  {yol.anaEylem === 'resmi-site' ? hedef.etiket : 'İlana git'}
+                  {girisGerekli && onGirisGerekli
+                    ? 'Başvurmak için ücretsiz üye ol'
+                    : yol.anaEylem === 'resmi-site' ? hedef.etiket : 'İlana git'}
                   <ExternalLink aria-hidden="true" className="w-4 h-4" />
-                </a>
+                </DisBaglanti>
               )}
               {kapanis ? (
                 <BasvuruKapaliDurumu neden={kapanis} />
@@ -976,16 +998,16 @@ export const ListingPage: React.FC<ListingPageProps> = ({
               olsaydı hangisinin asıl iş olduğu belirsizleşirdi.
             */
             <div className="flex items-stretch gap-2">
-              <a
+              <DisBaglanti
                 href={yol.resmiAdres}
-                target="_blank"
-                rel="noopener noreferrer nofollow"
+                girisGerekli={girisGerekli}
+                onGirisGerekli={onGirisGerekli ? disKapi : undefined}
                 title={yol.ozet}
                 className="flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-blue-600 px-4 text-sm font-bold text-white shadow-xs transition-colors hover:bg-blue-700"
               >
-                {hedef.etiket}
+                {girisGerekli && onGirisGerekli ? 'Başvurmak için ücretsiz üye ol' : hedef.etiket}
                 <ExternalLink className="h-4 w-4 shrink-0" />
-              </a>
+              </DisBaglanti>
               {yol.takipEtiketi && (
                 <button
                   type="button"

@@ -44,7 +44,7 @@ export const DisBaglanti: React.FC<{
   href,
   girisGerekli,
   onGirisGerekli,
-  kapiEtiketi = 'Başvurmak için giriş yap',
+  kapiEtiketi = 'Başvurmak için ücretsiz üye ol',
   className,
   title,
   id,
