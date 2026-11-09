@@ -12,7 +12,14 @@ import {
   kutuStil,
 } from './renk';
 import { FORM_ALAN } from './form-parcalari';
-import { sirketEkibi, type EkipUyesi } from '../lib/sirket-veri';
+import {
+  degerlendirmeOlcutleri,
+  olcutEkle,
+  olcutKaldirIstek,
+  sirketEkibi,
+  type DegerlendirmeOlcutu,
+  type EkipUyesi,
+} from '../lib/sirket-veri';
 import {
   DAVET_ROLLERI,
   bekleyenDavetler,
@@ -44,6 +51,26 @@ export const SirketEkibi: React.FC<{
   const [islem, setIslem] = React.useState(false);
   const [hata, setHata] = React.useState('');
   const [bilgi, setBilgi] = React.useState('');
+
+  /* Değerlendirme ölçütleri (rakip analizi #7): sahip tanımlıyor, ekip puanlıyor. */
+  const [olcutler, setOlcutler] = React.useState<DegerlendirmeOlcutu[]>([]);
+  const [yeniOlcut, setYeniOlcut] = React.useState('');
+  const olcutleriYukle = React.useCallback(() => {
+    void degerlendirmeOlcutleri(sirketId).then(setOlcutler);
+  }, [sirketId]);
+  React.useEffect(olcutleriYukle, [olcutleriYukle]);
+  const olcutEkleTikla = async (ad: string) => {
+    if (!ad.trim()) return;
+    setHata('');
+    try {
+      await olcutEkle(sirketId, ad, olcutler.length);
+      setYeniOlcut('');
+      olcutleriYukle();
+    } catch (h) {
+      setHata(h instanceof Error ? h.message : 'Ölçüt eklenemedi.');
+    }
+  };
+  const ONERILEN_OLCUTLER = ['Genel izlenim', 'İletişim', 'Alana ilgi', 'Teknik yetkinlik'];
 
   const yukle = React.useCallback(() => {
     void sirketEkibi(sirketId).then(setUyeler);
@@ -194,6 +221,62 @@ export const SirketEkibi: React.FC<{
               </li>
             ))}
           </ul>
+        </section>
+      )}
+      {sahipMi && (
+        <section className={KUTU} style={kutuStil} aria-labelledby="olcut-baslik">
+          <h2 id="olcut-baslik" className="text-base font-extrabold" style={{ color: SIRKET_METIN }}>
+            Değerlendirme ölçütleri
+          </h2>
+          <p className="mt-1 text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+            Ekibin her adayı aynı ölçütlerle 1–5 puanlaması için. Puan ve notlar yalnız ekibe görünür, adaya gitmez.
+          </p>
+          {olcutler.length > 0 && (
+            <ul className="mt-3 divide-y" style={{ borderColor: SIRKET_KENAR }}>
+              {olcutler.map((o) => (
+                <li key={o.id} className="flex min-h-11 items-center justify-between gap-3 py-1.5">
+                  <span className="text-sm font-bold" style={{ color: SIRKET_METIN }}>{o.ad}</span>
+                  <button
+                    type="button"
+                    onClick={() => void olcutKaldirIstek(o.id).then(olcutleriYukle).catch((h) => setHata(String(h?.message ?? h)))}
+                    aria-label={`${o.ad} ölçütünü kaldır`}
+                    className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl hover:bg-rose-50"
+                  >
+                    <Trash2 aria-hidden className="h-4 w-4 text-rose-700" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="mt-3 flex gap-2">
+            <input
+              value={yeniOlcut}
+              onChange={(e) => setYeniOlcut(e.target.value)}
+              maxLength={60}
+              placeholder="Ölçüt adı"
+              aria-label="Yeni ölçüt adı"
+              className={`${FORM_ALAN} min-w-0 flex-1`}
+            />
+            <button type="button" onClick={() => void olcutEkleTikla(yeniOlcut)} className={IKINCIL_DUGME} style={ikincilStil}>
+              Ekle
+            </button>
+          </div>
+          {olcutler.length === 0 && (
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+              Öneri:
+              {ONERILEN_OLCUTLER.map((ad) => (
+                <button
+                  key={ad}
+                  type="button"
+                  onClick={() => void olcutEkleTikla(ad)}
+                  className="min-h-11 cursor-pointer font-bold underline-offset-2 hover:underline"
+                  style={{ color: SIRKET_METIN }}
+                >
+                  + {ad}
+                </button>
+              ))}
+            </div>
+          )}
         </section>
       )}
     </div>

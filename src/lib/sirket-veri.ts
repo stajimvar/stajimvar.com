@@ -1143,6 +1143,20 @@ export interface DegerlendirmeKaydi {
   an: string;
 }
 
+/** Ölçüt ekler (yalnız şirket sahibi; sunucu `olcut_kaydet`). */
+export async function olcutEkle(companyId: string, ad: string, sira: number): Promise<void> {
+  const db = await istemci();
+  const { error } = await db.rpc('olcut_kaydet' as never, { p_sirket: companyId, p_ad: ad.trim(), p_sira: sira } as never);
+  if (error) throw new Error(/yetki/.test((error as { message?: string }).message ?? '') ? 'Ölçütü yalnız şirket sahibi ekleyebilir.' : 'Ölçüt eklenemedi.');
+}
+
+/** Ölçütü kaldırır (pasif; geçmiş puanlar duruyor). */
+export async function olcutKaldirIstek(id: string): Promise<void> {
+  const db = await istemci();
+  const { error } = await db.rpc('olcut_kaldir' as never, { p_id: id } as never);
+  if (error) throw new Error('Ölçüt kaldırılamadı.');
+}
+
 /** Şirketin AKTİF ölçütleri, sırasıyla. */
 export async function degerlendirmeOlcutleri(companyId: string): Promise<DegerlendirmeOlcutu[]> {
   const db = await istemci();

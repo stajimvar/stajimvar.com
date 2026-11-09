@@ -1,4 +1,6 @@
 import React from 'react';
+import { DegerlendirmeFormu } from './DegerlendirmeFormu';
+import type { DegerlendirmeOlcutu } from '../lib/sirket-veri';
 import { createPortal } from 'react-dom';
 import { MessageCircle,
   CalendarDays,
@@ -191,6 +193,11 @@ export const AdayCekmecesi: React.FC<{
     sütunu çizilmiyor — gerekçe o sütunun başında.
   */
   saltOkunur?: boolean;
+  /**
+   * Ekip içi değerlendirme (rakip analizi #7): ölçütlere 1–5 puan ve not;
+   * yalnız ekibe görünür. Verilmezse bölüm çizilmiyor.
+   */
+  degerlendirmeOlcutleri?: DegerlendirmeOlcutu[];
   /*
     AYRINTI BAŞARIYLA ÇİZİLDİ → görüntülenme kaydı.
 
@@ -216,6 +223,7 @@ export const AdayCekmecesi: React.FC<{
   onPaylasimlar,
   yerelGorselAdresi,
   saltOkunur,
+  degerlendirmeOlcutleri,
   onGoruntulendi,
 }) => {
   /*
@@ -1717,6 +1725,20 @@ saltOkunur ? (
                   </div>
                 ))}
               </dl>
+            </section>
+          )}
+
+          {degerlendirmeOlcutleri && kart.id && (
+            <section aria-labelledby="aday-ekip-degerlendirmesi" className="space-y-2">
+              <BolumBasligi id="aday-ekip-degerlendirmesi">Ekip değerlendirmesi</BolumBasligi>
+              <p className="text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+                Yalnız ekibin görür; adaya gitmez.
+              </p>
+              <DegerlendirmeFormu
+                basvuruId={String(kart.id)}
+                olcutler={degerlendirmeOlcutleri}
+                yazabilir={!saltOkunur}
+              />
             </section>
           )}
 

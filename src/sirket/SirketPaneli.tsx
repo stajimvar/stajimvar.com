@@ -956,6 +956,7 @@ const Basvuranlar: React.FC<{
   adayAramasi,
   onAdayAcildi,
   onNot,
+  olcutler,
 }) => {
   const kartAcik = adayGorebilir(baglam.kademe);
 
@@ -1118,6 +1119,7 @@ const Basvuranlar: React.FC<{
         <AdayIzgarasi
           basliksiz
           saltOkunur
+          degerlendirmeOlcutleri={olcutler}
           kartlar={kartlar}
           ilanAdresi={ilanAdresi}
           baslangicIlan={baslangicIlan}
@@ -1140,6 +1142,7 @@ const Basvuranlar: React.FC<{
       {baslik}
       <AdayIzgarasi
         basliksiz
+        degerlendirmeOlcutleri={olcutler}
         kartlar={kartlar}
         ilanAdresi={ilanAdresi}
         baslangicIlan={baslangicIlan}
