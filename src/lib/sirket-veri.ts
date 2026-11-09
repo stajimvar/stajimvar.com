@@ -1306,6 +1306,24 @@ export interface IlanIstatistigi {
   basvuru: number;
 }
 
+export interface IlanGunu {
+  gun: string;
+  goruntulenme: number;
+  basvuru: number;
+}
+
+/** Son N günün günlük görüntülenme ve başvurusu (20270107010000). Okunamazsa null. */
+export async function ilanGunlukIstatistik(ilanId: string, gun = 30): Promise<IlanGunu[] | null> {
+  const db = await istemci();
+  const { data, error } = await db.rpc('sirket_ilan_gunluk' as never, { p_ilan: ilanId, p_gun: gun } as never);
+  if (error || !Array.isArray(data)) return null;
+  return (data as Record<string, unknown>[]).map((s) => ({
+    gun: String(s.gun),
+    goruntulenme: Number(s.goruntulenme ?? 0),
+    basvuru: Number(s.basvuru ?? 0),
+  }));
+}
+
 /**
  * Şirketin ilanlarının görüntülenme / kaydetme / başvuru sayıları.
  * Okunamazsa boş: kartlar istatistik satırını hiç çizmiyor (uydurma 0 yok).
