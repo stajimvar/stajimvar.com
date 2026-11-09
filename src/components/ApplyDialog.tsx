@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { X, ExternalLink, ShieldCheck, AlertTriangle, Loader2 } from 'lucide-react';
+import { X, ExternalLink, ShieldCheck, AlertTriangle, Loader2, Info, Building2, ArrowRight } from 'lucide-react';
 import type { InternshipListing } from '../types';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
 import { useModalErisim } from '../lib/modal-erisim';
@@ -132,15 +132,21 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="basvuru-diyalog-basligi"
-        className="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl border border-gray-200 shadow-xl max-h-[92vh] overflow-y-auto"
+        className="bg-white w-full sm:max-w-xl rounded-t-3xl sm:rounded-3xl border border-gray-200 shadow-xl max-h-[92vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between gap-3 p-5 sm:p-6 border-b border-gray-100">
+        {/*
+          YENİ GÖRÜNÜM (9 Kasım 2026, kullanıcının ürettiği tasarım): başlık
+          ve alt şerit sabit, yalnız gövde kayıyor — "Başvuruyu Tamamla"
+          düğmesi kaydırmadan görünüyor. Adımlar çizgiyle bağlı, paylaşılacak
+          bilgiler mavi kutuda. Metinler ve kurallar değişmedi.
+        */}
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-gray-100 px-5 pb-4 pt-5 sm:px-7 sm:pt-6">
           <div className="min-w-0">
-            <p className="text-xs font-bold text-blue-600">
+            <p className="text-sm font-bold text-blue-600">
               {listing.companyName}
             </p>
-            <h2 id="basvuru-diyalog-basligi" className="text-lg font-bold text-gray-900 leading-snug">
+            <h2 id="basvuru-diyalog-basligi" className="text-xl font-extrabold text-gray-900 leading-snug">
               {listing.title}
             </h2>
           </div>
@@ -154,7 +160,7 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
           </button>
         </div>
 
-        <div className="p-5 sm:p-6 space-y-5">
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-7 space-y-5">
           {alreadyApplied ? (
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 space-y-2">
               <p className="text-sm font-bold text-emerald-900">
@@ -172,40 +178,35 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
             <>
               {/* Ne olacağını adım adım söyle. */}
               <div className="space-y-3">
-                <p className="text-sm font-bold text-gray-900">
+                <p className="flex items-center gap-2 text-base font-extrabold text-gray-900">
+                  <span aria-hidden className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
+                    <Info className="h-4 w-4" />
+                  </span>
                   {rizaGerekli ? 'Başvurunca ne olacak?' : 'İşaretleyince ne olacak?'}
                 </p>
-                <ol className="space-y-2.5 text-sm text-gray-600">
-                  <li className="flex gap-2.5">
-                    <span className="shrink-0 w-5 h-5 rounded-full bg-blue-600 text-white text-[11px] font-bold flex items-center justify-center">
-                      1
-                    </span>
-                    <span>
-                      {rizaGerekli
-                        ? "Başvurun StajımVar'a kaydedilir ve panelinden takip edebilirsin."
-                        : 'Bu ilan panelindeki başvuru listene eklenir; hangi ilana başvurduğunu takip edebilirsin.'}
-                    </span>
-                  </li>
-                  <li className="flex gap-2.5">
-                    <span className="shrink-0 w-5 h-5 rounded-full bg-blue-600 text-white text-[11px] font-bold flex items-center justify-center">
-                      2
-                    </span>
-                    <span>
-                      {rizaGerekli
-                        ? 'Profilin ve iletişim bilgilerin, şirketin doğrulanmış başvuru kanalına iletilir.'
-                        : 'Bilgilerin şirkete iletilmez ve şirketle paylaşılmaz.'}
-                    </span>
-                  </li>
-                  <li className="flex gap-2.5">
-                    <span className="shrink-0 w-5 h-5 rounded-full bg-blue-600 text-white text-[11px] font-bold flex items-center justify-center">
-                      3
-                    </span>
-                    <span>
-                      {rizaGerekli
-                        ? 'Şirketin cevabı geldiğinde başvurunun durumu panelinde güncellenir.'
-                        : 'Gerçek başvuru şirketin kendi sayfasından yapılır — aşağıdaki bağlantı oraya götürür.'}
-                    </span>
-                  </li>
+                <ol className="text-sm text-gray-700">
+                  {[
+                    rizaGerekli
+                      ? "Başvurun StajımVar'a kaydedilir ve panelinden takip edebilirsin."
+                      : 'Bu ilan panelindeki başvuru listene eklenir; hangi ilana başvurduğunu takip edebilirsin.',
+                    rizaGerekli
+                      ? 'Profilin ve iletişim bilgilerin, şirketin doğrulanmış başvuru kanalına iletilir.'
+                      : 'Bilgilerin şirkete iletilmez ve şirketle paylaşılmaz.',
+                    rizaGerekli
+                      ? 'Şirketin cevabı geldiğinde başvurunun durumu panelinde güncellenir.'
+                      : 'Gerçek başvuru şirketin kendi sayfasından yapılır — aşağıdaki bağlantı oraya götürür.',
+                  ].map((metin, sira, liste) => (
+                    <li key={sira} className="relative flex gap-3 pb-3 last:pb-0">
+                      {/* Adımları bağlayan çizgi; son adımda yok. */}
+                      {sira < liste.length - 1 && (
+                        <span aria-hidden className="absolute left-3 top-7 bottom-0 w-px -translate-x-1/2 bg-blue-200" />
+                      )}
+                      <span className="relative z-[1] flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
+                        {sira + 1}
+                      </span>
+                      <span className="pt-0.5 leading-relaxed">{metin}</span>
+                    </li>
+                  ))}
                 </ol>
               </div>
 
@@ -235,21 +236,25 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
                 yazan değerler gerçek profil değerleri; uydurulmuyor.
               */}
               {rizaGerekli && paylasilacak && (
-                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-3.5">
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                <div className="flex gap-3 rounded-2xl border border-blue-100 bg-blue-50/70 p-4">
+                  <span aria-hidden className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-blue-600 shadow-xs sm:flex">
+                    <Building2 className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-gray-600">
                     {listing.companyName} ile paylaşılacak bilgiler
                   </p>
-                  <dl className="mt-2 space-y-1 text-xs text-gray-700">
+                  <dl className="mt-2 space-y-1 text-sm text-gray-700">
                     <div className="flex gap-2">
-                      <dt className="w-16 shrink-0 text-gray-500">Ad</dt>
+                      <dt className="w-20 shrink-0 text-gray-500">Ad</dt>
                       <dd className="font-semibold break-words">{paylasilacak.ad || '—'}</dd>
                     </div>
                     <div className="flex gap-2">
-                      <dt className="w-16 shrink-0 text-gray-500">E-posta</dt>
+                      <dt className="w-20 shrink-0 text-gray-500">E-posta</dt>
                       <dd className="font-semibold break-all">{paylasilacak.eposta || '—'}</dd>
                     </div>
                     <div className="flex gap-2">
-                      <dt className="w-16 shrink-0 text-gray-500">Telefon</dt>
+                      <dt className="w-20 shrink-0 text-gray-500">Telefon</dt>
                       <dd className="font-semibold break-words">
                         {telefon ? telefon : <span className="font-normal text-gray-500">eklenmedi</span>}
                       </dd>
@@ -275,7 +280,7 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
                           placeholder="05XX XXX XX XX"
                           value={telefonTaslak}
                           onChange={(e) => setTelefonTaslak(e.target.value)}
-                          className="min-h-11 flex-1 rounded-xl border border-gray-300 px-2.5 text-sm"
+                          className="min-h-11 min-w-0 flex-1 rounded-xl border border-gray-300 bg-white px-2.5 text-sm"
                         />
                         <button
                           type="button"
@@ -304,19 +309,20 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
                       )}
                     </div>
                   )}
+                  </div>
                 </div>
               )}
 
               {/* KVKK açık rızası — yalnızca gerçekten aktarım yapılıyorsa */}
               {rizaGerekli && (
-              <label className="flex gap-2.5 items-start cursor-pointer rounded-2xl border border-gray-200 p-3.5 hover:border-blue-300 transition-colors">
+              <label className="flex gap-3 items-start cursor-pointer rounded-2xl border border-gray-200 p-4 hover:border-blue-300 transition-colors">
                 <input
                   type="checkbox"
                   checked={consent}
                   onChange={(e) => setConsent(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 accent-blue-600 shrink-0"
+                  className="mt-0.5 w-5 h-5 accent-blue-600 shrink-0"
                 />
-                <span className="text-xs text-gray-600 leading-relaxed">
+                <span className="text-sm text-gray-700 leading-relaxed">
                   {/*
                     METİN NE PAYLAŞILDIĞINI VE KİMİNLE PAYLAŞILDIĞINI
                     AÇIKÇA SÖYLÜYOR: "iletişim bilgilerim" yerine
@@ -346,14 +352,14 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
                 KVKK rızasına bakıyor.
               */}
               {paylasimKutusu && (
-              <label className="flex gap-2.5 items-start cursor-pointer rounded-2xl border border-gray-200 p-3.5 hover:border-blue-300 transition-colors">
+              <label className="flex gap-3 items-start cursor-pointer rounded-2xl border border-gray-200 p-4 hover:border-blue-300 transition-colors">
                 <input
                   type="checkbox"
                   checked={paylasimIzni}
                   onChange={(e) => setPaylasimIzni(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 accent-blue-600 shrink-0"
+                  className="mt-0.5 w-5 h-5 accent-blue-600 shrink-0"
                 />
-                <span className="text-xs text-gray-600 leading-relaxed">
+                <span className="text-sm text-gray-700 leading-relaxed">
                   Profilimdeki paylaşımlarımın ve görsellerimin bu başvuru kapsamında{' '}
                   {listing.companyName} tarafından görülmesine izin veriyorum (isteğe bağlı,
                   istediğin zaman geri alabilirsin).
@@ -370,16 +376,25 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
           )}
         </div>
 
-        <div className="p-5 sm:p-6 pt-0 flex flex-col sm:flex-row gap-2.5">
+        <div className="flex shrink-0 flex-col-reverse gap-2.5 border-t border-gray-100 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-end sm:px-7">
+          {rizaGerekli && !alreadyApplied && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex min-h-12 cursor-pointer items-center justify-center rounded-full bg-gray-100 px-6 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-200"
+            >
+              İptal
+            </button>
+          )}
           {yol.resmiAdres && (
             <a
               href={yol.resmiAdres}
               target="_blank"
               rel="noopener noreferrer nofollow"
-              className={`flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors ${
+              className={`inline-flex min-h-12 items-center justify-center gap-1.5 rounded-full px-5 text-sm font-bold transition-colors ${
                 rizaGerekli
                   ? 'border border-gray-200 text-gray-700 hover:bg-gray-50'
-                  : 'text-white bg-blue-600 hover:bg-blue-700'
+                  : 'flex-1 text-white bg-blue-600 hover:bg-blue-700'
               }`}
             >
               {rizaGerekli ? 'İlana git' : 'Şirket sayfasında başvur'}
@@ -392,10 +407,10 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
               type="button"
               onClick={handleSubmit}
               disabled={(rizaGerekli && !consent) || busy}
-              className={`flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors disabled:bg-gray-300 disabled:text-white disabled:cursor-not-allowed ${
+              className={`inline-flex min-h-12 items-center justify-center gap-1.5 rounded-full px-6 text-sm font-bold transition-colors disabled:bg-gray-300 disabled:text-white disabled:cursor-not-allowed ${
                 rizaGerekli
-                  ? 'text-white bg-blue-600 hover:bg-blue-700'
-                  : 'border border-gray-200 text-gray-700 hover:bg-gray-50'
+                  ? 'text-white bg-blue-600 hover:bg-blue-700 shadow-sm'
+                  : 'flex-1 border border-gray-200 text-gray-700 hover:bg-gray-50'
               }`}
             >
               {busy ? (
@@ -404,10 +419,17 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
                   Kaydediliyor
                 </>
               ) : (
-                <>
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  {rizaGerekli ? 'StajımVar ile Başvur' : 'Başvurduğumu işaretle'}
-                </>
+                rizaGerekli ? (
+                  <>
+                    Başvuruyu Tamamla
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    Başvurduğumu işaretle
+                  </>
+                )
               )}
             </button>
           )}
