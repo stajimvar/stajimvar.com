@@ -274,6 +274,12 @@ export function kartVerisi(satir, ek = {}) {
     paylasimIzniAt: satir?.paylasim_izni_at ?? null,
 
     onYazi: satir?.cover_letter ?? null,
+    /* Ön eleme cevapları (20270105010000): [{soru, cevap}], başvuru anında donmuş. */
+    onElemeCevaplari: Array.isArray(satir?.on_eleme_cevaplari)
+      ? satir.on_eleme_cevaplari
+          .filter((c) => c && typeof c === 'object' && String(c.soru ?? '').trim())
+          .map((c) => ({ soru: String(c.soru).trim(), cevap: String(c.cevap ?? '').trim() }))
+      : [],
     /*
       CV: ÖNCE BAŞVURU ANININ KOPYASI, SONRA ESKİ ALAN
 

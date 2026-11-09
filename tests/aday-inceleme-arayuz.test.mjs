@@ -388,18 +388,18 @@ test('paylaşım izni ayrı, isteğe bağlı ve varsayılanı kapalı', () => {
   const izin = pencere.indexOf('checked={paylasimIzni}');
   assert.ok(kvkk > -1 && izin > kvkk, 'izin kutusu KVKK kutusunun altında değil');
   /* Gönderim yalnız KVKK rızasını bekliyor. */
-  assert.match(pencere, /disabled=\{\(rizaGerekli && !consent\) \|\| busy\}/);
+  assert.match(pencere, /disabled=\{\(rizaGerekli && !consent\) \|\| !cevaplarTamam \|\| busy\}/);
   assert.doesNotMatch(pencere, /disabled=\{[^}]*paylasimIzni/);
 });
 
 test('izin kutusu yalnız StajımVar üzerinden alınan başvuruda', () => {
   assert.match(pencere, /const paylasimKutusu = rizaGerekli && listing\.applicationMethod === 'internal';/);
-  assert.match(pencere, /await onSubmit\(consent, paylasimKutusu && paylasimIzni\);/);
+  assert.match(pencere, /await onSubmit\(\s*consent,\s*paylasimKutusu && paylasimIzni,/);
 });
 
 test('başvurudan sonra izin RPC ile yazılıyor; hata sessiz değil', () => {
   const gonder = blok(app, 'const submitApplication = async (');
-  assert.match(gonder, /async \(consent: boolean, paylasimIzni = false\)/);
+  assert.match(gonder, /async \(\s*consent: boolean,\s*paylasimIzni = false,/);
   const olustur = gonder.indexOf('await createApplication(');
   const izin = gonder.indexOf('await basvuruPaylasimIzni(created.id, true)');
   assert.ok(olustur > -1 && izin > olustur, 'izin başvurudan önce ya da hiç yazılmıyor');

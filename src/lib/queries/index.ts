@@ -760,6 +760,8 @@ export async function createApplication(params: {
    * başvurusuna bağlayıp şirkete okutmak mümkün değil.
    */
   cvSnapshotPath?: string | null;
+  /** Ön eleme cevapları (20270105010000): soru ile birlikte donduruluyor. */
+  onElemeCevaplari?: { soru: string; cevap: string }[];
 }): Promise<ApplicationRecord> {
   /*
     Açık rıza yalnızca veri gerçekten aktarılıyorsa zorunlu. Dış ilanlarda
@@ -819,6 +821,9 @@ export async function createApplication(params: {
       cv_snapshot_path: yol.teslimEdiliyor ? (params.cvSnapshotPath ?? null) : null,
       email_delivery_status: deliveryStatus,
       created_via: 'web',
+      on_eleme_cevaplari: (yol.teslimEdiliyor && params.onElemeCevaplari?.length
+        ? params.onElemeCevaplari.slice(0, 3)
+        : null) as never,
     })
     .select('*')
     .single();

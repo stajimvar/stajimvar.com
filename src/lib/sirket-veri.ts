@@ -429,7 +429,7 @@ export async function ilanOku(id: string) {
   const { data, error } = await db
     .from('listings')
     .select(
-      'id, company_id, title, city, country_code, basvuru_ulkeleri, work_type, term, duration, is_paid, stipend_text, ' +
+      'id, company_id, title, city, country_code, basvuru_ulkeleri, work_type, term, duration, is_paid, stipend_text, on_eleme_sorulari, ' +
         'description, application_deadline, status, origin, ' +
         'mandatory_staj_accepted, voluntary_staj_accepted, kontrol_durumu, kontrol_gerekceleri, kontrol_at, ' +
         'yonetici_incelemesi_gerekli, bekleyen:ilan_bekleyen_degisiklikleri(icerik, durum, gerekceler, kontrol_at)'
@@ -533,7 +533,7 @@ export async function sirketBasvurulari(companyId: string) {
     .from('applications')
     .select(
       'id, status, applied_at, match_score, listing_id, student_id, cover_letter, cv_path, ' +
-        'cv_snapshot_path, contact_share_consent_at, application_method, paylasim_izni_at, ' +
+        'cv_snapshot_path, contact_share_consent_at, application_method, paylasim_izni_at, on_eleme_cevaplari, ' +
         'interview_date, interview_time, interview_type, interview_location, ' +
         'interview_note, interview_response, interview_responded_at, ' +
         'status_changed_at, offer_note, offer_start_date, offer_compensation, ' +

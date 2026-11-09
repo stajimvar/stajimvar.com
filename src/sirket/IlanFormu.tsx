@@ -176,6 +176,8 @@ export interface IlanFormDegeri {
   ucretTutari: string;
   aciklama: string;
   sonBasvuru: string;
+  /** Başvuruda sorulan 0–3 kısa soru (20270105010000). */
+  onElemeSorulari: string[];
 }
 
 /** `yaz` ile yazılabilen (metin değerli) alanlar. */
@@ -208,6 +210,7 @@ const BOS: IlanFormDegeri = {
   ucretTutari: '',
   aciklama: '',
   sonBasvuru: '',
+  onElemeSorulari: [],
 };
 
 /** Kontrolün şirkete gösterilen sonucu ve nereden geldiği. */
@@ -1314,6 +1317,69 @@ export const IlanFormu: React.FC<{
             )}
           </div>
         </div>
+
+        {/*
+          ÖN ELEME SORULARI (9 Kasım 2026, rakip analizi #5): isteğe bağlı,
+          en çok 3. Öğrenci başvururken cevaplıyor; cevaplar aday kartında.
+        */}
+        <fieldset className="mt-5 border-t pt-4" style={{ borderColor: SIRKET_KENAR }}>
+          <legend className="sr-only">Ön eleme soruları</legend>
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <p className="text-sm font-black" style={{ color: SIRKET_METIN }}>
+              Ön eleme soruları
+            </p>
+            <span className="text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+              isteğe bağlı · en çok 3
+            </span>
+          </div>
+          <p className="mt-1 text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+            Öğrenci başvururken cevaplar; cevaplar aday kartında görünür. Ör. “Haftada kaç gün gelebilirsin?”
+          </p>
+          <div className="mt-2 space-y-2">
+            {deger.onElemeSorulari.map((soru, i) => (
+              <div key={i} className="flex gap-2">
+                <input
+                  value={soru}
+                  maxLength={200}
+                  onChange={(e) =>
+                    setDeger((o) => ({
+                      ...o,
+                      onElemeSorulari: o.onElemeSorulari.map((x, j) => (j === i ? e.target.value : x)),
+                    }))
+                  }
+                  aria-label={`Ön eleme sorusu ${i + 1}`}
+                  placeholder="Sorunu yaz"
+                  className={`${FORM_ALAN} min-w-0 flex-1`}
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDeger((o) => ({ ...o, onElemeSorulari: o.onElemeSorulari.filter((_, j) => j !== i) }))
+                  }
+                  aria-label={`Ön eleme sorusu ${i + 1} kaldır`}
+                  className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl hover:bg-gray-100"
+                >
+                  <X aria-hidden className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+            {deger.onElemeSorulari.length < 3 && (
+              <button
+                type="button"
+                onClick={() => setDeger((o) => ({ ...o, onElemeSorulari: [...o.onElemeSorulari, ''] }))}
+                className="min-h-11 cursor-pointer text-sm font-bold underline-offset-2 hover:underline"
+                style={{ color: SIRKET_VURGU_KOYU }}
+              >
+                + Soru ekle
+              </button>
+            )}
+            {goster('onElemeSorulari') && (
+              <p role="alert" className="text-xs font-semibold text-rose-700">
+                {goster('onElemeSorulari')}
+              </p>
+            )}
+          </div>
+        </fieldset>
 
         {/*
           GÖNDER KARTIN SON SATIRI; YANINDA KONTROL VE BAŞVURU BİLGİSİ
