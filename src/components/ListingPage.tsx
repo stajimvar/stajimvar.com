@@ -3,7 +3,7 @@ import { SAYFA_GENISLIGI } from '../lib/duzen';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft, ArrowRight, MapPin, Calendar, DollarSign, ShieldCheck, ExternalLink, RefreshCw,
-  Building2, Clock, AlertTriangle, Share2, Check, Lock, FileText, Info,
+  Building2, Clock, AlertTriangle, Share2, Check, Lock, FileText, Info, CheckCircle2,
 } from 'lucide-react';
 import { ODAK_HALKASI, RENK_GECISI } from '../lib/renk-token';
 import type { InternshipListing } from '../types';
@@ -65,6 +65,13 @@ interface ListingPageProps {
    * göndermediğimiz başvuruyu göndermiş gibi kaydetmek.
    */
   onTrack: (listing: InternshipListing) => void;
+  /**
+   * Bu ilana StajımVar üzerinden başvurdu mu (App'in başvuru listesi).
+   * Başvurduysa "StajımVar ile Başvur" yerine "Başvurdun" ve Başvurularım
+   * bağlantısı çiziliyor (9 Kasım 2026: başvurudan sonra düğme aynı kalıyordu).
+   */
+  basvurduMu?: (ilanId: string) => boolean;
+  onBasvurulariAc?: () => void;
   /** Misafir mi: dış başvuru bağlantısı kayıt penceresini açıyor (ui/DisBaglanti). */
   girisGerekli?: boolean;
   onGirisGerekli?: (niyet: { tur: 'dis' | 'ic'; ilanId: string; yol: string; disAdres?: string; baslik?: string }) => void;
@@ -133,9 +140,28 @@ const BILGI_IZGARASI = [
   'sm:[&>*:not(:nth-child(3n+1))]:border-l',
 ].join(' ');
 
+/** Başvurduktan sonra: tekrar başvur düğmesi yerine durum ve Başvurularım bağlantısı. */
+const BasvurdunDurumu: React.FC<{ onBasvurulariAc?: () => void }> = ({ onBasvurulariAc }) => (
+  <div className="flex flex-col gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+    <p className="flex items-center gap-2 text-sm font-bold text-emerald-900">
+      <CheckCircle2 aria-hidden="true" className="h-5 w-5 shrink-0 text-emerald-600" />
+      Bu ilana başvurdun
+    </p>
+    {onBasvurulariAc && (
+      <button
+        type="button"
+        onClick={onBasvurulariAc}
+        className={`min-h-11 cursor-pointer rounded-lg bg-white px-3 text-sm font-bold text-emerald-800 ring-1 ring-emerald-200 hover:bg-emerald-100 ${ODAK_HALKASI}`}
+      >
+        Başvurularımda gör
+      </button>
+    )}
+  </div>
+);
+
 export const ListingPage: React.FC<ListingPageProps> = ({
   gomulu = false, idPrefix, onBack, onNavigate, onApply, onTrack, hazirIlan,
-  girisGerekli = false, onGirisGerekli,
+  girisGerekli = false, onGirisGerekli, basvurduMu, onBasvurulariAc,
 }) => {
   const [listing, setListing] = useState<InternshipListing | null>(null);
   const [durum, setDurum] = useState<'yukleniyor' | 'hazir' | 'yok' | 'hata'>('yukleniyor');
@@ -226,6 +252,13 @@ export const ListingPage: React.FC<ListingPageProps> = ({
     doğrulanmadıkça "başvur" denmiyor (kural lib/ilan-hedefi.mjs).
   */
   const hedef = ilanHedefi(listing ?? {});
+  /*
+    ÇEVİRİ ETİKETİ YALNIZ ÇEVRİLEN METİNDE (9 Kasım 2026): şirketin kendi
+    girdiği ilan (StajımVar üzerinden başvuru) ve dili Türkçe işaretli ilan
+    çeviri değil; Modmere'nin Türkçe ilanında "otomatik çeviri" yazıyordu.
+  */
+  const basvurdu = Boolean(listing && yol.anaEylem === 'platform-ici' && basvurduMu?.(listing.id));
+  const ceviriMi = Boolean(listing) && listing?.applicationMethod !== 'internal' && listing?.originalLanguage !== 'tr';
   /*
     MİSAFİR DIŞARI GİTMİYOR, KAYDA GİDİYOR (9 Kasım 2026, kullanıcı isteği):
     dış başvuru bağlantısı kayıt penceresini nedenini anlatan notla açıyor;
@@ -740,10 +773,12 @@ export const ListingPage: React.FC<ListingPageProps> = ({
             <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-7">
               <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
                 <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-gray-950">İlan metni</h2>
+                {ceviriMi && (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-700">
                   Otomatik çeviri
                   <Info aria-hidden="true" className="w-3.5 h-3.5 text-gray-500" />
                 </span>
+                )}
               </div>
               {/*
                 "ŞİRKETİN KENDİ METNİ" DEĞİL, ÇEVİRİSİ
@@ -765,6 +800,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                 yerine resmî ilana giden bağlantı veriliyor — tek doğru
                 kaynak zaten orası.
               */}
+              {ceviriMi && (
               <p className="mt-2 text-xs text-gray-600 leading-relaxed">
                 Bu metin kaynak ilanın otomatik Türkçe çevirisi. Anlam
                 uyuşmazlığında şirketin resmî ilanı esas alınır.
@@ -783,6 +819,7 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                   </>
                 )}
               </p>
+              )}
               {/*
                 OKUMA ÖLÇÜSÜ: `max-w-[75ch]` satırı ~75 karaktere kesiyor;
                 sol sütun 1440px'te bundan geniş ve tam genişlikte satırlar
@@ -843,7 +880,9 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                   <ExternalLink aria-hidden="true" className="w-4 h-4" />
                 </DisBaglanti>
               )}
-              {kapanis ? (
+              {basvurdu ? (
+                <BasvurdunDurumu onBasvurulariAc={onBasvurulariAc} />
+              ) : kapanis ? (
                 <BasvuruKapaliDurumu neden={kapanis} />
               ) : (
               <button
@@ -1019,6 +1058,8 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                 </button>
               )}
             </div>
+          ) : basvurdu ? (
+            <BasvurdunDurumu onBasvurulariAc={onBasvurulariAc} />
           ) : kapanis ? (
             <BasvuruKapaliDurumu neden={kapanis} />
           ) : (

@@ -51,9 +51,11 @@ test('kapalı iç ilanda onApply düğmesi yerine durum çiziliyor (masaüstü v
   assert.equal((sayfa.match(/<BasvuruKapaliDurumu neden=\{kapanis\} \/>/g) ?? []).length, 2);
   assert.match(
     sayfa,
-    /\{kapanis \? \(\s*<BasvuruKapaliDurumu neden=\{kapanis\} \/>\s*\) : \(\s*<button[\s\S]*?onApply\(listing\)/,
+    /\) : kapanis \? \(\s*<BasvuruKapaliDurumu neden=\{kapanis\} \/>\s*\) : \(\s*<button[\s\S]*?onApply\(listing\)/,
     'masaüstünde düğme kapıdan geçmiyor',
   );
+  /* 9 Kasım 2026: kapıdan önce "başvurdun" durumu (iki yerde de). */
+  assert.equal((sayfa.match(/<BasvurdunDurumu onBasvurulariAc=\{onBasvurulariAc\} \/>/g) ?? []).length, 2);
   assert.match(
     sayfa,
     /\) : kapanis \? \(\s*<BasvuruKapaliDurumu neden=\{kapanis\} \/>\s*\) : \(\s*<button[\s\S]*?onApply\(listing\)/,
