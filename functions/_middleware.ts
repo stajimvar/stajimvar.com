@@ -336,11 +336,14 @@ async function kabukGetir(env: Ortam, istekAdresi: string): Promise<string | nul
   }
 }
 
-/** Derlemenin yazdığı 404 sayfası — gerçek 404 kodu ve noindex ile. */
-async function bulunamadi(env: Ortam, istekAdresi: string): Promise<Response> {
+/**
+ * Derlemenin yazdığı 404 sayfası — gerçek hata kodu ve noindex ile.
+ * `durum` 410: ilan adresinde yayında olmayan ilan (kapandı/kaldırıldı).
+ */
+async function bulunamadi(env: Ortam, istekAdresi: string, durum: 404 | 410 = 404): Promise<Response> {
   const sayfa = await env.ASSETS.fetch(new Request(new URL('/404.html', istekAdresi).toString()));
   return new Response(await sayfa.text(), {
-    status: 404,
+    status: durum,
     headers: {
       'content-type': 'text/html; charset=utf-8',
       'cache-control': 'no-store',
@@ -615,7 +618,15 @@ export const onRequest: PagesFunction<Ortam> = async (baglam) => {
           headers: { location: new URL(sonuc.konum, request.url).toString(), 'cache-control': 'public, max-age=3600' },
         });
       }
-      if (sonuc.tur === 404) return bulunamadi(env, request.url);
+      /*
+        410, 404 DEĞİL (9 Kasım 2026): yayında olmayan ilan çoğunlukla
+        KAPANMIŞ ilan; Google kapanan ilanların 404'ünü "dizine eklenmesini
+        engelleyen yeni neden" diye e-postayla bildiriyordu. 410 "kalıcı
+        olarak kaldırıldı" diyor ve sayfa dizinden daha hızlı düşüyor.
+        Kenar okuması yalnız yayındakini görebildiği için kapalı ile hiç
+        olmamış ayrılamıyor; ikisi için de 410 doğru cevap.
+      */
+      if (sonuc.tur === 404) return bulunamadi(env, request.url, 410);
       /* Yedek: derlemede yazılan dosya (ve _redirects'teki eski kimlik kuralları). */
       const statik = await next();
       if (statik.status !== 404) {
@@ -634,8 +645,8 @@ export const onRequest: PagesFunction<Ortam> = async (baglam) => {
       });
     };
     const ilanCevabi = await kenardanSun(request, uret, (is) => baglam.waitUntil(is));
-    /* Yalnız 200 kenarda tutuluyor; 404 ve 503 paylaşılan önbelleğe girmesin. */
-    if (ilanCevabi.status === 404 || ilanCevabi.status === 503) {
+    /* Yalnız 200 kenarda tutuluyor; 404, 410 ve 503 paylaşılan önbelleğe girmesin. */
+    if (ilanCevabi.status === 404 || ilanCevabi.status === 410 || ilanCevabi.status === 503) {
       const yeni = new Response(ilanCevabi.body, ilanCevabi);
       yeni.headers.set('cache-control', 'no-store');
       return yeni;

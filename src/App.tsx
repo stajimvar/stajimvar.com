@@ -3368,6 +3368,12 @@ export default function App() {
             onTrack={handleTrackApplication}
             girisGerekli={!session}
             onGirisGerekli={AUTH_ENABLED ? handleOpenLogin : undefined}
+            basvurduMu={(ilanId) => applications.some((b) => b.listingId === ilanId)}
+            onBasvurulariAc={() => {
+              navigate('/');
+              setActiveTab('applications');
+              setActiveSubTab('all');
+            }}
           />
           {basvuruPenceresi}
         </>,
