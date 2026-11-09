@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Pencil, Plus, User, Users } from 'lucide-react';
+import { Bookmark, Eye, MapPin, Pencil, Plus, User, Users } from 'lucide-react';
 import {
   IKINCIL_DUGME,
   SIRKET_METIN,
@@ -287,7 +287,12 @@ export const IlanKarti: React.FC<{
   sirketAdi?: string | null;
   logoUrl?: string | null;
   simdi?: Date;
-}> = ({ ilan, basvurular, onNavigate, ekEylemler, ekRozet, altNot, sirketAdi, logoUrl, simdi }) => {
+  /**
+   * Ölçülen görüntülenme ve kaydetme (20270101010000). Verilmezse satır
+   * çizilmiyor; taslakta da yok (öğrenciye görünmüyor).
+   */
+  istatistik?: { goruntulenme: number; sonYediGun: number; kaydeden: number };
+}> = ({ ilan, basvurular, onNavigate, ekEylemler, ekRozet, altNot, sirketAdi, logoUrl, simdi, istatistik }) => {
   const id = String(ilan.id);
   const rozet = ilanDurumRozeti(ilan, simdi);
   const degisiklik = ilan.status === 'published' ? bekleyenOku(ilan.bekleyen) : null;
@@ -478,6 +483,23 @@ export const IlanKarti: React.FC<{
           ) : (
             <p className="text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
               Henüz başvuru yok
+            </p>
+          )}
+          {istatistik && !taslak && (
+            <p
+              className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs"
+              style={{ color: SIRKET_METIN_IKINCIL }}
+              title="İlan sayfasını açan farklı ziyaretçi sayısı; şirket ekibinin kendi bakışları sayılmıyor."
+            >
+              <span className="inline-flex items-center gap-1">
+                <Eye aria-hidden className="h-3.5 w-3.5" />
+                {istatistik.goruntulenme} görüntülenme
+                {istatistik.sonYediGun > 0 && ` · son 7 günde ${istatistik.sonYediGun}`}
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Bookmark aria-hidden className="h-3.5 w-3.5" />
+                {istatistik.kaydeden} kaydeden
+              </span>
             </p>
           )}
         </div>

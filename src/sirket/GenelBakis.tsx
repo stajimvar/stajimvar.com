@@ -31,7 +31,7 @@ import { ilanEylemleri } from '../lib/ilan-formu.mjs';
 import { YAYIN_SONUCU_METNI } from '../lib/ilan-kontrol-gorunumu.mjs';
 import { adayGorebilir } from '../lib/sirket-kademe.mjs';
 import type { BekleyenAday, IlanKontrolSonucu, SirketBaglami, SirketProfilDegeri } from '../lib/sirket-veri';
-import { ilanBekleyenAdaylar } from '../lib/sirket-veri';
+import { ilanBekleyenAdaylar, sirketIlanIstatistikleri, type IlanIstatistigi } from '../lib/sirket-veri';
 import { durumAdi } from '../lib/basvuru-durumu.mjs';
 
 /**
@@ -143,6 +143,18 @@ export const GenelBakis: React.FC<{
 }) => {
   const kartAcik = adayGorebilir(baglam.kademe);
   const eksikler = profilEksikleri(profil);
+
+  /* İlan istatistikleri (20270101010000): okunamazsa satır çizilmiyor. */
+  const [istatistik, setIstatistik] = React.useState<Record<string, IlanIstatistigi>>({});
+  const ilanSayisi = ilanlar.length;
+  React.useEffect(() => {
+    if (!baglam.companyId || ilanSayisi === 0) return;
+    let iptal = false;
+    void sirketIlanIstatistikleri(baglam.companyId).then((s) => !iptal && setIstatistik(s));
+    return () => {
+      iptal = true;
+    };
+  }, [baglam.companyId, ilanSayisi]);
 
   /* Yanlışlıkla basmaya açık olmasın: kaldırma iki adımda. */
   const [kaldirilacak, setKaldirilacak] = React.useState<{
@@ -381,6 +393,7 @@ export const GenelBakis: React.FC<{
               sirketAdi={baglam.ad}
               logoUrl={baglam.logoUrl}
               simdi={simdi}
+              istatistik={istatistik[id]}
               /*
                 BAŞVURU YOLU ETİKETİ YALNIZCA FARKLIYSA
 

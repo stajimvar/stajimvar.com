@@ -1268,3 +1268,33 @@ export async function basvurulariDagit(companyId: string, ilanId?: string | null
   if (error) throw new Error('Dağıtım yapılamadı.');
   return Number(data ?? 0);
 }
+
+/* ------------------------------------------------- ilan istatistikleri */
+
+/** İlan başına ölçülen sayılar (20270101010000). Öğrenci kimliği yok. */
+export interface IlanIstatistigi {
+  goruntulenme: number;
+  sonYediGun: number;
+  kaydeden: number;
+  basvuru: number;
+}
+
+/**
+ * Şirketin ilanlarının görüntülenme / kaydetme / başvuru sayıları.
+ * Okunamazsa boş: kartlar istatistik satırını hiç çizmiyor (uydurma 0 yok).
+ */
+export async function sirketIlanIstatistikleri(companyId: string): Promise<Record<string, IlanIstatistigi>> {
+  const db = await istemci();
+  const { data, error } = await db.rpc('sirket_ilan_istatistikleri' as never, { p_sirket: companyId } as never);
+  if (error || !data) return {};
+  const sonuc: Record<string, IlanIstatistigi> = {};
+  for (const s of data as Record<string, unknown>[]) {
+    sonuc[String(s.ilan_id)] = {
+      goruntulenme: Number(s.goruntulenme ?? 0),
+      sonYediGun: Number(s.son_yedi_gun ?? 0),
+      kaydeden: Number(s.kaydeden ?? 0),
+      basvuru: Number(s.basvuru ?? 0),
+    };
+  }
+  return sonuc;
+}
