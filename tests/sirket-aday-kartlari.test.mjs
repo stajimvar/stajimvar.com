@@ -30,7 +30,8 @@ test('kesif kutulari Basvuranlar ekranindan kalkti, kesif sayfasi duruyor', () =
   assert.ok(!kod.includes('ogrencileriKesfet'), 'kutu blogu kalmamali');
   assert.ok(!kod.includes('Staj arayanlar') && !kod.includes('İş arayanlar'), 'kutular cizilmemeli');
   assert.ok(PANEL.includes("if (yol.startsWith('/sirket/adaylar')) return { tur: 'adaylar' };"), 'kesif rotasi durmali');
-  assert.ok(PANEL.includes('<SirketAdaylar onNavigate={onNavigate} />'), 'kesif ekrani cizilmeli');
+  /* 9 Kasım 2026: "İlanıma uygun" için yayındaki ilanlar da veriliyor. */
+  assert.match(PANEL, /<SirketAdaylar\s+onNavigate=\{onNavigate\}/, 'kesif ekrani cizilmeli');
 });
 
 test('kesif ekrani baslangic sekmesini adresten okuyor', () => {
