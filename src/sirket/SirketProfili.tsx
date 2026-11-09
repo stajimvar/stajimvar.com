@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Eye, ImagePlus, LogOut, Pencil, Plus, Users } from 'lucide-react';
+import { ArrowLeft, Eye, ImagePlus, LogOut, Mail, Pencil, Plus, Users } from 'lucide-react';
 import {
   IKINCIL_DUGME,
   KUTU,
@@ -14,6 +14,7 @@ import { SirketProfilFormu } from './SirketProfilFormu';
 import { SirketProfilGorunumu, type SayacDurumu } from './SirketProfilGorunumu';
 import { SirketSayfasi } from './SirketSayfasi';
 import { SirketEkibi } from './SirketEkibi';
+import { EpostaTercihleri } from './EpostaTercihleri';
 import { KapakFotografiYukleme } from '../components/sosyal/KapakFotografiYukleme';
 import { ProfilAyarlarSayfasi, type AyarBolumu } from '../components/ProfilAyarlarSayfasi';
 import { ProfilSayfaDuzeni } from '../components/sosyal/ProfilSayfaDuzeni';
@@ -91,6 +92,8 @@ const KAPAK_YOLU = '/sirket/profil/kapak';
 const ONIZLE_YOLU = '/sirket/profil/onizle';
 /* Ekip ve davetler (20261231010000). */
 const EKIP_YOLU = '/sirket/profil/ekip';
+/* E-posta tercihleri (20270106010000). */
+const EPOSTA_YOLU = '/sirket/profil/eposta';
 const ILAN_OLUSTUR_YOLU = '/sirket/ilan/yeni';
 const ADAYLAR_YOLU = '/sirket/adaylar';
 
@@ -265,6 +268,21 @@ export const SirketProfili: React.FC<{
       Şirketim'e dön
     </a>
   );
+
+  /* ------------------------------------------------------- e-posta tercihi */
+  if (yol.startsWith(EPOSTA_YOLU) && userId) {
+    return (
+      <ProfilSayfaDuzeni>
+      <div className="space-y-3">
+        {geriSatiri}
+        <h1 className="text-xl font-extrabold tracking-tight" style={{ color: SIRKET_METIN }}>
+          E-posta tercihleri
+        </h1>
+        <EpostaTercihleri userId={userId} />
+      </div>
+      </ProfilSayfaDuzeni>
+    );
+  }
 
   /* ---------------------------------------------------------------- ekip */
   if (yol.startsWith(EKIP_YOLU) && baglam.companyId) {
@@ -451,7 +469,17 @@ export const SirketProfili: React.FC<{
     },
     {
       baslik: 'Hesap',
-      ogeler: onCikis
+      ogeler: [
+        {
+          anahtar: 'eposta',
+          etiket: 'E-posta tercihleri',
+          ikon: <Mail aria-hidden className="h-5 w-5" />,
+          onClick: () => {
+            setAyarlarAcik(false);
+            onNavigate(EPOSTA_YOLU);
+          },
+        },
+        ...(onCikis
         ? [
             {
               anahtar: 'cikis',
@@ -464,7 +492,8 @@ export const SirketProfili: React.FC<{
               tehlike: true,
             },
           ]
-        : [],
+        : []),
+      ],
     },
   ];
 
