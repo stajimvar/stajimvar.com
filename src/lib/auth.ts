@@ -55,6 +55,26 @@ export interface AuthResult {
 
 function translateError(message: string): string {
   const map: Array<[RegExp, string]> = [
+    /*
+      SÜRESİ DOLMUŞ / KULLANILMIŞ E-POSTA BAĞLANTISI (10 Kasım 2026)
+      Supabase `#error=access_denied&error_code=otp_expired&error_description=
+      Email link is invalid or has expired` döndürüyor. `access_denied`
+      aşağıda "Giriş iptal edildi" ile eşleşiyordu; kişi neden giremediğini
+      anlamıyordu. Bu kural ondan ÖNCE durmalı.
+    */
+    [
+      /otp_expired|link is invalid or has expired|token has expired|expired.*link/i,
+      'Bu bağlantının süresi dolmuş ya da daha önce kullanılmış. Giriş ekranından yenisini isteyebilirsin.',
+    ],
+    /* Proje genelindeki saatlik e-posta sınırı: kişinin "çok denemesi" değil. */
+    [
+      /email rate limit exceeded|over_email_send_rate_limit/i,
+      'Şu an çok fazla e-posta gönderiliyor. Birkaç dakika sonra tekrar dene.',
+    ],
+    [/new password should be different/i, 'Yeni şifre eskisinden farklı olmalı.'],
+    [/password is known to be weak|weak password|weak_password/i, 'Bu şifre çok yaygın. Daha güçlü bir şifre seç.'],
+    [/signups not allowed|signup.*disabled/i, 'Şu an yeni kayıt alınmıyor. Daha sonra tekrar dene.'],
+    [/user not found/i, 'Bu e-postayla kayıtlı bir hesap bulunamadı.'],
     [/invalid login credentials/i, 'E-posta veya şifre hatalı.'],
     [/email not confirmed/i, 'E-posta adresini doğrulaman gerekiyor. Gelen kutunu kontrol et.'],
     [/user already registered|already been registered/i, 'Bu e-posta ile zaten bir hesap var. Giriş yapmayı dene.'],
