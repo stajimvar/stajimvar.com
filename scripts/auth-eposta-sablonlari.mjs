@@ -25,8 +25,23 @@ export const KONULAR = {
   reauthentication: 'StajımVar doğrulama kodun',
 };
 
+/*
+  KİMLİK AYARLARI DA DEPODA (10 Kasım 2026, kullanıcı kararı)
+  - rate_limit_email_sent: proje genelinde saatlik kimlik e-postası. 30'du;
+    bir saatte 30'dan fazla kayıt olunca fazlası onay e-postası alamıyordu.
+    Gönderim Google Workspace SMTP'si (günde 2000 sınırı) → 200/saat.
+  - smtp_sender_name: "StajimVar" (ı yerine i) yazıyordu.
+  - mailer_otp_exp: bağlantı 1 saat geçerliydi; e-postaya geç bakan işveren
+    için kısaydı → 24 saat (şablonlarda "Bağlantı 24 saat geçerli.").
+*/
+export const AYARLAR = {
+  rate_limit_email_sent: 200,
+  smtp_sender_name: 'StajımVar',
+  mailer_otp_exp: 86400,
+};
+
 export function yuk() {
-  const govde = {};
+  const govde = { ...AYARLAR };
   for (const [ad, konu] of Object.entries(KONULAR)) {
     govde[`mailer_subjects_${ad}`] = konu;
     govde[`mailer_templates_${ad}_content`] = readFileSync(new URL(`${ad}.html`, KOK), 'utf8');
@@ -60,7 +75,7 @@ async function main() {
     console.error(`Canlıda farklı kalan alanlar: ${farkli.join(', ')}`);
     process.exit(1);
   }
-  console.log(`${Object.keys(KONULAR).length} kimlik e-postası şablonu canlıda ve depoyla aynı.`);
+  console.log(`${Object.keys(KONULAR).length} kimlik e-postası şablonu ve ${Object.keys(AYARLAR).length} kimlik ayarı canlıda ve depoyla aynı.`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('auth-eposta-sablonlari.mjs')) {

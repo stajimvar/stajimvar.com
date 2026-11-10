@@ -34,7 +34,7 @@ import {
   fetchIsAdmin,
   fetchQuizzes,
 } from './lib/queries';
-import { adrestekiOAuthHatasi, getCurrentUser, oauthProfiliTamamla, onAuthChange, signOut, KVKK_VERSION, type AuthResult } from './lib/auth';
+import { adrestekiEpostaBaglantisi, adrestekiOAuthHatasi, getCurrentUser, oauthProfiliTamamla, onAuthChange, signOut, KVKK_VERSION, type AuthResult } from './lib/auth';
 import {
   StudentProfile,
   InternshipListing,
@@ -1052,6 +1052,10 @@ export default function App() {
   React.useEffect(() => {
     const hata = adrestekiOAuthHatasi();
     if (hata) showToast(hata);
+    /* E-postadaki onay / şifre / davet bağlantısı (token_hash, 20261110). */
+    void adrestekiEpostaBaglantisi().then((h) => {
+      if (h) showToast(h);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [authDonusYolu, setAuthDonusYolu] = useState<string | null>(null);

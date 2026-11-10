@@ -692,6 +692,38 @@ export async function acikOAuthSaglayicilari(): Promise<OAuthSaglayici[]> {
  * Okunan parametreler adresten TEMİZLENİYOR: yenilemede aynı hatanın
  * tekrar gösterilmesi kullanıcıya olmayan bir sorun bildirir.
  */
+/**
+ * E-POSTA BAĞLANTISI SİTEDE DOĞRULANIYOR (10 Kasım 2026)
+ *
+ * Kimlik e-postalarındaki bağlantı eskiden Supabase alan adına
+ * (…supabase.co/auth/v1/verify) gidiyordu; kullanıcı tanımadığı bir adres
+ * görüyordu ve e-posta tarayıcıları bağlantıyı önceden açıp tek kullanımlık
+ * kodu harcayabiliyordu. Şablonlar artık stajimvar.com'a
+ * `?token_hash=…&type=…` ile geliyor; doğrulama burada, JavaScript
+ * çalışınca yapılıyor (önden açan tarayıcı kodu harcamıyor).
+ *
+ * Parametreler başarıda da hatada da adresten siliniyor. Dönen değer
+ * kullanıcıya gösterilecek hata ya da null.
+ */
+const EPOSTA_BAGLANTI_TURLERI = ['email', 'signup', 'recovery', 'invite', 'magiclink', 'email_change'] as const;
+type EpostaBaglantiTuru = (typeof EPOSTA_BAGLANTI_TURLERI)[number];
+
+export async function adrestekiEpostaBaglantisi(): Promise<string | null> {
+  if (typeof window === 'undefined') return null;
+  const arama = new URLSearchParams(window.location.search);
+  const tokenHash = arama.get('token_hash');
+  const tur = arama.get('type') as EpostaBaglantiTuru | null;
+  if (!tokenHash || !tur || !(EPOSTA_BAGLANTI_TURLERI as readonly string[]).includes(tur)) return null;
+
+  arama.delete('token_hash');
+  arama.delete('type');
+  const kuyruk = arama.toString();
+  window.history.replaceState({}, '', window.location.pathname + (kuyruk ? `?${kuyruk}` : ''));
+
+  const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: tur });
+  return error ? translateError(error.message) : null;
+}
+
 export function adrestekiOAuthHatasi(): string | null {
   if (typeof window === 'undefined') return null;
 
