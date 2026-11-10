@@ -42,7 +42,7 @@ test('şirket ekranları ortak kabukta; eski kabuk ve eski portal sekmeleri yok'
   assert.match(APP, /if \(temizYol === '\/sirket'\) \{\s*navigate\('\/sirket\/ilanlar', \{ degistir: true \}\);/);
   assert.match(APP, /onDunyaDegistir=\{kabukRolu === 'company' \? undefined : sirketDunyasinaGec\}/);
   /* Şirket için /  ve /cv kendi karşılıklarına. */
-  assert.match(APP, /if \(temizYol === '\/' \|\| temizYol === '\/sirket'\) navigate\('\/sirket\/ilanlar', \{ degistir: true \}\);/);
+  assert.match(APP, /if \(temizYol === '\/' \|\| temizYol === '\/sirket'( \|\| temizYol === '\/isveren\/ilan-ver')?\) \{?\s*navigate\('\/sirket\/ilanlar', \{ degistir: true \}\);/);
   assert.match(APP, /navigate\('\/sirket\/profil', \{ degistir: true \}\)/);
 
   /*

@@ -86,7 +86,7 @@ const MESAJ_PROFIL_YUKLENIYOR = 'Profilin yükleniyor…';
 */
 const MESAJ_ILAN_OKUNAMADI = 'İlanın güncel durumu okunamadı. Bağlantını kontrol edip Başvur düğmesine yeniden dokun.';
 
-const SIRKET_PANEL_YOLLARI = ['/sirket/ilanlar', '/sirket/basvuranlar', '/sirket/adaylar', '/sirket/aday', '/sirket/profil', '/sirket/ilan'];
+const SIRKET_PANEL_YOLLARI = ['/sirket/ilanlar', '/sirket/basvuranlar', '/sirket/adaylar', '/sirket/aday', '/sirket/profil', '/sirket/ilan', '/sirket/mesajlar'];
 /*
   Fırsat listesinin adresleri — hepsi tek bileşen (OpportunitiesPage;
   gerekçesi çizildiği yerde). Burada da sayılıyor, çünkü şirket
@@ -2193,9 +2193,27 @@ export default function App() {
       navigate('/isveren/baslangic', { degistir: true });
     }
   }, [session, uyelikOkundu, sirketUyesi, isAdmin, temizYol]);
+  /*
+    /sirket/mesajlar YOKTU (404, 10 Kasım 2026): mesajlar herkes için ortak
+    /mesajlar ekranında. Ara katman bu yolu panel yolu sayıp kabuğu veriyor
+    (yönlendirme hedefi yazılmış sayfa olmak zorunda, /mesajlar değil);
+    buradan herkes /mesajlar'a geçiyor.
+  */
+  React.useEffect(() => {
+    if (temizYol === '/sirket/mesajlar' || temizYol.startsWith('/sirket/mesajlar/')) {
+      navigate(temizYol.replace('/sirket/mesajlar', '/mesajlar'), { degistir: true });
+    }
+  }, [temizYol]);
   React.useEffect(() => {
     if (kabukRolu !== 'company') return;
-    if (temizYol === '/' || temizYol === '/sirket') navigate('/sirket/ilanlar', { degistir: true });
+    /*
+      /isveren/ilan-ver sahiplenme/başlangıç sayfası; şirket üyesine anlamsız.
+      Eski /sirket → /isveren/ilan-ver 301'i tarayıcı önbelleğinde kalan
+      hesap da buradan paneline geliyor (10 Kasım 2026).
+    */
+    if (temizYol === '/' || temizYol === '/sirket' || temizYol === '/isveren/ilan-ver') {
+      navigate('/sirket/ilanlar', { degistir: true });
+    }
     else if (temizYol === '/cv' || temizYol === '/cv/yazdir') navigate('/sirket/profil', { degistir: true });
     else if (FIRSAT_LISTE_YOLLARI.has(temizYol)) navigate('/sirket/basvuranlar', { degistir: true });
   }, [kabukRolu, temizYol]);
