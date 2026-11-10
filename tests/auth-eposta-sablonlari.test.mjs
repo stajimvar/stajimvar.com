@@ -17,6 +17,9 @@ test('altı kimlik e-postası Türkçe; bağlantı akışı değişmiyor', () =>
     for (const [, h] of html.matchAll(/href="([^"]+)"/g)) {
       assert.ok(h === '{{ .ConfirmationURL }}' || h === 'https://stajimvar.com', `${ad}: ${h}`);
     }
+    /* Görsel yalnız sitenin kendi logosu; süre vaadi yok (geçerlilik Supabase ayarında). */
+    for (const [, src] of html.matchAll(/src="([^"]+)"/g)) assert.equal(src, 'https://stajimvar.com/logo.png', ad);
+    assert.doesNotMatch(html, /\d+ saat geçerli/, ad);
   }
 });
 
