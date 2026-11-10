@@ -2195,7 +2195,17 @@ export default function App() {
   }, [session, uyelikOkundu, sirketUyesi, isAdmin, temizYol]);
   React.useEffect(() => {
     if (kabukRolu !== 'company') return;
-    if (temizYol === '/' || temizYol === '/sirket') navigate('/sirket/ilanlar', { degistir: true });
+    /*
+      /isveren/ilan-ver sahiplenme/başlangıç sayfası; şirket üyesine anlamsız.
+      Eski /sirket → /isveren/ilan-ver 301'i tarayıcı önbelleğinde kalan
+      hesap da buradan paneline geliyor (10 Kasım 2026).
+    */
+    if (temizYol === '/' || temizYol === '/sirket' || temizYol === '/isveren/ilan-ver') {
+      navigate('/sirket/ilanlar', { degistir: true });
+    }
+    else if (temizYol === '/sirket/mesajlar' || temizYol.startsWith('/sirket/mesajlar/')) {
+      navigate(temizYol.replace('/sirket/mesajlar', '/mesajlar'), { degistir: true });
+    }
     else if (temizYol === '/cv' || temizYol === '/cv/yazdir') navigate('/sirket/profil', { degistir: true });
     else if (FIRSAT_LISTE_YOLLARI.has(temizYol)) navigate('/sirket/basvuranlar', { degistir: true });
   }, [kabukRolu, temizYol]);
