@@ -279,6 +279,12 @@ jobs:
           fi
       - name: E-posta tetik işlevini dağıt
         run: supabase functions deploy eposta-tetik --no-verify-jwt --project-ref "$SUPABASE_PROJECT_REF"
+      # Kimlik e-postaları (onay, şifre yenileme…) Türkçe şablonlarla
+      # (supabase/templates). Yalnız mailer_* alanları yazılıyor, sonra geri
+      # okunup karşılaştırılıyor. Yazılamazsa uyarı: site yayını durmasın.
+      - name: Kimlik e-postası şablonlarını uygula
+        continue-on-error: true
+        run: node scripts/auth-eposta-sablonlari.mjs
 
   # SİTE DAĞITIMI ŞEMA İŞİNE YENİDEN BAĞLI
   #

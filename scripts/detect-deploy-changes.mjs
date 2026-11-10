@@ -16,6 +16,8 @@ const SUPABASE_PATHS = [
   'supabase/migrations/',
   'supabase/functions/',
   'supabase/config.toml',
+  'supabase/templates/',
+  'scripts/auth-eposta-sablonlari.mjs',
   '.github/workflows/supabase-production.yml',
   'scripts/sql/elle-uygulananlar.txt',
   'scripts/sql/gecmisten-dusulenler.txt',
