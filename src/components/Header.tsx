@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Briefcase,
   UserCheck,
+  UserSearch,
   BookOpen,
   LogOut,
   ArrowRight,
@@ -784,7 +785,13 @@ export const Header: React.FC<HeaderProps> = ({
     oradan açılan aday profili (/sirket/aday/<id>) Şirketim sekmesini
     yakıyor; Başvurular yalnız /sirket/basvuranlar'da seçili.
   */
-  const sirketProfilindeMi = /^\/sirket\/(profil|adaylar|aday)(\/|$)/.test(bulunulanYol);
+  const sirketProfilindeMi = /^\/sirket\/profil(\/|$)/.test(bulunulanYol);
+  /*
+    ADAYLAR KENDİ SEKMESİNDE (10 Kasım 2026): keşif Şirketim kartındaki
+    bağlantının arkasında kalınca dışarıdan değerlendiren bulamadı. Keşif
+    ve aday profili artık Adaylar sekmesini yakıyor.
+  */
+  const sirketAdaylardaMi = /^\/sirket\/(adaylar|aday)(\/|$)/.test(bulunulanYol);
   /* Şirket ana adresi: marka buraya götürüyor. */
   const anaAdres = sirketKabugu ? '/sirket/ilanlar' : '/';
 
@@ -1223,6 +1230,16 @@ export const Header: React.FC<HeaderProps> = ({
                 >
                   <Users className={masaustuSekmeIkonu(sirketBasvuranlarindaMi)} />
                   <span>Başvurular</span>
+                </a>
+                <a
+                  id="nav-tab-sirket-adaylar"
+                  href="/sirket/adaylar"
+                  aria-current={sirketAdaylardaMi ? 'page' : undefined}
+                  onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/sirket/adaylar')) : undefined}
+                  className={masaustuSekme(sirketAdaylardaMi)}
+                >
+                  <UserSearch className={masaustuSekmeIkonu(sirketAdaylardaMi)} />
+                  <span>Adaylar</span>
                 </a>
                 {/*
                   TAKİPÇİLER SEKMESİ KALKTI (11 Ekim 2026, kullanıcı kararı):
@@ -2119,6 +2136,20 @@ export const Header: React.FC<HeaderProps> = ({
             <Users className="h-5 w-5" />
           </span>
           <span className={altMenuYazisi(sirketBasvuranlarindaMi)}>Başvurular</span>
+        </a>
+
+        {/* Adaylar (10 Kasım 2026): beşinci sekme; beş sekme 320/360 px'te ölçülmüştü. */}
+        <a
+          href="/sirket/adaylar"
+          aria-label="Adaylar"
+          aria-current={sirketAdaylardaMi ? 'page' : undefined}
+          onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/sirket/adaylar')) : undefined}
+          className={altMenuOgesi(sirketAdaylardaMi)}
+        >
+          <span className={altMenuIkonu(sirketAdaylardaMi)}>
+            <UserSearch className="h-5 w-5" />
+          </span>
+          <span className={altMenuYazisi(sirketAdaylardaMi)}>Adaylar</span>
         </a>
 
         {/*

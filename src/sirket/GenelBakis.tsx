@@ -20,6 +20,7 @@ import {
   IKINCIL_DUGME,
   KUTU,
   SIRKET_METIN,
+  SIRKET_KENAR,
   SIRKET_METIN_IKINCIL,
   SIRKET_ODAK,
   SIRKET_ROZET,
@@ -31,6 +32,8 @@ import {
 import { IlanKarti, KontrolNotu, type AdayOzeti } from './IlanKarti';
 import { ilanEylemleri } from '../lib/ilan-formu.mjs';
 import { uzatilmisTarih } from '../lib/ilan-uzatma.mjs';
+import { sirketOzeti } from '../lib/sirket-ozeti.mjs';
+import { oranMetni } from '../lib/ilan-istatistik.mjs';
 import { tarihMetni } from '../lib/tarih.mjs';
 import { YAYIN_SONUCU_METNI } from '../lib/ilan-kontrol-gorunumu.mjs';
 import { adayGorebilir } from '../lib/sirket-kademe.mjs';
@@ -376,6 +379,45 @@ export const GenelBakis: React.FC<{
           </button>
         </div>
       )}
+
+      {/*
+        ÖZET (10 Kasım 2026): yalnız iki ve daha fazla ilanda — tek ilanda
+        kartın kendisini tekrar ederdi. Telefonda 2, geniş ekranda 4 sütun.
+      */}
+      {ilanlar.length > 1 && (() => {
+        const o = sirketOzeti(ilanlar, istatistik);
+        const kutular: [string, string][] = [
+          ['Yayındaki ilan', String(o.yayinda)],
+          ['Toplam başvuru', String(o.basvuru)],
+          ...(o.sonYediGun !== null ? [['Son 7 günde ziyaret', String(o.sonYediGun)] as [string, string]] : []),
+          ...(o.donusum !== null ? [['Dönüşüm', oranMetni(o.donusum)] as [string, string]] : []),
+        ];
+        return (
+          <section aria-label="İlan özeti" className="rounded-2xl border bg-white p-4" style={{ borderColor: SIRKET_KENAR }}>
+            <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {kutular.map(([etiket, deger]) => (
+                <div key={etiket} className="min-w-0">
+                  <dt className="text-xs font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>{etiket}</dt>
+                  <dd className="text-2xl font-extrabold tabular-nums" style={{ color: SIRKET_METIN }}>{deger}</dd>
+                </div>
+              ))}
+            </dl>
+            {o.enCok && (
+              <p className="mt-3 border-t pt-3 text-sm" style={{ borderColor: SIRKET_KENAR, color: SIRKET_METIN_IKINCIL }}>
+                En çok başvuru alan:{' '}
+                <button
+                  type="button"
+                  onClick={() => onNavigate(`/sirket/basvuranlar?ilan=${encodeURIComponent(o.enCok!.id)}`)}
+                  className={`min-h-11 cursor-pointer font-bold underline-offset-2 hover:underline ${SIRKET_ODAK}`}
+                  style={{ color: SIRKET_METIN }}
+                >
+                  {o.enCok.baslik} ({o.enCok.basvuru})
+                </button>
+              </p>
+            )}
+          </section>
+        );
+      })()}
 
       {uzatmaSonucu && (
         <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
