@@ -54,14 +54,15 @@ test('şirket ekranları ortak kabukta; eski kabuk ve eski portal sekmeleri yok'
   */
   const altCubuk = HEADER.slice(HEADER.indexOf('aria-label="Mobil Alt Şirket Navigasyon"'));
   const hrefler = [...altCubuk.matchAll(/href="([^"]+)"/g)].map((e) => e[1]);
-  assert.deepEqual(hrefler, ['/sirket/ilanlar', '/sirket/basvuranlar', '/rehber', '/sirket/profil']);
+  /* 10 Kasım 2026 (kullanıcı isteği): Adaylar beşinci sekme; beş sekme 320/360 px'te ölçülmüştü. */
+  assert.deepEqual(hrefler, ['/sirket/ilanlar', '/sirket/basvuranlar', '/sirket/adaylar', '/rehber', '/sirket/profil']);
   /*
     Masaüstü şirket sekmeleri: İlanlar, Başvurular, Rehber (11 Ekim 2026'da
     Takipçiler kalktı; Profil sağdaki hesap bağlantısında). `/agim` adresi
     yerinde, paylaşılmış bağlantılar kırılmıyor.
   */
   const masaustu = HEADER.slice(HEADER.indexOf('id="nav-tab-sirket-ilanlar"'), HEADER.indexOf('id="nav-tab-sirket-rehber"'));
-  assert.deepEqual([...masaustu.matchAll(/href="([^"]+)"/g)].map((e) => e[1]), ['/sirket/ilanlar', '/sirket/basvuranlar']);
+  assert.deepEqual([...masaustu.matchAll(/href="([^"]+)"/g)].map((e) => e[1]), ['/sirket/ilanlar', '/sirket/basvuranlar', '/sirket/adaylar']);
   assert.doesNotMatch(HEADER, /id="nav-tab-sirket-agim"/);
   assert.doesNotMatch(HEADER, /nav-tab-sirket-firsatlar/);
   /* Aktiflik: Başvuranlar kendi kümesinde, İlanlar kümesinden çıktı — iki sekme birden yanmasın. */
@@ -72,30 +73,32 @@ test('şirket ekranları ortak kabukta; eski kabuk ve eski portal sekmeleri yok'
     yakıyor; Başvurular yalnız kendi adresinde.
   */
   assert.ok(HEADER.includes("const sirketBasvuranlarindaMi = \/^\\/sirket\\/basvuranlar(\\/|$)\/.test(bulunulanYol);"), 'Başvurular kendi kümesi');
-  assert.ok(HEADER.includes("const sirketProfilindeMi = \/^\\/sirket\\/(profil|adaylar|aday)(\\/|$)\/.test(bulunulanYol);"), 'keşif Şirketim kümesinde');
+  /* 10 Kasım 2026 (kullanıcı isteği): keşif ve aday profili kendi Adaylar sekmesini yakıyor. */
+  assert.ok(HEADER.includes("const sirketProfilindeMi = \/^\\/sirket\\/profil(\\/|$)\/.test(bulunulanYol);"), 'Şirketim yalnız profil');
+  assert.ok(HEADER.includes("const sirketAdaylardaMi = \/^\\/sirket\\/(adaylar|aday)(\\/|$)\/.test(bulunulanYol);"), 'keşif Adaylar kümesinde');
   /* Davranış: kümeler ayrık — hiçbir yolda iki sekme birden yanmıyor. */
   const kume = (ad) => new RegExp(HEADER.match(new RegExp('const ' + ad + ' = \\/(.+)\\/\\.test\\(bulunulanYol\\);'))[1]);
-  const [ilan, basvuru, profil] = ['sirketIlanlarindaMi', 'sirketBasvuranlarindaMi', 'sirketProfilindeMi'].map(kume);
+  const [ilan, basvuru, profil, aday] = ['sirketIlanlarindaMi', 'sirketBasvuranlarindaMi', 'sirketProfilindeMi', 'sirketAdaylardaMi'].map(kume);
   for (const [yol, beklenen] of [
     ['/sirket/basvuranlar', 'basvuru'],
     ['/sirket/basvuranlar?aday=x', 'basvuru'],
-    ['/sirket/adaylar', 'profil'],
-    ['/sirket/adaylar?tur=is', 'profil'],
-    ['/sirket/aday/123', 'profil'],
+    ['/sirket/adaylar', 'aday'],
+    ['/sirket/adaylar?tur=is', 'aday'],
+    ['/sirket/aday/123', 'aday'],
     ['/sirket/profil', 'profil'],
     ['/sirket/ilanlar', 'ilan'],
   ]) {
-    const yanan = [['ilan', ilan], ['basvuru', basvuru], ['profil', profil]]
+    const yanan = [['ilan', ilan], ['basvuru', basvuru], ['profil', profil], ['aday', aday]]
       .filter(([, r]) => r.test(yol.split('?')[0]))
       .map(([a]) => a);
     assert.deepEqual(yanan, [beklenen], yol);
   }
-  /* Adlar: İlanlar · Başvurular · Rehber · Şirketim. */
+  /* Adlar: İlanlar · Başvurular · Adaylar · Rehber · Şirketim. */
   const etiketler = [...altCubuk.matchAll(/<span className=\{altMenuYazisi\([^)]*\)\}>([^<]+)<\/span>/g)].map((e) => e[1]);
-  assert.deepEqual(etiketler, ['İlanlar', 'Başvurular', 'Rehber', 'Şirketim']);
+  assert.deepEqual(etiketler, ['İlanlar', 'Başvurular', 'Adaylar', 'Rehber', 'Şirketim']);
   /* Her sekme ayrı ikon: aynı simge iki kez çizilirse ikisi ayırt edilemez. */
   const ikonlar = [...altCubuk.matchAll(/<span className=\{altMenuIkonu\([^)]*\)\}>\s*<(\w+) /g)].map((e) => e[1]);
-  assert.equal(new Set(ikonlar).size, 4, `alt çubukta aynı ikon iki kez: ${ikonlar}`);
+  assert.equal(new Set(ikonlar).size, 5, `alt çubukta aynı ikon iki kez: ${ikonlar}`);
   const kod = HEADER.replace(/\/\*[\s\S]*?\*\//g, '');
   for (const iz of ['nav-company-kanban', '%80+ Uyum', 'companyDropdownOpen', 'Şirket Portalından Çıkış', 'Kanban']) {
     assert.ok(!kod.includes(iz), `${iz} hâlâ Header'da`);

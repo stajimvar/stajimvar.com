@@ -31,8 +31,8 @@ const ISVEREN = blok('MASAÜSTÜ ŞİRKET GEZİNMESİ');
 const say = (metin, parca) => metin.split(parca).length - 1;
 
 test('iki menü de ortak sabitleri kullanıyor', () => {
-  /* İşveren menüsü 11 Ekim 2026'dan beri üç sekme: İlanlar, Başvurular, Rehber. */
-  for (const [ad, kaynak, adet] of [['öğrenci', OGRENCI, 4], ['işveren', ISVEREN, 3]]) {
+  /* İşveren menüsü: İlanlar, Başvurular, Adaylar (10 Kasım 2026, kullanıcı isteği), Rehber. */
+  for (const [ad, kaynak, adet] of [['öğrenci', OGRENCI, 4], ['işveren', ISVEREN, 4]]) {
     assert.equal(say(kaynak, 'className={MASAUSTU_MENU}'), 1, `${ad}: menü kabı`);
     assert.equal(say(kaynak, 'className={masaustuSekme('), adet, `${ad}: sekme sayısı`);
     assert.equal(say(kaynak, 'className={masaustuSekmeIkonu('), adet, `${ad}: simge sayısı`);
