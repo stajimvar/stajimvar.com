@@ -55,18 +55,7 @@
 # (/sirket/<slug>) ve panel yolları (/sirket/ilanlar, /sirket/basvuranlar,
 # /sirket/profil, /sirket/ilan) etkilenmiyor — hepsinin ardında bir yol
 # parçası var.
-#
-# 10 Kasım 2026: hedef /sirket/ilanlar. Şirket hesabı adres çubuğuna
-# /sirket yazınca sahiplenme sayfasına düşüyordu (kullanıcı bildirdi).
-# /sirket/ilanlar oturumsuzu işveren girişine, şirket üyesini paneline
-# alıyor. Eski 301'i önbellekte tutan tarayıcı için App.tsx şirket
-# hesabını /isveren/ilan-ver'den panele alıyor.
-/sirket   /sirket/ilanlar   301
-
-# /sirket/mesajlar YOKTU (404): mesajlar ortak /mesajlar ekranında, şirket
-# hesabı da orada. Jokersiz (kural: canlı aile toptan yönlendirilmez);
-# /sirket/mesajlar/<kişi> uygulama içinde çevriliyor.
-/sirket/mesajlar   /mesajlar   301
+/sirket   /isveren/ilan-ver   301
 
 # BAŞLIĞI TÜRKÇELEŞTİRİLEN ÜÇ İLAN
 #
