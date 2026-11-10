@@ -19,7 +19,11 @@ test('altı kimlik e-postası Türkçe; bağlantı akışı değişmiyor', () =>
     }
     /* Görsel yalnız sitenin kendi logosu; süre vaadi yok (geçerlilik Supabase ayarında). */
     for (const [, src] of html.matchAll(/src="([^"]+)"/g)) assert.equal(src, 'https://stajimvar.com/logo.png', ad);
-    assert.doesNotMatch(html, /\d+ saat geçerli/, ad);
+    /*
+      Süre yazılırsa panelle aynı olmalı: Email OTP expiration = 3600 sn
+      (okundu, 10 Kasım 2026). Panelde değişirse burası da değişmeli.
+    */
+    for (const [, n] of html.matchAll(/(\d+) saat geçerli/g)) assert.equal(n, '1', ad);
   }
 });
 
@@ -37,4 +41,10 @@ test('yayın hattı: yalnız mailer_* alanları, geri okuma, site yayınını du
   const w = oku('.github/workflows/supabase-production.yml');
   assert.match(w, /- name: Kimlik e-postası şablonlarını uygula\s+continue-on-error: true\s+run: node scripts\/auth-eposta-sablonlari\.mjs/);
   assert.match(oku('scripts/detect-deploy-changes.mjs'), /'supabase\/templates\/'/);
+});
+
+test('hitap kişinin adıyla; ad yoksa yalnız "Merhaba,"', () => {
+  const c = oku('supabase/templates/confirmation.html');
+  assert.equal((c.match(/Merhaba\{\{ with \.Data\.full_name \}\} \{\{ \. \}\}\{\{ end \}\},/g) ?? []).length, 2);
+  assert.doesNotMatch(c, /COMPANY_NAME/);
 });
