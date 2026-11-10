@@ -13,6 +13,10 @@ import {
 } from '../lib/isveren-baslangic';
 import { CALISAN_SAYILARI, TANITIM_UST_SINIR, profilFormunuDogrula } from '../lib/isveren-profil-formu.mjs';
 import { benimDavetlerim, davetKabul, rolEtiketi, type GelenDavet } from '../lib/ekip-davetleri';
+import { epostadanSirketTahmini } from '../lib/isveren-eposta-tahmini.mjs';
+import { AutocompleteField } from './AutocompleteField';
+import { TR_CITIES } from '../data/turkeyData';
+import { sektorleriGetir } from '../lib/queries/sosyal';
 
 /**
  * İŞVEREN BAŞLANGICI — "ŞİRKET PROFİLİNİ TAMAMLA" (7 Kasım 2026)
@@ -91,6 +95,32 @@ export const IsverenBaslangic: React.FC<{
 
   const yaz = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setD((o) => ({ ...o, [k]: e.target.value }));
+  const yazDeger = (k: string) => (v: string) => setD((o) => ({ ...o, [k]: v }));
+
+  /*
+    İSTEMEDEN ÖNÜNE (10 Kasım 2026): kurumsal e-postadan şirket adı ve web
+    sitesi tahmini; serbest sağlayıcıda (gmail…) tahmin yok, bunun yerine
+    otomatik onayın neden olmayacağı baştan söyleniyor.
+  */
+  const tahmin = React.useMemo(() => epostadanSirketTahmini(userEmail), [userEmail]);
+  const [sektorler, setSektorler] = useState<string[]>([]);
+  useEffect(() => {
+    let iptal = false;
+    sektorleriGetir()
+      .then((l) => !iptal && setSektorler(l.map((x) => x.ad)))
+      .catch(() => undefined);
+    return () => {
+      iptal = true;
+    };
+  }, []);
+  const tahminAramasi = React.useRef(false);
+  useEffect(() => {
+    if (!tahmin || tahminAramasi.current || adim.tur !== 'ara' || terim) return;
+    tahminAramasi.current = true;
+    setTerim(tahmin.sirketAdi);
+    void aramaYap(tahmin.sirketAdi);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tahmin, adim.tur]);
 
   /*
     NİYET BU SAYFADA DA YAZILIYOR (9 Kasım 2026): Google/Microsoft ile
@@ -120,7 +150,10 @@ export const IsverenBaslangic: React.FC<{
 
   const ara = async (e: React.FormEvent) => {
     e.preventDefault();
-    const temiz = terim.trim();
+    await aramaYap(terim);
+  };
+  const aramaYap = async (metin: string) => {
+    const temiz = metin.trim();
     if (temiz.length < 2) return;
     setAraniyor(true);
     try {
@@ -348,6 +381,18 @@ export const IsverenBaslangic: React.FC<{
         {adim.tur === 'ara' && (
           <section className="space-y-3 rounded-2xl border border-gray-200 bg-white p-5">
             <p className="text-sm font-bold text-gray-900">1. Şirketini bul</p>
+            {tahmin ? (
+              <p className="text-xs text-gray-500">
+                <strong className="font-semibold text-gray-700">{tahmin.alan}</strong> adresinden tahmin edip aradık; doğru değilse adı değiştir.
+              </p>
+            ) : (
+              userEmail && (
+                <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">
+                  Hesabın kişisel bir e-postayla ({userEmail.split('@')[1]}) açık. Şirket hesabı bu yüzden otomatik açılmaz; ekibimiz
+                  bilgilerini kontrol edip onaylar. Şirket e-postanla (ad@sirketin.com) açılan hesap, web sitesiyle eşleşirse hemen onaylanır.
+                </p>
+              )
+            )}
             <form onSubmit={ara} className="flex gap-2">
               <label className="sr-only" htmlFor="baslangic-ara">Şirket adı</label>
               <input id="baslangic-ara" className={alan} value={terim} onChange={(e) => setTerim(e.target.value)} placeholder="Şirketinin adı" />
@@ -379,7 +424,7 @@ export const IsverenBaslangic: React.FC<{
               <button
                 type="button"
                 onClick={() => {
-                  setD((o) => ({ ...o, sirketAdi: terim.trim() }));
+                  setD((o) => ({ ...o, sirketAdi: terim.trim(), ...(tahmin && !o.webSitesi ? { webSitesi: tahmin.alan } : {}) }));
                   setAdim({ tur: 'yeni', ad: terim.trim() });
                 }}
                 className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-sm font-bold text-blue-700 hover:underline"
@@ -409,12 +454,22 @@ export const IsverenBaslangic: React.FC<{
                   </label>
                   <label className="block">
                     <span className={etiket}>Web sitesi *</span>
-                    <input className={alan} onChange={yaz('webSitesi')} placeholder="ornek.com" inputMode="url" />
+                    <input className={alan} defaultValue={d.webSitesi ?? ''} onChange={yaz('webSitesi')} placeholder="ornek.com" inputMode="url" />
+                    {tahmin && d.webSitesi === tahmin.alan && (
+                      <p className="mt-1 text-xs text-gray-500">E-posta adresinden önerildi; değiştirebilirsin.</p>
+                    )}
                     <Hata metin={hatalar.webSitesi} />
                   </label>
                   <label className="block">
                     <span className={etiket}>Sektör {istege}</span>
-                    <input className={alan} onChange={yaz('sektor')} placeholder="ör. Yazılım" />
+                    <AutocompleteField
+                      value={d.sektor ?? ''}
+                      onChange={yazDeger('sektor')}
+                      options={sektorler}
+                      placeholder="ör. Yazılım"
+                      className={alan}
+                      klavyeDuzeni
+                    />
                   </label>
                   <label className="block">
                     <span className={etiket}>Çalışan sayısı {istege}</span>
@@ -428,7 +483,14 @@ export const IsverenBaslangic: React.FC<{
                   </label>
                   <label className="block">
                     <span className={etiket}>Şehir {istege}</span>
-                    <input className={alan} onChange={yaz('sehir')} placeholder="ör. İstanbul" />
+                    <AutocompleteField
+                      value={d.sehir ?? ''}
+                      onChange={yazDeger('sehir')}
+                      options={TR_CITIES}
+                      placeholder="ör. İstanbul"
+                      className={alan}
+                      klavyeDuzeni
+                    />
                   </label>
                   <label className="block">
                     <span className={etiket}>Logo {istege}</span>
