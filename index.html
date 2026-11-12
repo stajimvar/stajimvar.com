@@ -641,15 +641,23 @@
         yükleyemiyor ve `error` olayı tetikleniyor. Bu betik o hatayı yakalayıp
         sayfayı BİR KEZ, önbelleği aşarak yeniliyor.
 
-        Tek seferlik: bayrak sessionStorage'da. Sorun dosya adından değil de
-        ağdan kaynaklanıyorsa sonsuz yenileme döngüsüne girmiyoruz.
+        Döngü koruması: son kurtarmanın ZAMANI sessionStorage'da. Bir dakika
+        içinde ikinci kurtarma yapılmıyor; sorun dosya adından değil de ağdan
+        kaynaklanıyorsa sonsuz yenileme döngüsüne girmiyoruz.
+
+        12 Kasım 2026: önce "oturumda bir kez"di. Aynı gün birkaç yayın
+        olunca açık kalan sekme ilk yayında hakkını kullanıyor, sonrakinde
+        "Sayfa yüklenemedi" ekranında kalıyordu (şirket hesabı, Mesajlar).
       */
       (function () {
         var ANAHTAR = 'sv-varlik-yenilendi';
+        var BEKLEME_MS = 60000;
         function kurtar() {
           try {
-            if (sessionStorage.getItem(ANAHTAR)) return;
-            sessionStorage.setItem(ANAHTAR, '1');
+            var onceki = Number(sessionStorage.getItem(ANAHTAR)) || 0;
+            var simdi = Date.now();
+            if (simdi - onceki < BEKLEME_MS) return;
+            sessionStorage.setItem(ANAHTAR, String(simdi));
           } catch (e) {
             return; // gizli sekmede depolama kapalı olabilir; döngü riskini alma
           }
