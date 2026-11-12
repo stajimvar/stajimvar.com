@@ -32,7 +32,8 @@ const parca = (metin, bas, son) => {
 };
 
 test('App: başvuru satırları panel açıkken, tek sorguyla ve iptal bayrağıyla okunuyor', () => {
-  assert.match(app, /import \{ bildirimBasvurulariniGetir, type BildirimBasvurusu \} from '\.\/lib\/bildirim';/);
+  /* 12 Kasım 2026: aynı modülden yönetici talep logoları da (talepBildirimGorselleri). */
+  assert.match(app, /import \{ bildirimBasvurulariniGetir, (talepBildirimGorselleri, )?type BildirimBasvurusu \} from '\.\/lib\/bildirim';/);
   const anahtar = parca(app, 'const bildirimBasvuruAnahtari = bildirim.acik', ": '';");
   assert.match(anahtar, /OGRENCI_BASVURU_TURLERI\.has\(b\.tur\) \|\| ADAY_FOTOGRAFLI_TURLER\.has\(b\.tur\)/);
   assert.match(anahtar, /\.map\(\(b\) => b\.basvuruId\)/);
@@ -47,7 +48,7 @@ test('App: başvuru satırları panel açıkken, tek sorguyla ve iptal bayrağı
 });
 
 test('App: görsel kararı yalnız basvuruGorseli veriyor ve depo kökü ortamdan geliyor', () => {
-  const bilgi = parca(app, 'const bildirimBasvuruBilgisi = React.useCallback(', '[bildirimBasvurulari],');
+  const bilgi = parca(app, 'const bildirimBasvuruBilgisi = React.useCallback(', '[bildirimBasvurulari, talepGorselleri],');
   assert.match(
     bilgi,
     /basvuruGorseli\(b\.tur, bildirimBasvurulari\.get\(b\.basvuruId\) \?\? null, import\.meta\.env\.VITE_SUPABASE_URL\)/,

@@ -252,3 +252,29 @@ export function bildirimleriDinle(
   Saf bir modüle taşındı; davranışı doğrudan sınanabiliyor.
 */
 export { gecenSure } from './gecen-sure.mjs';
+
+/**
+ * Yönetici talep bildirimlerinin şirket logoları (lib/bildirim-talep-logosu).
+ * Yalnız yöneticide çağrılıyor; RLS zaten yalnız yöneticiye açık. Hata → boş.
+ */
+export async function talepBildirimGorselleri(
+  anahtarlar: { tur: 'talep' | 'sahiplenme'; id: string }[],
+): Promise<Map<string, { sirketAdi: string | null; logo: string }>> {
+  const { talepGorselHaritasi } = await import('./bildirim-talep-logosu.mjs');
+  const talepIdleri = anahtarlar.filter((a) => a.tur === 'talep').map((a) => a.id);
+  const sahiplenmeIdleri = anahtarlar.filter((a) => a.tur === 'sahiplenme').map((a) => a.id);
+  const db = supabase as unknown as { from: (t: string) => any };
+  try {
+    const [t, c] = await Promise.all([
+      talepIdleri.length
+        ? db.from('sirket_talepleri').select('id, sirket_adi, logo_url, sirket:companies(logo_url)').in('id', talepIdleri)
+        : Promise.resolve({ data: [] }),
+      sahiplenmeIdleri.length
+        ? db.from('company_claims').select('id, sirket:companies(name, logo_url)').in('id', sahiplenmeIdleri)
+        : Promise.resolve({ data: [] }),
+    ]);
+    return talepGorselHaritasi(t.data ?? [], c.data ?? []);
+  } catch {
+    return new Map();
+  }
+}
