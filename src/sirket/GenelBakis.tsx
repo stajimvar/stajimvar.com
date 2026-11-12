@@ -6,6 +6,8 @@ import {
   Copy,
   ArrowRight,
   Briefcase,
+  Check,
+  UserPlus,
   Building2,
   ChevronRight,
   FileText,
@@ -278,37 +280,68 @@ export const GenelBakis: React.FC<{
           düğme sm üstünde sağda, telefonda altta tam genişlik. Böylece
           öteki şirketlerin ilanları (sıra) ilk ekrana giriyor.
         */}
-        <div
-          className="flex flex-col gap-3 rounded-2xl border p-4 shadow-xs sm:flex-row sm:items-center"
+        {/*
+          HOŞ GELDİN (12 Kasım 2026, kullanıcı: "onaydan sonra kuru bir
+          bildirimle olmaz"): ilanı olmayan şirkete adıyla karşılama ve üç
+          adım. İlk ilan TEK birincil düğme (26 Eylül kararı); öteki iki adım
+          bağlantı. Profil adımı gerçek veriden işaretleniyor (profilEksikleri).
+          Yükseklik ince tutuldu: adımlar geniş ekranda tek satır, öteki
+          şirketlerin sırası yine ilk ekrana giriyor (27 Eylül kararı).
+        */}
+        <section
+          aria-labelledby="hosgeldin-baslik"
+          className="rounded-2xl border p-4 shadow-xs sm:p-5"
           style={kutuStil}
         >
-          <div className="flex min-w-0 flex-1 items-center gap-3">
-            <span
-              aria-hidden
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-              style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
-            >
-              <Briefcase className="h-5 w-5" />
-            </span>
-            <div className="min-w-0">
-              <h2 className="text-base font-extrabold leading-snug" style={{ color: SIRKET_METIN }}>
-                İlk ilanınızı oluşturun
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="min-w-0 flex-1">
+              <h2 id="hosgeldin-baslik" className="text-lg font-extrabold leading-snug" style={{ color: SIRKET_METIN }}>
+                StajımVar&apos;a hoş geldiniz{baglam.ad ? `, ${baglam.ad}` : ''}
               </h2>
               <p className="text-sm leading-snug" style={{ color: SIRKET_METIN_IKINCIL }}>
-                Pozisyonu ve çalışma koşullarını ekleyin, öğrencilerle buluşun.
+                Şirket hesabınız açıldı. İlk ilanınızı oluşturun; başvurular doğrudan bu panele düşer.
               </p>
             </div>
+            <button
+              type="button"
+              onClick={() => onNavigate('/sirket/ilan/yeni')}
+              className={`w-full shrink-0 sm:w-auto ${BIRINCIL_DUGME}`}
+              style={birincilStil}
+            >
+              <Plus className="h-5 w-5" aria-hidden />
+              İlan oluştur
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => onNavigate('/sirket/ilan/yeni')}
-            className={`w-full shrink-0 sm:w-auto ${BIRINCIL_DUGME}`}
-            style={birincilStil}
-          >
-            <Plus className="h-5 w-5" aria-hidden />
-            İlan oluştur
-          </button>
-        </div>
+          <ol className="mt-4 grid gap-2 border-t pt-4 sm:grid-cols-3 sm:gap-3" style={{ borderColor: SIRKET_KENAR }}>
+            {(
+              [
+                { ad: 'İlk ilanınızı oluşturun', yol: '/sirket/ilan/yeni', bitti: false, Ikon: Briefcase },
+                { ad: 'Şirket sayfanızı tamamlayın', yol: '/sirket/profil/duzenle', bitti: eksikler.length === 0, Ikon: Building2 },
+                { ad: 'Ekibinizi davet edin', yol: '/sirket/profil/ekip', bitti: false, Ikon: UserPlus },
+              ] as const
+            ).map(({ ad, yol, bitti, Ikon }, i) => (
+              <li key={ad}>
+                <button
+                  type="button"
+                  onClick={() => onNavigate(yol)}
+                  className={`flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-xl px-2 text-left text-sm font-bold hover:bg-gray-50 ${SIRKET_ODAK}`}
+                  style={{ color: SIRKET_METIN }}
+                >
+                  <span
+                    aria-hidden
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs"
+                    style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
+                  >
+                    {bitti ? <Check className="h-4 w-4" /> : i + 1}
+                  </span>
+                  <Ikon aria-hidden className="h-4 w-4 shrink-0" style={{ color: SIRKET_METIN_IKINCIL }} />
+                  <span className={bitti ? 'line-through decoration-1 opacity-60' : ''}>{ad}</span>
+                  {bitti && <span className="sr-only"> (tamamlandı)</span>}
+                </button>
+              </li>
+            ))}
+          </ol>
+        </section>
 
         {siralama}
 
