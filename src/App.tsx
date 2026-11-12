@@ -1,13 +1,14 @@
 import React, { useState, useRef, Suspense } from 'react';
 import { cvVarMi, karsilamaGosterilsinMi, karsilamaIsaretle } from './lib/cv-hazirlik.mjs';
 import { bildirimIcerigi } from './lib/bildirim-icerigi.mjs';
+import { talepAnahtari } from './lib/bildirim-talep-logosu.mjs';
 import { bildirimKisisi } from './lib/bildirim-kisisi.mjs';
 import {
   ADAY_FOTOGRAFLI_TURLER,
   OGRENCI_BASVURU_TURLERI,
   basvuruGorseli,
 } from './lib/bildirim-basvurusu.mjs';
-import { bildirimBasvurulariniGetir, type BildirimBasvurusu } from './lib/bildirim';
+import { bildirimBasvurulariniGetir, talepBildirimGorselleri, type BildirimBasvurusu } from './lib/bildirim';
 import { COGRAFYA, ilanCografyasi } from './lib/ilan-cografyasi.mjs';
 import {
   baglantiDurumu,
@@ -2448,12 +2449,52 @@ export default function App() {
       iptal = true;
     };
   }, [bildirimBasvuruAnahtari]);
+  /*
+    YÖNETİCİ TALEP BİLDİRİMİNDE ŞİRKET LOGOSU (12 Kasım 2026): yeni şirket
+    ve sahiplenme talebi satırları; olay kimliği dedupe_key'de. Yalnız
+    yöneticide ve panel açıkken; logo yoksa satır simgeyle kalıyor.
+  */
+  const [talepGorselleri, setTalepGorselleri] = useState<Map<string, { sirketAdi: string | null; logo: string }>>(
+    () => new Map(),
+  );
+  const talepGorselAnahtari =
+    bildirim.acik && isAdmin
+      ? Array.from(
+          new Set(
+            bildirim.bildirimler
+              .map((b) => talepAnahtari(b.anahtar))
+              .filter((k): k is { tur: 'talep' | 'sahiplenme'; id: string } => Boolean(k))
+              .map((k) => `${k.tur}:${k.id}`),
+          ),
+        )
+          .sort()
+          .join(',')
+      : '';
+  React.useEffect(() => {
+    if (!talepGorselAnahtari) return;
+    let iptal = false;
+    const anahtarlar = talepGorselAnahtari.split(',').map((k) => {
+      const [tur, id] = k.split(':');
+      return { tur: tur as 'talep' | 'sahiplenme', id };
+    });
+    void talepBildirimGorselleri(anahtarlar).then((h) => {
+      if (!iptal) setTalepGorselleri(h);
+    });
+    return () => {
+      iptal = true;
+    };
+  }, [talepGorselAnahtari]);
+
   const bildirimBasvuruBilgisi = React.useCallback(
-    (b: { tur: string; basvuruId: string | null }) =>
-      b.basvuruId
-        ? basvuruGorseli(b.tur, bildirimBasvurulari.get(b.basvuruId) ?? null, import.meta.env.VITE_SUPABASE_URL)
-        : null,
-    [bildirimBasvurulari],
+    (b: { tur: string; basvuruId: string | null; anahtar?: string | null }) => {
+      if (b.basvuruId) {
+        return basvuruGorseli(b.tur, bildirimBasvurulari.get(b.basvuruId) ?? null, import.meta.env.VITE_SUPABASE_URL);
+      }
+      const k = talepAnahtari(b.anahtar ?? null);
+      const g = k ? talepGorselleri.get(`${k.tur}:${k.id}`) : undefined;
+      return g ? { tip: 'sirket' as const, sirketAdi: g.sirketAdi, logo: g.logo, ilanAdi: null } : null;
+    },
+    [bildirimBasvurulari, talepGorselleri],
   );
 
   /* Bildirimin işaret ettiği kişi, olayın kimliğinden okunuyor. */
