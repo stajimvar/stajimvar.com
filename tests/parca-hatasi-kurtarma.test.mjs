@@ -60,7 +60,9 @@ test('D1 sınırı: yalnız parça hatasını yakalıyor, gerisini yeniden fırl
 test('D2: vite:preloadError ve sınır index.html\'deki AYNI tek seferlik kurtarmayı çağırıyor', () => {
   const h = oku('index.html');
   const betik = h.slice(h.indexOf('BAYAT HTML KURTARMASI'), h.indexOf('</script>', h.indexOf('BAYAT HTML KURTARMASI')));
-  assert.equal((betik.match(/sessionStorage\.setItem\(ANAHTAR, '1'\)/g) || []).length, 1, 'tek bayrak');
+  /* 12 Kasım 2026: bayrak artık son kurtarmanın zamanı (dakikada en fazla bir). */
+  assert.equal((betik.match(/sessionStorage\.setItem\(ANAHTAR, String\(simdi\)\)/g) || []).length, 1, 'tek bayrak');
+  assert.match(betik, /var BEKLEME_MS = 60000;/);
   assert.equal((betik.match(/location\.replace\(/g) || []).length, 1, 'tek yenileme noktası');
   assert.match(betik, /window\.addEventListener\('vite:preloadError', function \(\) \{\s*kurtar\(\);\s*\}\);/);
   assert.match(betik, /window\.svVarlikKurtar = kurtar;/);
@@ -68,12 +70,12 @@ test('D2: vite:preloadError ve sınır index.html\'deki AYNI tek seferlik kurtar
   assert.doesNotMatch(betik, /\.preventDefault\(/);
 });
 
-test('D2: kurtarma işlevi davranışı — aynı oturumda en fazla bir yenileme, depolama kapalıysa hiç', () => {
+test('D2: kurtarma işlevi davranışı — dakikada en fazla bir yenileme, depolama kapalıysa hiç', () => {
   const h = oku('index.html');
   const bas = h.indexOf('(function () {', h.indexOf('BAYAT HTML KURTARMASI'));
   const kod = h.slice(bas, h.indexOf('})();', bas) + 5);
-  const calistir = ({ depolamaKapali = false } = {}) => {
-    const depo = new Map();
+  const calistir = ({ depolamaKapali = false, onceki = null } = {}) => {
+    const depo = new Map(onceki === null ? [] : [['sv-varlik-yenilendi', String(onceki)]]);
     const yenilemeler = [];
     const dinleyiciler = {};
     const pencere = { addEventListener: (ad, f) => { dinleyiciler[ad] = f; } };
@@ -96,6 +98,13 @@ test('D2: kurtarma işlevi davranışı — aynı oturumda en fazla bir yenileme
   const ikinci = calistir();
   ikinci.dinleyiciler.error({ target: { tagName: 'IMG', src: 'https://stajimvar.com/logo.png' } });
   assert.equal(ikinci.yenilemeler.length, 0);
+  /* Aynı gün ikinci yayın: önceki kurtarma 1 dakikadan eskiyse yine yenileniyor; yeniyse (döngü) yenilenmiyor. */
+  const eski = calistir({ onceki: Date.now() - 5 * 60 * 1000 });
+  eski.dinleyiciler['vite:preloadError']({});
+  assert.equal(eski.yenilemeler.length, 1);
+  const yeni = calistir({ onceki: Date.now() - 5000 });
+  yeni.dinleyiciler['vite:preloadError']({});
+  assert.equal(yeni.yenilemeler.length, 0);
   /* Depolama kapalı (gizli sekme): döngü riskine girilmiyor. */
   const ucuncu = calistir({ depolamaKapali: true });
   ucuncu.dinleyiciler['vite:preloadError']({});
