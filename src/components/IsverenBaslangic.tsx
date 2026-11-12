@@ -61,7 +61,7 @@ const AdimGostergesi: React.FC<{ adim: 1 | 2 | 3 }> = ({ adim }) => (
         <li key={ad} className="flex min-w-0 items-center gap-2 sm:gap-3" aria-current={simdi ? 'step' : undefined}>
           <span
             className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-              simdi ? 'bg-blue-600 text-white' : bitti ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'
+              simdi ? 'bg-blue-600 text-white' : bitti ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
             }`}
           >
             {bitti ? <Check aria-hidden className="h-4 w-4" /> : no}
