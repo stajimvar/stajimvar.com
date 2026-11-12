@@ -2,6 +2,7 @@ import React, { useState, useRef, Suspense } from 'react';
 import { cvVarMi, karsilamaGosterilsinMi, karsilamaIsaretle } from './lib/cv-hazirlik.mjs';
 import { bildirimIcerigi } from './lib/bildirim-icerigi.mjs';
 import { talepAnahtari } from './lib/bildirim-talep-logosu.mjs';
+import { STAJIMVAR_LOGOSU, sistemBildirimiMi } from './lib/sistem-bildirimi.mjs';
 import { bildirimKisisi } from './lib/bildirim-kisisi.mjs';
 import {
   ADAY_FOTOGRAFLI_TURLER,
@@ -2492,7 +2493,11 @@ export default function App() {
       }
       const k = talepAnahtari(b.anahtar ?? null);
       const g = k ? talepGorselleri.get(`${k.tur}:${k.id}`) : undefined;
-      return g ? { tip: 'sirket' as const, sirketAdi: g.sirketAdi, logo: g.logo, ilanAdi: null } : null;
+      if (g) return { tip: 'sirket' as const, sirketAdi: g.sirketAdi, logo: g.logo, ilanAdi: null };
+      /* StajımVar'ın kendisinden gelen bildirim: StajımVar logosu (lib/sistem-bildirimi). */
+      return sistemBildirimiMi(b.tur)
+        ? { tip: 'sirket' as const, sirketAdi: 'StajımVar', logo: STAJIMVAR_LOGOSU, ilanAdi: null }
+        : null;
     },
     [bildirimBasvurulari, talepGorselleri],
   );
