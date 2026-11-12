@@ -24,3 +24,15 @@ test('sayfa: kendiliğinden arama, web sitesi önerisi, sektör/şehir önerisi,
   assert.match(s, /options=\{TR_CITIES\}/);
   assert.match(s, /Şirket hesabı bu yüzden otomatik açılmaz/);
 });
+
+test('geniş düzen: ana sayfa genişliği, iki sütun, adım göstergesi; her durum aynı kabukta', () => {
+  const s = readFileSync(new URL('../src/components/IsverenBaslangic.tsx', import.meta.url), 'utf8');
+  assert.match(s, /<SayfaKabugu onBack=\{onBack\} icerikGenisligi=\{SAYFA_GENISLIGI\}>/);
+  assert.match(s, /lg:grid-cols-\[minmax\(0,1fr\)_360px\]/);
+  assert.match(s, /<AdimGostergesi adim=\{adimNo\} \/>/);
+  assert.equal((s.match(/sayfa\([123], <>/g) ?? []).length, 4);
+  assert.match(s, /return sayfa\(adim\.tur === 'ara' \? 1 : 2, <>/);
+  /* Yan sütunda sayı ya da süre vaadi yok. */
+  const yan = s.slice(s.indexOf('const ACILANLAR'), s.indexOf('export const IsverenBaslangic'));
+  assert.doesNotMatch(yan, /\d+\s*(saat|gün|dakika|%)/);
+});

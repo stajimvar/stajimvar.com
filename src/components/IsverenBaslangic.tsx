@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Building2, CheckCircle2, Clock, Search, Upload } from 'lucide-react';
+import { ArrowLeft, Building2, Check, CheckCircle2, Clock, FileText, Mail, Megaphone, Search, ShieldCheck, Upload, Users } from 'lucide-react';
+import { SAYFA_GENISLIGI } from '../lib/duzen';
 import { SayfaKabugu } from './SayfaKabugu';
 import { CompanyLogo } from './CompanyLogo';
 import { searchCompanies } from '../lib/queries';
@@ -40,6 +41,88 @@ const istege = <span className="font-medium text-gray-500">(isteğe bağlı)</sp
 
 const Hata: React.FC<{ metin?: string }> = ({ metin }) =>
   metin ? <p className="mt-1 text-xs font-medium text-rose-700">{metin}</p> : null;
+
+/*
+  GENİŞ DÜZEN (12 Kasım 2026, kullanıcı: "ana sayfadaki gibi genişlet")
+  Ana sayfa genişliği (SAYFA_GENISLIGI); geniş ekranda iki sütun: solda
+  adım ve form, sağda onaydan sonra açılanlar ve onayı hızlandıranlar.
+  Telefonda sağ sütun formun altına iniyor. Yan sütundaki her madde
+  bugün gerçekten çalışan bir özellik; sayı ya da süre sözü yok.
+*/
+const ADIMLAR = ['Şirketini bul', 'Bilgilerini gir', 'Onay'] as const;
+
+const AdimGostergesi: React.FC<{ adim: 1 | 2 | 3 }> = ({ adim }) => (
+  <ol className="flex items-center gap-2 sm:gap-3" aria-label="Adımlar">
+    {ADIMLAR.map((ad, i) => {
+      const no = (i + 1) as 1 | 2 | 3;
+      const bitti = no < adim;
+      const simdi = no === adim;
+      return (
+        <li key={ad} className="flex min-w-0 items-center gap-2 sm:gap-3" aria-current={simdi ? 'step' : undefined}>
+          <span
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+              simdi ? 'bg-blue-600 text-white' : bitti ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+            }`}
+          >
+            {bitti ? <Check aria-hidden className="h-4 w-4" /> : no}
+          </span>
+          <span className={`truncate text-sm font-semibold ${simdi ? 'text-gray-900' : 'hidden text-gray-500 sm:inline'}`}>
+            {ad}
+          </span>
+          {no < 3 && <span aria-hidden className="h-px w-6 shrink-0 bg-gray-200 sm:w-10" />}
+        </li>
+      );
+    })}
+  </ol>
+);
+
+const ACILANLAR = [
+  [Megaphone, 'Ücretsiz staj ilanı', 'İlanın öğrencilerin ilan listesinde yayınlanır.'],
+  [FileText, 'Başvurular tek panelde', 'Aday kartı, CV ve ön eleme cevapları aynı ekranda.'],
+  [Users, 'Ekibini davet et', 'İK arkadaşların kendi hesabıyla başvuruları birlikte inceler.'],
+  [Search, 'Aday havuzu', 'Staj arayan öğrencileri bölüme ve şehre göre keşfet.'],
+] as const;
+
+const Acilanlar: React.FC = () => (
+  <section aria-labelledby="acilanlar-baslik" className="rounded-2xl border border-gray-200 bg-white p-5 sm:p-6">
+    <h2 id="acilanlar-baslik" className="text-base font-extrabold text-gray-900">Onaydan sonra neler açılıyor</h2>
+    <ul className="mt-4 grid gap-4 sm:grid-cols-2 sm:gap-5">
+      {ACILANLAR.map(([Ikon, b, a]) => (
+        <li key={b} className="flex gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+            <Ikon aria-hidden className="h-5 w-5" />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-sm font-bold text-gray-900">{b}</span>
+            <span className="block text-sm leading-5 text-gray-600">{a}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  </section>
+);
+
+const YanSutun: React.FC = () => (
+  <aside className="space-y-4 lg:sticky lg:top-24">
+    <section className="rounded-2xl border border-gray-200 bg-white p-5">
+      <h2 className="flex items-center gap-2 text-base font-extrabold text-gray-900">
+        <ShieldCheck aria-hidden className="h-5 w-5 text-blue-700" /> Onayı hızlandırmak için
+      </h2>
+      <ul className="mt-3 space-y-2 text-sm leading-5 text-gray-600">
+        <li>• Şirket e-postanla (ad@sirketin.com) açılan hesap, web sitesiyle eşleşirse hemen onaylanır.</li>
+        <li>• Web sitesi adresini eksiksiz yaz.</li>
+        <li>• Vergi kimlik numarasını eklemek kontrolü kolaylaştırır.</li>
+      </ul>
+      <p className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-gray-100 pt-3 text-sm text-gray-600">
+        <Mail aria-hidden className="h-4 w-4 shrink-0" />
+        Takıldın mı?
+        <a href="mailto:iletisim@stajimvar.com" className="inline-flex min-h-11 items-center font-semibold text-blue-700 hover:underline">
+          iletisim@stajimvar.com
+        </a>
+      </p>
+    </section>
+  </aside>
+);
 
 export const IsverenBaslangic: React.FC<{
   onBack: () => void;
@@ -219,21 +302,32 @@ export const IsverenBaslangic: React.FC<{
     }
   };
 
-  const baslik = (
-    <header className="space-y-1">
-      <h1 className="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">Şirket profilini tamamla</h1>
-      <p className="text-sm leading-6 text-gray-600">
-        Hesabın kişisel kimliğinle açıldı. Şirketini bul ya da ekle; bilgilerini doldur. Aday erişimi, şirket
-        doğrulamasından sonra açılır.
-      </p>
-    </header>
+  const sayfa = (adimNo: 1 | 2 | 3, icerik: React.ReactNode) => (
+    <SayfaKabugu onBack={onBack} icerikGenisligi={SAYFA_GENISLIGI}>
+      <header className="flex flex-col gap-4 border-b border-gray-200 pb-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="max-w-2xl space-y-1.5">
+          <p className="text-xs font-bold uppercase tracking-wide text-blue-700">İşveren hesabı</p>
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">Şirket profilini tamamla</h1>
+          <p className="text-sm leading-6 text-gray-600 sm:text-base">
+            Hesabın kişisel kimliğinle açıldı. Şirketini bul ya da ekle, bilgilerini doldur. Aday erişimi şirket
+            doğrulamasından sonra açılır.
+          </p>
+        </div>
+        <AdimGostergesi adim={adimNo} />
+      </header>
+      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start xl:gap-8">
+        <div className="min-w-0 space-y-4">
+          {icerik}
+          <Acilanlar />
+        </div>
+        <YanSutun />
+      </div>
+    </SayfaKabugu>
   );
 
   if (!userId) {
     return (
-      <SayfaKabugu onBack={onBack}>
-        <div className="space-y-4">
-          {baslik}
+      sayfa(1, <>
           <div className="rounded-2xl border border-gray-200 bg-white p-5">
             <p className="text-sm text-gray-700">Şirket profilini doldurmak için önce giriş yap ya da işveren hesabı aç.</p>
             {onGirisGerekli && (
@@ -242,8 +336,7 @@ export const IsverenBaslangic: React.FC<{
               </button>
             )}
           </div>
-        </div>
-      </SayfaKabugu>
+        </>)
     );
   }
 
@@ -257,9 +350,7 @@ export const IsverenBaslangic: React.FC<{
 
   if (davetler.length > 0 && !davetleriGec) {
     return (
-      <SayfaKabugu onBack={onBack}>
-        <div className="space-y-4">
-          {baslik}
+      sayfa(1, <>
           {davetler.map((d) => (
             <div key={d.id} className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
               <p className="text-base font-bold text-blue-950">
@@ -284,16 +375,13 @@ export const IsverenBaslangic: React.FC<{
           >
             Davet yerine kendi şirketimi ekleyeceğim
           </button>
-        </div>
-      </SayfaKabugu>
+        </>)
     );
   }
 
   if (talep?.durum === 'bekliyor') {
     return (
-      <SayfaKabugu onBack={onBack}>
-        <div className="space-y-4">
-          {baslik}
+      sayfa(3, <>
           <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
             <p className="flex items-center gap-2 font-bold text-amber-900">
               <Clock aria-hidden className="h-5 w-5" /> Talebin inceleniyor
@@ -304,16 +392,13 @@ export const IsverenBaslangic: React.FC<{
               işveren paneline bu sayfadan geçebilirsin; ilan girme ve aday erişimi o zaman açılır.
             </p>
           </section>
-        </div>
-      </SayfaKabugu>
+        </>)
     );
   }
 
   if (talep?.durum === 'onaylandi') {
     return (
-      <SayfaKabugu onBack={onBack}>
-        <div className="space-y-4">
-          {baslik}
+      sayfa(3, <>
           <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
             <p className="flex items-center gap-2 font-bold text-emerald-900">
               <CheckCircle2 aria-hidden className="h-5 w-5" /> {talep.sirketAdi} onaylandı
@@ -328,8 +413,7 @@ export const IsverenBaslangic: React.FC<{
               İşveren paneline git
             </button>
           </section>
-        </div>
-      </SayfaKabugu>
+        </>)
     );
   }
 
@@ -366,10 +450,7 @@ export const IsverenBaslangic: React.FC<{
     </>
   );
 
-  return (
-    <SayfaKabugu onBack={onBack}>
-      <div className="space-y-4">
-        {baslik}
+  return sayfa(adim.tur === 'ara' ? 1 : 2, <>
 
         {talep?.durum === 'reddedildi' && (
           <p className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
@@ -379,15 +460,15 @@ export const IsverenBaslangic: React.FC<{
         )}
 
         {adim.tur === 'ara' && (
-          <section className="space-y-3 rounded-2xl border border-gray-200 bg-white p-5">
-            <p className="text-sm font-bold text-gray-900">1. Şirketini bul</p>
+          <section className="space-y-3 rounded-2xl border border-gray-200 bg-white p-5 sm:p-6">
+            <h2 className="text-lg font-extrabold text-gray-900">Şirketini bul</h2>
             {tahmin ? (
-              <p className="text-xs text-gray-500">
-                <strong className="font-semibold text-gray-700">{tahmin.alan}</strong> adresinden tahmin edip aradık; doğru değilse adı değiştir.
+              <p className="text-sm text-gray-600">
+                <strong className="font-semibold text-gray-800">{tahmin.alan}</strong> adresinden tahmin edip aradık; doğru değilse adı değiştir.
               </p>
             ) : (
               userEmail && (
-                <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">
+                <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
                   Hesabın kişisel bir e-postayla ({userEmail.split('@')[1]}) açık. Şirket hesabı bu yüzden otomatik açılmaz; ekibimiz
                   bilgilerini kontrol edip onaylar. Şirket e-postanla (ad@sirketin.com) açılan hesap, web sitesiyle eşleşirse hemen onaylanır.
                 </p>
@@ -436,13 +517,13 @@ export const IsverenBaslangic: React.FC<{
         )}
 
         {adim.tur !== 'ara' && (
-          <form onSubmit={gonder} noValidate className="space-y-4 rounded-2xl border border-gray-200 bg-white p-5">
+          <form onSubmit={gonder} noValidate className="space-y-4 rounded-2xl border border-gray-200 bg-white p-5 sm:p-6">
             <button type="button" onClick={() => setAdim({ tur: 'ara' })} className="inline-flex min-h-9 cursor-pointer items-center gap-1 text-sm font-semibold text-gray-600 hover:text-gray-900">
               <ArrowLeft aria-hidden className="h-4 w-4" /> Şirket aramasına dön
             </button>
-            <p className="text-sm font-bold text-gray-900">
-              {adim.tur === 'sahiplen' ? `2. ${adim.sirket.name} — yetkili bilgilerin` : '2. Şirket profili'}
-            </p>
+            <h2 className="text-lg font-extrabold text-gray-900">
+              {adim.tur === 'sahiplen' ? `${adim.sirket.name} — yetkili bilgilerin` : 'Şirket profili'}
+            </h2>
 
             <div className="grid gap-4 sm:grid-cols-2">
               {adim.tur === 'yeni' && (
@@ -530,7 +611,5 @@ export const IsverenBaslangic: React.FC<{
             </p>
           </form>
         )}
-      </div>
-    </SayfaKabugu>
-  );
+    </>);
 };
