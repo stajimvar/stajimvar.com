@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Search, X } from 'lucide-react';
+import { Bell, Search, Users, X } from 'lucide-react';
 import { ODAK_HALKASI, RENK_GECISI } from '../../lib/renk-token';
 import {
   akisiGetir,
@@ -701,6 +701,26 @@ export const AgimSayfasi: React.FC<Props> = ({
         </nav>
 
         <main className="min-w-0 flex-1">
+          {/*
+            KARŞILAMA ŞERİDİ (13 Kasım 2026, kullanıcı isteği: İlanlar'daki
+            "Staj aramaya buradan başla." kartının Ağım karşılığı). Aynı
+            sınıflar: açık mavi tonlu kart, sağda simge (xl). Yalnız geniş
+            ekranda — telefonda Ağım'ın kendi üst çubuğu var ve akış ilk
+            ekranda kalmalı. Sayfanın h1'i telefon çubuğundaki marka; burada
+            h2. Metindeki her şey bugün çalışıyor: bağlantı, akış, şirket takibi.
+          */}
+          <div className="mb-4 hidden lg:relative lg:block lg:overflow-hidden lg:rounded-2xl lg:border lg:border-blue-100 lg:bg-gradient-to-r lg:from-blue-50 lg:via-white lg:to-blue-50/80 lg:px-6 lg:py-5 lg:shadow-xs xl:pr-44">
+            <h2 className="text-[28px] font-extrabold leading-9 tracking-tight text-slate-900">Ağını burada büyüt.</h2>
+            <p className="mt-1.5 text-sm leading-5 text-gray-600">
+              Öğrencilerle bağlantı kur, paylaşımlarını gör, takip ettiğin şirketlerin yeni ilanlarından ilk sen haberdar ol.
+            </p>
+            <div aria-hidden className="pointer-events-none absolute right-8 top-1/2 hidden -translate-y-1/2 xl:block">
+              <span className="absolute -left-6 top-6 h-12 w-10 -rotate-12 rounded-lg border border-blue-100 bg-white shadow-sm" />
+              <span className="relative flex h-20 w-20 rotate-6 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 shadow-lg shadow-blue-600/30">
+                <Users className="h-10 w-10 text-white" strokeWidth={1.75} />
+              </span>
+            </div>
+          </div>
           {baglantilar.length > 0 && (
             <div className="px-4 sm:mb-4 sm:px-0">
               <BaglantiSeridi
