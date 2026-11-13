@@ -655,8 +655,8 @@ export const PaylasimOlustur: React.FC<OlusturProps> = ({
               },
               {
                 deger: 'alan-toplulugum' as const,
-                etiket: 'Alan topluluğum',
-                aciklama: 'Aynı alandaki, topluluğa katılmış herkes görür.',
+                etiket: 'Alan grubum',
+                aciklama: 'Aynı alandaki, gruba katılmış herkes görür.',
               },
             ] as const
           ).map((secenek) => {
@@ -716,10 +716,10 @@ export const PaylasimOlustur: React.FC<OlusturProps> = ({
           {!uyeMiyim && (
             <p id="kitle-uyelik-sebebi" className="text-xs leading-relaxed text-gray-600">
               {uyelikDurumu === 'yukleniyor'
-                ? 'Topluluk üyeliğin okunuyor; "Alan topluluğum" o zamana kadar kapalı.'
+                ? 'Grup üyeliğin okunuyor; "Alan grubum" o zamana kadar kapalı.'
                 : uyelikDurumu === 'hata'
-                  ? 'Topluluk üyeliğin okunamadı; "Alan topluluğum" bu yüzden kapalı. Paylaşımın bağlantılarına açılabilir.'
-                  : '"Alan topluluğum" alan topluluğuna katılınca açılıyor.'}{' '}
+                  ? 'Grup üyeliğin okunamadı; "Alan grubum" bu yüzden kapalı. Paylaşımın bağlantılarına açılabilir.'
+                  : '"Alan grubum" alan grubuna katılınca açılıyor.'}{' '}
               <a
                 href={TOPLULUKLAR_YOLU}
                 onClick={(olay) => {
@@ -737,7 +737,7 @@ export const PaylasimOlustur: React.FC<OlusturProps> = ({
                 }}
                 className={`font-semibold text-blue-700 underline underline-offset-2 ${ODAK_HALKASI}`}
               >
-                Alan toplulukları
+                Alan grupları
               </a>
             </p>
           )}

@@ -263,7 +263,7 @@ export const AgimSayfasi: React.FC<Props> = ({
   if (!kullaniciId) {
     return (
       <div className="mx-auto max-w-md space-y-3 px-4 py-12 text-center">
-        <h1 className="text-lg font-extrabold text-gray-900">Ağın için giriş gerekiyor</h1>
+        <h1 className="text-lg font-extrabold text-gray-900">Topluluk için giriş gerekiyor</h1>
         <p className="text-sm leading-relaxed text-gray-600">
           Akış, bağlantılarının ve alanındaki kişilerin paylaşımlarından oluşuyor.
         </p>
@@ -659,7 +659,7 @@ export const AgimSayfasi: React.FC<Props> = ({
           `/cv`. "Fotoğraf paylaş" üst çubuktaki ile AYNI bileşen —
           ikinci bir paylaşım yolu değil, aynı kolun ikinci tutamağı.
         */}
-        <nav aria-label="Ağım" className="hidden w-[240px] shrink-0 lg:block xl:w-[260px]">
+        <nav aria-label="Topluluk" className="hidden w-[240px] shrink-0 lg:block xl:w-[260px]">
           <div className="sticky top-6 space-y-1">
             {[
               { ad: 'Akış', yol: '/agim' },
@@ -710,7 +710,7 @@ export const AgimSayfasi: React.FC<Props> = ({
             h2. Metindeki her şey bugün çalışıyor: bağlantı, akış, şirket takibi.
           */}
           <div className="mb-4 hidden lg:relative lg:block lg:overflow-hidden lg:rounded-2xl lg:border lg:border-blue-100 lg:bg-gradient-to-r lg:from-blue-50 lg:via-white lg:to-blue-50/80 lg:px-6 lg:py-5 lg:shadow-xs xl:pr-44">
-            <h2 className="text-[28px] font-extrabold leading-9 tracking-tight text-slate-900">Ağını burada büyüt.</h2>
+            <h2 className="text-[28px] font-extrabold leading-9 tracking-tight text-slate-900">Topluluğunu burada büyüt.</h2>
             <p className="mt-1.5 text-sm leading-5 text-gray-600">
               Öğrencilerle bağlantı kur, paylaşımlarını gör, takip ettiğin şirketlerin yeni ilanlarından ilk sen haberdar ol.
             </p>

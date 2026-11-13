@@ -160,12 +160,12 @@ export const BolumTalebi: React.FC<TalepProps> = ({ kip, kullaniciId, bolum, onG
   const baslik =
     kip === 'bolum-yok'
       ? 'Bölümün listede yok'
-      : 'Bölümün için alan topluluğu henüz tanımlı değil';
+      : 'Bölümün için alan grubu henüz tanımlı değil';
 
   const aciklamaMetni =
     kip === 'bolum-yok'
       ? 'Katalog Türkiye’deki bütün bölümleri kapsamıyor. Bölümünü yazarsan yönetim kuyruğuna düşer; kataloğa eklenip eklenmeyeceğine orada karar verilir.'
-      : 'Bu bölüm katalogda var ama hangi alan topluluğuna bağlanacağı henüz tanımlı değil. Eşleme tanımlanmadan bu bölümle topluluğa katılım açılmıyor.';
+      : 'Bu bölüm katalogda var ama hangi alan grubuna bağlanacağı henüz tanımlı değil. Eşleme tanımlanmadan bu bölümle gruba katılım açılmıyor.';
 
   return (
     <div className="space-y-4">
@@ -210,8 +210,8 @@ export const BolumTalebi: React.FC<TalepProps> = ({ kip, kullaniciId, bolum, onG
         >
           <p className="text-sm font-bold">{DURUM_CUMLESI[mevcut.durum] ?? 'Talebin kayıtlı.'}</p>
           <p className="text-xs leading-relaxed">
-            Talep açmak alan topluluğuna erişim vermiyor; erişim ancak bölümünün alanı
-            tanımlandığında ve topluluğa katılmayı seçtiğinde açılıyor.
+            Talep açmak alan grubuna erişim vermiyor; erişim ancak bölümünün alanı
+            tanımlandığında ve gruba katılmayı seçtiğinde açılıyor.
           </p>
           {tarihMetni(mevcut.olusturmaAni) && (
             <p className="text-xs">Gönderildiği tarih: {tarihMetni(mevcut.olusturmaAni)}</p>

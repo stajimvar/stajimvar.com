@@ -165,7 +165,7 @@ const etkilesimSinifi = (basili: boolean) =>
 */
 const KITLE_METNI: Record<SosyalPaylasim['kitle'], string> = {
   baglantilarim: 'Bağlantılarım',
-  'alan-toplulugum': 'Alan topluluğum',
+  'alan-toplulugum': 'Alan grubum',
   resmi: 'Resmî içerik — herkes',
   /* Şirket sayfasının tek kitlesi (20261014010000): giriş yapmış herkes. */
   sirket: 'Şirket paylaşımı — herkes',

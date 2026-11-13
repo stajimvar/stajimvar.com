@@ -40,8 +40,8 @@ test('DÖRT ANA ALAN DURUYOR — hiçbiri diğerinin altına gömülmedi', () =>
   assert.ok(!header.includes('href="/kesfet"'), 'Keşfet gezintiden kalktı');
 });
 
-test('AĞIM SEKMESİ: lucide Users, etiket "Ağım"', () => {
-  assert.match(header, /id="nav-tab-network"[\s\S]{0,900}<Users[\s\S]{0,200}<span>Ağım<\/span>/);
+test('AĞIM SEKMESİ: lucide Users, etiket "Topluluk"', () => {
+  assert.match(header, /id="nav-tab-network"[\s\S]{0,900}<Users[\s\S]{0,200}<span>Topluluk<\/span>/);
 });
 
 test('İŞVEREN BAĞLANTISI ÖĞRENCİ SEKMELERİNDEN AYRI', () => {

@@ -1561,7 +1561,7 @@ test('iki durumun cümleleri ayrı: bölüm yok / alan tanımlı değil', () => 
   */
   assert.match(bolumTalebi, /kip === 'bolum-yok'/);
   assert.match(bolumTalebi, /Bölümün listede yok/);
-  assert.match(bolumTalebi, /Bölümün için alan topluluğu henüz tanımlı değil/);
+  assert.match(bolumTalebi, /Bölümün için alan grubu henüz tanımlı değil/);
   /* Serbest metin YALNIZ "bölümüm listede yok" durumunda soruluyor. */
   assert.match(bolumTalebi, /kimlik="bolum-talebi-ad"/);
   assert.match(bolumTalebi, /kimlik="bolum-talebi-universite"/);
@@ -2580,7 +2580,7 @@ test('üye sayısı NULL iken hiçbir sayı çizilmiyor', () => {
   );
   assert.match(sorgular, /satir\.uye_sayisi === null \|\| satir\.uye_sayisi === undefined\n?\s*\? null/);
   /* Üye olmayana boş liste + "içerik yok" DEĞİL, sebep yazılıyor. */
-  assert.match(topluluklar, /Topluluk paylaşımları üye olunca görünür/);
+  assert.match(topluluklar, /Grup paylaşımları üye olunca görünür/);
   assert.doesNotMatch(yorumsuz(topluluklar), /henüz içerik yok/i);
 });
 
@@ -2601,7 +2601,7 @@ test('"Alan topluluğum" kitlesi yalnız üyede açılıyor', () => {
   assert.match(olustur, /uyeMiyim/);
   assert.match(olustur, /setUyeMiyim\(liste\.some\(\(topluluk\) => topluluk\.uyeMiyim\)\)/);
   /* Sebep ve açan adres yazılı; bağlantı etiketin DIŞINDA. */
-  assert.match(olustur, /alan topluluğuna katılınca açılıyor/);
+  assert.match(olustur, /alan grubuna katılınca açılıyor/);
   assert.match(olustur, /href=\{TOPLULUKLAR_YOLU\}/);
   assert.match(olustur, /aria-describedby=\{uyelikSarti && !uyeMiyim \? 'kitle-uyelik-sebebi' : undefined\}/);
   assert.match(olustur, /React\.useState<PaylasimKitlesi>\('baglantilarim'\)/);
