@@ -40,7 +40,7 @@ test("adres sekmeyi eziyor: rehber, fırsat, kurumsal ve sosyal sayfalarda İlan
 test("alt çubuk sırası İlanlar · Fırsatlar · Ağım · Rehber · Profil; Keşfet yok", () => {
   const altCubuk = source.slice(source.indexOf('aria-label="Mobil Alt Navigasyon"'), source.indexOf('aria-label="Mobil Alt Şirket Navigasyon"'));
   const etiketler = [...altCubuk.matchAll(/aria-label="([^"]+)"/g)].map((e) => e[1]).filter((e) => e !== 'Mobil Alt Navigasyon');
-  assert.deepEqual(etiketler, ['Staj ilanları', 'Öğrenci fırsatları', 'Ağım', 'Öğrenci rehberi', 'İşveren tarafı', 'Profilim']);
+  assert.deepEqual(etiketler, ['Staj ilanları', 'Öğrenci fırsatları', 'Topluluk', 'Öğrenci rehberi', 'İşveren tarafı', 'Profilim']);
   const hrefler = [...altCubuk.matchAll(/href="([^"]+)"/g)].map((e) => e[1]);
   assert.deepEqual(hrefler, ['/', '/firsatlar', '/baglantilar', '/rehber']);
   /* Keşfet'in izi yok: adres, bayrak, etiket, ikon. Yorumlar atılıyor: kalkışı ANLATAN not kalabilir, kod kalamaz. */
@@ -64,7 +64,7 @@ test("Ağım /agim ve /baglantilar'ta yanıyor; /profil/* ve Profil ayrı, her a
   assert.match(source, /const agimdaMi = \/\^\\\/\(agim\|baglantilar\|takip\)\(\\\/\|\$\)\/\.test\(bulunulanYol\);/);
   /* Ağım'da Profil sönük: sekme durumu 'profile' kalsa bile adres eziyor. */
   assert.match(source, /const profildeMi = cvEkranindaMi \|\| \(!rehberdeMi && !kurumsalSayfada && !agimdaMi && !kampustaMi && activeTab === 'profile'\)/);
-  assert.match(source, /aria-label="Ağım"\s*aria-current=\{agimdaMi \? 'page' : undefined\}/);
+  assert.match(source, /aria-label="Topluluk"\s*aria-current=\{agimdaMi \? 'page' : undefined\}/);
   /* /baglantilar ve /takip sosyal küme içinde, yani İlanlar da sönük (ilanlardaMi !sosyaldeMi). */
   assert.match(source, /const sosyaldeMi = \/\^\\\/\(agim\|cv\|profil\|topluluklar\|baglantilar\|takip\)\(\\\/\|\$\)\/\.test\(bulunulanYol\);/);
 });

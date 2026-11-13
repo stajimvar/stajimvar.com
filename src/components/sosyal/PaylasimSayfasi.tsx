@@ -217,7 +217,7 @@ export const PaylasimSayfasi: React.FC<Props> = ({
         Sabit hedef `/agim`: paylaşımların durduğu ekran.
       */}
       <div className="flex items-center gap-1 border-b border-gray-200 px-2 py-1.5 sm:px-4">
-        <button type="button" onClick={() => onNavigate('/agim')} className={GERI} aria-label="Ağıma dön">
+        <button type="button" onClick={() => onNavigate('/agim')} className={GERI} aria-label="Topluluğa dön">
           <ArrowLeft className="h-5 w-5" aria-hidden="true" />
         </button>
         <h1 className="text-base font-extrabold text-gray-900">Gönderi</h1>

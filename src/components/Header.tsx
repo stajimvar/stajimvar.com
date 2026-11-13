@@ -1128,7 +1128,7 @@ export const Header: React.FC<HeaderProps> = ({
                   className={masaustuSekme(agimdaMi)}
                 >
                   <Users className={masaustuSekmeIkonu(agimdaMi)} />
-                  <span>Ağım</span>
+                  <span>Topluluk</span>
                 </a>
 
                 {/*
@@ -1977,7 +1977,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* 3. Ağım — masaüstündeki sekmenin karşılığı; Keşfet'in yerini aldı (bkz. üstteki not). */}
         <a
           href="/baglantilar"
-          aria-label="Ağım"
+          aria-label="Topluluk"
           aria-current={agimdaMi ? 'page' : undefined}
           onClick={onNavigate ? baglantiTiklamasi(() => onNavigate('/agim')) : undefined}
           className={altMenuOgesi(agimdaMi)}
@@ -1985,7 +1985,7 @@ export const Header: React.FC<HeaderProps> = ({
           <span className={altMenuIkonu(agimdaMi)}>
             <Users className="h-5 w-5" />
           </span>
-          <span className={altMenuYazisi(agimdaMi)}>Ağım</span>
+          <span className={altMenuYazisi(agimdaMi)}>Topluluk</span>
         </a>
 
         {/*

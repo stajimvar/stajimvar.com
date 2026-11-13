@@ -164,9 +164,9 @@ export const TopluluklarSayfasi: React.FC<Props> = ({
   if (!kullaniciId) {
     return kabuk(
       <div className={`${KART} space-y-3 text-center`}>
-        <h1 className="text-lg font-extrabold text-gray-900">Topluluklar için giriş gerekiyor</h1>
+        <h1 className="text-lg font-extrabold text-gray-900">Alan grupları için giriş gerekiyor</h1>
         <p className="text-sm leading-relaxed text-gray-600">
-          Alan toplulukları yalnızca giriş yapmış kullanıcılara açık.
+          Alan grupları yalnızca giriş yapmış kullanıcılara açık.
         </p>
         {onGirisGerekli && (
           <button type="button" onClick={onGirisGerekli} className={BIRINCIL_EYLEM}>
@@ -183,7 +183,7 @@ export const TopluluklarSayfasi: React.FC<Props> = ({
   if (durum === 'hata') {
     return kabuk(
       <div className={`${KART} space-y-3 text-center`} role="alert">
-        <h1 className="text-lg font-extrabold text-gray-900">Topluluklar alınamadı</h1>
+        <h1 className="text-lg font-extrabold text-gray-900">Alan grupları alınamadı</h1>
         <p className="text-sm leading-relaxed text-gray-600">
           Sunucudan cevap alınamadı. Üyeliğinde bir değişiklik olmadı.
         </p>
@@ -213,9 +213,9 @@ export const TopluluklarSayfasi: React.FC<Props> = ({
     if (!topluluk) {
       return kabuk(
         <div className={`${KART} space-y-3 text-center`}>
-          <h1 className="text-lg font-extrabold text-gray-900">Bu topluluk görüntülenemiyor</h1>
+          <h1 className="text-lg font-extrabold text-gray-900">Bu grup görüntülenemiyor</h1>
           <p className="text-sm leading-relaxed text-gray-600">
-            Adres yanlış olabilir ya da bu topluluk artık açık olmayabilir.
+            Adres yanlış olabilir ya da bu grup artık açık olmayabilir.
           </p>
         </div>,
         () => onNavigate('/topluluklar'),
@@ -249,12 +249,12 @@ export const TopluluklarSayfasi: React.FC<Props> = ({
         */}
         {!topluluk.uyeMiyim && (
           <p className={`${KART} text-sm leading-relaxed text-gray-600`}>
-            Topluluk paylaşımları üye olunca görünür.
+            Grup paylaşımları üye olunca görünür.
           </p>
         )}
         {topluluk.uyeMiyim && (
           <p className={`${KART} text-sm leading-relaxed text-gray-600`}>
-            Bu topluluğun üyesisin. Paylaşırken kitle olarak "Alan topluluğum" seçebilirsin.
+            Bu grubun üyesisin. Paylaşırken kitle olarak "Alan grubum" seçebilirsin.
           </p>
         )}
 
@@ -281,7 +281,7 @@ export const TopluluklarSayfasi: React.FC<Props> = ({
         )}
         {!topluluk.uyeMiyim && !topluluk.uygunMu && (
           <p className="text-sm leading-relaxed text-gray-600">
-            Bu topluluk senin bölümüne açık değil.
+            Bu grup senin bölümüne açık değil.
           </p>
         )}
       </div>,
@@ -303,23 +303,23 @@ export const TopluluklarSayfasi: React.FC<Props> = ({
     <div className="space-y-3">
       <header className="space-y-1.5">
         <h1 className="text-xl font-extrabold tracking-tight text-gray-900 sm:text-2xl">
-          Alan toplulukları
+          Alan grupları
         </h1>
         <p className="text-sm leading-relaxed text-gray-600">
-          Bölümünün alanına açık topluluğa katılabilirsin. Üyelik profil görünürlüğünden ayrı:
+          Bölümünün alanına açık gruba katılabilirsin. Üyelik profil görünürlüğünden ayrı:
           katılmak ya da ayrılmak profilini değiştirmiyor.
         </p>
       </header>
 
       {liste.length === 0 && (
         <p className={`${KART} text-sm leading-relaxed text-gray-600`}>
-          Şu anda açık bir alan topluluğu yok.
+          Şu anda açık bir alan grubu yok.
         </p>
       )}
 
       {liste.length > 0 && !uygunVarMi && (
         <p role="status" className={`${KART} text-sm leading-relaxed text-gray-600`}>
-          Bölümün için topluluk henüz tanımlı değil.
+          Bölümün için grup henüz tanımlı değil.
         </p>
       )}
 

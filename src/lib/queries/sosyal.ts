@@ -973,7 +973,7 @@ const PAYLASIM_CUMLELERI: Record<string, string> = {
     farklı.
   */
   'topluluk-uyeligi-yok':
-    'Alan topluluğuna katılmadan "Alan topluluğum" kitlesiyle paylaşamazsın.',
+    'Alan grubuna katılmadan "Alan grubum" kitlesiyle paylaşamazsın.',
   'gecersiz-kitle': 'Paylaşımın kimlere görüneceği seçilmeden gönderilemiyor.',
   'anahtar-kullanilmis': 'Bu paylaşım zaten tamamlanmış. Yeni bir paylaşım başlatman gerekiyor.',
   'istemci-anahtari-gerekli': 'Paylaşım başlatılamadı. Sayfayı yenileyip yeniden dene.',
@@ -2528,7 +2528,7 @@ export interface AlanToplulugu {
  */
 export async function sosyalTopluluklariGetir(): Promise<AlanToplulugu[]> {
   const { data, error } = await db.rpc('sosyal_topluluklar', {});
-  if (error) hata('Topluluklar alınamadı', error);
+  if (error) hata('Alan grupları alınamadı', error);
 
   return (data ?? []).map((satir: any) => ({
     sektorId: String(satir.sector_id),
@@ -2559,8 +2559,8 @@ export async function sosyalTopluluklariGetir(): Promise<AlanToplulugu[]> {
 function toplulukHatasi(error: { code?: string; message?: string; details?: string }): SosyalHata {
   const detay = (error?.details ?? '').trim();
   const cumleler: Record<string, string> = {
-    'bolum-alani-tanimsiz': 'Bölümün için topluluk henüz tanımlı değil.',
-    'topluluk-uygun-degil': 'Bu topluluk senin bölümüne açık değil.',
+    'bolum-alani-tanimsiz': 'Bölümün için grup henüz tanımlı değil.',
+    'topluluk-uygun-degil': 'Bu grup senin bölümüne açık değil.',
     'oturum-yok': 'Oturumun kapanmış görünüyor. Yeniden giriş yap.',
   };
   if (cumleler[detay]) return new SosyalHata(cumleler[detay], detay);
