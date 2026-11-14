@@ -145,7 +145,8 @@ class KaynakKaydi(unittest.TestCase):
         # (Siemens 8, Amazon 1, EY 1). Başka ülke ya da başka tür yok.
         de = [k for k in self.belirsiz if k.get("country") == "DE"]
         tr = [k for k in self.belirsiz if k.get("country") == "TR"]
-        self.assertEqual(sum(len(k["urls"]) for k in de), 12)
+        # 14 Kasım 2026: Amazon 10554701 eklendi (13).
+        self.assertEqual(sum(len(k["urls"]) for k in de), 13)
         self.assertEqual(sum(len(k["urls"]) for k in tr), 10)
         self.assertEqual(len(de) + len(tr), len(self.belirsiz))
         self.assertTrue(all(k["type"] == "resmi_ilan_sayfasi" for k in self.belirsiz))
@@ -153,7 +154,7 @@ class KaynakKaydi(unittest.TestCase):
     def test_dogrulanmis_34_ilan_karismiyor(self):
         dogrulanmis = [k for k in self.kaynaklar
                        if k.get("country") == "DE" and not k.get("aciklik_dogrulanmadi")]
-        self.assertEqual(sum(len(k.get("dogrulanmis_ilanlar") or k.get("urls") or []) for k in dogrulanmis), 34)
+        self.assertEqual(sum(len(k.get("dogrulanmis_ilanlar") or k.get("urls") or []) for k in dogrulanmis), 42)  # 14 Kasım 2026: +8
 
     def test_kapanma_isaretli_ve_verisiz_sayfalar_yok(self):
         """UBS sayfasında "expired"/"no longer" geçiyor; Audi ve EF

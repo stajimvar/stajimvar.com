@@ -666,7 +666,9 @@
       "tenant": "puma",
       "site": "Jobs_at_Puma",
       "dogrulanmis_ilanlar": [
-        "R42934"
+        "R42934",
+        "R44365",
+        "R44412"
       ]
     },
     {
@@ -967,7 +969,8 @@
       "aciklik_dogrulanmadi": true,
       "urls": [
         "https://www.amazon.jobs/en/jobs/10488197/praktikum-im-bereich-logistik-gera-start-2027",
-        "https://www.amazon.jobs/en/jobs/10488201/praktikum-im-bereich-logistik-erfurt-start-2027"
+        "https://www.amazon.jobs/en/jobs/10488201/praktikum-im-bereich-logistik-erfurt-start-2027",
+        "https://www.amazon.jobs/en/jobs/10554701/2027-software-dev-engineer-intern-germany"
       ]
     },
     {
@@ -1580,6 +1583,46 @@
         "https://careers.ey.com/ey/job/Ankara-EY-T%C3%BCrkiye-TAX-Accounting%2C-Compliance-and-Reporting-Intern-Assistant-%28Ankara-Office%29-06510/1437101233/"
       ],
       "_not": "1 Kasım 2026 kullanıcı JSON teslimi. JobPosting var ama konum alanı boş; Türkiye konumu yapısal veriyle doğrulanamadığı için TASLAK (başlık ve adres Ankara ofisi diyor)."
+    },
+    {
+      "id": "databricks-greenhouse-de",
+      "name": "Databricks (Almanya)",
+      "type": "greenhouse",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Databricks",
+      "careers_url": "https://www.databricks.com/company/careers",
+      "board_token": "databricks",
+      "dogrulanmis_ilanlar": [
+        "6866531002"
+      ]
+    },
+    {
+      "id": "hugoboss-jsonld-de",
+      "name": "HUGO BOSS (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "HUGO BOSS",
+      "careers_url": "https://careers.hugoboss.com",
+      "urls": [
+        "https://careers.hugoboss.com/global/en/job/145026/Praktikum-Marketplace-Management-Global-eCommerce-w-m-d",
+        "https://careers.hugoboss.com/global/en/job/145248/Internship-Global-Franchise-Travel-Retail-m-f-d",
+        "https://careers.hugoboss.com/global/en/job/144957/Internship-Project-Management-Change-Management-Strategic-Communication-m-f-d"
+      ]
+    },
+    {
+      "id": "mercedesbenz-jsonld-de",
+      "name": "Mercedes-Benz (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Mercedes-Benz Group AG",
+      "careers_url": "https://jobs.mercedes-benz.com",
+      "urls": [
+        "https://jobs.mercedes-benz.com/en/internship-digital-product-management-mbos-mandatory-internship-243767-mer00049r6",
+        "https://jobs.mercedes-benz.com/intern-project-management-customer-experience-digital-solutions-mandatory-internship--244546-MER00049ZR"
+      ]
     }
   ],
   "notes": "Only add verified public ATS/API endpoints. Keep credentials in environment variables, never here."
