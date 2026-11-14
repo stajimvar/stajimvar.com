@@ -49,7 +49,7 @@ test('BELİRSİZ KAYNAKLAR AYRI İŞARETLİ VE DOĞRULANMIŞLARLA KARIŞMIYOR', 
   const belirsiz = liste.filter((k) => k.aciklik_dogrulanmadi && k.country === 'DE');
   const ilanSayisi = belirsiz.reduce((a, k) => a + k.urls.length, 0);
 
-  assert.equal(ilanSayisi, 12, 'açıklığı belirsiz 12 Almanya ilanı');
+  assert.equal(ilanSayisi, 13, 'açıklığı belirsiz 13 Almanya ilanı (14 Kasım 2026: Amazon 10554701 eklendi)');
   for (const k of liste.filter((x) => x.aciklik_dogrulanmadi)) {
     assert.equal(k.type, 'resmi_ilan_sayfasi', `${k.id} ayrı adaptörü kullanmalı`);
     assert.ok(['DE', 'TR'].includes(k.country), `${k.id} ülkesi`);
@@ -57,13 +57,13 @@ test('BELİRSİZ KAYNAKLAR AYRI İŞARETLİ VE DOĞRULANMIŞLARLA KARIŞMIYOR', 
     for (const u of k.urls) assert.match(u, /^https:\/\//, `${k.id} resmî bağlantı`);
   }
 
-  /* Doğrulanmış 34 ilan bu işaretten etkilenmiyor. */
+  /* Doğrulanmış 42 ilan bu işaretten etkilenmiyor (14 Kasım 2026: +8 — Databricks, PUMA x2, HUGO BOSS x3, Mercedes-Benz x2). */
   const dogrulanmis = liste.filter((k) => k.country === 'DE' && !k.aciklik_dogrulanmadi);
   const dogrulanmisAdet = dogrulanmis.reduce(
     (a, k) => a + (k.dogrulanmis_ilanlar ?? k.urls ?? []).length,
     0
   );
-  assert.equal(dogrulanmisAdet, 34);
+  assert.equal(dogrulanmisAdet, 42);
 });
 
 /*
