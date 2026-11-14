@@ -75,7 +75,8 @@ test('BELİRSİZ KAYNAKLAR AYRI İŞARETLİ VE DOĞRULANMIŞLARLA KARIŞMIYOR', 
   yönetici onayı olmadan yayına çıkmıyorlar. Başka hiçbir Türkiye kaynağı
   bu hatta giremez; listeye ekleme bilinçli bir karar olmalı.
 */
-const TR_BELIRSIZ = new Set(['siemens-tr-ilan-sayfasi', 'amazon-tr-ilan-sayfasi', 'ey-tr-ilan-sayfasi']);
+/* 14 Kasım 2026: Baykar 2027 yaz stajları (8) kullanıcı teslimiyle eklendi. */
+const TR_BELIRSIZ = new Set(['siemens-tr-ilan-sayfasi', 'amazon-tr-ilan-sayfasi', 'ey-tr-ilan-sayfasi', 'baykar-tr-ilan-sayfasi']);
 
 test('TÜRKİYE KAYNAKLARI BU HATTA YALNIZ ADIYLA GİRİYOR', () => {
   const ham = JSON.parse(oku('automation/sources.json'));
@@ -92,5 +93,15 @@ test('TÜRKİYE KAYNAKLARI BU HATTA YALNIZ ADIYLA GİRİYOR', () => {
       assert.notEqual(k.type, 'resmi_ilan_sayfasi');
     }
   }
-  assert.equal(trIlan, 10);
+  assert.equal(trIlan, 18);
+});
+
+test('başlık title önekinden: h1 site adıysa ilan adı <title>dan alınıyor (Baykar, 14 Kasım 2026)', () => {
+  const s = oku('automation/scraper.py');
+  assert.match(s, /def ilan_sayfasi_basligi\(html: str, title_oneki: str \| None = None\)/);
+  assert.match(s, /ilan_sayfasi_basligi\(yanit\.text, config\.get\("baslik_title_oneki"\)\)/);
+  const ham = JSON.parse(oku('automation/sources.json'));
+  const baykar = Object.values(ham)[0].find((k) => k.id === 'baykar-tr-ilan-sayfasi');
+  assert.equal(baykar.baslik_title_oneki, 'Baykar Kariyer |');
+  assert.equal(baykar.urls.length, 8);
 });
