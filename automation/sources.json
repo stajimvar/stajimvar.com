@@ -1125,7 +1125,8 @@
       "careers_url": "https://www.pgcareers.com/global/en",
       "website": "https://www.pg.com",
       "urls": [
-        "https://www.pgcareers.com/global/en/job/R000158920/Analytics-Insights-Winter-Intern"
+        "https://www.pgcareers.com/global/en/job/R000160927",
+        "https://www.pgcareers.com/global/en/job/R000160880"
       ]
     },
     {
@@ -1580,6 +1581,29 @@
         "https://careers.ey.com/ey/job/Ankara-EY-T%C3%BCrkiye-TAX-Accounting%2C-Compliance-and-Reporting-Intern-Assistant-%28Ankara-Office%29-06510/1437101233/"
       ],
       "_not": "1 Kasım 2026 kullanıcı JSON teslimi. JobPosting var ama konum alanı boş; Türkiye konumu yapısal veriyle doğrulanamadığı için TASLAK (başlık ve adres Ankara ofisi diyor)."
+    },
+    {
+      "id": "baykar-tr-ilan-sayfasi",
+      "name": "Baykar (açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Baykar",
+      "careers_url": "https://kariyer.baykartech.com/tr/acik-pozisyonlar",
+      "aciklik_dogrulanmadi": true,
+      "city_hint": "İstanbul",
+      "_not": "14 Kasım 2026 kullanıcı teslimi: 2027 yaz stajları. Sayfa makine-okunur ilan verisi vermiyor; TASLAK girer, yönetici onayıyla yayına çıkar.",
+      "urls": [
+        "https://kariyer.baykartech.com/tr/acik-pozisyonlar/detay/2027-yaz-donemi-staj-web-yazilim-gelistirme",
+        "https://kariyer.baykartech.com/tr/acik-pozisyonlar/detay/2027-yaz-donemi-staj-bilgi-guvenligi-denetimi",
+        "https://kariyer.baykartech.com/tr/acik-pozisyonlar/detay/2027-yaz-donemi-staj-kullanici-teknik-destek",
+        "https://kariyer.baykartech.com/tr/acik-pozisyonlar/detay/2027-yaz-donemi-staj-imalat-ve-entegrasyon-teknisy",
+        "https://kariyer.baykartech.com/tr/acik-pozisyonlar/detay/2027-yaz-donemi-staj-uluslararasi-programproje-yon",
+        "https://kariyer.baykartech.com/tr/acik-pozisyonlar/detay/2027-yaz-donemi-staj-insan-kaynaklari",
+        "https://kariyer.baykartech.com/tr/acik-pozisyonlar/detay/2027-yaz-donemi-staj-kurumsal-iletisim-kurum-ici-i",
+        "https://kariyer.baykartech.com/tr/acik-pozisyonlar/detay/2027-yaz-donemi-staj-kurumsal-idari-satin-alma"
+      ],
+      "baslik_title_oneki": "Baykar Kariyer |"
     }
   ],
   "notes": "Only add verified public ATS/API endpoints. Keep credentials in environment variables, never here."

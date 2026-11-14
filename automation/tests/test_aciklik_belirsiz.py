@@ -146,7 +146,8 @@ class KaynakKaydi(unittest.TestCase):
         de = [k for k in self.belirsiz if k.get("country") == "DE"]
         tr = [k for k in self.belirsiz if k.get("country") == "TR"]
         self.assertEqual(sum(len(k["urls"]) for k in de), 12)
-        self.assertEqual(sum(len(k["urls"]) for k in tr), 10)
+        # 14 Kasım 2026: Baykar 2027 yaz stajları (8) eklendi.
+        self.assertEqual(sum(len(k["urls"]) for k in tr), 18)
         self.assertEqual(len(de) + len(tr), len(self.belirsiz))
         self.assertTrue(all(k["type"] == "resmi_ilan_sayfasi" for k in self.belirsiz))
 

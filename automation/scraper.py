@@ -15,6 +15,7 @@ from html.parser import HTMLParser
 from typing import Any, Iterable
 from urllib.parse import parse_qsl, urlencode, urljoin, urlsplit, urlunsplit
 import feedparser, requests
+import html as html_lib
 from country_normalization import infer_country_code, location_country_signals, structured_country_code
 from translation import translate_text, translate_title
 
@@ -1052,8 +1053,22 @@ KAPANMA_ISARETLERI = re.compile(
 # Ayraçlı tekil ek de atılıyor: Siemens <title>'ı "… - Job Detail".
 BASLIK_EKLERI = re.compile(r"\s*[-–|]?\s*(?:stellendetails|stellenangebot|stellenanzeige|job details?|job description)\s*$", re.I)
 
-def ilan_sayfasi_basligi(html: str) -> str | None:
-    """Önce h1, yoksa <title>. Hiçbiri yoksa None — başlık uydurulmuyor."""
+def ilan_sayfasi_basligi(html: str, title_oneki: str | None = None) -> str | None:
+    """Önce h1, yoksa <title>. Hiçbiri yoksa None — başlık uydurulmuyor.
+
+    `title_oneki` (kaynakta `baslik_title_oneki`, 14 Kasım 2026): bazı resmî
+    sayfalarda ilk h1 sitenin kendi adı ("Baykar Kariyer") ve ilan adı yalnız
+    <title>'da: "Baykar Kariyer | 2027 Yaz Dönemi Staj | Web Yazılım
+    Geliştirme". Önek verilirse başlık <title>'dan, önek atılarak alınır ve
+    kalan bölümler " — " ile birleştirilir. Önek tutmazsa None (uydurma yok).
+    """
+    if title_oneki:
+        eslesme = re.search(r"<title[^>]*>(.*?)</title>", html, re.S | re.I)
+        metin = clean(html_lib.unescape(eslesme.group(1))) if eslesme else ""
+        if not metin.startswith(title_oneki):
+            return None
+        parcalar = [x.strip() for x in metin[len(title_oneki):].split("|") if x.strip()]
+        return " — ".join(parcalar) or None
     okuyucu = _GorunurMetin()
     okuyucu.feed(html)
     if okuyucu.baslik:
@@ -1106,7 +1121,7 @@ def resmi_ilan_sayfasi(config: dict[str, Any]) -> Iterable[Job]:
         if KAPANMA_ISARETLERI.search(okuyucu.metin):
             continue
 
-        baslik = ilan_sayfasi_basligi(yanit.text)
+        baslik = ilan_sayfasi_basligi(yanit.text, config.get("baslik_title_oneki"))
         if not baslik or not erken_kariyer_mi(config, baslik, ""):
             continue
 
