@@ -1,4 +1,5 @@
 import React from 'react';
+import { MetinBolumu } from './kurumsal/KurumsalKabuk';
 import { IlanBildirFormu, type BildirimOnDolgusu } from './IlanBildirFormu';
 import {
   BellRing,
@@ -125,13 +126,9 @@ const CanliSayilar: React.FC = () => {
   );
 };
 
+/* Bölüm: yasal sayfalarla aynı başlık ve yazı düzeni (kurumsal/KurumsalKabuk). */
 const S: React.FC<{ baslik: string; children: React.ReactNode }> = ({ baslik, children }) => (
-  <section className="space-y-2">
-    <h2 className="text-base font-bold text-gray-900">{baslik}</h2>
-    <div className="text-sm text-gray-600 leading-relaxed space-y-2">
-      {children}
-    </div>
-  </section>
+  <MetinBolumu baslik={baslik}>{children}</MetinBolumu>
 );
 
 /**
