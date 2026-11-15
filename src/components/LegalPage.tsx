@@ -1,5 +1,7 @@
 import React from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, BookOpen, CalendarDays, Cookie, FileText, Flag, Info, Mail, MessageCircle, Scale, ShieldCheck } from 'lucide-react';
+import { ODAK_HALKASI } from '../lib/renk-token';
+import { BuSayfada, MetinBolumu, SayfaGezintisi } from './kurumsal/KurumsalKabuk';
 import { Logo } from './Logo';
 import { CorporateContent } from './CorporatePages';
 /*
@@ -68,12 +70,7 @@ interface LegalPageProps {
 }
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-  <section className="space-y-2">
-    <h2 className="text-base font-bold text-gray-900">{title}</h2>
-    <div className="text-sm text-gray-600 leading-relaxed space-y-2">
-      {children}
-    </div>
-  </section>
+  <MetinBolumu baslik={title}>{children}</MetinBolumu>
 );
 
 const YASAL_BASLIK: Record<string, string> = {
@@ -82,10 +79,35 @@ const YASAL_BASLIK: Record<string, string> = {
   'kvkk-aydinlatma-metni': 'KVKK Aydınlatma Metni',
 };
 
+/** Başlık alanındaki tek cümlelik özet; metnin yerine geçmiyor. */
+const SAYFA_OZETI: Record<LegalSlug, string> = {
+  hakkimizda: 'StajımVar’ın ne yaptığı, nasıl çalıştığı ve neyi yapmadığı.',
+  iletisim: 'Soru, öneri ve talepleriniz için bize nasıl ulaşacağınız.',
+  'kullanim-kosullari': 'Siteyi kullanırken geçerli olan kurallar.',
+  'ilan-kurallari': 'StajımVar’da ilan yayınlarken uyulması gereken kurallar.',
+  'ilan-bildir': 'Hatalı, süresi geçmiş ya da kurallara aykırı bir ilanı bize bildirin.',
+  gizlilik: 'Hangi verileri neden işlediğimiz ve nasıl koruduğumuz.',
+  'cerez-politikasi': 'Sitede kullanılan çerezler ve ziyaret ölçümü.',
+  'kvkk-aydinlatma-metni': '6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında aydınlatma metni.',
+};
+
+const IKON = 'h-7 w-7';
+const SAYFA_IKONU: Record<LegalSlug, React.ReactNode> = {
+  hakkimizda: <Info className={IKON} />,
+  iletisim: <MessageCircle className={IKON} />,
+  'kullanim-kosullari': <FileText className={IKON} />,
+  'ilan-kurallari': <BookOpen className={IKON} />,
+  'ilan-bildir': <Flag className={IKON} />,
+  gizlilik: <ShieldCheck className={IKON} />,
+  'cerez-politikasi': <Cookie className={IKON} />,
+  'kvkk-aydinlatma-metni': <Scale className={IKON} />,
+};
+
 export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
   const kurumsal = (Object.values(CORPORATE_ROUTES) as string[]).includes(slug)
     ? (slug as CorporateSlug)
     : null;
+  const metinRef = React.useRef<HTMLElement | null>(null);
 
   /*
     Sayfa başlığı burada ayarlanıyor.
@@ -100,50 +122,70 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
     if (ad) document.title = `${ad} | StajımVar`;
   }, [slug, kurumsal]);
 
+  const baslik = kurumsal ? CORPORATE_TITLES[kurumsal] : YASAL_BASLIK[slug];
+
   return (
     <div className="text-gray-900">
       {/*
-        Kendi başlık çubuğu kaldırıldı: uygulamanın üst çubuğu (arama,
-        sekmeler, profil) artık her sayfada App tarafından çiziliyordu ve
-        burada bir başlık daha çizilince ikisi üst üste biniyordu — ölçüldü,
-        sayfada iki <header> vardı.
-
-        "İlanlara dön" bağlantısı içeriğin üstünde ince bir satır olarak kaldı.
+        YENİ KABUK (15 Kasım 2026, kullanıcı isteği: "alttaki sayfaların
+        arayüzü eski kalmış"). Metinler DEĞİŞMEDİ, yalnız kabuk:
+          · üstte başlık alanı: tür, başlık, tek cümlelik özet, güncelleme
+          · lg ve üstünde solda sayfalar arası gezinme + "Bu sayfada"
+          · metin beyaz kartta, okunur satır uzunluğu ve aralığıyla
+        Kendi üst çubuğu yok (uygulamanınki var); alt boşluk mobil
+        gezinme çubuğu için.
       */}
-      {/* Alt boşluk mobil gezinme çubuğu için; ayrıntı SayfaKabugu.tsx içinde. */}
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-24 lg:pb-10 space-y-8">
-        <button
-          type="button"
-          onClick={onBack}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          İlanlara dön
-        </button>
-
-        {kurumsal && (
-          <>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold">
-                {CORPORATE_TITLES[kurumsal]}
-              </h1>
-              <p className="text-xs text-gray-500 mt-1">
+      <header className="border-b border-gray-200 bg-white">
+        <div className={`max-w-6xl mx-auto px-4 pb-8 pt-4 sm:px-6 sm:pb-10 sm:pt-6 lg:px-8 xl:px-10`}>
+          <button
+            type="button"
+            onClick={onBack}
+            className={`-ml-1 inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-lg px-1 text-sm font-semibold text-gray-500 transition-colors hover:text-gray-900 ${ODAK_HALKASI}`}
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden />
+            Ana sayfa
+          </button>
+          <div className="mt-4 flex items-start gap-4 sm:mt-6 sm:gap-5">
+            <span
+              aria-hidden
+              className="hidden h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 sm:flex"
+            >
+              {SAYFA_IKONU[slug]}
+            </span>
+            <div className="min-w-0 max-w-3xl">
+              <p className="text-xs font-bold uppercase tracking-wide text-blue-700">
+                {kurumsal ? 'Kurumsal' : 'Yasal metin'}
+              </p>
+              <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">{baslik}</h1>
+              <p className="mt-2 text-base leading-7 text-gray-600">{SAYFA_OZETI[slug]}</p>
+              <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">
+                <CalendarDays className="h-3.5 w-3.5" aria-hidden />
                 Son güncelleme: {guncellemeTarihi(slug)}
               </p>
             </div>
-            <CorporateContent slug={kurumsal} />
-          </>
-        )}
+          </div>
+        </div>
+      </header>
+
+      <div
+        className={`max-w-6xl mx-auto grid gap-6 px-4 pb-24 pt-6 sm:px-6 sm:pt-8 lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-10 lg:px-8 lg:pb-12 xl:px-10`}
+      >
+        <aside className="hidden lg:block">
+          <div className="sticky top-24 space-y-6">
+            <SayfaGezintisi aktif={slug} />
+            <BuSayfada kapsayici={metinRef} anahtar={slug} />
+          </div>
+        </aside>
+
+        <div className="min-w-0 space-y-6">
+          <article
+            ref={metinRef}
+            className="space-y-9 rounded-2xl border border-gray-200 bg-white p-5 sm:p-8 lg:p-10"
+          >
+        {kurumsal && <CorporateContent slug={kurumsal} />}
 
         {slug === 'gizlilik' && (
           <>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold">Gizlilik Politikası</h1>
-              <p className="text-xs text-gray-500 mt-1">
-                Son güncelleme: {guncellemeTarihi(slug)}
-              </p>
-            </div>
-
             <Section title="Kısa özet">
               <p>
                 İlanlara bakmak için hesap açmanız gerekmez. Hesap açarsanız
@@ -311,13 +353,6 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
 
         {slug === 'cerez-politikasi' && (
           <>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold">Çerez Politikası</h1>
-              <p className="text-xs text-gray-500 mt-1">
-                Son güncelleme: {guncellemeTarihi(slug)}
-              </p>
-            </div>
-
             <Section title="Kullandığımız çerezler">
               <p>
                 Site <strong>takip çerezi kullanmıyor</strong> ve ziyaretinizi kişi
@@ -393,13 +428,6 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
 
         {slug === 'kvkk-aydinlatma-metni' && (
           <>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold">KVKK Aydınlatma Metni</h1>
-              <p className="text-xs text-gray-500 mt-1">
-                Son güncelleme: {guncellemeTarihi(slug)}
-              </p>
-            </div>
-
             <Section title="İşlenen veriler ve amaçları">
               <p>
                 6698 sayılı Kanun kapsamında veri sorumlusu StajımVar'dır. İlanlara
@@ -481,18 +509,35 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
           </>
         )}
 
-        <div className="pt-6 border-t border-gray-200 text-sm text-gray-600">
-          <p>
-            Sorularınız için:{' '}
+          </article>
+
+          <section
+            aria-label="İletişim"
+            className="flex flex-col gap-4 rounded-2xl border border-blue-100 bg-blue-50/60 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
+          >
+            <div className="flex items-start gap-3">
+              <span aria-hidden className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-600">
+                <Mail className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="font-bold text-gray-900">Sorunuz mu var?</p>
+                <p className="text-sm text-gray-600">Yanıt süremiz genellikle 2 iş günü.</p>
+              </div>
+            </div>
             <a
-              className="text-blue-600 font-semibold hover:underline"
               href="mailto:iletisim@stajimvar.com"
+              className={`inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-bold text-white transition-colors hover:bg-blue-700 ${ODAK_HALKASI}`}
             >
               iletisim@stajimvar.com
             </a>
-          </p>
+          </section>
+
+          {/* Telefonda sol sütun yok: öteki sayfalar metnin altında, liste olarak. */}
+          <div className="lg:hidden">
+            <SayfaGezintisi aktif={slug} />
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };
