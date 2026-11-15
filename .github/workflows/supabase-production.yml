@@ -268,6 +268,9 @@ jobs:
         run: supabase db push --project-ref "$SUPABASE_PROJECT_REF"
       - name: Edge Functionları JWT doğrulamayla dağıt
         run: supabase functions deploy opportunity-source-check --project-ref "$SUPABASE_PROJECT_REF"
+      # Kullanıcının kendi hesabını silmesi (20270114010000); JWT doğrulamalı.
+      - name: Hesap silme işlevini dağıt
+        run: supabase functions deploy hesap-sil --project-ref "$SUPABASE_PROJECT_REF"
       # E-postayı olay anında gönderen işlev: veritabanı tetikleyicisi (pg_net)
       # çağırıyor; JWT yerine Vault anahtarı (supabase/config.toml).
       - name: E-posta tetik işlevinin sırlarını ayarla
