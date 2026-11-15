@@ -163,6 +163,8 @@ interface StudentProfileViewProps {
     basılacak bir tuzaktır.
   */
   onLogout?: () => void;
+  /** Hesabımı sil (20270114010000): ProfilBasligi menüsünde, çıkışın yanında. */
+  onHesabiSil?: () => void;
   isAdmin?: boolean;
   onOpenAdmin?: () => void;
 }
@@ -189,6 +191,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
   onKaydedilenlere,
   onSubTabChange,
   onLogout,
+  onHesabiSil,
   isAdmin = false,
   onOpenAdmin,
 }) => {
@@ -680,6 +683,7 @@ export const StudentProfileView: React.FC<StudentProfileViewProps> = ({
             /* Yönetim paneli ve çıkış "Ayarlar ve hareketler" menüsünde (ProfilBasligi). */
             onYonetim={isAdmin && onOpenAdmin ? onOpenAdmin : undefined}
             onCikis={onLogout}
+            onHesabiSil={onHesabiSil}
             /*
               İKİ SAYAÇ DA AYRI BAŞVURU EKRANINA GİDİYOR
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Eye, ImagePlus, LogOut, Mail, Pencil, Plus, Users } from 'lucide-react';
+import { ArrowLeft, Eye, ImagePlus, LogOut, Mail, Pencil, Plus, Trash2, Users } from 'lucide-react';
 import {
   IKINCIL_DUGME,
   KUTU,
@@ -123,6 +123,8 @@ export const SirketProfili: React.FC<{
   onDurum: (id: string, d: 'published' | 'closed') => Promise<IlanKontrolSonucu | void>;
   onKaldir: (id: string, arsivle: boolean) => Promise<void>;
   onCikis?: () => void;
+  /** Hesabımı sil (20270114010000): ayarlar menüsünde, çıkışın altında. */
+  onHesabiSil?: () => void;
 }> = ({
   yol,
   baglam,
@@ -135,6 +137,7 @@ export const SirketProfili: React.FC<{
   onDurum,
   onKaldir,
   onCikis,
+  onHesabiSil,
 }) => {
   const [sosyal, setSosyal] = React.useState<SosyalProfil | null>(null);
   const [sosyalDurumu, setSosyalDurumu] = React.useState<Durum>('yukleniyor');
@@ -488,6 +491,20 @@ export const SirketProfili: React.FC<{
               onClick: () => {
                 setAyarlarAcik(false);
                 onCikis();
+              },
+              tehlike: true,
+            },
+          ]
+        : []),
+        ...(onHesabiSil
+        ? [
+            {
+              anahtar: 'hesap-sil',
+              etiket: 'Hesabımı sil',
+              ikon: <Trash2 aria-hidden className="h-5 w-5" />,
+              onClick: () => {
+                setAyarlarAcik(false);
+                onHesabiSil();
               },
               tehlike: true,
             },

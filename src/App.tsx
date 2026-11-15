@@ -306,6 +306,9 @@ const InternshipDetailModal = React.lazy(() =>
 const ApplyDialog = React.lazy(() =>
   import('./components/ApplyDialog').then((m) => ({ default: m.ApplyDialog }))
 );
+const HesapSilmePenceresi = React.lazy(() =>
+  import('./components/HesapSilmePenceresi').then((m) => ({ default: m.HesapSilmePenceresi }))
+);
 
 const StudentProfileView = React.lazy(() =>
   import('./components/StudentProfileView').then((m) => ({ default: m.StudentProfileView }))
@@ -1131,6 +1134,18 @@ export default function App() {
     setAuthDonusYolu(donusYolu ?? window.location.pathname);
     setAuthModalMode(kip);
     setIsAuthModalOpen(true);
+  };
+
+  /* Hesabımı sil (20270114010000): pencere App'te, iki menüden açılıyor. */
+  const [hesapSilme, setHesapSilme] = useState<'ogrenci' | 'sirket' | null>(null);
+  const hesapSilindi = (epostaGitti: boolean) => {
+    setHesapSilme(null);
+    setSession(null);
+    setStudent(null);
+    setApplications([]);
+    setActiveTab('internships');
+    navigate('/');
+    showToast(epostaGitti ? 'Hesabın silindi. Bilgi e-postası gönderildi.' : 'Hesabın silindi.');
   };
 
   const handleLogout = async () => {
@@ -2732,6 +2747,12 @@ export default function App() {
     "StajımVar ile Başvur" düğmesi `applyTarget`i dolduruyor ama pencere o
     rotada çizilmiyordu. Aynı öğe iki kabuğa da giriyor.
   */
+  const hesapSilmePenceresi = hesapSilme ? (
+    <Suspense fallback={null}>
+      <HesapSilmePenceresi tur={hesapSilme} onKapat={() => setHesapSilme(null)} onSilindi={hesapSilindi} />
+    </Suspense>
+  ) : null;
+
   const basvuruPenceresi = applyTarget ? (
     <Suspense fallback={null}>
       <ApplyDialog
@@ -3138,6 +3159,8 @@ export default function App() {
    */
   const ogrenciProfilEkrani = () =>
     activeStudent ? (
+      <>
+              {hesapSilmePenceresi}
               <StudentProfileView
                 student={activeStudent}
                 subTab={activeSubTab}
@@ -3151,6 +3174,7 @@ export default function App() {
                   çıkmanın yolu kalmaz.
                 */
                 onLogout={handleLogout}
+                onHesabiSil={isAdmin ? undefined : () => setHesapSilme('ogrenci')}
                 isAdmin={isAdmin}
                 /* Rota `/yonetim`; `/admin` diye bir adres yok, 404'e düşüyordu. */
                 onOpenAdmin={() => navigate('/yonetim')}
@@ -3320,6 +3344,7 @@ export default function App() {
                   setActiveQuiz(matchedQ);
                 }}
               />
+      </>
     ) : null;
 
   const legalSlug = LEGAL_ROUTES[temizYol];
@@ -4275,6 +4300,7 @@ export default function App() {
               adayAramasi={{ terim: sirketAramasi, degis: setSirketAramasi }}
               onAdayAcildi={() => setAcilacakAday(null)}
               onCikis={() => void handleLogout()}
+              onHesabiSil={isAdmin ? undefined : () => setHesapSilme('sirket')}
             />
           </main>,
           /*
@@ -4288,6 +4314,7 @@ export default function App() {
         {dunyaGecisi && (
           <DunyaGecisi yon={dunyaGecisi} onBitti={() => setDunyaGecisi(null)} />
         )}
+        {hesapSilmePenceresi}
       </>
     );
   }

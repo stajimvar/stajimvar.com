@@ -7,3 +7,7 @@ verify_jwt = true
 # Yetki Vault'taki anahtarla işlevin içinde (20270103010000).
 [functions.eposta-tetik]
 verify_jwt = false
+
+# Kullanıcının kendi hesabını silmesi (20270114010000): yalnız oturumlu çağrı.
+[functions.hesap-sil]
+verify_jwt = true

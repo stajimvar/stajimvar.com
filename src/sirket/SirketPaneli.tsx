@@ -189,7 +189,8 @@ export const SirketPaneli: React.FC<{
   adayAramasi?: AdayAramasi;
   onAdayAcildi?: () => void;
   onCikis?: () => void;
-}> = ({ yol, userId, yoneticiMi, onNavigate, acilacakAday, adayAramasi, onAdayAcildi, onCikis }) => {
+  onHesabiSil?: () => void;
+}> = ({ yol, userId, yoneticiMi, onNavigate, acilacakAday, adayAramasi, onAdayAcildi, onCikis, onHesabiSil }) => {
   useNoindex();
   React.useEffect(() => {
     document.title = sirketSekmeBasligi(yol);
@@ -543,6 +544,7 @@ export const SirketPaneli: React.FC<{
           await yukle();
         }}
         onCikis={onCikis}
+        onHesabiSil={onHesabiSil}
       />
     );
   }
