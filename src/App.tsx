@@ -2761,6 +2761,43 @@ export default function App() {
               }
             : undefined
         }
+        /*
+          Fotoğraf önerisi: sosyal satır henüz okunmadıysa (undefined)
+          "var" sayılıyor — olan fotoğrafı yok sanıp önermemek için.
+        */
+        fotografVar={sosyalAvatarYolu === undefined || Boolean(sosyalAvatarYolu || activeStudent?.avatarUrl)}
+        onFotografYukle={
+          session && activeStudent
+            ? async (dosya) => {
+                const [{ kareyeCevir }, { profilFotografiYukle, SosyalHata }] = await Promise.all([
+                  import('./components/sosyal/ProfilFotografiYukleme'),
+                  import('./lib/queries/sosyal'),
+                ]);
+                let kare;
+                try {
+                  kare = await kareyeCevir(dosya);
+                } catch {
+                  throw new Error('Bu dosya açılamadı. JPEG, PNG ya da WEBP bir fotoğraf seç.');
+                }
+                try {
+                  const yol = await profilFotografiYukle(session.userId, {
+                    veri: kare.veri,
+                    uzanti: kare.uzanti,
+                    genislik: kare.kenar,
+                    yukseklik: kare.kenar,
+                    alt: null,
+                  });
+                  setSosyalAvatarYolu(yol);
+                } catch (sorun) {
+                  throw new Error(
+                    sorun instanceof SosyalHata && sorun.kod === 'satir-yok'
+                      ? sorun.message
+                      : 'Fotoğraf eklenemedi. Yeniden deneyebilirsin.',
+                  );
+                }
+              }
+            : undefined
+        }
         /* Yalnız CV'si olmayan öğrenciye; dönüşte aynı ilanın penceresi yeniden açılıyor. */
         onCvOlustur={
           activeStudent && !cvVarMi(activeStudent)

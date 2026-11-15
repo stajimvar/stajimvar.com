@@ -1,7 +1,6 @@
 import React from 'react';
-import { ChevronRight, ExternalLink, ShieldOff } from 'lucide-react';
+import { ChevronRight, ExternalLink } from 'lucide-react';
 import {
-  SIRKET_KENAR_VURGU,
   SIRKET_METIN,
   SIRKET_METIN_IKINCIL,
   SIRKET_ROZET,
@@ -9,8 +8,8 @@ import {
   SIRKET_VURGU_KOYU,
   SIRKET_ODAK,
 } from './renk';
-import { monogram } from '../lib/aday-kart.mjs';
 import { durumAdi, durumRozeti } from './basvuru-durumu';
+import { AdayFotografi } from './AdayFotografi';
 
 /**
  * Başvuru satırı — Başvuranlar listesinin tek öğesi.
@@ -41,6 +40,8 @@ export interface AdayKart {
   id: string;
   ad: string | null;
   fotoUrl: string | null;
+  /** `social_profiles.avatar_path`; şirketin okuma kapısı 20270113010000. */
+  fotoYolu?: string | null;
   universite: string | null;
   bolum: string | null;
   sinif: string | null;
@@ -107,17 +108,13 @@ export const AdayKarti: React.FC<{
           : undefined
       }
     >
-      {kart.fotoUrl && !kart.gizli ? (
-        <img src={kart.fotoUrl} alt="" className="h-12 w-12 shrink-0 rounded-full object-cover" />
-      ) : (
-        <span
-          aria-hidden
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-black"
-          style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU, boxShadow: `inset 0 0 0 1px ${SIRKET_KENAR_VURGU}` }}
-        >
-          {kart.gizli ? <ShieldOff className="h-4 w-4" /> : monogram(kart.ad)}
-        </span>
-      )}
+      <AdayFotografi
+        ad={kart.ad}
+        fotoYolu={kart.fotoYolu}
+        fotoUrl={kart.fotoUrl}
+        gizli={Boolean(kart.gizli)}
+        className="h-12 w-12 text-sm"
+      />
 
       {/*
         AYNI DOM, İKİ YERLEŞİM (grid-template-areas)

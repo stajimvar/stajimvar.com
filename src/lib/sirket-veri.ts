@@ -573,8 +573,22 @@ export async function sirketBasvurulari(companyId: string) {
   */
   if (error) return [];
 
+  /*
+    BAŞVURANIN FOTOĞRAFI (20270113010000): fotoğrafın tek kaynağı
+    `social_profiles.avatar_path`; şirket o satırı okuyamıyor, yolu bu
+    fonksiyon veriyor (paylaşım açık, şirket doğrulanmış, engel yok).
+    Okunamazsa fotoğrafsız devam: baş harfler çiziliyor.
+  */
+  const fotoYollari = new Map<string, string>();
+  const kimlikler = (data ?? []).map((s: Record<string, unknown>) => String(s.id));
+  if (kimlikler.length) {
+    const { data: yollar } = await db.rpc('sirket_aday_foto_yollari' as never, { p_basvurular: kimlikler } as never);
+    for (const y of (yollar ?? []) as { basvuru_id: string; yol: string }[]) fotoYollari.set(y.basvuru_id, y.yol);
+  }
+
   return (data ?? []).map((s: Record<string, unknown>) => ({
     ...s,
+    fotoYolu: fotoYollari.get(String(s.id)) ?? null,
     /*
       Gömülü kopya bire bir ilişkide nesne, eski PostgREST'te dizi olarak
       gelebiliyor; ikisi de karşılanıyor. Kart oluşturucu kopyayı

@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { X, ExternalLink, ShieldCheck, AlertTriangle, Loader2, Info, Building2, ArrowRight } from 'lucide-react';
+import { X, ExternalLink, ShieldCheck, AlertTriangle, Loader2, Info, Building2, ArrowRight, Camera, Check } from 'lucide-react';
 import type { InternshipListing } from '../types';
 import { basvuruYolu } from '../lib/basvuru-yolu.mjs';
 import { useModalErisim } from '../lib/modal-erisim';
@@ -51,6 +51,15 @@ interface ApplyDialogProps {
     yazmıyor.
   */
   onTelefonKaydet?: (telefon: string) => Promise<void>;
+  /*
+    FOTOĞRAF ÖNERİSİ (15 Kasım 2026, kullanıcı kararı): şirket başvuranı
+    fotoğrafıyla görüyor; fotoğrafı olmayan öğrenciye burada önerilir.
+    ZORUNLU DEĞİL — başvuru onu beklemiyor. `fotografVar` bilinmiyorsa
+    (sosyal satır gelmedi) öneri çizilmiyor: olan fotoğrafı "yok" saymak
+    yanlış olurdu.
+  */
+  fotografVar?: boolean;
+  onFotografYukle?: (dosya: File) => Promise<void>;
 }
 
 export const ApplyDialog: React.FC<ApplyDialogProps> = ({
@@ -61,7 +70,27 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
   paylasilacak,
   onTelefonKaydet,
   onCvOlustur,
+  fotografVar = true,
+  onFotografYukle,
 }) => {
+  const [fotografEklendi, setFotografEklendi] = useState(false);
+  const [fotografYukleniyor, setFotografYukleniyor] = useState(false);
+  const [fotografHatasi, setFotografHatasi] = useState<string | null>(null);
+  const fotografGirdisi = useRef<HTMLInputElement>(null);
+  const fotografSec = async (dosya: File | undefined) => {
+    if (!dosya || !onFotografYukle) return;
+    setFotografHatasi(null);
+    setFotografYukleniyor(true);
+    try {
+      await onFotografYukle(dosya);
+      setFotografEklendi(true);
+    } catch (sorun) {
+      setFotografHatasi(sorun instanceof Error && sorun.message ? sorun.message : 'Fotoğraf eklenemedi. Yeniden dene.');
+    } finally {
+      setFotografYukleniyor(false);
+      if (fotografGirdisi.current) fotografGirdisi.current.value = '';
+    }
+  };
   const [consent, setConsent] = useState(false);
   /*
     PAYLAŞIM İZNİ — AYRI, İSTEĞE BAĞLI, VARSAYILANI KAPALI
@@ -317,6 +346,50 @@ export const ApplyDialog: React.FC<ApplyDialogProps> = ({
                         <p role="alert" className="mt-1 text-[11px] font-semibold text-red-700">
                           {telefonHatasi}
                         </p>
+                      )}
+                    </div>
+                  )}
+
+                  {onFotografYukle && (!fotografVar || fotografEklendi) && (
+                    <div className="mt-3 flex items-center gap-3 rounded-xl border border-blue-100 bg-white p-3">
+                      <span aria-hidden className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                        {fotografEklendi ? <Check className="h-5 w-5" /> : <Camera className="h-5 w-5" />}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        {fotografEklendi ? (
+                          <p className="text-sm font-semibold text-gray-900">Fotoğrafın eklendi.</p>
+                        ) : (
+                          <>
+                            <p className="text-sm font-semibold text-gray-900">Fotoğraf ekle, şirket seni tanısın</p>
+                            <p className="text-[11px] text-gray-600">İsteğe bağlı; eklemeden de başvurabilirsin.</p>
+                          </>
+                        )}
+                        {fotografHatasi && (
+                          <p role="alert" className="mt-1 text-[11px] font-semibold text-red-700">
+                            {fotografHatasi}
+                          </p>
+                        )}
+                      </div>
+                      {!fotografEklendi && (
+                        <>
+                          <input
+                            ref={fotografGirdisi}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            className="sr-only"
+                            tabIndex={-1}
+                            aria-hidden
+                            onChange={(e) => void fotografSec(e.target.files?.[0])}
+                          />
+                          <button
+                            type="button"
+                            disabled={fotografYukleniyor}
+                            onClick={() => fotografGirdisi.current?.click()}
+                            className="min-h-11 shrink-0 cursor-pointer rounded-xl border border-blue-200 bg-white px-3 text-sm font-bold text-blue-700 hover:bg-blue-50 disabled:cursor-wait disabled:opacity-60"
+                          >
+                            {fotografYukleniyor ? 'Ekleniyor…' : 'Fotoğraf ekle'}
+                          </button>
+                        </>
                       )}
                     </div>
                   )}

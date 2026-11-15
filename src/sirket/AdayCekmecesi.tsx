@@ -1,5 +1,6 @@
 import React from 'react';
 import { DegerlendirmeFormu } from './DegerlendirmeFormu';
+import { AdayFotografi, useAdayFotoAdresi } from './AdayFotografi';
 import type { DegerlendirmeOlcutu } from '../lib/sirket-veri';
 import { createPortal } from 'react-dom';
 import { MessageCircle,
@@ -18,7 +19,6 @@ import { MessageCircle,
   Minus,
   Phone,
   Plus,
-  ShieldOff,
   X,
 } from 'lucide-react';
 import { CvOnizleme, CvYazdirmaAlani } from '../components/CvPage';
@@ -40,7 +40,7 @@ import {
   birincilStil,
   ikincilStil,
 } from './renk';
-import { kimlikSatiri, monogram } from '../lib/aday-kart.mjs';
+import { kimlikSatiri } from '../lib/aday-kart.mjs';
 import { adayBaglantilari, adayProfilFarki, rozetEtiketi } from '../lib/aday-profil-farki.mjs';
 import { tarihMetni as ortakTarihMetni } from '../lib/tarih.mjs';
 import { telefonBaglantisi, telefonYaz } from '../lib/telefon.mjs';
@@ -325,6 +325,12 @@ export const AdayCekmecesi: React.FC<{
     açıkken ve kapalıyken aynı kalmalı.
   */
   const guncelProfil = useAdayGuncelProfili(kart?.id ?? null, Boolean(kart?.paylasildi), onGuncelProfil);
+  /*
+    FOTOĞRAF (20270113010000): asıl kaynak sosyal profildeki dosya; şirket
+    onu kendi oturumuyla indiriyor. Başlıktaki daire ve CV önizlemesi aynı
+    adresi kullanıyor — iki ayrı indirme yok.
+  */
+  const adayFoto = useAdayFotoAdresi(kart?.fotoYolu ?? null, kart?.fotoUrl ?? null, Boolean(kart?.gizli));
   const fark = React.useMemo(
     () =>
       kart && guncelProfil.sonuc?.riza && guncelProfil.sonuc.guncel
@@ -347,7 +353,7 @@ export const AdayCekmecesi: React.FC<{
         ? {
             ...kart,
             ad: guncelCv.ad ?? kart.ad,
-            fotoUrl: guncelCv.fotoUrl ?? kart.fotoUrl,
+            fotoUrl: adayFoto.adres ?? guncelCv.fotoUrl ?? kart.fotoUrl,
             universite: guncelCv.universite,
             bolum: guncelCv.bolum,
             sinif: guncelCv.sinif,
@@ -360,9 +366,9 @@ export const AdayCekmecesi: React.FC<{
             deneyimler: guncelCv.deneyimler ?? [],
             cvKopya: guncelCv.cv ?? null,
           }
-        : kart;
+        : { ...kart, fotoUrl: adayFoto.adres ?? kart.fotoUrl };
     return adayCvOgrencisi(kaynak, { iletisim: iletisimSatiri }) as unknown as StudentProfile;
-  }, [kart, iletisim, saltOkunur, cvGuncelden, guncelCv]);
+  }, [kart, iletisim, saltOkunur, cvGuncelden, guncelCv, adayFoto.adres]);
 
   /* Çekmece değiştiğinde ikinci sıra, not ve CV hatası sıfırlanıyor. */
   React.useEffect(() => {
@@ -813,28 +819,32 @@ saltOkunur ? (
         className="shrink-0 border-b px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-5 sm:pb-4"
         style={{ background: SIRKET_YUZEY, borderColor: SIRKET_KENAR }}
       >
-        <div className="flex items-start gap-3">
-          {kart.fotoUrl && !kart.gizli ? (
-            <img src={kart.fotoUrl} alt="" className="h-12 w-12 shrink-0 rounded-full object-cover" />
-          ) : (
-            <span
-              aria-hidden
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full font-black"
-              style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
-            >
-              {kart.gizli ? <ShieldOff className="h-5 w-5" /> : monogram(kart.ad)}
-            </span>
-          )}
+        {/*
+          BAŞLIK: FOTOĞRAF ÖNDE (15 Kasım 2026, kullanıcı taslağı)
+
+          Aday önce yüzüyle tanınıyor: telefonda 64, masaüstünde 80 piksel
+          daire, dokununca büyüyor. Fotoğraf yoksa baş harfler; önyargısız
+          incelemede kalkan simgesi.
+        */}
+        <div className="flex items-center gap-3 sm:gap-4">
+          <AdayFotografi
+            ad={kart.ad}
+            fotoYolu={kart.fotoYolu}
+            fotoUrl={kart.fotoUrl}
+            gizli={Boolean(kart.gizli)}
+            buyutulebilir
+            className="h-16 w-16 text-xl ring-4 ring-white shadow-sm sm:h-20 sm:w-20 sm:text-2xl"
+          />
           <div className="min-w-0 flex-1">
             <h2
               id="aday-inceleme-basligi"
-              className="break-words text-lg font-extrabold leading-tight"
+              className="break-words text-xl font-extrabold leading-tight sm:text-2xl"
               style={{ color: SIRKET_METIN }}
             >
               {kart.gizli ? 'Aday' : (kart.ad ?? 'Ad paylaşılmadı')}
             </h2>
             {kimlik && (
-              <p className="mt-0.5 text-xs font-semibold" style={{ color: SIRKET_METIN_IKINCIL }}>
+              <p className="mt-1 text-sm font-semibold" style={{ color: SIRKET_METIN_IKINCIL }}>
                 {kimlik}
               </p>
             )}

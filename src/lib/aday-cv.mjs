@@ -102,8 +102,16 @@ export function adayCvOgrencisi(kart, { iletisim = null } = {}) {
   return {
     id: String(k.id ?? 'aday'),
     fullName: gizli ? 'Aday' : metin(k.ad) || 'Aday',
-    /* Fotoğraf: kopyadaki adres (https) ya da sitenin kendi yolu ('/...'). */
-    avatarUrl: gizli ? '' : /^\/(?!\/)/.test(metin(k.fotoUrl)) ? metin(k.fotoUrl) : (guvenliDisAdres(k.fotoUrl) ?? ''),
+    /*
+      Fotoğraf: kopyadaki adres (https), sitenin kendi yolu ('/...') ya da
+      şirketin oturumuyla indirilen sosyal profil dosyasının bellek adresi
+      ('blob:', 20270113010000).
+    */
+    avatarUrl: gizli
+      ? ''
+      : /^\/(?!\/)/.test(metin(k.fotoUrl)) || /^blob:/.test(metin(k.fotoUrl))
+        ? metin(k.fotoUrl)
+        : (guvenliDisAdres(k.fotoUrl) ?? ''),
     email: metin(iletisim?.eposta),
     phone: metin(iletisim?.telefon),
     /* Konum oturduğu il; eski kopyalardaki `sehir` staj tercihi, CV'de yaşadığı yer gibi okunurdu. */

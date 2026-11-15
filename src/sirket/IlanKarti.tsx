@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart3, Bookmark, Eye, MapPin, Pencil, Plus, User, Users } from 'lucide-react';
+import { BarChart3, Bookmark, Eye, MapPin, Pencil, Plus, Users } from 'lucide-react';
 import { IlanIstatistikAyrintisi } from './IlanIstatistikAyrintisi';
 import { donusumOrani, oranMetni } from '../lib/ilan-istatistik.mjs';
 import {
@@ -13,8 +13,8 @@ import {
   kutuStil,
 } from './renk';
 import { ListingLogo } from '../components/ListingLogo';
+import { AdayFotografi } from './AdayFotografi';
 import { calismaEtiketi, konumEtiketi } from '../lib/sehir';
-import { monogram } from '../lib/aday-kart.mjs';
 import { ilanEylemleri } from '../lib/ilan-formu.mjs';
 import {
   DEGISIKLIK_METNI,
@@ -61,6 +61,9 @@ export type AdayOzeti = {
   ilanId: string | null;
   ad: string | null;
   fotoUrl: string | null;
+  /** `social_profiles.avatar_path` (20270113010000). */
+  fotoYolu?: string | null;
+  gizli?: boolean;
   durum: string;
 };
 
@@ -249,23 +252,15 @@ export const KontrolNotu: React.FC<{ ilan: Record<string, unknown> }> = ({ ilan 
   );
 };
 
-const Avatar: React.FC<{ aday: AdayOzeti }> = ({ aday }) =>
-  aday.fotoUrl ? (
-    <img
-      src={aday.fotoUrl}
-      alt=""
-      className="h-8 w-8 shrink-0 rounded-full object-cover ring-2 ring-white"
-    />
-  ) : (
-    <span
-      aria-hidden
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-black ring-2 ring-white"
-      style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
-    >
-      {/* Ad paylaşılmamışsa (rıza yok) harf uydurmuyoruz; nötr simge. */}
-      {aday.ad ? monogram(aday.ad) : <User className="h-4 w-4" />}
-    </span>
-  );
+const Avatar: React.FC<{ aday: AdayOzeti }> = ({ aday }) => (
+  <AdayFotografi
+    ad={aday.ad}
+    fotoYolu={aday.fotoYolu ?? null}
+    fotoUrl={aday.fotoUrl}
+    gizli={Boolean(aday.gizli)}
+    className="h-8 w-8 text-[11px] ring-2 ring-white"
+  />
+);
 
 /** Kart istatistik satırı (20270101010000); `basvuru` dönüşüm oranı için. */
 type IlanKartIstatistigi = { goruntulenme: number; sonYediGun: number; kaydeden: number; basvuru?: number };

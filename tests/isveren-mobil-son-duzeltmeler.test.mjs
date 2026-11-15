@@ -96,7 +96,7 @@ test('Şirketim yan sütunları gerçek veriden; kademe kapalıysa başvuru say�
   /* 11 Ekim 2026: panelde Takipçiler satırı yok (liste /agim'de ve sayaçta duruyor). */
   assert.doesNotMatch(yan, /etiket="Takipçiler"/);
   /* Son başvurularda fotoğraf: öğrenci başına en yeni başvurudaki; yoksa nötr avatar. */
-  assert.match(yan, /if \(b\.ogrenciId && b\.fotoUrl && !fotograflar\.has\(b\.ogrenciId\)\) fotograflar\.set\(b\.ogrenciId, b\.fotoUrl\);/);
+  assert.match(yan, /if \(b\.ogrenciId && \(b\.fotoYolu \|\| b\.fotoUrl\) && !fotograflar\.has\(b\.ogrenciId\)\) fotograflar\.set\(b\.ogrenciId, b\);/);
   /* Rehber kartları sitedeki aynı kapakla; ikon yok. */
   assert.match(yan, /<RehberKapagi slug=\{k\.kapak\} \/>/);
   /* Rehber verisi panelin ilk yüklemesine binmiyor. */
