@@ -3,7 +3,7 @@ import { ChevronDown } from 'lucide-react';
 import { SIRKET_METIN, SIRKET_METIN_IKINCIL, SIRKET_ODAK, kutuStil } from './renk';
 import { durumRozeti, sadeDurumSutunlari } from './basvuru-durumu';
 import { onyargisizla } from '../lib/aday-kart.mjs';
-import { ProfilFotografi } from '../components/sosyal/ProfilFotografi';
+import { AdayFotografi } from './AdayFotografi';
 import { panoyaDiz } from '../lib/basvuru-panosu.mjs';
 import { BEKLEME_ESIKLERI, beklemeGunu, bekliyorMu } from '../lib/bekleyen-basvuru.mjs';
 import type { DegerlendirmeOlcutu, EkipUyesi } from '../lib/sirket-veri';
@@ -89,11 +89,12 @@ const AdayCipi: React.FC<{
   const ortak = 'flex w-full min-h-11 items-center gap-2 rounded-xl border border-gray-200 bg-white px-2.5 py-2 text-left';
   const icerik = (
     <>
-      <ProfilFotografi
-        ad={kart.ad ?? '?'}
-        yol={null}
-        yedekAdres={kart.fotoUrl ?? null}
-        className="h-8 w-8 shrink-0 rounded-full text-[11px]"
+      <AdayFotografi
+        ad={kart.ad ?? null}
+        fotoYolu={kart.fotoYolu ?? null}
+        fotoUrl={kart.fotoUrl ?? null}
+        gizli={Boolean(kart.gizli)}
+        className="h-8 w-8 text-[11px]"
       />
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-bold" style={{ color: SIRKET_METIN }}>

@@ -41,10 +41,28 @@ test('avatar kapısı görünürlük kapısına varıyor', () => {
     Fonksiyon `sosyal_gorunur` çağrısıyla bitmeli. Ondan önce koşulsuz
     `return true` eden bir dal, engellemeyi atlatır.
   */
-  assert.match(tanim.govde, /return sahip = auth\.uid\(\) or sosyal_gizli\.sosyal_gorunur\(sahip\);/,
+  /*
+    20270113010000: üçüncü dal başvurulan şirket — o dal da engellemeyi
+    (`engelli_mi`) ve paylaşım kuralını kendi içinde soruyor (aşağıdaki test).
+  */
+  assert.match(tanim.govde, /return sahip = auth\.uid\(\) or sosyal_gizli\.sosyal_gorunur\(sahip\)(\s+or sosyal_gizli\.aday_fotografi_sirkete_acik\(nesne_adi\))?;/,
     `${tanim.dosya}: avatar kapısı sosyal_gorunur'a varmıyor`);
   assert.doesNotMatch(tanim.govde, /yayinda_mi/,
     `${tanim.dosya}: yayımlanmışlık dalı engelleme kontrolünü atlatıyor`);
+});
+
+test('başvurulan şirket yalnız şu anki avatarı, paylaşım açıkken ve engel yokken okuyor', () => {
+  const g = oku('supabase/migrations/20270113010000_aday_fotografi_sirkete.sql');
+  for (const kapi of [
+    /where sp\.avatar_path = nesne_adi/,
+    /sosyal_gizli\.basvuru_sirketi_mi\(a\.id\)/,
+    /public\.basvuru_iletisimi_acik\(a\.id\)/,
+    /not sosyal_gizli\.engelli_mi\(sp\.profile_id\)/,
+  ]) assert.match(g, kapi);
+  /* Yol fonksiyonu kapıyla aynı koşulları soruyor; anon çağıramıyor. */
+  const yollar = g.slice(g.indexOf('function public.sirket_aday_foto_yollari'));
+  assert.match(yollar, /basvuru_sirketi_mi\(a\.id\)[\s\S]*basvuru_iletisimi_acik\(a\.id\)[\s\S]*engelli_mi\(sp\.profile_id\)/);
+  assert.match(g, /revoke all on function public\.sirket_aday_foto_yollari\(uuid\[\]\) from public, anon;/);
 });
 
 test('anon bu kovada yetkisiz', () => {

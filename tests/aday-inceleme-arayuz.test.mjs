@@ -296,7 +296,13 @@ test('başvuru anı ile güncel arasındaki fark işaretleniyor', () => {
 /* ------------------------------------------------- 3. önyargısız kip */
 
 test('önyargısız kipte ad ve fotoğraf gizli — şerit ve güncel profil', () => {
-  assert.match(cekmece, /\{kart\.fotoUrl && !kart\.gizli \? \(/);
+  /* 20270113010000: fotoğraf ortak bileşende; önyargısız kipte indirme hiç yapılmıyor. */
+  assert.match(cekmece, /<AdayFotografi\s+ad=\{kart\.ad\}\s+fotoYolu=\{kart\.fotoYolu\}\s+fotoUrl=\{kart\.fotoUrl\}\s+gizli=\{Boolean\(kart\.gizli\)\}/);
+  const foto = readFileSync(new URL('../src/sirket/AdayFotografi.tsx', import.meta.url), 'utf8');
+  assert.match(foto, /const yol = !gizli && fotoYolu \? fotoYolu : null;/);
+  assert.match(foto, /if \(gizli\) return \{ adres: null, yukleniyor: false \};/);
+  /* CV önizlemesi de aynı adresi kullanıyor; kopyada önyargısız kip avatarı boşaltıyor (aday-cv). */
+  assert.match(cekmece, /useAdayFotoAdresi\(kart\?\.fotoYolu \?\? null, kart\?\.fotoUrl \?\? null, Boolean\(kart\?\.gizli\)\)/);
   assert.match(cekmece, /\{kart\.gizli \? 'Aday' : \(kart\.ad \?\? 'Ad paylaşılmadı'\)\}/);
   /* Güncel profil bölümü fotoğrafı ve adı hiç çizmiyor. */
   assert.doesNotMatch(guncel, /fotoUrl|\bguncel\??\.ad\b/);

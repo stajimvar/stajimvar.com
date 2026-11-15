@@ -1,9 +1,10 @@
 import React from 'react';
-import { ArrowRight, Briefcase, ChevronRight, Plus, User, Users } from 'lucide-react';
+import { ArrowRight, Briefcase, ChevronRight, Plus, Users } from 'lucide-react';
 import { RehberKapagi } from '../components/RehberKartlari';
 import { ODAK_HALKASI } from '../lib/renk-token';
 import { durumAdi } from './basvuru-durumu';
 import type { AdayOzeti } from './IlanKarti';
+import { AdayFotografi } from './AdayFotografi';
 
 /**
  * ŞİRKETİM'İN MASAÜSTÜ SÜTUNLARI (kullanıcı isteği, 27 Eylül 2026)
@@ -118,32 +119,14 @@ type YaziOzeti = { slug: string; baslik: string; ozet: string };
 */
 type BasvuruOzeti = AdayOzeti & { ogrenciId?: string | null; tarih?: string | null };
 
-function ogrenciFotograflari(basvurular: BasvuruOzeti[]): Map<string, string> {
-  const fotograflar = new Map<string, string>();
+function ogrenciFotograflari(basvurular: BasvuruOzeti[]): Map<string, BasvuruOzeti> {
+  const fotograflar = new Map<string, BasvuruOzeti>();
   const sirali = [...basvurular].sort((a, b) => String(b.tarih ?? '').localeCompare(String(a.tarih ?? '')));
   for (const b of sirali) {
-    if (b.ogrenciId && b.fotoUrl && !fotograflar.has(b.ogrenciId)) fotograflar.set(b.ogrenciId, b.fotoUrl);
+    if (b.ogrenciId && (b.fotoYolu || b.fotoUrl) && !fotograflar.has(b.ogrenciId)) fotograflar.set(b.ogrenciId, b);
   }
   return fotograflar;
 }
-
-const BasvuranAvatari: React.FC<{ adres: string | null }> = ({ adres }) => {
-  const [hata, setHata] = React.useState(false);
-  return adres && !hata ? (
-    <img
-      src={adres}
-      alt=""
-      loading="lazy"
-      decoding="async"
-      onError={() => setHata(true)}
-      className="h-10 w-10 shrink-0 rounded-full object-cover"
-    />
-  ) : (
-    <span aria-hidden className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-400">
-      <User className="h-5 w-5" />
-    </span>
-  );
-};
 
 export const SirketYanSutun: React.FC<{
   basvurular: AdayOzeti[];
@@ -194,9 +177,18 @@ export const SirketYanSutun: React.FC<{
               return (
                 <li key={b.id}>
                   <a href={yol} onClick={git(onNavigate, yol)} className={`group flex items-center gap-3 rounded-xl ${ODAK_HALKASI}`}>
-                    <BasvuranAvatari
-                      adres={((b as BasvuruOzeti).ogrenciId && fotograflar.get(String((b as BasvuruOzeti).ogrenciId))) || b.fotoUrl}
-                    />
+                    {(() => {
+                      const kaynak = ((b as BasvuruOzeti).ogrenciId && fotograflar.get(String((b as BasvuruOzeti).ogrenciId))) || b;
+                      return (
+                        <AdayFotografi
+                          ad={b.ad}
+                          fotoYolu={kaynak.fotoYolu ?? null}
+                          fotoUrl={kaynak.fotoUrl}
+                          gizli={Boolean(b.gizli)}
+                          className="h-10 w-10 text-xs"
+                        />
+                      );
+                    })()}
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-semibold text-gray-900 group-hover:text-blue-700">
                         {b.ad ?? 'Aday'}

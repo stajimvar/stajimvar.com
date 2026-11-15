@@ -212,6 +212,12 @@ export function kartVerisi(satir, ek = {}) {
     paylasildi,
     ad: paylasildi ? metin(anlik.ad) : null,
     fotoUrl: paylasildi ? metin(anlik.fotoUrl) : null,
+    /*
+      Asıl fotoğraf: `social_profiles.avatar_path` (private kova). Yolu
+      `sirket_aday_foto_yollari` veriyor (20270113010000); `fotoUrl`
+      eski alanın yedeği.
+    */
+    fotoYolu: paylasildi ? metin(satir?.fotoYolu) : null,
     universite: paylasildi ? metin(anlik.universite) : null,
     bolum: paylasildi ? metin(anlik.bolum) : null,
     sinif: paylasildi ? metin(anlik.sinif) : null,
@@ -326,7 +332,7 @@ export function kartVerisi(satir, ek = {}) {
  * kısıt; okul kalıyor çünkü başvurunun konusu o.
  */
 export function onyargisizla(kart) {
-  return { ...kart, ad: null, fotoUrl: null, gizli: true };
+  return { ...kart, ad: null, fotoUrl: null, fotoYolu: null, gizli: true };
 }
 
 /* --------------------------------------------------------- mini ATS */
