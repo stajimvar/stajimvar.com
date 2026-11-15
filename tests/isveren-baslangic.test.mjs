@@ -199,7 +199,25 @@ test('tek kapı: Google dönüşü, giriş dönüşü ve panel yolları şirket 
   assert.match(app, /temizYol === '\/isveren\/ilan-ver' \|\|\s*SIRKET_PANEL_YOLLARI\.some/);
   assert.match(app, /\}, \[session\?\.userId, isverenTalepSurumu\]\);/);
   const sayfa = oku('src/components/IsverenBaslangic.tsx');
-  assert.match(sayfa, /if \(!userId \|\| niyetKayitli\) return;\s*isverenNiyetiniKaydet\(\)/);
+  assert.match(sayfa, /if \(!userId \|\| niyetKayitli\) return;\s*if \(!isverenOauthIsaretiAl\(\)\) return;\s*isverenNiyetiniKaydet\(\)/);
+});
+
+/*
+  ÖĞRENCİ KİLİDİ (15 Kasım 2026, ölçüldü): sayfa açıldığı anda niyet
+  yazıyordu; alt bilgideki bağlantıya tıklayan öğrenci işveren görünümüne
+  kilitleniyordu ve geri dönüş yolu yoktu.
+*/
+test('şirket profili sayfası açılınca hesap işveren olmuyor; öğrencinin dönüş yolu var', () => {
+  const auth = oku('src/lib/auth.ts');
+  assert.match(auth, /if \(guvenliYol === '\/isveren\/baslangic'\) isverenOauthIsaretiKoy\(\);/);
+  assert.match(auth, /removeItem\(ISVEREN_OAUTH_ISARETI\)/);
+  const veri = oku('src/lib/isveren-baslangic.ts');
+  assert.match(veri, /updateUser\(\{ data: \{ kayit_niyeti: null \} \}\)/);
+  const sayfa = oku('src/components/IsverenBaslangic.tsx');
+  assert.match(sayfa, /userId && !yukleniyor && !talep && onOgrenciyim/);
+  assert.match(sayfa, /Öğrenci hesabıma dön/);
+  const app = oku('src/App.tsx');
+  assert.match(app, /onOgrenciyim=\{\(\) => \{/);
 });
 
 test('işveren sayfası ve SSS bugünkü akışı anlatıyor: görüşme/teklif ve teklif-kabulü iletişimi yok', () => {
