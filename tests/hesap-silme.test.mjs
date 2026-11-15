@@ -49,7 +49,7 @@ test('silmeyi engelleyen bağlar çözülüyor; fonksiyonlar yalnız service_rol
   assert.match(goc, /c\.logo_url like '%\/logos\/' \|\| o\.name/);
 });
 
-test('pencere iki onay istiyor; menüde yönetici dışındaki herkese', () => {
+test('pencere iki onay istiyor; bağlantı gizli yerde, yönetici dışındaki herkese', () => {
   const p = oku('src/components/HesapSilmePenceresi.tsx');
   assert.match(p, /const hazir = okudum && yazi\.trim\(\)\.toLocaleUpperCase\('tr-TR'\) === SILME_ONAYI && !siliniyor;/);
   assert.match(p, /disabled=\{!hazir\}/);
@@ -57,8 +57,18 @@ test('pencere iki onay istiyor; menüde yönetici dışındaki herkese', () => {
   const app = oku('src/App.tsx');
   assert.match(app, /onHesabiSil=\{isAdmin \? undefined : \(\) => setHesapSilme\('ogrenci'\)\}/);
   assert.match(app, /onHesabiSil=\{isAdmin \? undefined : \(\) => setHesapSilme\('sirket'\)\}/);
-  assert.match(oku('src/components/ProfilBasligi.tsx'), /anahtar: 'hesap-sil', etiket: 'Hesabımı sil'/);
-  assert.match(oku('src/sirket/SirketProfili.tsx'), /anahtar: 'hesap-sil',\s*etiket: 'Hesabımı sil'/);
+  /*
+    Kullanıcı kararı (15 Kasım 2026): menüde değil, daha gizli — öğrencide
+    profil düzenlemenin, şirkette e-posta tercihlerinin en dibinde soluk
+    bir yazı bağlantısı.
+  */
+  assert.doesNotMatch(oku('src/components/ProfilBasligi.tsx'), /hesap-sil|Hesabımı sil/);
+  assert.doesNotMatch(oku('src/sirket/SirketProfili.tsx'), /anahtar: 'hesap-sil'/);
+  const duzenleme = oku('src/components/ProfilDuzenleme.tsx');
+  assert.match(duzenleme, /\{onHesabiSil && \([\s\S]{0,300}text-xs font-semibold text-gray-400[\s\S]{0,120}Hesabını sil/);
+  assert.match(oku('src/components/StudentProfileView.tsx'), /onStartQuiz=\{onStartQuiz\}\s+onHesabiSil=\{onHesabiSil\}/);
+  const sirket = oku('src/sirket/SirketProfili.tsx');
+  assert.match(sirket, /<EpostaTercihleri userId=\{userId\} \/>\s+\{onHesabiSil && \(/);
   /* Başarıda yerel oturum da kapanıyor. */
   assert.match(oku('src/lib/hesap-silme.ts'), /await supabase\.auth\.signOut\(\{ scope: 'local' \}\)/);
 });
