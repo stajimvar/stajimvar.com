@@ -118,6 +118,12 @@ interface Props {
   onCvOlustur?: () => void;
   quizzes?: SkillQuiz[];
   onStartQuiz?: (quiz: SkillQuiz) => void;
+  /**
+   * Hesabımı sil (20270114010000). Kullanıcı kararı: menüde değil, bu
+   * sayfanın en dibinde soluk bir yazı bağlantısı — aranınca bulunuyor,
+   * gezinirken göze batmıyor.
+   */
+  onHesabiSil?: () => void;
 }
 
 /* ------------------------------------------------------------------ */
@@ -260,6 +266,7 @@ export const ProfilDuzenleme: React.FC<Props> = ({
   onCvOlustur,
   quizzes = [],
   onStartQuiz,
+  onHesabiSil,
 }) => {
   /* Açılışta istenen yer: alt bölüm paneli ya da açık kart. */
   const ilkYer: DuzenlemeBolumu | null = acilisBolumu === 'temel' ? 'kisisel' : acilisBolumu;
@@ -866,6 +873,18 @@ export const ProfilDuzenleme: React.FC<Props> = ({
               )}
               {sosyalProfilDuzenleme}
             </Kart>
+          )}
+
+          {onHesabiSil && (
+          <div className="px-1 pt-6">
+            <button
+              type="button"
+              onClick={onHesabiSil}
+              className={`min-h-11 cursor-pointer text-xs font-semibold text-gray-400 underline-offset-2 hover:text-red-600 hover:underline ${ODAK_HALKASI}`}
+            >
+              Hesabını sil
+            </button>
+          </div>
           )}
         </div>
 

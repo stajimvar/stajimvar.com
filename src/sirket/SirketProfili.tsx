@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Eye, ImagePlus, LogOut, Mail, Pencil, Plus, Trash2, Users } from 'lucide-react';
+import { ArrowLeft, Eye, ImagePlus, LogOut, Mail, Pencil, Plus, Users } from 'lucide-react';
 import {
   IKINCIL_DUGME,
   KUTU,
@@ -123,7 +123,7 @@ export const SirketProfili: React.FC<{
   onDurum: (id: string, d: 'published' | 'closed') => Promise<IlanKontrolSonucu | void>;
   onKaldir: (id: string, arsivle: boolean) => Promise<void>;
   onCikis?: () => void;
-  /** Hesabımı sil (20270114010000): ayarlar menüsünde, çıkışın altında. */
+  /** Hesabımı sil (20270114010000): e-posta tercihlerinin en altında, soluk bir bağlantı. */
   onHesabiSil?: () => void;
 }> = ({
   yol,
@@ -282,6 +282,17 @@ export const SirketProfili: React.FC<{
           E-posta tercihleri
         </h1>
         <EpostaTercihleri userId={userId} />
+        {onHesabiSil && (
+        <div className="pt-6">
+          <button
+            type="button"
+            onClick={onHesabiSil}
+            className={`min-h-11 cursor-pointer text-xs font-semibold text-gray-400 underline-offset-2 hover:text-red-600 hover:underline ${SIRKET_ODAK}`}
+          >
+            Hesabını sil
+          </button>
+        </div>
+        )}
       </div>
       </ProfilSayfaDuzeni>
     );
@@ -496,20 +507,7 @@ export const SirketProfili: React.FC<{
             },
           ]
         : []),
-        ...(onHesabiSil
-        ? [
-            {
-              anahtar: 'hesap-sil',
-              etiket: 'Hesabımı sil',
-              ikon: <Trash2 aria-hidden className="h-5 w-5" />,
-              onClick: () => {
-                setAyarlarAcik(false);
-                onHesabiSil();
-              },
-              tehlike: true,
-            },
-          ]
-        : []),
+
       ],
     },
   ];

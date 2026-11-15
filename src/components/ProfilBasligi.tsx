@@ -8,7 +8,6 @@ import {
   FileText,
   GraduationCap,
   LogOut,
-  Trash2,
   MapPin,
   Settings,
 } from 'lucide-react';
@@ -252,8 +251,6 @@ interface Props {
   onYonetim?: () => void;
   /** Çıkış — "Ayarlar ve hareketler"in en altında. */
   onCikis?: () => void;
-  /** Hesabımı sil (20270114010000) — çıkışın yanında, aynı tehlike grubunda. */
-  onHesabiSil?: () => void;
   onBasvurulara?: () => void;
   onMulakatlara?: () => void;
   /**
@@ -337,7 +334,6 @@ export const ProfilBasligi: React.FC<Props> = ({
   onKaydedilenlere,
   onYonetim,
   onCikis,
-  onHesabiSil,
   onBasvurulara,
   onMulakatlara,
   portfolyo,
@@ -458,13 +454,8 @@ export const ProfilBasligi: React.FC<Props> = ({
     ...(onYonetim
       ? [{ baslik: 'Yönetim', ogeler: [{ anahtar: 'yonetim', etiket: 'Yönetim paneli', ikon: <Settings className={ikon} strokeWidth={1.75} />, onClick: menudenGit(onYonetim) }] }]
       : []),
-    ...(onCikis || onHesabiSil
-      ? [{
-          ogeler: [
-            ...(onCikis ? [{ anahtar: 'cikis', etiket: 'Çıkış yap', ikon: <LogOut className={ikon} strokeWidth={1.75} />, onClick: menudenGit(onCikis), tehlike: true }] : []),
-            ...(onHesabiSil ? [{ anahtar: 'hesap-sil', etiket: 'Hesabımı sil', ikon: <Trash2 className={ikon} strokeWidth={1.75} />, onClick: menudenGit(onHesabiSil), tehlike: true }] : []),
-          ],
-        }]
+    ...(onCikis
+      ? [{ ogeler: [{ anahtar: 'cikis', etiket: 'Çıkış yap', ikon: <LogOut className={ikon} strokeWidth={1.75} />, onClick: menudenGit(onCikis), tehlike: true }] }]
       : []),
   ];
 
