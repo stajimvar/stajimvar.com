@@ -99,6 +99,15 @@ export async function isverenNiyetiniKaydet(): Promise<void> {
   if (error) hata('Hesap güncellenemedi', error);
 }
 
+/**
+ * "Öğrenciyim" — işveren niyetini hesaptan kaldırır. Yetki değişmiyor;
+ * yalnız gösterilen yüz öğrenci görünümüne dönüyor.
+ */
+export async function isverenNiyetiniKaldir(): Promise<void> {
+  const { error } = await supabase.auth.updateUser({ data: { kayit_niyeti: null } });
+  if (error) hata('Hesap güncellenemedi', error);
+}
+
 export async function yeniSirketTalebiGonder(p: {
   userId: string;
   yetkiliAdi: string;

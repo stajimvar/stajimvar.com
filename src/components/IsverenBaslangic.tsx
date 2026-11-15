@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Building2, Check, CheckCircle2, Clock, FileText, Mail, Megaphone, Search, ShieldCheck, Upload, Users } from 'lucide-react';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
+import { isverenOauthIsaretiAl } from '../lib/auth';
 import { SayfaKabugu } from './SayfaKabugu';
 import { CompanyLogo } from './CompanyLogo';
 import { searchCompanies } from '../lib/queries';
 import {
   benimSonTalebim,
   isverenNiyetiniKaydet,
+  isverenNiyetiniKaldir,
   sahiplenmeTalebiGonder,
   talepLogosuYukle,
   yeniSirketTalebiGonder,
@@ -135,7 +137,19 @@ export const IsverenBaslangic: React.FC<{
   onGirisGerekli?: () => void;
   /** Talep gönderildi ya da durum değişti: üst çubuk etiketini yenilemek için. */
   onDurumDegisti?: () => void;
-}> = ({ onBack, onNavigate, userId, niyetKayitli = false, userEmail = '', adSoyad = '', onGirisGerekli, onDurumDegisti }) => {
+  /** "Öğrenci hesabıma dön": niyet kaldırıldıktan sonra oturumu ve yolu App güncelliyor. */
+  onOgrenciyim?: () => void;
+}> = ({ onBack, onNavigate, userId, niyetKayitli = false, userEmail = '', adSoyad = '', onGirisGerekli, onDurumDegisti, onOgrenciyim }) => {
+  const [ogrenciyeDonuluyor, setOgrenciyeDonuluyor] = useState(false);
+  const ogrenciyeDon = async () => {
+    setOgrenciyeDonuluyor(true);
+    try {
+      if (niyetKayitli) await isverenNiyetiniKaldir();
+      onOgrenciyim?.();
+    } catch {
+      setOgrenciyeDonuluyor(false);
+    }
+  };
   const [talep, setTalep] = useState<IsverenTalebi | null>(null);
   const [yukleniyor, setYukleniyor] = useState(Boolean(userId));
   const [adim, setAdim] = useState<Adim>({ tur: 'ara' });
@@ -206,13 +220,19 @@ export const IsverenBaslangic: React.FC<{
   }, [tahmin, adim.tur]);
 
   /*
-    NİYET BU SAYFADA DA YAZILIYOR (9 Kasım 2026): Google/Microsoft ile
-    işveren penceresinden gelen hesapta kayıt niyeti yok; yazılmazsa site
-    onu öğrenci sanıp CV ekranı gösteriyordu. Bu sayfa yalnız işveren
-    kapısından açılıyor.
+    NİYET YALNIZ İŞVEREN PENCERESİNDEN GELEN OAUTH DÖNÜŞÜNDE (9 → 15 Kasım 2026)
+
+    Google/Microsoft ile işveren penceresinden gelen hesapta kayıt niyeti
+    yok; yazılmazsa site onu öğrenci sanıyordu. Eskiden bu sayfa AÇILDIĞI
+    ANDA yazıyordu; ama alt bilgideki "Şirketini sahiplen" bağlantısından
+    giriş yapmış öğrenci de geliyor ve bir tıklama hesabı işveren
+    görünümüne kilitliyordu. Artık yalnız OAuth öncesi bırakılan işaret
+    (`isverenOauthIsaretiAl`) varsa yazılıyor; öteki herkes için niyet
+    şirket profili gönderilince yazılıyor (`gonder`).
   */
   useEffect(() => {
     if (!userId || niyetKayitli) return;
+    if (!isverenOauthIsaretiAl()) return;
     isverenNiyetiniKaydet()
       .then(() => onDurumDegisti?.())
       .catch(() => undefined);
@@ -312,6 +332,24 @@ export const IsverenBaslangic: React.FC<{
             Hesabın kişisel kimliğinle açıldı. Şirketini bul ya da ekle, bilgilerini doldur. Aday erişimi şirket
             doğrulamasından sonra açılır.
           </p>
+          {/*
+            ÖĞRENCİ ÇIKIŞI (15 Kasım 2026): bu sayfaya alt bilgideki
+            bağlantıdan öğrenci de gelebiliyor. Talebi olmayan giriş yapmış
+            hesaba geri dönüş yolu; niyet yazılıysa kaldırılıyor.
+          */}
+          {userId && !yukleniyor && !talep && onOgrenciyim && (
+            <p className="pt-1 text-sm text-gray-600">
+              Öğrenci misin?{' '}
+              <button
+                type="button"
+                onClick={ogrenciyeDon}
+                disabled={ogrenciyeDonuluyor}
+                className="min-h-11 cursor-pointer font-bold text-blue-700 underline underline-offset-2 hover:text-blue-800 disabled:cursor-wait disabled:opacity-60"
+              >
+                {ogrenciyeDonuluyor ? 'Öğrenci hesabına dönülüyor…' : 'Öğrenci hesabıma dön'}
+              </button>
+            </p>
+          )}
         </div>
         <AdimGostergesi adim={adimNo} />
       </header>

@@ -538,6 +538,39 @@ export const OAUTH_ADLARI: Record<OAuthSaglayici, string> = {
  * @param saglayici 'google' | 'azure'
  * @param donusYolu giriş bitince dönülecek site içi adres
  */
+/*
+  İŞVEREN PENCERESİNDEN OAUTH (15 Kasım 2026)
+
+  Şirket profili sayfası eskiden AÇILDIĞI ANDA hesaba `kayit_niyeti:
+  'isveren'` yazıyordu (Google ile gelen işverende niyet yoktu). Ama o
+  sayfaya alt bilgideki "Şirketini sahiplen" bağlantısından giriş yapmış
+  her öğrenci de gelebiliyordu; bir tıklama hesabı işveren görünümüne
+  kilitliyordu (ölçüldü: kurucunun öğrenci hesabı). Niyet artık yalnız
+  işveren penceresinden başlayan OAuth dönüşünde yazılıyor: yönlendirme
+  öncesi aynı sekmeye bir işaret bırakılıyor, sayfa onu bir kez okuyup
+  siliyor.
+*/
+const ISVEREN_OAUTH_ISARETI = 'stajimvar_isveren_oauth';
+
+function isverenOauthIsaretiKoy(): void {
+  try {
+    window.sessionStorage.setItem(ISVEREN_OAUTH_ISARETI, '1');
+  } catch {
+    /* Depo kapalı: niyet şirket formu gönderilince yine yazılıyor. */
+  }
+}
+
+/** İşveren penceresinden başlayan OAuth dönüşü mü? Okunduğu an silinir. */
+export function isverenOauthIsaretiAl(): boolean {
+  try {
+    const var_ = window.sessionStorage.getItem(ISVEREN_OAUTH_ISARETI) === '1';
+    window.sessionStorage.removeItem(ISVEREN_OAUTH_ISARETI);
+    return var_;
+  } catch {
+    return false;
+  }
+}
+
 export async function signInWithProvider(
   saglayici: OAuthSaglayici,
   donusYolu?: string
@@ -550,6 +583,7 @@ export async function signInWithProvider(
   */
   const guvenliYol = donusYolu && /^\/(?!\/)/.test(donusYolu) ? donusYolu : '/';
   const hedef = `${window.location.origin}${guvenliYol}`;
+  if (guvenliYol === '/isveren/baslangic') isverenOauthIsaretiKoy();
 
   const { error } = await supabase.auth.signInWithOAuth({
     provider: saglayici,

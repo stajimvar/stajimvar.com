@@ -4026,6 +4026,16 @@ export default function App() {
         adSoyad={session?.displayName ?? ''}
         onGirisGerekli={AUTH_ENABLED ? () => isverenGirisiAc('login', '/isveren/baslangic') : undefined}
         onDurumDegisti={() => setIsverenTalepSurumu((n) => n + 1)}
+        onOgrenciyim={() => {
+          /* Niyet hesaptan kaldırıldı; oturum dinleyicisi bunu duyurmuyor, burada düşülüyor. */
+          setSession((o) => {
+            if (!o) return o;
+            const { kayitNiyeti: _niyet, ...geri } = o;
+            return geri;
+          });
+          navigate('/');
+          showToast('Öğrenci hesabına dönüldü.');
+        }}
       />
     );
   }
