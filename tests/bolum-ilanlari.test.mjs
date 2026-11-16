@@ -169,7 +169,7 @@ test('ön render: ilan okuması alan_idleri taşıyor, bölüm gövdesine ortak 
   assert.match(r, /yol: '\/rest\/v1\/sectors\?aktif=eq\.true&select=id,slug,ad&order=sira\.asc'/);
   assert.match(r, /const sonuc = bolumIlanlari\(\{ bolumSlug: b\.slug, ilanlar, sektorler \}\);/);
   assert.match(r, /\? gorunurIlanKartlari\(sonuc\.ilanlar\) \+/);
-  assert.match(r, /govde: `<main><h1>\$\{kacir\(b\.ad\)\} stajı<\/h1>\$\{b\.cizim\}\$\{blok\.html\}<\/main>`/);
+  assert.match(r, /govde: `<main><h1>\$\{kacir\(b\.seo\.h1\)\}<\/h1>\$\{b\.cizim\}\$\{blok\.html\}<\/main>`/);
   /* Kenar çiziminin seçimi değişmedi. */
   assert.doesNotMatch(oku('src/lib/seo/ilan-sayfasi.mjs'), /alan_idleri/);
   const blok = r.slice(r.indexOf('const bolumIlanBlogu = (b) =>'), r.indexOf('/* ---------------------------------------------- /staj-ilanlari ---- */'));

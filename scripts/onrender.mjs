@@ -53,6 +53,7 @@ import { sayfaHtml } from '../src/lib/seo/sayfa-html.mjs';
 import { ARSIV_SAYFA_BOYU, acikIlanMi, arsivSirasi, arsivYolu, arsivSayfaBasligi, arsivSayfaNumaralari } from '../src/lib/seo/ilan-arsivi.mjs';
 import { zorunluVeriGetir, VeriKaynagiHatasi, azalmaKapisi } from '../src/lib/seo/veri-kaynagi.mjs';
 import { bolumIlanlari } from '../src/lib/bolum-ilanlari.mjs';
+import { bolumSeo, BOLUM_LISTESI_BASLIGI } from '../src/lib/seo/bolum-seo.mjs';
 import { ilanKartlariHtml } from '../src/lib/seo/ilan-karti-html.mjs';
 import { SEHIR_SAYFALARI, sehirSayfasi, sehirYolu } from '../src/lib/seo/sehir-ilanlari.mjs';
 
@@ -294,7 +295,7 @@ async function icerikDerle(girisDosyasi, ad) {
  */
 async function bolumleriCiz() {
   try {
-    const { BOLUMLER } = await icerikDerle(path.join(kok, 'src', 'data', 'bolumler.ts'), 'bolumler');
+    const { BOLUMLER, OKUL_YERLESTIRIR } = await icerikDerle(path.join(kok, 'src', 'data', 'bolumler.ts'), 'bolumler');
     const { BolumIcerik } = await icerikDerle(
       path.join(kok, 'src', 'components', 'BolumIcerik.tsx'),
       'bolum-icerik'
@@ -306,6 +307,8 @@ async function bolumleriCiz() {
     for (const b of BOLUMLER) {
       sonuc[b.slug] = {
         ...b,
+        /* Başlık, H1 ve açıklama tarayıcıyla ortak (lib/seo/bolum-seo.mjs). */
+        seo: bolumSeo(b, { okulYerlestirir: OKUL_YERLESTIRIR.includes(b.grup) }),
         cizim: renderToStaticMarkup(React.createElement(BolumIcerik, { bolum: b })),
       };
     }
@@ -1031,8 +1034,8 @@ async function main() {
     const bolumGrafik = [
       {
         '@type': 'Article',
-        headline: `${b.ad} stajı`,
-        description: ozetle(b.aciklama || b.ozet),
+        headline: b.seo.h1,
+        description: ozetle(b.seo.aciklama),
         inLanguage: 'tr-TR',
         ...(b.guncelleme ? { dateModified: b.guncelleme } : {}),
         author: { '@type': 'Organization', name: 'StajımVar', url: SITE },
@@ -1471,7 +1474,7 @@ async function main() {
 
   const sabitler = [
     ['/rehber', 'Öğrenci rehberi | StajımVar', "Stajdan bursa, KYK'dan yurda; öğrencilikte ihtiyaç duyacağın bilgiler resmî kaynağıyla, adım adım.", 'Öğrenci rehberleri, tek listede.'],
-    ['/bolumler', 'Bölüme göre staj rehberi | StajımVar', `${bolumler.length} bölüm için: staj nerede yapılır, stajyer ne iş yapar, ne öğrenmeli.`, 'Bölüme göre staj'],
+    ['/bolumler', BOLUM_LISTESI_BASLIGI, `${bolumler.length} bölüm için: staj nerede yapılır, stajyer ne iş yapar, ne öğrenmeli.`, 'Bölüme göre staj'],
     /*
       BAŞLIK STAJ ARAÇLARINI ÖNE ALIYOR
 
@@ -1657,10 +1660,10 @@ async function main() {
     if (blok.html) bolumIlanOzeti[b.slug] = blok.adet;
     sayfaYaz(`/bolum/${b.slug}`, {
       lastmod: b.guncelleme ? String(b.guncelleme).slice(0, 10) : null,
-      baslik: `${b.ad} stajı | StajımVar`,
-      aciklama: ozetle(b.aciklama || b.ozet),
+      baslik: b.seo.baslik,
+      aciklama: ozetle(b.seo.aciklama),
       // Gövde = başlık + BolumIcerik'in çizilmiş hâli (kullanıcının gördüğünün aynısı) + açık ilanlar.
-      govde: `<main><h1>${kacir(b.ad)} stajı</h1>${b.cizim}${blok.html}</main>`,
+      govde: `<main><h1>${kacir(b.seo.h1)}</h1>${b.cizim}${blok.html}</main>`,
       jsonLd: { '@context': 'https://schema.org', '@graph': bolumGrafik },
     });
     sayac++;

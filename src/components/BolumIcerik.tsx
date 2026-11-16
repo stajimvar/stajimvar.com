@@ -95,7 +95,7 @@ export const BolumIcerik: React.FC<{ bolum: Bolum }> = ({ bolum }) => {
       )}
 
       <Blok
-        baslik={okulYerlestirir ? 'Klinik uygulama nerede yapılıyor' : 'Nerede staj yapılır'}
+        baslik={okulYerlestirir ? 'Klinik uygulama nerede yapılıyor' : `${bolum.ad} stajı nerede yapılır`}
         maddeler={bolum.nerede}
       />
 
@@ -119,7 +119,7 @@ export const BolumIcerik: React.FC<{ bolum: Bolum }> = ({ bolum }) => {
       )}
 
       <Blok
-        baslik={okulYerlestirir ? 'Öğrenci ne yapıyor' : 'Stajyer ne iş yapar'}
+        baslik={okulYerlestirir ? 'Öğrenci ne yapıyor' : `${bolum.ad} stajyeri ne iş yapar`}
         maddeler={bolum.isler}
       />
 

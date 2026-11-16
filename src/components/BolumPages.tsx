@@ -10,9 +10,11 @@ import {
   BOLUMLER,
   BOLUM_GRUPLARI,
   GRUP_SIRASI,
+  OKUL_YERLESTIRIR,
   bolumBul,
   type Bolum,
 } from '../data/bolumler';
+import { bolumSeo, BOLUM_LISTESI_BASLIGI } from '../lib/seo/bolum-seo.mjs';
 import { SAYFA_GENISLIGI } from '../lib/duzen';
 
 /**
@@ -131,7 +133,7 @@ export const BolumListesi: React.FC<{ onNavigate?: (p: string) => void }> = ({
 
 export const BolumHub: React.FC<HubProps> = ({ onBack, onNavigate }) => {
   useEffect(() => {
-    document.title = 'Bölüme göre staj rehberi | StajımVar';
+    document.title = BOLUM_LISTESI_BASLIGI;
   }, []);
 
   return (
@@ -180,18 +182,18 @@ export const BolumPage: React.FC<
   SayfaProps & { ogrenci?: StudentProfile | null; onGirisGerekli?: () => void }
 > = ({ slug, onBack, onNavigate, onSearch, ogrenci = null, onGirisGerekli }) => {
   const bolum = bolumBul(slug);
+  /* Başlık, H1 ve açıklama ön render'la ortak (lib/seo/bolum-seo.mjs). */
+  const seo = bolum ? bolumSeo(bolum, { okulYerlestirir: OKUL_YERLESTIRIR.includes(bolum.grup) }) : null;
 
   useEffect(() => {
-    document.title = bolum
-      ? `${bolum.ad} stajı | StajımVar`
-      : 'Bölüm bulunamadı | StajımVar';
-    if (bolum) {
+    document.title = seo ? seo.baslik : 'Bölüm bulunamadı | StajımVar';
+    if (seo) {
       const etiket = document.querySelector('meta[name="description"]');
-      if (etiket) etiket.setAttribute('content', bolum.aciklama);
+      if (etiket) etiket.setAttribute('content', seo.aciklama);
     }
-  }, [bolum]);
+  }, [seo?.baslik, seo?.aciklama]);
 
-  if (!bolum) {
+  if (!bolum || !seo) {
     return (
       <Kabuk onBack={onBack}>
         <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center space-y-3">
@@ -245,7 +247,7 @@ export const BolumPage: React.FC<
         </button>
 
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900">
-          {bolum.ad} stajı
+          {seo.h1}
         </h1>
 
         {/*
