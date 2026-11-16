@@ -3492,6 +3492,17 @@ export default function App() {
                 </div>
               </section>
             )}
+            {/* HAFTALIK ÖZET E-POSTASI (20270115010000): pazartesi zil bildiriminin kopyası. */}
+            {activeStudent && session.userId && (
+              <section className="space-y-2">
+                <h2 className="text-base font-bold text-gray-900">Haftalık özet</h2>
+                <div className="rounded-2xl border border-gray-200 bg-white p-4">
+                  <React.Suspense fallback={<div className="h-11 rounded-xl bg-gray-100 animate-pulse" />}>
+                    <EpostaTercihAnahtari userId={session.userId} alan="haftalik_ozet_eposta" />
+                  </React.Suspense>
+                </div>
+              </section>
+            )}
           </>
         ) : (
           <p className="rounded-2xl border border-gray-200 bg-white p-6 text-center text-sm text-gray-600">

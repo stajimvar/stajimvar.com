@@ -168,15 +168,18 @@ Deno.serve(async (request) => {
   sonuc.bildirim = await kuyruk(rpc, 'bildirim_eposta_kuyruktan_al', 'bildirim_eposta_isaretle', async (b) => {
     const hedef = typeof b.hedef === 'string' && /^\/(?!\/)/.test(b.hedef) ? `${SITE}${b.hedef}` : `${SITE}/`;
     const takipIlani = b.tur === 'takip_ilan';
+    const haftalikOzet = b.tur === 'haftalik_ozet';
     const html = HOSGELDIN_TURLERI.has(String(b.tur)) ? hosgeldinHtml(b.baslik, b.govde) : [
       '<div style="font:15px/1.5 system-ui;color:#111827;max-width:520px">',
       `<p style="font-weight:700;margin:0 0 8px">${kacir(b.baslik)}</p>`,
       b.govde ? `<p style="margin:0 0 16px">${kacir(b.govde)}</p>` : '',
-      `<p style="margin:0 0 20px"><a href="${kacir(hedef)}" style="display:inline-block;background:#2563EB;color:#fff;text-decoration:none;font-weight:700;padding:10px 16px;border-radius:10px">${takipIlani ? 'İlanı gör' : 'Başvuruyu panelde aç'}</a></p>`,
+      `<p style="margin:0 0 20px"><a href="${kacir(hedef)}" style="display:inline-block;background:#2563EB;color:#fff;text-decoration:none;font-weight:700;padding:10px 16px;border-radius:10px">${takipIlani ? 'İlanı gör' : haftalikOzet ? 'Yeni ilanları gör' : 'Başvuruyu panelde aç'}</a></p>`,
       '<p style="font-size:12px;color:#6B7280;margin:0">Bu e-posta StajımVar hesabındaki bildirimin kopyası. ',
       takipIlani
         ? `Bu şirketi takip ettiğin için gönderildi; <a href="${SITE}/ayarlar/bildirimler" style="color:#6B7280">Bildirim ayarları</a>ndan kapatabilirsin.</p>`
-        : 'Aday bilgileri yalnız şirket panelinde görünür.</p>',
+        : haftalikOzet
+          ? `Haftada bir, pazartesi günü gönderilir; <a href="${SITE}/ayarlar/bildirimler" style="color:#6B7280">Bildirim ayarları</a>ndan kapatabilirsin.</p>`
+          : 'Aday bilgileri yalnız şirket panelinde görünür.</p>',
       '</div>',
     ].filter(Boolean).join('\n');
     await gonder(resend, `bildirim-${b.id}`, String(b.alici), tekSatir(b.baslik ?? 'StajımVar bildirimi', 120), html);

@@ -112,7 +112,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
             etiket="onay bekleyen ilan"
             vurgu={ozet.taslakToplam > 0 ? 'uyari' : 'normal'}
           />
-          <Kutu deger={ozet.basvuru} etiket="toplam başvuru" />
+          <Kutu deger={ozet.basvuru} etiket={ozet.basvuruEkip ? `toplam başvuru (ekip hesabının ${ozet.basvuruEkip} denemesi hariç)` : 'toplam başvuru'} />
           <Kutu deger={ozet.sirket} etiket="şirket kaydı" />
         </div>
       </section>

@@ -23,6 +23,8 @@
  * sorun panelde eksik veri olarak görünür, ziyaretçinin sayfasında değil.
  */
 
+import { botZiyaretiMi } from '../../src/lib/bot-ziyareti.mjs';
+
 interface Ortam {
   SUPABASE_URL?: string;
   VITE_SUPABASE_URL?: string;
@@ -91,6 +93,22 @@ export const onRequestPost: PagesFunction<Ortam> = async ({ request, env }) => {
   if (!oturum || !tur || !yol || !TURLER.has(tur)) return BOS;
 
   const cf = (request as unknown as { cf?: Record<string, unknown> }).cf ?? {};
+
+  /*
+    BOTLAR ÖLÇÜME YAZILMIYOR (16 Kasım 2026, src/lib/bot-ziyareti.mjs)
+    Ölçüldü: 30 günlük oturumların ~%80'i veri merkezlerinden gelen tek
+    olaylı otomatik tarayıcılardı; panel trafiği ~6 kat fazla gösteriyordu.
+  */
+  const botYonetimi = cf.botManagement as { verifiedBot?: unknown } | undefined;
+  if (
+    botZiyaretiMi({
+      araci: request.headers.get('user-agent'),
+      asn: cf.asn,
+      dogrulanmisBot: botYonetimi?.verifiedBot === true || Boolean(cf.verifiedBotCategory),
+    })
+  ) {
+    return BOS;
+  }
   const kendiHost = new URL(request.url).hostname;
 
   await fetch(`${adres}/rest/v1/rpc/site_olayi_yaz`, {
