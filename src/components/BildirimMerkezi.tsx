@@ -160,20 +160,21 @@ function BildirimIkonu({
     );
   }
 
-  /* Aday fotoğrafı yuvarlak kalıyor: kişi fotoğrafıyla (beğeni, bağlantı) aynı desen. */
-  if (basvuru?.tip === 'aday' && gorsel) {
+  /*
+    Aday fotoğrafı yuvarlak kalıyor: kişi fotoğrafıyla (beğeni, bağlantı) aynı
+    desen. Asıl kaynak sosyal profildeki dosya (`fotoYolu`, oturumla iniyor);
+    yoksa kopyadaki eski adres. İkisi de yoksa adın baş harfleri — çanta
+    simgesi değil: satır bir kişiye ait.
+  */
+  if (basvuru?.tip === 'aday' && (basvuru.fotoYolu || gorsel || basvuru.adayAdi)) {
     return (
       <span data-bildirim-aday="" className="relative h-14 w-14 shrink-0 sm:h-11 sm:w-11">
-        <span className="block h-full w-full overflow-hidden rounded-full border border-gray-200 bg-white">
-          <img
-            src={gorsel}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            onError={() => setBozukAdres(gorsel)}
-            className="h-full w-full object-cover"
-          />
-        </span>
+        <ProfilFotografi
+          ad={basvuru.adayAdi ?? 'Aday'}
+          yol={basvuru.fotoYolu ?? null}
+          yedekAdres={gorsel}
+          className="h-14 w-14 rounded-full border border-gray-200 text-lg sm:h-11 sm:w-11 sm:text-sm"
+        />
         <span
           aria-hidden="true"
           className="absolute -bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white sm:h-5 sm:w-5"

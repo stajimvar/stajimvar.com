@@ -131,6 +131,8 @@ export type BildirimBasvurusu = {
   rizaTarihi: string | null;
   adayAdi: string | null;
   adayFotografi: string | null;
+  /** `social_profiles.avatar_path` — fotoğrafın asıl kaynağı (20270113010000). */
+  adayFotoYolu: string | null;
   ilan: {
     baslik: string | null;
     sirket: { ad: string | null; logo: string | null; dogrulanmis: boolean } | null;
@@ -148,20 +150,38 @@ export async function bildirimBasvurulariniGetir(
   const { data, error } = await supabase
     .from('applications')
     .select(
+      /*
+        AD VE FOTOĞRAF KORUMALI KOPYADAN (16 Kasım 2026, ölçüldü): kopya
+        20261203010000'den beri `basvuru_profil_kopyalari`nda;
+        başvuru satırındaki eski kopya sütunu hep boş. Bildirim o boş sütunu
+        okuduğu için aday fotoğrafı hiç çizilmiyordu.
+      */
       'id, application_method, contact_share_consent_at, ' +
-        'aday_adi:profile_snapshot->>ad, aday_fotografi:profile_snapshot->>fotoUrl, ' +
+        /* Kopyanın TAMAMI değil: yalnız ad ve fotoğraf adresi. */
+        'basvuru_profil_kopyalari(ad:kopya->>ad, foto:kopya->>fotoUrl), ' +
         'listings ( title, companies ( name, logo_url, verified ) )',
     )
     .in('id', temiz);
   if (error) throw new Error('Bildirim başvuruları alınamadı');
+  /*
+    Asıl fotoğraf sosyal profildeki dosya; yolu yalnız başvurulan şirketin
+    doğrulanmış üyesine, paylaşım açıkken veriliyor. Öğrencide boş döner.
+    Okunamazsa fotoğrafsız devam (kopyadaki eski adres ya da simge).
+  */
+  const yollar = new Map<string, string>();
+  const { data: yolSatirlari } = await supabase.rpc('sirket_aday_foto_yollari' as never, { p_basvurular: temiz } as never);
+  for (const y of (yolSatirlari ?? []) as { basvuru_id: string; yol: string }[]) yollar.set(y.basvuru_id, y.yol);
   for (const s of (data ?? []) as unknown as any[]) {
+    const kopyaHam = Array.isArray(s.basvuru_profil_kopyalari) ? s.basvuru_profil_kopyalari[0] : s.basvuru_profil_kopyalari;
+    const kopya = (kopyaHam ?? null) as { ad?: string | null; foto?: string | null } | null;
     const ilan = Array.isArray(s.listings) ? s.listings[0] : s.listings;
     const sirket = ilan ? (Array.isArray(ilan.companies) ? ilan.companies[0] : ilan.companies) : null;
     sonuc.set(s.id, {
       yontem: s.application_method ?? null,
       rizaTarihi: s.contact_share_consent_at ?? null,
-      adayAdi: s.aday_adi ?? null,
-      adayFotografi: s.aday_fotografi ?? null,
+      adayAdi: kopya?.ad ?? null,
+      adayFotografi: kopya?.foto ?? null,
+      adayFotoYolu: yollar.get(s.id) ?? null,
       ilan: ilan
         ? {
             baslik: ilan.title ?? null,

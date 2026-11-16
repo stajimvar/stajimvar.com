@@ -56,7 +56,7 @@ test('logo yoksa ya da güvensizse null — simgeye dönülür', () => {
 
 test('işveren yeni başvuru: rıza + internal + doğrulanmış şirket → aday adı ve fotoğrafı', () => {
   assert.deepEqual(basvuruGorseli('yeni_basvuru', satir(), DEPO), {
-    tip: 'aday', adayAdi: 'Örnek Aday', foto: FOTO, ilanAdi: 'Yazılım Stajyeri',
+    tip: 'aday', adayAdi: 'Örnek Aday', foto: FOTO, fotoYolu: null, ilanAdi: 'Yazılım Stajyeri',
   });
 });
 
@@ -96,8 +96,11 @@ test('sorgu kopyanın tamamını değil yalnız ad ve fotoğrafı çekiyor', asy
   const kaynak = await readFile(new URL('../src/lib/bildirim.ts', import.meta.url), 'utf8');
   const blok = kaynak.slice(kaynak.indexOf('export async function bildirimBasvurulariniGetir'));
   const secim = blok.slice(0, blok.indexOf('.in('));
-  assert.match(secim, /profile_snapshot->>ad/);
-  assert.match(secim, /profile_snapshot->>fotoUrl/);
-  assert.ok(!/profile_snapshot\s*,|profile_snapshot'\s*\)|'profile_snapshot\b(?!->>)/.test(secim), 'kopyanın tamamı çekilmemeli');
+  /* 16 Kasım 2026: kopya korumalı tabloda; `applications.profile_snapshot` hep boş. */
+  assert.match(secim, /basvuru_profil_kopyalari\(ad:kopya->>ad, foto:kopya->>fotoUrl\)/);
+  assert.ok(!/profile_snapshot/.test(secim), 'boş sütun okunuyor');
+  assert.ok(!/basvuru_profil_kopyalari\(kopya\)/.test(secim), 'kopyanın tamamı çekilmemeli');
+  /* Asıl fotoğrafın yolu izin kapısından (paylaşım + doğrulanmış şirket + engel yok). */
+  assert.match(blok, /supabase\.rpc\('sirket_aday_foto_yollari' as never, \{ p_basvurular: temiz \} as never\)/);
   assert.ok(!/student_profiles|social_profiles|profiles\b/.test(secim), 'profil tablosu sorgulanmamalı');
 });

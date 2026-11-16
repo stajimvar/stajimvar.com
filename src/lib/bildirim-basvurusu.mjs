@@ -98,7 +98,7 @@ export function guvenliAdayFotografi(ham, depoAdresi) {
 
 /**
  * @typedef {{ tip: 'sirket', sirketAdi: string | null, logo: string | null, ilanAdi: string | null }} SirketGorseli
- * @typedef {{ tip: 'aday', adayAdi: string | null, foto: string | null, ilanAdi: string | null }} AdayGorseli
+ * @typedef {{ tip: 'aday', adayAdi: string | null, foto: string | null, fotoYolu: string | null, ilanAdi: string | null }} AdayGorseli
  */
 
 /**
@@ -135,6 +135,8 @@ export function basvuruGorseli(tur, satir, depoAdresi) {
       tip: 'aday',
       adayAdi: metin(satir.adayAdi),
       foto: guvenliAdayFotografi(satir.adayFotografi, depoAdresi),
+      /* Sosyal profildeki dosyanın yolu; bileşen oturumla indiriyor (20270113010000). */
+      fotoYolu: metin(satir.adayFotoYolu),
       ilanAdi,
     };
   }
