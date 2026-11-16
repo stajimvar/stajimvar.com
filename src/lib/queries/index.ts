@@ -1355,7 +1355,10 @@ export interface AdminOzet {
   profilDolu: number;
   teklifeAcik: number;
   rozet: number;
+  /** Yönetici rolündeki (ekip) hesapların başvuruları HARİÇ (20270116010000). */
   basvuru: number;
+  /** Ekip hesaplarının deneme/takip başvuruları; toplama girmiyor. */
+  basvuruEkip?: number;
   /** Yayındaki ilanın tamamı. */
   ilanYayinToplam: number;
   /** Şirketin StajımVar'da kendisi açtığı ilan; başvuru site içinde toplanıyor. */

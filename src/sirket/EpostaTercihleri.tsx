@@ -13,7 +13,7 @@ import { KUTU, SIRKET_METIN, SIRKET_METIN_IKINCIL, kutuStil } from './renk';
  * ilanı" e-postası için de kullanılıyor (alan: takip_ilan_eposta,
  * /ayarlar/bildirimler). Renk ve kutu çağıran sayfadan geliyor.
  */
-type TercihAlani = 'yeni_basvuru_eposta' | 'takip_ilan_eposta';
+type TercihAlani = 'yeni_basvuru_eposta' | 'takip_ilan_eposta' | 'haftalik_ozet_eposta';
 
 const METINLER: Record<TercihAlani, { etiket: string; aciklama: string }> = {
   yeni_basvuru_eposta: {
@@ -23,6 +23,10 @@ const METINLER: Record<TercihAlani, { etiket: string; aciklama: string }> = {
   takip_ilan_eposta: {
     etiket: 'Takip ettiğim şirket yeni ilan yayımlayınca e-posta gönder',
     aciklama: 'Kapalıyken yeni ilanlar yine zil bildirimi olarak gelir; yalnız e-posta gitmez.',
+  },
+  haftalik_ozet_eposta: {
+    etiket: 'Haftalık özeti e-postayla gönder',
+    aciklama: 'Pazartesi günleri: bölümüne uygun yeni ilanlar ve kaydettiğin ilanların yaklaşan son başvuruları. Kapalıyken özet yine zil bildirimi olarak gelir.',
   },
 };
 

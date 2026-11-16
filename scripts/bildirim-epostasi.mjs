@@ -73,11 +73,13 @@ export function hosgeldinHtml(baslik, govde) {
 
 /* Takip edilen şirketin yeni ilanı (20270109010000): öğrenciye giden e-posta. */
 const takipIlaniMi = (b) => b.tur === 'takip_ilan';
+/* Pazartesi haftalık özeti (20270115010000): öğrenciye, zildeki satırın kopyası. */
+const haftalikOzetMi = (b) => b.tur === 'haftalik_ozet';
 
 export function govdeKur(b) {
   if (HOSGELDIN_TURLERI.has(b.tur)) return hosgeldinHtml(b.baslik, b.govde);
   const baglanti = guvenliBaglanti(b.hedef);
-  const dugme = takipIlaniMi(b) ? 'İlanı gör' : 'Başvuruyu panelde aç';
+  const dugme = takipIlaniMi(b) ? 'İlanı gör' : haftalikOzetMi(b) ? 'Yeni ilanları gör' : 'Başvuruyu panelde aç';
   return [
     '<div style="font:15px/1.5 system-ui;color:#111827;max-width:520px">',
     `<p style="font-weight:700;margin:0 0 8px">${kacir(b.baslik)}</p>`,
@@ -86,7 +88,9 @@ export function govdeKur(b) {
     '<p style="font-size:12px;color:#6B7280;margin:0">Bu e-posta StajımVar hesabındaki bildirimin kopyası. ',
     takipIlaniMi(b)
       ? `Bu şirketi takip ettiğin için gönderildi; <a href="${SITE}/ayarlar/bildirimler" style="color:#6B7280">Bildirim ayarları</a>ndan kapatabilirsin.</p>`
-      : 'Aday bilgileri yalnız şirket panelinde görünür.</p>',
+      : haftalikOzetMi(b)
+        ? `Haftada bir, pazartesi günü gönderilir; <a href="${SITE}/ayarlar/bildirimler" style="color:#6B7280">Bildirim ayarları</a>ndan kapatabilirsin.</p>`
+        : 'Aday bilgileri yalnız şirket panelinde görünür.</p>',
     '</div>',
   ]
     .filter(Boolean)

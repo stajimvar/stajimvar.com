@@ -225,7 +225,7 @@ export const OzetSayfasi: React.FC<{
                 etiket="onay bekleyen ilan"
                 vurgu={ozet.taslakToplam > 0 ? 'uyari' : 'normal'}
               />
-              <Kutu deger={sayi(ozet.basvuru)} etiket="toplam başvuru" />
+              <Kutu deger={sayi(ozet.basvuru)} etiket={ozet.basvuruEkip ? `toplam başvuru (ekip hesabının ${ozet.basvuruEkip} denemesi hariç)` : 'toplam başvuru'} />
               <Kutu deger={sayi(ozet.sirket)} etiket="şirket kaydı" />
             </div>
             <p className="mt-2 text-[11px] leading-relaxed text-gray-500">

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { AYARLAR, KONULAR, yuk } from '../scripts/auth-eposta-sablonlari.mjs';
+import { AYARLAR, GUVENLIK_AYARLARI, KONULAR, yuk } from '../scripts/auth-eposta-sablonlari.mjs';
 
 const oku = (p) => readFileSync(new URL(`../${p}`, import.meta.url), 'utf8');
 
@@ -40,6 +40,11 @@ test('yayın hattı: yalnız mailer_* alanları, geri okuma, site yayınını du
   assert.match(s, /const farkli = Object\.keys\(govde\)\.filter/);
   for (const k of Object.keys(yuk())) assert.match(k, /^(mailer_(subjects|templates)_|rate_limit_email_sent$|smtp_sender_name$|mailer_otp_exp$)/);
   assert.deepEqual(AYARLAR, { rate_limit_email_sent: 200, smtp_sender_name: 'StajımVar', mailer_otp_exp: 86400 });
+  /* Sızdırılmış şifre koruması ayrı istekte: plan reddederse şablonlar yine yazılsın. */
+  assert.deepEqual(GUVENLIK_AYARLARI, { password_hibp_enabled: true });
+  assert.ok(!('password_hibp_enabled' in yuk()));
+  assert.match(s, /body: JSON\.stringify\(GUVENLIK_AYARLARI\)/);
+  assert.match(s, /::warning::Sızdırılmış şifre koruması açılamadı/);
   const w = oku('.github/workflows/supabase-production.yml');
   assert.match(w, /- name: Kimlik e-postası şablonlarını uygula\s+continue-on-error: true\s+run: node scripts\/auth-eposta-sablonlari\.mjs/);
   assert.match(oku('scripts/detect-deploy-changes.mjs'), /'supabase\/templates\/'/);

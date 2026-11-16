@@ -40,6 +40,17 @@ export const AYARLAR = {
   mailer_otp_exp: 86400,
 };
 
+/*
+  SIZDIRILMIŞ ŞİFRE KORUMASI (16 Kasım 2026, güvenlik danışmanı uyarısı)
+  Kayıt ve şifre değişikliğinde şifre HaveIBeenPwned listesinde varsa
+  reddedilir. Supabase bunu yalnız ücretli planda açıyor; bu yüzden ayrı
+  istekle yazılıyor: plan izin vermezse şablonlar yine yazılır, yalnız
+  uyarı düşer.
+*/
+export const GUVENLIK_AYARLARI = {
+  password_hibp_enabled: true,
+};
+
 export function yuk() {
   const govde = { ...AYARLAR };
   for (const [ad, konu] of Object.entries(KONULAR)) {
@@ -76,6 +87,13 @@ async function main() {
     process.exit(1);
   }
   console.log(`${Object.keys(KONULAR).length} kimlik e-postası şablonu ve ${Object.keys(AYARLAR).length} kimlik ayarı canlıda ve depoyla aynı.`);
+
+  const koruma = await fetch(adres, { method: 'PATCH', headers: basliklar, body: JSON.stringify(GUVENLIK_AYARLARI) });
+  if (koruma.ok) {
+    console.log('Sızdırılmış şifre koruması açık.');
+  } else {
+    console.warn(`::warning::Sızdırılmış şifre koruması açılamadı (plan izin vermiyor olabilir): HTTP ${koruma.status} ${(await koruma.text()).slice(0, 300)}`);
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('auth-eposta-sablonlari.mjs')) {
