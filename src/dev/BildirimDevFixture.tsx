@@ -326,6 +326,7 @@ const basvuruSatiri = (
   rizaTarihi: '2026-10-01T10:00:00Z',
   adayAdi: null,
   adayFotografi: null,
+  adayFotoYolu: null,
   ...aday,
   ilan: { baslik, sirket: sirketi },
 });

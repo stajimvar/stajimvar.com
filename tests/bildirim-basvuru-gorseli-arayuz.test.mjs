@@ -86,14 +86,16 @@ test('bileşen: görsel inmezse tür simgesine dönülüyor, kırık resim kalm�
   assert.match(ikon, /const gorsel = gorselAdresi && gorselAdresi !== bozukAdres \? gorselAdresi : null;/);
   assert.match(ikon, /onError=\{\(\) => setBozukAdres\(gorsel\)\}/);
   assert.match(ikon, /if \(basvuru\?\.tip === 'sirket' && gorsel\) \{/);
-  assert.match(ikon, /if \(basvuru\?\.tip === 'aday' && gorsel\) \{/);
-  assert.equal((ikon.match(/onError=\{\(\) => setBozukAdres\(gorsel\)\}/g) ?? []).length, 2, 'logo ve fotoğraf ikisi de simgeye dönmeli');
+  /* Aday dalı fotoğraf yolu, eski adres ya da ad varken çiziliyor (16 Kasım 2026). */
+  assert.ok(ikon.includes("if (basvuru?.tip === 'aday' && (basvuru.fotoYolu || gorsel || basvuru.adayAdi)) {"));
+  /* Logo kendi onError'ıyla simgeye dönüyor; aday fotoğrafı ProfilFotografi'de baş harflere düşüyor. */
+  assert.equal((ikon.match(/onError=\{\(\) => setBozukAdres\(gorsel\)\}/g) ?? []).length, 1);
   /* Logo ya da fotoğraf yoksa (null) da aynı kapıdan simgeye düşülüyor. */
   assert.match(ikon, /basvuru\?\.tip === 'sirket' \? basvuru\.logo : basvuru\?\.tip === 'aday' \? basvuru\.foto : null/);
 });
 
 test('logo kabı yuvarlak değil ve oranı logodan alıyor', () => {
-  const logo = parca(merkez, "if (basvuru?.tip === 'sirket' && gorsel) {", "if (basvuru?.tip === 'aday' && gorsel) {");
+  const logo = parca(merkez, "if (basvuru?.tip === 'sirket' && gorsel) {", "if (basvuru?.tip === 'aday' && (basvuru.fotoYolu || gorsel || basvuru.adayAdi)) {");
   /* Yuvarlatılmış dikdörtgen; daire yok. */
   assert.match(logo, /rounded-xl border border-gray-200 bg-white/);
   assert.ok(!/rounded-full border border-gray-200/.test(logo), 'logo yine daireye sıkıştırılmış');
@@ -111,11 +113,11 @@ test('logo kabı yuvarlak değil ve oranı logodan alıyor', () => {
 });
 
 test('aday fotoğrafı yuvarlak kalıyor', () => {
-  const aday = parca(merkez, "if (basvuru?.tip === 'aday' && gorsel) {", 'if (kisi) {');
+  const aday = parca(merkez, "if (basvuru?.tip === 'aday' && (basvuru.fotoYolu || gorsel || basvuru.adayAdi)) {", 'if (kisi) {');
   assert.match(aday, /className="relative h-14 w-14 shrink-0 sm:h-11 sm:w-11"/);
-  assert.match(aday, /rounded-full border border-gray-200 bg-white/);
-  assert.match(aday, /className="h-full w-full object-cover"/);
-  assert.match(aday, /alt=""/);
+  /* Sosyal profildeki dosya oturumla iniyor; yoksa eski adres, o da yoksa baş harfler. */
+  assert.match(aday, /<ProfilFotografi\s+ad=\{basvuru\.adayAdi \?\? 'Aday'\}\s+yol=\{basvuru\.fotoYolu \?\? null\}\s+yedekAdres=\{gorsel\}/);
+  assert.match(aday, /rounded-full border border-gray-200/);
   /* Köşe rozeti kişi satırındakiyle aynı ölçüde ve ekran okuyucudan gizli. */
   assert.match(aday, /aria-hidden="true"\s+className="absolute -bottom-0\.5 -right-0\.5 flex h-6 w-6/);
 });
