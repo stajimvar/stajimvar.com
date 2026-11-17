@@ -114,9 +114,11 @@ test('seçim: yalnız İstanbul; ilanIli kuralı; kapanmış, yayında olmayan v
   for (const yok of [ankara, yalnizUlke, belirsiz, yabanci, dunBitti, taslak, kopya]) assert.ok(!kimlikler.has(yok.id), `${yok.city} ${yok.status}`);
   assert.equal(liste.length, 5);
   for (const i of liste) assert.equal(ilanIli(i), 'İstanbul');
-  /* En yeni önce (arşivle aynı sıra). */
-  const zamanlar = liste.map((i) => i.posted_at);
-  assert.deepEqual(zamanlar, [...zamanlar].sort().reverse());
+  /* Son başvurusu yaklaşan önce, tarihsiz sonda (18 Kasım 2026); eşitlikte en yeni önce. */
+  const tarihler = liste.map((i) => i.application_deadline || '9999');
+  assert.deepEqual(tarihler, [...tarihler].sort());
+  const tarihsiz = liste.filter((i) => !i.application_deadline).map((i) => i.posted_at);
+  assert.deepEqual(tarihsiz, [...tarihsiz].sort().reverse());
 });
 
 /* ---------------------------------------------------- sayfalama ve HTML */

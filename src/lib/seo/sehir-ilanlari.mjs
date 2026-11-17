@@ -16,7 +16,15 @@ import { ilanKartlariHtml } from './ilan-karti-html.mjs';
  *   yayında + son başvurusu geçmemiş (arşivle aynı kural) + ilanIli(ilan)
  *   === il (lib/ilan-ili: doğrulanmış il önce, boşsa Türkiye ilanının
  *   şehir metninden, belirsizse il yok) + aynı kimlik ya da aynı şirket ve
- *   başlık bir kez. Sıra arşivle aynı (en yeni önce, eşitlikte kimlik).
+ *   başlık bir kez.
+ *
+ * SIRA: SON BAŞVURUSU YAKLAŞAN ÖNCE (18 Kasım 2026). Önce arşivle aynıydı
+ * (en yeni önce). Ölçüldü: 17 Kasım teslimiyle en yeni 16 ilanın 14'ü
+ * İstanbul'daydı; şehir sayfası arşivin ilk sayfasıyla %51 ortak metne
+ * düştü ve "kopya değil" kapısı (tests/sehir-ilanlari) yayını durdurdu.
+ * Şehir sayfası artık son başvuru tarihine göre diziliyor (tarihsiz ilan
+ * sonda), eşitlikte arşiv sırası. Öğrenci için de yararlı: kaçmak üzere
+ * olan ilan üstte.
  *
  * Sayfalama: 30 ilan (ARSIV_SAYFA_BOYU). Birinci sayfa /staj-ilanlari/<şehir>;
  * "/sayfa/1" adresi yok, kenar onu birinci sayfaya 301'liyor.
@@ -71,12 +79,25 @@ export function sehirOnekindeMi(yol) {
 
 const sade = (t) => String(t || '').trim().toLocaleLowerCase('tr').replace(/\s+/g, ' ');
 
+/** Son başvurusu yakın olan önce; tarihsiz sonda; eşitlikte arşiv sırası. */
+export function sehirSirasi(a, b) {
+  const t = (i) => String(i?.application_deadline ?? i?.applicationDeadline ?? '').slice(0, 10);
+  const ta = t(a);
+  const tb = t(b);
+  if (ta !== tb) {
+    if (!ta) return 1;
+    if (!tb) return -1;
+    return ta.localeCompare(tb);
+  }
+  return arsivSirasi(a, b);
+}
+
 /** Şehrin açık ilanları, sıralı ve tekrarsız. */
 export function sehirIlanlari(ilanlar, il, bugun = istanbulBugun()) {
   const kimlik = new Set();
   const imza = new Set();
   const sonuc = [];
-  for (const i of [...(Array.isArray(ilanlar) ? ilanlar : [])].sort(arsivSirasi)) {
+  for (const i of [...(Array.isArray(ilanlar) ? ilanlar : [])].sort(sehirSirasi)) {
     if (!i || !i.id || !String(i.title || '').trim()) continue;
     if (i.status !== undefined && i.status !== 'published') continue;
     if (!acikIlanMi(i, bugun)) continue;
@@ -128,7 +149,7 @@ export function sehirSayfasi({ slug, sayfa = 1, ilanlar, etiketler, bugun = ista
     : `${tanim.il} staj ilanları — sayfa ${sayfa}/${toplamSayfa} | StajımVar`;
   const aciklama =
     `${tanim.bulunma} ${liste.length} açık staj ilanı, ${sirketSayisi} şirketin kendi kariyer sayfasından; ` +
-    `en yeniden eskiye${toplamSayfa > 1 ? ` · sayfa ${sayfa}/${toplamSayfa}` : ''}.`;
+    `son başvurusu yaklaşandan başlayarak${toplamSayfa > 1 ? ` · sayfa ${sayfa}/${toplamSayfa}` : ''}.`;
 
   const numaralar =
     toplamSayfa > 1
