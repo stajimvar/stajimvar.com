@@ -54,3 +54,10 @@ test('üç form okula göre bölüm öneriyor', () => {
   assert.match(oku('src/components/CvOlusturucu.tsx'), /options=\{bolumSecenekleri\(taslak\.university\)\}/);
   assert.match(oku('src/lib/useOkulBolumleri.ts'), /import\('\.\.\/data\/universite-bolumleri\.json'\)/);
 });
+
+test('yeni katalogla eşleşen eski profiller bir kez onarılıyor', () => {
+  const g = oku('supabase/migrations/20270118020000_bolum_eslesme_onarimi.sql');
+  assert.match(g, /where so\.department_id is null/);
+  assert.match(g, /sosyal_gizli\.bolumu_esle\(sp\.department\) is not null/);
+  assert.match(g, /perform sosyal_gizli\.sosyal_profil_ac\(kim\);/);
+});
