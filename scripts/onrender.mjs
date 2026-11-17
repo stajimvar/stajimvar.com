@@ -54,6 +54,7 @@ import { ARSIV_SAYFA_BOYU, acikIlanMi, arsivSirasi, arsivYolu, arsivSayfaBasligi
 import { zorunluVeriGetir, VeriKaynagiHatasi, azalmaKapisi } from '../src/lib/seo/veri-kaynagi.mjs';
 import { bolumIlanlari } from '../src/lib/bolum-ilanlari.mjs';
 import { bolumSeo, BOLUM_LISTESI_BASLIGI } from '../src/lib/seo/bolum-seo.mjs';
+import { sirketSayfaBasligi, sirketYedekAciklamasi } from '../src/lib/seo/sirket-seo.mjs';
 import { ilanKartlariHtml } from '../src/lib/seo/ilan-karti-html.mjs';
 import { SEHIR_SAYFALARI, sehirSayfasi, sehirYolu } from '../src/lib/seo/sehir-ilanlari.mjs';
 
@@ -2145,14 +2146,9 @@ async function main() {
   for (const [slug, s] of sirketler) {
     const adet = s.ilanlar.length;
     const sehirler = [...new Set(s.ilanlar.map((i) => i.city).filter(Boolean))].map((c) => konumEtiketi(c));
-    const baslik = `${s.name} staj ilanları | StajımVar`;
-    const aciklama = ozetle(
-      s.description ||
-        `${s.name} şirketinin yayındaki ${adet} staj ilanı${
-          sehirler.length ? ` (${sehirler.slice(0, 3).join(', ')})` : ''
-        }. İlanlar şirketin kendi kariyer sayfasından derleniyor; başvuru doğrudan şirkete yapılıyor.`,
-      155,
-    );
+    /* Başlık ve yedek açıklama tarayıcıyla ortak (lib/seo/sirket-seo.mjs). */
+    const baslik = sirketSayfaBasligi(s.name);
+    const aciklama = ozetle(s.description || sirketYedekAciklamasi({ ad: s.name, adet, sehirler }), 155);
 
     /* Boş alan satır üretmiyor: "Sektör: —" yazmak bilgi vermiyor. */
     const kunye = [
