@@ -1647,6 +1647,92 @@
         "https://kariyer.baykartech.com/tr/acik-pozisyonlar/detay/2027-yaz-donemi-staj-kurumsal-iletisim-kurum-ici-i",
         "https://kariyer.baykartech.com/tr/acik-pozisyonlar/detay/2027-yaz-donemi-staj-kurumsal-idari-satin-alma"
       ]
+    },
+    {
+      "id": "logo-yazilim-peoplise-ilan-sayfasi",
+      "name": "Logo Yazılım (açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Logo Yazılım",
+      "careers_url": "https://live.peoplise.com/Logo",
+      "aciklik_dogrulanmadi": true,
+      "_not": "17 Kasım 2026 kullanıcı teslimi. Sayfa makine-okunur ilan verisi vermiyor; TASLAK girer, yönetici onayıyla yayına çıkar. Peoplise ATS; sayfada son başvuru 22 Kasım 2026.",
+      "urls": [
+        "https://live.peoplise.com/Logo/Application/Landing/03ad6089-31ee-4ea3-a80e-ccc4897b5a18"
+      ]
+    },
+    {
+      "id": "opet-kockariyerim-ilan-sayfasi",
+      "name": "Opet (açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Opet",
+      "careers_url": "https://www.kockariyerim.com",
+      "aciklik_dogrulanmadi": true,
+      "city_hint": "İstanbul",
+      "_not": "17 Kasım 2026 kullanıcı teslimi. Sayfa makine-okunur ilan verisi vermiyor; TASLAK girer, yönetici onayıyla yayına çıkar. Koç Topluluğu'nun resmî kariyer portalı; sayfada başvuru 6–24 Kasım 2026.",
+      "baslik_soneki": ", İstanbul | Koç Kariyerim",
+      "urls": [
+        "https://www.kockariyerim.com/jobAd/opet-petrolcUlUk-a-S-opet-kampUs-uzun-dOnem-staj-programi/1d1c0518-8931-4976-93fe-7007f4a5930b"
+      ]
+    },
+    {
+      "id": "anadolu-ajansi-ajans-staj-ilan-sayfasi",
+      "name": "Anadolu Ajansı Ajans Staj (açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Anadolu Ajansı",
+      "careers_url": "https://kariyer.aa.com.tr/jobs",
+      "aciklik_dogrulanmadi": true,
+      "city_hint": "Ankara",
+      "_not": "17 Kasım 2026 kullanıcı teslimi. Sayfa makine-okunur ilan verisi vermiyor; TASLAK girer, yönetici onayıyla yayına çıkar. Ankara ve İstanbul; sayfada yayın tarihi 3 Kasım 2026, son tarih yazmıyor.",
+      "urls": [
+        "https://kariyer.aa.com.tr/ht93gmznwvh9x5cffaf5affa6q.job"
+      ]
+    },
+    {
+      "id": "anadolu-ajansi-yurt-staj-ilan-sayfasi",
+      "name": "Anadolu Ajansı Yurt Staj (açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Anadolu Ajansı",
+      "careers_url": "https://kariyer.aa.com.tr/jobs",
+      "aciklik_dogrulanmadi": true,
+      "_not": "17 Kasım 2026 kullanıcı teslimi. Sayfa makine-okunur ilan verisi vermiyor; TASLAK girer, yönetici onayıyla yayına çıkar. 14 bölge müdürlüğü; sayfada yayın tarihi 3 Kasım 2026, son tarih yazmıyor.",
+      "urls": [
+        "https://kariyer.aa.com.tr/2fa6wdq99cu2kcp8fgffqfa8ns.job"
+      ]
+    },
+    {
+      "id": "fergani-tr-ilan-sayfasi",
+      "name": "Fergani Uzay (açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Fergani Uzay Teknolojileri",
+      "careers_url": "https://kariyer.ferganispace.com/tr/staj/",
+      "aciklik_dogrulanmadi": true,
+      "city_hint": "İstanbul",
+      "_not": "17 Kasım 2026 kullanıcı teslimi. Sayfa makine-okunur ilan verisi vermiyor; TASLAK girer, yönetici onayıyla yayına çıkar. 2027 yaz dönemi, 12 pozisyon; staj sayfasında son başvuru 15 Ocak 2027.",
+      "baslik_title_oneki": "Fergani Kariyer |",
+      "urls": [
+        "https://kariyer.ferganispace.com/tr/basvuru/acik-pozisyonlar/2027-yaz-donemi-staj-aviyonik-gelistirme",
+        "https://kariyer.ferganispace.com/tr/basvuru/acik-pozisyonlar/2027-yaz-donemi-staj-gomulu-yazilim",
+        "https://kariyer.ferganispace.com/tr/basvuru/acik-pozisyonlar/2027-yaz-donemi-staj-haberlesme-sistemleri",
+        "https://kariyer.ferganispace.com/tr/basvuru/acik-pozisyonlar/2027-yaz-donemi-staj-konumlandirma-ve-sayisal-tasa",
+        "https://kariyer.ferganispace.com/tr/basvuru/acik-pozisyonlar/2027-yaz-donemi-staj-kullanici-arayuz-gelistirme",
+        "https://kariyer.ferganispace.com/tr/basvuru/acik-pozisyonlar/2027-yaz-donemi-staj-montaj-entegrasyon-test-gelis",
+        "https://kariyer.ferganispace.com/tr/basvuru/acik-pozisyonlar/2027-yaz-donemi-staj-proje-muhendisligi",
+        "https://kariyer.ferganispace.com/tr/basvuru/acik-pozisyonlar/2027-yaz-donemi-staj-roket-sistemleri-gelistirme",
+        "https://kariyer.ferganispace.com/tr/basvuru/acik-pozisyonlar/2027-yaz-donemi-staj-sistem-muhendisligi",
+        "https://kariyer.ferganispace.com/tr/basvuru/acik-pozisyonlar/2027-yaz-donemi-staj-teknik-proje-muhendisi",
+        "https://kariyer.ferganispace.com/tr/basvuru/acik-pozisyonlar/2027-yaz-donemi-staj-uydu-sistemleri-gelistirme",
+        "https://kariyer.ferganispace.com/tr/basvuru/acik-pozisyonlar/2027-yaz-donemi-staj-yorunge-yonelim-belirleme-ve-"
+      ]
     }
   ],
   "notes": "Only add verified public ATS/API endpoints. Keep credentials in environment variables, never here."

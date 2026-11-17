@@ -71,6 +71,17 @@ class AdaptorKapilari(unittest.TestCase):
 
     @patch("scraper.time.sleep", lambda *a: None)
     @patch("scraper.requests.get")
+    def test_baslik_soneki_yalniz_tam_tutarsa_atiliyor(self, get):
+        """Koç Kariyerim h1'e site imzası ekliyor (17 Kasım 2026, Opet)."""
+        tr = {**BELIRSIZ, "country": "TR", "baslik_soneki": ", İstanbul | Koç Kariyerim"}
+        get.return_value = sayfa("<html><body><h1>Kampüs Staj Programı, İstanbul | Koç Kariyerim</h1></body></html>")
+        self.assertEqual([j.title for j in scraper.resmi_ilan_sayfasi(dict(tr))], ["Kampüs Staj Programı"])
+        get.return_value = sayfa("<html><body><h1>Kampüs Staj Programı, Ankara | Koç Kariyerim</h1></body></html>")
+        self.assertEqual([j.title for j in scraper.resmi_ilan_sayfasi(dict(tr))],
+                         ["Kampüs Staj Programı, Ankara | Koç Kariyerim"])
+
+    @patch("scraper.time.sleep", lambda *a: None)
+    @patch("scraper.requests.get")
     def test_baslik_sayfanin_kendi_metninden(self, get):
         get.return_value = sayfa(ILAN_SAYFASI)
         (is_,) = list(scraper.resmi_ilan_sayfasi(dict(BELIRSIZ)))
@@ -148,7 +159,8 @@ class KaynakKaydi(unittest.TestCase):
         # 14 Kasım 2026: Amazon 10554701 eklendi (13).
         self.assertEqual(sum(len(k["urls"]) for k in de), 13)
         # 14 Kasım 2026: Baykar 2027 yaz stajları (8) eklendi.
-        self.assertEqual(sum(len(k["urls"]) for k in tr), 18)
+        # 17 Kasım 2026: Logo, Opet, Anadolu Ajansı (2), Fergani 2027 yaz (12) eklendi.
+        self.assertEqual(sum(len(k["urls"]) for k in tr), 34)
         self.assertEqual(len(de) + len(tr), len(self.belirsiz))
         self.assertTrue(all(k["type"] == "resmi_ilan_sayfasi" for k in self.belirsiz))
 

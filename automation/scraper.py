@@ -1122,6 +1122,12 @@ def resmi_ilan_sayfasi(config: dict[str, Any]) -> Iterable[Job]:
             continue
 
         baslik = ilan_sayfasi_basligi(yanit.text, config.get("baslik_title_oneki"))
+        # `baslik_soneki` (17 Kasım 2026): bazı portallar h1'e site imzası
+        # ekliyor ("… Staj Programı, İstanbul | Koç Kariyerim"). Yalnız tam
+        # bu sonekle bitiyorsa atılır; tutmazsa başlık olduğu gibi kalır.
+        sonek = config.get("baslik_soneki")
+        if baslik and sonek and baslik.endswith(sonek):
+            baslik = baslik[: -len(sonek)].strip() or None
         if not baslik or not erken_kariyer_mi(config, baslik, ""):
             continue
 

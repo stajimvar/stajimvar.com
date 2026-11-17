@@ -76,7 +76,12 @@ test('BELİRSİZ KAYNAKLAR AYRI İŞARETLİ VE DOĞRULANMIŞLARLA KARIŞMIYOR', 
   bu hatta giremez; listeye ekleme bilinçli bir karar olmalı.
 */
 /* 14 Kasım 2026: Baykar 2027 yaz stajları (8) kullanıcı teslimiyle eklendi. */
-const TR_BELIRSIZ = new Set(['siemens-tr-ilan-sayfasi', 'amazon-tr-ilan-sayfasi', 'ey-tr-ilan-sayfasi', 'baykar-tr-ilan-sayfasi']);
+/* 17 Kasım 2026: Logo, Opet, Anadolu Ajansı (2) ve Fergani 2027 yaz (12) kullanıcı teslimiyle eklendi. */
+const TR_BELIRSIZ = new Set([
+  'siemens-tr-ilan-sayfasi', 'amazon-tr-ilan-sayfasi', 'ey-tr-ilan-sayfasi', 'baykar-tr-ilan-sayfasi',
+  'logo-yazilim-peoplise-ilan-sayfasi', 'opet-kockariyerim-ilan-sayfasi', 'anadolu-ajansi-ajans-staj-ilan-sayfasi',
+  'anadolu-ajansi-yurt-staj-ilan-sayfasi', 'fergani-tr-ilan-sayfasi',
+]);
 
 test('TÜRKİYE KAYNAKLARI BU HATTA YALNIZ ADIYLA GİRİYOR', () => {
   const ham = JSON.parse(oku('automation/sources.json'));
@@ -93,7 +98,7 @@ test('TÜRKİYE KAYNAKLARI BU HATTA YALNIZ ADIYLA GİRİYOR', () => {
       assert.notEqual(k.type, 'resmi_ilan_sayfasi');
     }
   }
-  assert.equal(trIlan, 18);
+  assert.equal(trIlan, 34);
 });
 
 test('başlık title önekinden: h1 site adıysa ilan adı <title>dan alınıyor (Baykar, 14 Kasım 2026)', () => {
