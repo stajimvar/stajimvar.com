@@ -20,6 +20,7 @@ import { useGenisEkran, XL_SORGUSU } from './sosyal/useGenisEkran';
 import { AgimYanSutun } from './sosyal/AgimYanSutun';
 import { SirketProfilGorunumu } from '../sirket/SirketProfilGorunumu';
 import type { SirketAcikKimlik } from '../lib/sirket-veri';
+import { sirketSayfaBasligi, sirketYedekAciklamasi } from '../lib/seo/sirket-seo.mjs';
 
 /**
  * Şirket sayfası.
@@ -94,10 +95,10 @@ export const CompanyPage: React.FC<CompanyPageProps> = ({
   useEffect(() => {
     if (!veri) return;
     return sayfaMetaAyarla({
-      baslik: `${veri.company.name} staj ilanları | StajımVar`,
+      baslik: sirketSayfaBasligi(veri.company.name),
       aciklama:
         (veri.company.description || '').replace(/\s+/g, ' ').trim().slice(0, 155) ||
-        `${veri.company.name} şirketinin yayındaki staj ilanları. İlanlar şirketin kendi kariyer sayfasından derleniyor.`,
+        sirketYedekAciklamasi({ ad: veri.company.name }),
     });
   }, [veri]);
 
