@@ -63,7 +63,12 @@ test('düzey eki yalnız katalogda karşılığı olmayan adda kalıyor', () => 
   */
   const katalog = new Set(katalogAdlari().map(sadelestir));
   const eksiz = (ad) => sadelestir(String(ad).replace(/\s*\([^)]*\)\s*$/, ''));
-  const ekli = liste().filter((ad) => sadelestir(ad) !== eksiz(ad));
+  /*
+    Parantez YÖK'ün kendi adının parçasıysa (2026 kılavuzu: "Filoloji
+    (İngiliz Dili ve Edebiyatı)", "Mütercim-Tercümanlık (Rusça)") düzey eki
+    değil; o ad katalogda birebir var ve öyle kalıyor.
+  */
+  const ekli = liste().filter((ad) => sadelestir(ad) !== eksiz(ad) && !katalog.has(sadelestir(ad)));
   const gereksiz = ekli.filter((ad) => katalog.has(eksiz(ad)));
   assert.deepEqual(gereksiz, [], 'katalogda eksiz karşılığı olan ekli ad listede');
   assert.equal(ekli.length, 1, `beklenmeyen sayıda ekli ad: ${ekli.join(', ')}`);

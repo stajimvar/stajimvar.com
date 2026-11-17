@@ -17,7 +17,7 @@ test('pencere kapatılamıyor, tek çıkış oturumu kapatmak; App öğrenciye b
   assert.doesNotMatch(p, /onKapat/);
   assert.match(p, /onClick=\{onCikis\}/);
   assert.match(p, /options=\{secenekler\}/);
-  for (const v of ['TR_UNIVERSITIES', 'TR_DEPARTMENTS', 'TR_CITIES']) assert.ok(p.includes(v), v);
+  for (const v of ['TR_UNIVERSITIES', 'useOkulBolumleri', 'TR_CITIES']) assert.ok(p.includes(v), v);
   const a = oku('src/App.tsx');
   assert.match(a, /session\?\.role === 'student' &&\s+activeStudent &&\s+activeStudent\.id === session\.userId &&\s+!adSoruluyor &&\s+temelBilgilerEksik\(/);
   assert.match(a, /await saveStudentProfile\(activeStudent\.id, bilgi\);/);

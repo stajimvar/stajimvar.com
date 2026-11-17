@@ -1,7 +1,8 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 import { AutocompleteField } from './AutocompleteField';
-import { TR_CITIES, TR_DEPARTMENTS, TR_UNIVERSITIES } from '../data/turkeyData';
+import { TR_CITIES, TR_UNIVERSITIES } from '../data/turkeyData';
+import { useOkulBolumleri } from '../lib/useOkulBolumleri';
 import { temelBilgiHatalari, type TemelBilgiler } from '../lib/ogrenci-temel-bilgileri.mjs';
 
 /**
@@ -29,6 +30,8 @@ export const OgrenciTemelBilgileri: React.FC<{
   const [hata, setHata] = React.useState('');
 
   const hatalar = temelBilgiHatalari(bilgi);
+  /* Okul seçilince önce o okulun programları (YÖK Atlas). */
+  const bolumSecenekleri = useOkulBolumleri();
   const yaz = (alan: keyof TemelBilgiler) => (v: string) => setBilgi((o: TemelBilgiler) => ({ ...o, [alan]: v }));
 
   const gonder = async (e: React.FormEvent) => {
@@ -98,7 +101,7 @@ export const OgrenciTemelBilgileri: React.FC<{
         </div>
 
         {alan('university', 'Okul', TR_UNIVERSITIES, 'Yazmaya başla, listeden seç')}
-        {alan('department', 'Bölüm', TR_DEPARTMENTS, 'Örn. Bilgisayar Mühendisliği')}
+        {alan('department', 'Bölüm', bolumSecenekleri(bilgi.university), 'Örn. Bilgisayar Mühendisliği')}
         {alan('city', 'Yaşadığın şehir', TR_CITIES, 'Örn. İstanbul')}
 
         {hata && (

@@ -28,6 +28,8 @@ import path from 'node:path';
 
 const KOK = path.resolve(import.meta.dirname, '..');
 const GOC = path.join(KOK, 'supabase/migrations/20261021010000_yok_bolum_katalogu.sql');
+/* 2026 kılavuzuna göre tamamlama (17 Kasım 2026): 39 yeni program + kılavuzda olmayan 9 program. */
+const GOC_EK = path.join(KOK, 'supabase/migrations/20270118010000_yok_bolum_katalogu_2026.sql');
 const HEDEF = path.join(KOK, 'src/data/turkeyData.ts');
 
 /** Göçteki `insert into yok_katalog ... values` bloğundan adları okur. */
@@ -40,7 +42,14 @@ export function katalogAdlari() {
   /* Her satır: ('Ad', 'slug', 'duzey', 'Alan') — ilk alan aranan. */
   const adlar = [...govde.matchAll(/^\s*\('((?:[^']|'')*)',/gm)].map((m) => m[1].replace(/''/g, "'"));
   if (adlar.length < 500) throw new Error(`katalogdan yalnız ${adlar.length} ad okundu`);
-  return adlar;
+  const ek = readFileSync(GOC_EK, 'utf8');
+  const ekGovde = ek.slice(
+    ek.indexOf('insert into yok_katalog_ek (ad, slug, duzey, alan) values'),
+    ek.indexOf('/* Her satır bir alana')
+  );
+  const ekAdlar = [...ekGovde.matchAll(/^\s*\('((?:[^']|'')*)',/gm)].map((m) => m[1].replace(/''/g, "'"));
+  if (ekAdlar.length < 40) throw new Error(`ek katalogdan yalnız ${ekAdlar.length} ad okundu`);
+  return [...adlar, ...ekAdlar];
 }
 
 /**
