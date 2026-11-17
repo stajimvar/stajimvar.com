@@ -1,7 +1,8 @@
 import React from 'react';
 import { ArrowLeft, Camera, Check, Eye, ImagePlus, Maximize2, Plus, X } from 'lucide-react';
 import type { StudentProfile, StudentSkill } from '../types';
-import { TR_DEPARTMENTS, TR_UNIVERSITIES } from '../data/turkeyData';
+import { TR_UNIVERSITIES } from '../data/turkeyData';
+import { useOkulBolumleri } from '../lib/useOkulBolumleri';
 import { HARD_SKILLS_DICTIONARY } from '../data/skillsDictionary';
 import { ONERILEN_SOSYAL, POPULER_ARACLAR } from '../data/cv-secenekleri';
 import { platformCvHazirMi } from '../lib/cv-hazirlik.mjs';
@@ -134,6 +135,8 @@ export const CvOlusturucu: React.FC<Props> = ({
   onPdf,
   onProfil,
 }) => {
+  /* Okul seçilince önce o okulun programları (YÖK Atlas). */
+  const bolumSecenekleri = useOkulBolumleri();
   const [adim, setAdim] = React.useState<CvAkisiAdimi>(baslangic);
   const [taslak, setTaslak] = React.useState<Taslak>(() => taslakYap(student));
   const [kayitDurumu, setKayitDurumu] = React.useState<'bos' | 'gonderiliyor' | 'hata'>('bos');
@@ -348,7 +351,7 @@ export const CvOlusturucu: React.FC<Props> = ({
                 id="cv-bolum"
                 value={taslak.department}
                 onChange={(v) => setTaslak((t) => ({ ...t, department: v }))}
-                options={TR_DEPARTMENTS}
+                options={bolumSecenekleri(taslak.university)}
                 placeholder="Ön lisans ve lisans programları"
                 className={ALAN}
               />

@@ -1,7 +1,8 @@
 import React from 'react';
 import { ExternalLink, Pencil, Plus, Trash2 } from 'lucide-react';
 import { AutocompleteField } from '../AutocompleteField';
-import { TR_DEPARTMENTS, TR_UNIVERSITIES } from '../../data/turkeyData';
+import { TR_UNIVERSITIES } from '../../data/turkeyData';
+import { useOkulBolumleri } from '../../lib/useOkulBolumleri';
 import { ACIKLAMA_UZUNLUGU, AY_ADLARI, DENEYIM_SINIRI, ayAnahtari, tarihAraligi } from '../../lib/deneyim.mjs';
 import { yeniKimlik } from '../../lib/profil-taslagi.mjs';
 import { ODAK_HALKASI } from '../../lib/renk-token';
@@ -309,6 +310,8 @@ type EgitimFormu = Taslak['egitimler'][number];
 const SINIFLAR = ['1. Sınıf', '2. Sınıf', '3. Sınıf', '4. Sınıf', 'Yüksek Lisans / Mezun'];
 
 export const EgitimListesi: React.FC<BolumProps> = ({ t, degistir, hata, hataVar }) => {
+  /* Okul seçilince önce o okulun programları (YÖK Atlas). */
+  const bolumSecenekleri = useOkulBolumleri();
   const yaz = (id: string, yama: Partial<EgitimFormu>) =>
     degistir((o) => ({ ...o, egitimler: o.egitimler.map((e) => (e.id === id ? { ...e, ...yama } : e)) }));
   /* Ana okul alan kimlikleri değişmedi: Kampüsüm'ün "Üniversiteni ekle"si `universite`e odaklanıyor. */
@@ -371,7 +374,7 @@ export const EgitimListesi: React.FC<BolumProps> = ({ t, degistir, hata, hataVar
               id={kimlik(e, 'bolum')}
               value={e.bolum}
               onChange={(v) => yaz(e.id, { bolum: v })}
-              options={TR_DEPARTMENTS}
+              options={bolumSecenekleri(e.okul)}
               placeholder="Örn. Giyim Üretim Teknolojisi"
               className={ALAN}
               klavyeDuzeni
