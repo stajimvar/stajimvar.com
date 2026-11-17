@@ -60,6 +60,7 @@ import { STAJ_ILANLARI_METNI } from './lib/staj-ilanlari-metni.mjs';
 import { basvuruKarari, basvuruyaAcikMi } from './lib/basvuru-devam.mjs';
 import { istanbulGunBaslangici } from './lib/kontrol-nabzi.mjs';
 import { OgrenciProfiliOlustur } from './components/OgrenciProfiliOlustur';
+import { temelBilgilerEksik } from './lib/ogrenci-temel-bilgileri.mjs';
 import { CerezBandi } from './components/CerezBandi';
 /*
   Yalnız TİP: `import type` derlemede siliniyor, yani bu satır
@@ -196,6 +197,9 @@ const BasvuruSablonu = React.lazy(() =>
 );
 const SifreYenile = React.lazy(() =>
   import('./components/SifreYenile').then((m) => ({ default: m.SifreYenile }))
+);
+const OgrenciTemelBilgileri = React.lazy(() =>
+  import('./components/OgrenciTemelBilgileri').then((m) => ({ default: m.OgrenciTemelBilgileri }))
 );
 const ProfilTamamla = React.lazy(() =>
   import('./components/ProfilTamamla').then((m) => ({ default: m.ProfilTamamla }))
@@ -2897,10 +2901,42 @@ export default function App() {
     />
     </Suspense>
   ) : null;
+  /*
+    OKUL, BÖLÜM VE ŞEHİR ZORUNLU (17 Kasım 2026): öğrenci profilinde biri
+    eksikse kapatılamayan pencere (ayrıntısı OgrenciTemelBilgileri.tsx).
+    Ad sorusu açıkken beklemede: önce ad, sonra okul.
+  */
+  const temelBilgiSorusu =
+    session?.role === 'student' &&
+    activeStudent &&
+    activeStudent.id === session.userId &&
+    !adSoruluyor &&
+    temelBilgilerEksik({
+      university: activeStudent.university,
+      department: activeStudent.department,
+      city: activeStudent.city ?? '',
+    }) ? (
+      <Suspense fallback={null}>
+        <OgrenciTemelBilgileri
+          baslangic={{
+            university: activeStudent.university ?? '',
+            department: activeStudent.department ?? '',
+            city: activeStudent.city ?? '',
+          }}
+          onKaydet={async (bilgi) => {
+            await saveStudentProfile(activeStudent.id, bilgi);
+            setStudent((o) => (o ? { ...o, ...bilgi } : o));
+            showToast('Bilgilerin kaydedildi.');
+          }}
+          onCikis={() => void handleLogout()}
+        />
+      </Suspense>
+    ) : null;
   /* Ad sorusu ve CV akışı aynı noktadan her kabuğa giriyor. */
   const adPenceresi = (
     <>
       {adSorusu}
+      {temelBilgiSorusu}
       {cvPenceresi}
     </>
   );
