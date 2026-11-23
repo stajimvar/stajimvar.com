@@ -54,19 +54,26 @@ test('il kararı şehir sayfasının seçimiyle aynı: bağlantı ⇔ ilanIli ==
   const sehirdeki = new Set(sehirIlanlari(ilanlar, 'İstanbul', '2026-10-15').map((i) => i.id));
   for (const i of ilanlar) {
     const bag = ilanSehirBaglantisi(i);
+    /* 23 Kasım 2026: Ankara da bir şehir sayfası; bağlantı ilanın kendi iline. */
+    if (ilanIli(i) === 'Ankara') {
+      assert.deepEqual(bag, { yol: '/staj-ilanlari/ankara', metin: 'Ankara staj ilanları' }, i.id);
+      continue;
+    }
     assert.equal(Boolean(bag), ilanIli(i) === 'İstanbul', i.id);
     assert.equal(Boolean(bag), sehirdeki.has(i.id), `${i.id}: şehir sayfası seçimiyle farklı`);
     if (bag) assert.deepEqual(bag, { yol: '/staj-ilanlari/istanbul', metin: 'İstanbul staj ilanları' });
   }
   /* React'in verdiği biçim (countryCode) aynı sonucu veriyor. */
   assert.ok(ilanSehirBaglantisi({ il: undefined, city: 'Atasehir Istanbul', countryCode: 'TR' }));
-  assert.equal(ilanSehirBaglantisi({ city: 'Ankara', countryCode: 'TR' }), null);
+  assert.deepEqual(ilanSehirBaglantisi({ city: 'Ankara', countryCode: 'TR' }), { yol: '/staj-ilanlari/ankara', metin: 'Ankara staj ilanları' });
+  /* Sayfası olmayan il bağlantı almıyor. */
+  assert.equal(ilanSehirBaglantisi({ city: 'Antalya', countryCode: 'TR' }), null);
   assert.equal(ilanSehirBaglantisi(null), null);
-  assert.equal(sehirBaglantisi('ankara'), null);
+  assert.equal(sehirBaglantisi('antalya'), null);
   assert.deepEqual(anaSayfaSehirBaglantisi(), { yol: '/staj-ilanlari/istanbul', metin: 'İstanbul staj ilanları' });
   /* Eski içe aktarma yolu aynı fonksiyonu veriyor (yeniden dışa aktarım). */
   assert.equal(eskiYoldan, ilanSehirBaglantisi);
-  assert.deepEqual(Object.keys(SEHIR_SAYFALARI), ['istanbul']);
+  assert.deepEqual(Object.keys(SEHIR_SAYFALARI), ['istanbul', 'ankara', 'izmir', 'kocaeli', 'bursa']);
 });
 
 test('döngüsel içe aktarma yok: sehir-sayfalari yalnız ilan-ili modülüne bağlı, ilan-sayfasi sehir-ilanlari modülüne ulaşmıyor', () => {
@@ -95,11 +102,15 @@ test('ilan gövdesi: İstanbul ilanında "Tüm staj ilanları"nın yanında; ba�
   const ist = ilanGorunurGovde(TEMEL, etiket, SIMDI);
   assert.match(ist, new RegExp(`<a href="/staj-ilanlari">Tüm staj ilanları</a> · ${BAG}`));
   assert.equal(ist.split('/staj-ilanlari/istanbul').length - 1, 1, 'tek bağlantı');
-  for (const ek of [{ il: 'Ankara', city: 'Ankara' }, { il: null, city: 'Berlin', country_code: 'DE' }, { il: null, city: null }]) {
+  for (const ek of [{ il: 'Antalya', city: 'Antalya' }, { il: null, city: 'Berlin', country_code: 'DE' }, { il: null, city: null }]) {
     const g = ilanGorunurGovde({ ...TEMEL, ...ek }, etiket, SIMDI);
     assert.doesNotMatch(g, /\/staj-ilanlari\/istanbul/);
     assert.match(g, /<a href="\/staj-ilanlari">Tüm staj ilanları<\/a> · <a href="\/sirket\/ornek">/);
   }
+  /* Şehir sayfası olan başka il kendi sayfasına bağlanıyor (23 Kasım 2026). */
+  const ank = ilanGorunurGovde({ ...TEMEL, il: 'Ankara', city: 'Ankara' }, etiket, SIMDI);
+  assert.match(ank, /<a href="\/staj-ilanlari">Tüm staj ilanları<\/a> · <a href="\/staj-ilanlari\/ankara">Ankara staj ilanları<\/a> · <a href="\/sirket\/ornek">/);
+  assert.doesNotMatch(ank, /\/staj-ilanlari\/istanbul/);
 });
 
 test('ön render: başlık, meta, canonical yolu, robots ve JSON-LD şehir bağlantısından bağımsız', () => {

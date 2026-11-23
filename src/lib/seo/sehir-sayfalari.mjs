@@ -9,9 +9,20 @@ import { ilanIli } from '../ilan-ili.mjs';
  * sayfası bağlantıyı oradan alsaydı iki modül birbirini içe aktarırdı.
  *
  * Liste bilerek kapalı: yeni bir şehir ancak buraya yazılarak açılır.
+ *
+ * ANKARA, İZMİR, KOCAELİ, BURSA (23 Kasım 2026, kullanıcı kararı):
+ * "ankara staj ilanları" gibi aramalar için. Ölçüldü: o gün açık ilan
+ * Ankara 5, Kocaeli 5, İzmir 3, Bursa 1 — hepsi eşiğin (SEHIR_ESIGI, 10)
+ * altında. Eşik altı sayfa noindex alıyor ve haritaya girmiyor; ilan
+ * sayısı eşiğe ulaşınca kendiliğinden dizine açılıyor. Yani ince sayfa
+ * dizine girmiyor ama adres hazır bekliyor.
  */
 export const SEHIR_SAYFALARI = Object.freeze({
   istanbul: Object.freeze({ il: 'İstanbul', bulunma: "İstanbul'daki" }),
+  ankara: Object.freeze({ il: 'Ankara', bulunma: "Ankara'daki" }),
+  izmir: Object.freeze({ il: 'İzmir', bulunma: "İzmir'deki" }),
+  kocaeli: Object.freeze({ il: 'Kocaeli', bulunma: "Kocaeli'ndeki" }),
+  bursa: Object.freeze({ il: 'Bursa', bulunma: "Bursa'daki" }),
 });
 
 export const sehirYolu = (slug, n = 1) => (n <= 1 ? `/staj-ilanlari/${slug}` : `/staj-ilanlari/${slug}/sayfa/${n}`);

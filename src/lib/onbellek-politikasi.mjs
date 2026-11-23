@@ -52,7 +52,11 @@ export const UYGULAMA_BOLUMLERI = [
  * `/staj-ilanlari` ve arşiv sayfaları BİLEREK dışarıda — onların davranışı
  * değişmedi.
  */
-export const BELGE_BOLUMLERI = ['/ilan', '/bolum', '/rehber', '/staj-ilanlari/istanbul'];
+/* 23 Kasım 2026: öteki şehir sayfaları da aynı kenar çiziminden geçiyor. */
+export const BELGE_BOLUMLERI = [
+  '/ilan', '/bolum', '/rehber',
+  '/staj-ilanlari/istanbul', '/staj-ilanlari/ankara', '/staj-ilanlari/izmir', '/staj-ilanlari/kocaeli', '/staj-ilanlari/bursa',
+];
 
 const kirp = (yol) => yol.replace(/\/+$/, '') || '/';
 

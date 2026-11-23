@@ -27,7 +27,8 @@ test('sayfa üretiliyor: title, H1, description, canonical', () => {
   }
   const h = readFileSync(dosya, 'utf8');
 
-  assert.match(h, /<title>Güncel Staj İlanları 2026 \| StajımVar<\/title>/);
+  /* 23 Kasım 2026: yıl derleme tarihinden (Eylülden itibaren gelecek yıl), "stajyer iş ilanları" da başlıkta. */
+  assert.match(h, /<title>Staj İlanları 20\d\d — Güncel Stajyer İş İlanları \| StajımVar<\/title>/);
   assert.match(h, /<h1[^>]*>Güncel Staj İlanları<\/h1>/);
   assert.match(
     h,
