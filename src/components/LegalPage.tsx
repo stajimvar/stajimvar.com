@@ -56,10 +56,13 @@ const GUNCELLEME: Partial<Record<LegalSlug, string>> = {
   // Çerezsiz ziyaret ölçümü eklendi ve AdSense doğrulama betiğinin zaten
   // yüklendiği açıkça yazıldı; ikisi de bu iki metni değiştirdi.
   'cerez-politikasi': '19 Ağustos 2026',
-  // Özgeçmiş yükleme, StajımVar üzerinden başvuru ve teklif sonrası iletişim
-  // paylaşımı bu iki metne işlendi.
-  gizlilik: '1 Eylül 2026',
-  'kvkk-aydinlatma-metni': '1 Eylül 2026',
+  // 24 Kasım 2026: profil fotoğrafı, sosyal profil ve mesajlar, onaya bağlı
+  // iletişim paylaşımı, bildirim e-postaları (Resend), kendi ziyaret ölçümümüz,
+  // zorunlu okul/bölüm/şehir ve kullanıcının kendi hesabını silmesi işlendi.
+  // "E-posta göndermiyoruz" ve "teklif kabulünde iletişim açılır" ifadeleri
+  // artık doğru değildi.
+  gizlilik: '24 Kasım 2026',
+  'kvkk-aydinlatma-metni': '24 Kasım 2026',
 };
 
 const guncellemeTarihi = (slug: LegalSlug) => GUNCELLEME[slug] || TEMEL_GUNCELLEME;
@@ -188,10 +191,11 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
           <>
             <Section title="Kısa özet">
               <p>
-                İlanlara bakmak için hesap açmanız gerekmez. Hesap açarsanız
-                <strong> adınız, e-posta adresiniz</strong> ve profilinize kendi
-                girdiğiniz bilgiler (üniversite, bölüm, yetenekler, tercihler)
-                saklanır. Profilinize özgeçmiş dosyası da yükleyebilirsiniz.
+                İlanlara bakmak için hesap açmanız gerekmez. Hesap açarsanız{' '}
+                <strong>adınız, e-posta adresiniz</strong> ve profilinize girdiğiniz
+                bilgiler saklanır. Öğrenci hesabında okul, bölüm ve yaşadığınız şehir
+                zorunludur; geri kalan profil alanları, profil fotoğrafı ve özgeçmiş
+                dosyası isteğe bağlıdır.
               </p>
               <p>
                 İki tür ilan var ve başvuru ikisinde farklı işliyor. Şirketin kendi
@@ -201,46 +205,76 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
                 şirkete iletiriz — bunu her başvuruda ayrıca onaylarsınız.
               </p>
               <p>
-                İletişim bilgileriniz başvuruyla birlikte paylaşılmaz. Şirket size
-                teklif verir ve <strong>siz teklifi kabul ederseniz</strong> iki
-                tarafın iletişim bilgileri karşılıklı açılır.
+                Telefon ve e-posta bilgileriniz başvuruyla birlikte{' '}
+                <strong>yalnızca siz ayrıca onaylarsanız</strong> paylaşılır. Hesabınızı
+                istediğiniz zaman profil ayarlarınızdan kendiniz silebilirsiniz.
               </p>
             </Section>
 
             <Section title="Hangi verileri işliyoruz">
               <p>
-                <strong>Hesap verisi:</strong> Kayıt olursanız ad, e-posta ve şifrenizin
-                şifrelenmiş özeti. Şifrenin kendisi hiçbir yerde açık tutulmaz.
-              </p>
-              {/*
-                JSX BOŞLUK YUTMASI — İKİ YERDE
-
-                Metnin ortasına konan bir JSX yorumu ve bir öğeden sonraki
-                satır sonu siliniyor. Burada iki kez oldu: "yetenekler," ile
-                "projeler" arasında yorum vardı ve "yetenekler,projeler"
-                basılıyordu; ayrıca em öğesinden sonra "girdiğinizalanlar"
-                çıkıyordu. Yorum metnin dışına alındı, boşluklar açıkça
-                yazıldı.
-              */}
-              <p>
-                <strong>Profil verisi:</strong> Üniversite, bölüm, sınıf, yetenekler,{' '}
-                projeler ve çalışma tercihleri gibi profilinize <em>sizin girdiğiniz</em>{' '}
-                alanlar. Hepsi isteğe bağlıdır.
+                <strong>Hesap verisi:</strong> Ad, e-posta ve şifrenizin şifrelenmiş özeti.
+                Google ya da Microsoft hesabınızla giriş yaparsanız şifre bizde tutulmaz;
+                sağlayıcıdan yalnızca adınızı ve e-posta adresinizi alırız.
               </p>
               <p>
-                <strong>Onay kaydı:</strong> Kayıt sırasında bu metni onayladığınız an ve
-                metnin sürümü. Onayın kanıtı olarak tutulur.
+                <strong>Profil verisi:</strong> Okul, bölüm ve şehir (öğrenci hesabında
+                zorunlu; size uygun ilanları ve haftalık özeti bunlarla hazırlıyoruz).
+                Bunun dışında sınıf, yetenekler, projeler, deneyimler, çalışma tercihleri
+                ve telefon gibi profilinize <em>sizin girdiğiniz</em>{' '}
+                alanlar; hepsi isteğe bağlıdır.
+              </p>
+              <p>
+                <strong>Profil fotoğrafı ve özgeçmiş dosyası:</strong> İsteğe bağlı. Kapalı
+                bir depolama alanında tutulur, herkese açık bir adresi yoktur.
+              </p>
+              <p>
+                <strong>Sosyal profil ve içerik:</strong> Kullanıcı adınız, paylaşımlarınız,
+                bağlantılarınız, katıldığınız topluluklar ve gönderdiğiniz mesajlar. Bunları
+                yalnızca siz oluşturursanız işleriz.
+              </p>
+              <p>
+                <strong>Bildirim ve e-posta tercihleri:</strong> Hangi bildirimleri e-posta
+                ile almak istediğiniz; kaydettiğiniz aramalar ve takip ettiğiniz şirketler.
+              </p>
+              <p>
+                <strong>Onay kayıtları:</strong> Bu metni onayladığınız an ve metnin sürümü;
+                başvuruda iletişim bilgilerinizin paylaşılmasına onay verdiyseniz onun anı.
+              </p>
+              <p>
+                <strong>Ziyaret ölçümü:</strong> Sitenin hangi sayfalarının ziyaret
+                edildiğini kendimiz sayıyoruz. Kaydedilen: sekmeye özel rastgele bir oturum
+                kimliği (tarayıcınızın oturum deposunda, sekme kapanınca silinir), açılan
+                sayfa, yönlendiren site, cihaz türü ve barındırma sağlayıcımızın isteğe
+                eklediği yaklaşık şehir ve ülke. Giriş yaptıysanız kullanıcı kimliğiniz de
+                eklenir; yönetim panelindeki &quot;son görülme&quot; tarihi bundan çıkar. IP
+                adresinizi bu kayıtlara yazmıyoruz. Bot olarak tanınan istekler kaydedilmez.
               </p>
               <p>
                 <strong>Teknik veri:</strong> Site Cloudflare üzerinde barındırılıyor.
-                Cloudflare, hizmetin çalışması ve kötüye kullanımın engellenmesi için
-                IP adresi ve tarayıcı bilgisi gibi teknik kayıtları kendi altyapısında
-                tutar. Bu kayıtlara biz kişi bazında erişmiyoruz.
+                Cloudflare, hizmetin çalışması ve kötüye kullanımın engellenmesi için IP
+                adresi ve tarayıcı bilgisi gibi teknik kayıtları kendi altyapısında tutar.
               </p>
               <p>
                 <strong>İlan verisi:</strong> Sitede gösterilen ilanlar şirketlerin kendi
-                kariyer sayfalarından ve resmî işe alım sistemlerinden derlenir. Bu veriler
-                şirketlere ait olup kişisel veri içermez.
+                kariyer sayfalarından ve resmî işe alım sistemlerinden derlenir ya da
+                şirketlerce doğrudan açılır. Kişisel veri içermez.
+              </p>
+            </Section>
+
+            <Section title="Kim neyi görür">
+              <p>
+                <strong>Profil fotoğrafınız</strong> sosyal profilinizi görebilen giriş
+                yapmış kullanıcılara ve başvurduğunuz şirkete görünür.
+              </p>
+              <p>
+                <strong>Paylaşımlarınız</strong> varsayılan olarak yalnızca
+                bağlantılarınıza, isterseniz alan topluluğunuza görünür. Mesajlarınızı
+                yalnızca konuştuğunuz kişi görür.
+              </p>
+              <p>
+                <strong>Başvurduğunuz şirket</strong> başvuru anındaki profil ve özgeçmiş
+                kopyanızı görür. Bu kopyaya e-posta ve telefon bilgileriniz alınmaz.
               </p>
             </Section>
 
@@ -258,28 +292,53 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
                 bir şirket yalnızca kendi ilanlarına yapılan başvuruları görebilir.
               </p>
               <p>
-                <strong>Şirketin gördüğü bilgi.</strong> Başvuru sırasında profilinizin
-                ve özgeçmiş dosyanızın o anki bir kopyası başvuruya bağlanır; sonradan
-                profilinizi değiştirseniz bile şirketin gördüğü belge değişmez. Bu
-                kopyaya <strong>e-posta ve telefon bilgileriniz alınmaz</strong>.
+                <strong>Şirketin gördüğü bilgi.</strong> Başvuru sırasında profilinizin,
+                profil fotoğrafınızın ve özgeçmiş dosyanızın o anki bir kopyası başvuruya
+                bağlanır; sonradan profilinizi değiştirseniz bile şirketin gördüğü belge
+                değişmez.
               </p>
               <p>
-                <strong>İletişim bilgileri ne zaman açılır.</strong> Şirket süreci
-                panelinden yürütür: görüşmeye davet eder, teklif gönderir. İletişim
-                bilgileri yalnızca <strong>siz teklifi kabul ettiğinizde</strong> ve
-                karşılıklı olarak açılır. Teklifi reddederseniz ya da başvurunuzu geri
-                çekerseniz açılmaz.
+                <strong>İletişim bilgileri.</strong> Başvururken telefon ve e-postanızın
+                şirketle paylaşılmasını ayrıca onaylayabilirsiniz. Onaylarsanız bunları
+                ilanı açan şirketin yetkili ekip üyeleri (şirket sahibi ve işe alım
+                sorumluları) görür; şirketin yalnızca görüntüleme yetkili üyeleri görmez.
+                Onaylamazsanız paylaşılmaz ve bu tercihi sonradan değiştirebilirsiniz.
+                Özgeçmiş dosyanızın kendisinde iletişim bilgisi varsa, şirket onu dosyada
+                görebilir.
+              </p>
+            </Section>
+
+            <Section title="E-postalar">
+              <p>
+                Hesap onayı, şifre yenileme ve giriş bağlantısı gibi kimlik e-postalarını
+                gönderiyoruz. Bunun dışında bazı bildirimleri e-postayla da iletiyoruz:
+                şirketlere yeni başvuru, öğrencilere takip ettikleri şirketin yeni ilanı ve
+                pazartesi günleri haftalık özet. Haftalık özet ve takip bildirimlerini{' '}
+                <a href="/ayarlar/bildirimler" className="text-blue-600 hover:underline">
+                  Bildirim ayarları
+                </a>{' '}
+                sayfasından kapatabilirsiniz. SMS göndermiyoruz, sizi aramıyoruz ve
+                e-posta adresinizi pazarlama amacıyla kimseyle paylaşmıyoruz.
               </p>
             </Section>
 
             <Section title="Üçüncü taraflar">
               <p>
-                Site, ilan verisini saklamak için Supabase (sunucu bölgesi: Frankfurt,
-                Almanya) ve barındırma için Cloudflare altyapısını kullanır. Reklam
-                tarafında Google AdSense entegre: doğrulama betiği her sayfada
+                Hizmeti çalıştırmak için şu sağlayıcıları kullanıyoruz; veriyi bizim
+                adımıza ve bizim talimatımızla işlerler:
+              </p>
+              <p>
+                <strong>Supabase</strong> — veritabanı, dosya deposu ve kimlik doğrulama
+                (sunucu bölgesi: Frankfurt, Almanya). <strong>Cloudflare</strong> — barındırma
+                ve güvenlik. <strong>Google Workspace</strong> — kimlik e-postalarının
+                gönderimi. <strong>Resend</strong> — bildirim e-postalarının gönderimi (ABD
+                merkezli). <strong>Google ve Microsoft</strong> — yalnızca o hesapla giriş
+                yapmayı seçerseniz.
+              </p>
+              <p>
+                Reklam tarafında Google AdSense entegre: doğrulama betiği her sayfada
                 yükleniyor, reklam birimi ise yalnızca öğrenci rehberlerinin bir
-                bölümünde çiziliyor. İlan, şirket, burs ve etkinlik sayfalarında reklam
-                birimi yok. Ayrıntısı{' '}
+                bölümünde çiziliyor. Ayrıntısı{' '}
                 <a href="/cerez-politikasi" className="text-blue-600 hover:underline">
                   Çerez Politikası
                 </a>{' '}
@@ -296,9 +355,8 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
                 verisi dönmez.
               </p>
               <p>
-                <strong>Kolon düzeyinde kısıtlama.</strong> Şirketlerin işe alım e-posta
-                adresi gibi hassas alanlar tarayıcıya hiç gönderilmez; bu alanlarda
-                okuma yetkisi tarayıcıdan tamamen alınmıştır.
+                <strong>Kolon düzeyinde kısıtlama.</strong> Hassas alanlar tarayıcıya hiç
+                gönderilmez; bu alanlarda okuma yetkisi tarayıcıdan tamamen alınmıştır.
               </p>
               <p>
                 <strong>Şifreler.</strong> Şifreniz hiçbir yerde açık tutulmaz; yalnızca
@@ -315,12 +373,29 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
                 trafik şifrelidir (HTTPS/TLS).
               </p>
               <p>
-                <strong>Dosyalar.</strong> Yüklediğiniz özgeçmiş dosyasına yalnızca siz
-                erişebilirsiniz. Bir şirket bu dosyayı ancak o şirketin ilanına
-                başvurduysanız ve yalnızca başvuruya bağlanan kopya üzerinden görebilir.
-                Dosyayı profilinizden değiştirebilir ya da kaldırabilirsiniz; bu, daha
-                önce gönderdiğiniz başvurulardaki kopyayı değiştirmez. Şirket logoları
-                gibi kamuya açık görseller ayrı bir alanda tutuluyor.
+                <strong>Dosyalar.</strong> Özgeçmiş dosyanıza ve profil fotoğrafınıza
+                yalnızca yukarıda anlatılan kişiler erişebilir; herkese açık adresleri
+                yoktur. Dosyayı profilinizden değiştirebilir ya da kaldırabilirsiniz; bu,
+                daha önce gönderdiğiniz başvurulardaki kopyayı değiştirmez.
+              </p>
+            </Section>
+
+            <Section title="Hesabınızı silmek">
+              <p>
+                Hesabınızı kendiniz silebilirsiniz: profil düzenleme sayfasının en
+                altındaki <strong>Hesabımı sil</strong> bağlantısı (şirket hesaplarında
+                şirket profilindeki e-posta tercihlerinin altında). Silme geri alınamaz.
+              </p>
+              <p>
+                Silindiğinde hesabınız, profiliniz, profil fotoğrafınız ve özgeçmiş
+                dosyanız, başvurularınız (şirketlere iletilen kopyalar dahil), sosyal
+                profiliniz, paylaşımlarınız, mesajlarınız, bildirimleriniz, kayıtlı
+                aramalarınız ve onay kayıtlarınız silinir. Ziyaret ölçümü kayıtlarındaki
+                kullanıcı kimliğiniz kaldırılır; kayıtlar kimliksiz olarak kalır.
+              </p>
+              <p>
+                Bir şirketin tek sahibiyseniz, şirket sahipsiz kalmasın diye önce
+                sahipliği devretmeniz gerekir.
               </p>
             </Section>
 
@@ -336,8 +411,9 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
             <Section title="Haklarınız">
               <p>
                 KVKK madde 11 kapsamında verilerinize erişme, düzeltme, silme ve
-                işlemeye itiraz etme haklarına sahipsiniz. Hesabınızı silmek isterseniz
-                aşağıdaki adrese yazmanız yeterli; hesap ve profil kayıtları silinir.
+                işlemeye itiraz etme haklarına sahipsiniz. Hesabınızı yukarıda anlatıldığı
+                gibi kendiniz silebilir, diğer talepleriniz için aşağıdaki adrese
+                yazabilirsiniz.
               </p>
             </Section>
 
@@ -430,47 +506,89 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
           <>
             <Section title="İşlenen veriler ve amaçları">
               <p>
-                6698 sayılı Kanun kapsamında veri sorumlusu StajımVar'dır. İlanlara
-                bakmak için hesap gerekmez; hesap açtığınızda aşağıdaki veriler işlenir.
+                6698 sayılı Kanun kapsamında veri sorumlusu, StajımVar&apos;ın kurucusu{' '}
+                <strong>Mustafa Oğulcan Doğan</strong>&apos;dır (iletişim:
+                iletisim@stajimvar.com). İlanlara bakmak için hesap gerekmez; hesap
+                açtığınızda aşağıdaki veriler işlenir.
               </p>
               <p>
-                <strong>Ad ve e-posta</strong> — hesabı oluşturmak ve girişi doğrulamak
-                için; hukuki sebep sözleşmenin kurulması (m.5/2-c).
+                <strong>Ad ve e-posta</strong> — hesabı oluşturmak, girişi doğrulamak ve
+                hizmetle ilgili e-postaları göndermek için; hukuki sebep sözleşmenin
+                kurulması ve ifası (m.5/2-c). Google ya da Microsoft ile girerseniz bu iki
+                bilgi o sağlayıcıdan alınır.
               </p>
               <p>
-                <strong>Profil bilgileri ve özgeçmiş dosyası</strong> — ilanları
-                uygunluğa göre sıralamak ve başvurunuzu oluşturmak için; tamamı
-                isteğe bağlıdır ve yalnızca sizin girdiğiniz kadarıyla işlenir.
+                <strong>Okul, bölüm ve şehir</strong> — öğrenci hesabında zorunlu; size uygun
+                ilanları ve haftalık özeti hazırlamak için; hukuki sebep sözleşmenin ifası
+                (m.5/2-c).
+              </p>
+              <p>
+                <strong>Diğer profil bilgileri, profil fotoğrafı ve özgeçmiş dosyası</strong>{' '}
+                — isteğe bağlı; profilinizi oluşturmak, ilanları uygunluğa göre sıralamak
+                ve başvurunuzu hazırlamak için; hukuki sebep sözleşmenin ifası (m.5/2-c).
+                Yalnızca sizin girdiğiniz kadarıyla işlenir.
+              </p>
+              <p>
+                <strong>Sosyal profil, paylaşımlar, bağlantılar ve mesajlar</strong> — bu
+                özellikleri kullanırsanız; hizmetin sunulması için; hukuki sebep sözleşmenin
+                ifası (m.5/2-c).
               </p>
               <p>
                 <strong>Başvuru kaydı</strong> — StajımVar&apos;da açılmış bir ilana
                 başvurduğunuzda; hukuki sebep açık rıza (m.5/1). Rızayı başvuru anında
-                verirsiniz ve bu an kayda geçer.
+                verirsiniz ve bu an kayda geçer. Telefon ve e-postanızın şirketle
+                paylaşılması ayrı bir onaydır; vermezseniz paylaşılmaz.
               </p>
               <p>
-                <strong>Onay kaydı</strong> — bu metni onayladığınız an ve sürümü; hukuki
-                sebep hukuki yükümlülük (m.5/2-ç).
+                <strong>Ziyaret ölçümü</strong> — açılan sayfa, yönlendiren site, cihaz
+                türü, yaklaşık şehir ve ülke ile giriş yaptıysanız kullanıcı kimliğiniz;
+                sitenin nasıl kullanıldığını ölçmek ve kötüye kullanımı fark etmek için;
+                hukuki sebep meşru menfaat (m.5/2-f). IP adresi bu kayıtlara yazılmaz.
               </p>
               <p>
-                <strong>Aktarım:</strong> Hesap ve profil verileriniz pazarlama amacıyla
-                üçüncü taraflara aktarılmaz ve satılmaz. Tek aktarım şudur:
-                StajımVar&apos;da açılmış bir ilana başvurduğunuzda, başvurunuz ve ona
-                bağlanan profil/özgeçmiş kopyası <strong>o ilanı açan doğrulanmış
-                şirkete</strong> iletilir. Bu kopyaya e-posta ve telefon bilgileriniz
-                alınmaz; iletişim bilgileri yalnızca şirketin teklifini kabul ettiğinizde
-                karşılıklı açılır. Barındırma Supabase (Frankfurt) ve Cloudflare
-                altyapısındadır; bu sağlayıcılar veriyi bizim adımıza saklar. Ziyaret
-                ölçümü Cloudflare Web Analytics ile yapılıyor ve kişisel veri içermiyor;
-                ayrıntısı{' '}
+                <strong>Onay kayıtları</strong> — bu metni onayladığınız an ve sürümü;
+                hukuki sebep hukuki yükümlülük (m.5/2-ç).
+              </p>
+            </Section>
+
+            <Section title="Aktarım">
+              <p>
+                Hesap ve profil verileriniz pazarlama amacıyla üçüncü taraflara aktarılmaz
+                ve satılmaz. Aktarımlar şunlardır:
+              </p>
+              <p>
+                <strong>İlanı açan şirkete:</strong> StajımVar&apos;da açılmış bir ilana
+                başvurduğunuzda başvurunuz ve ona bağlanan profil, fotoğraf ve özgeçmiş
+                kopyası <strong>o ilanı açan doğrulanmış şirkete</strong> iletilir. Telefon
+                ve e-postanız yalnızca ayrıca onaylarsanız şirketin yetkili ekip üyelerine
+                açılır.
+              </p>
+              <p>
+                <strong>Hizmet sağlayıcılara:</strong> Supabase (veritabanı ve dosyalar,
+                Frankfurt), Cloudflare (barındırma), Google Workspace (kimlik e-postaları)
+                ve Resend (bildirim e-postaları, ABD). Bu sağlayıcılar veriyi yalnızca bizim
+                adımıza işler; bir kısmı yurt dışındadır.
+              </p>
+              <p>
+                Ayrıntılar{' '}
+                <a href="/gizlilik" className="text-blue-600 hover:underline">
+                  Gizlilik Politikası
+                </a>{' '}
+                ve{' '}
                 <a href="/cerez-politikasi" className="text-blue-600 hover:underline">
                   Çerez Politikası
                 </a>{' '}
-                sayfasında.
+                sayfalarında.
               </p>
+            </Section>
+
+            <Section title="Saklama ve silme">
               <p>
-                <strong>Saklama:</strong> Hesabınız açık kaldığı sürece. Hesap silindiğinde
-                profil ve hesap kayıtları silinir; onay kaydı ispat yükümlülüğü nedeniyle
-                kanuni zamanaşımı süresince saklanır.
+                Verileriniz hesabınız açık kaldığı sürece saklanır. Hesabınızı profil
+                ayarlarınızdaki <strong>Hesabımı sil</strong> bağlantısıyla kendiniz
+                silebilirsiniz. Silindiğinde hesap, profil, dosyalar, başvurular (şirkete
+                iletilen kopyalar dahil), sosyal içerik, mesajlar ve onay kayıtları silinir;
+                ziyaret ölçümü kayıtlarından kullanıcı kimliğiniz kaldırılır.
               </p>
             </Section>
 
@@ -498,9 +616,10 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
                 işaretlerseniz bu kayıt sizin takip listenizdir; şirkete gönderilmez.
               </p>
               <p>
-                Bildirimleri yalnızca site içinde gösteriyoruz; e-posta, SMS ya da
-                telefon bildirimi göndermiyoruz. Öğrenci verisi satmıyoruz ve pazarlama
-                amacıyla üçüncü taraflara aktarmıyoruz.
+                SMS göndermiyoruz ve sizi telefonla aramıyoruz. E-postayı yalnızca hesap
+                işlemleri ve bildirimler için kullanıyoruz; haftalık özet ve takip
+                bildirimlerini Bildirim ayarlarından kapatabilirsiniz. Öğrenci verisi
+                satmıyoruz.
               </p>
               <p>
                 KVKK m.11 kapsamındaki taleplerinizi aşağıdaki adrese iletebilirsiniz.

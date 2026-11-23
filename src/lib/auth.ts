@@ -18,7 +18,7 @@ import type { CompanyAccount, StudentProfile } from '../types';
   İkisi de yayına girince aydınlatma metni yeniden yazıldı; sürüm artmazsa
   kullanıcı, o gün var olmayan bir veri işlemesine onay vermiş sayılırdı.
 */
-export const KVKK_VERSION = '2026-09-v2';
+export const KVKK_VERSION = '2026-11-v3';
 
 /*
   'admin' de gerçek bir rol. Yönetici, siteyi kullanan bir kişi olmaktan
