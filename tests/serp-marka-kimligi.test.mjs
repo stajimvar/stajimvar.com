@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { ANA_SAYFA_BASLIGI } from '../src/lib/seo/staj-ilanlari-basligi.mjs';
 
 /*
   ARAMA SONUCUNDA MARKA (23 Eylül 2026)
@@ -86,5 +87,8 @@ test('simge 48in kati olcularde', () => {
 
 test('ana sayfa basligi markayla basliyor', () => {
   /* Google başlığı yine de yazabilir ama verdiğimiz sinyal marka olmalı. */
-  assert.match(ONRENDER, /baslik: 'StajımVar — Şirketlerin staj ilanları, tek listede'/);
+  assert.match(ONRENDER, /baslik: ANA_SAYFA_BASLIGI,/);
+  assert.match(ANA_SAYFA_BASLIGI, /^StajımVar — /);
+  /* "staj ilanları" aramasını /staj-ilanlari ile bölmüyor (23 Kasım 2026). */
+  assert.doesNotMatch(ANA_SAYFA_BASLIGI, /staj ilanlar/i);
 });

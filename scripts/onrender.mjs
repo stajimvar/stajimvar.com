@@ -55,6 +55,8 @@ import { zorunluVeriGetir, VeriKaynagiHatasi, azalmaKapisi } from '../src/lib/se
 import { bolumIlanlari } from '../src/lib/bolum-ilanlari.mjs';
 import { bolumSeo, BOLUM_LISTESI_BASLIGI } from '../src/lib/seo/bolum-seo.mjs';
 import { sirketSayfaBasligi, sirketYedekAciklamasi } from '../src/lib/seo/sirket-seo.mjs';
+import { SABLON_DEGISIKLIKLERI, enYeniTarih } from '../src/lib/seo/sablon-tarihleri.mjs';
+import { stajIlanlariBasligi, ANA_SAYFA_BASLIGI } from '../src/lib/seo/staj-ilanlari-basligi.mjs';
 import { ilanKartlariHtml } from '../src/lib/seo/ilan-karti-html.mjs';
 import { SEHIR_SAYFALARI, sehirSayfasi, sehirYolu } from '../src/lib/seo/sehir-ilanlari.mjs';
 
@@ -1660,7 +1662,8 @@ async function main() {
     const blok = bolumIlanBlogu(b);
     if (blok.html) bolumIlanOzeti[b.slug] = blok.adet;
     sayfaYaz(`/bolum/${b.slug}`, {
-      lastmod: b.guncelleme ? String(b.guncelleme).slice(0, 10) : null,
+      /* Şablon tarihi de sayılıyor (lib/seo/sablon-tarihleri.mjs). */
+      lastmod: enYeniTarih(b.guncelleme, SABLON_DEGISIKLIKLERI.bolum),
       baslik: b.seo.baslik,
       aciklama: ozetle(b.seo.aciklama),
       // Gövde = başlık + BolumIcerik'in çizilmiş hâli (kullanıcının gördüğünün aynısı) + açık ilanlar.
@@ -1771,7 +1774,7 @@ async function main() {
   })();
 
   sayfaYaz('/staj-ilanlari', {
-    baslik: 'Güncel Staj İlanları 2026 | StajımVar',
+    baslik: stajIlanlariBasligi(),
     aciklama:
       "Türkiye'den ve yurt dışından güncel staj ilanlarını şehir, bölüm ve staj türüne göre filtrele. Şirketlerin resmî başvuru sayfalarına doğrudan ulaş.",
     /*
@@ -2198,7 +2201,8 @@ async function main() {
     sayfaYaz(`/sirket/${slug}`, {
       dizinDisi: sirketInce,
       /* İçerik = ilan listesi: en son değişen ilanın tarihi. */
-      lastmod: s.ilanlar.map((x) => String(x.updated_at || '').slice(0, 10)).filter(Boolean).sort().pop() || null,
+      /* İçerik = ilan listesi + şablon; ikisinin yenisi (lib/seo/sablon-tarihleri.mjs). */
+      lastmod: enYeniTarih(...s.ilanlar.map((x) => x.updated_at), SABLON_DEGISIKLIKLERI.sirket),
       baslik,
       aciklama,
       /*
@@ -2529,7 +2533,7 @@ async function main() {
     '</ul></nav>';
 
   sayfaYaz('/', {
-    baslik: 'StajımVar — Şirketlerin staj ilanları, tek listede',
+    baslik: ANA_SAYFA_BASLIGI,
     aciklama:
       "Türkiye'den ve yurt dışından staj ilanları tek listede. Çoğu şirketlerin kendi " +
       'kariyer sayfalarından derlenir, bir kısmını işverenler doğrudan yayımlar.',

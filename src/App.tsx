@@ -130,6 +130,7 @@ import { CheckCircle2 } from 'lucide-react';
 import { SAYFA_GENISLIGI } from './lib/duzen';
 import { cikisiDinle, sayfaBildir } from './lib/izleme.mjs';
 import { PAYLASIM_SURUMU } from './lib/basvuru-durumu.mjs';
+import { SEHIR_SAYFALARI } from './lib/seo/sehir-sayfalari.mjs';
 
 /*
   GECİKMELİ YÜKLEME
@@ -4036,9 +4037,9 @@ export default function App() {
     Ön render her sayfayı dosya olarak yazıyor; olmayan sayfa numarası ara
     katmanda 404 alıyor (dosya yok, uygulama önekinde değil).
   */
-  /* Şehir sayfası (yalnız İstanbul): lib/seo/sehir-ilanlari, kenarda da çiziliyor. */
-  const sehirEslesmesi = temizYol.match(/^\/staj-ilanlari\/(istanbul)(?:\/sayfa\/([1-9]\d{0,3}))?$/);
-  if (sehirEslesmesi) {
+  /* Şehir sayfası (SEHIR_SAYFALARI): lib/seo/sehir-ilanlari, kenarda da çiziliyor. */
+  const sehirEslesmesi = temizYol.match(/^\/staj-ilanlari\/([a-z]+)(?:\/sayfa\/([1-9]\d{0,3}))?$/);
+  if (sehirEslesmesi && Object.hasOwn(SEHIR_SAYFALARI, sehirEslesmesi[1])) {
     return icerikSayfasi(
       <SehirIlanlari slug={sehirEslesmesi[1]} sayfa={Number(sehirEslesmesi[2] ?? 1)} onBack={goHome} onNavigate={navigate} />,
     );

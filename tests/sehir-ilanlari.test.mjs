@@ -57,16 +57,19 @@ const istanbullar = (n) => Array.from({ length: n }, () => ilan());
 
 /* ------------------------------------------------------------ adresler */
 
-test('adres: yalnız İstanbul; /sayfa/1 ve sondaki eğik çizgi kanoniğe; biçimsiz adres yok', () => {
-  assert.deepEqual(Object.keys(SEHIR_SAYFALARI), ['istanbul'], 'başka şehir sayfası açılmamalı');
+test('adres: listedeki şehirler; /sayfa/1 ve sondaki eğik çizgi kanoniğe; biçimsiz adres yok', () => {
+  /* 23 Kasım 2026: Ankara, İzmir, Kocaeli, Bursa eklendi; eşik altında noindex. */
+  assert.deepEqual(Object.keys(SEHIR_SAYFALARI), ['istanbul', 'ankara', 'izmir', 'kocaeli', 'bursa'], 'liste bilinçli genişletilmeli');
+  assert.deepEqual(sehirAdresiniCoz('/staj-ilanlari/ankara'), { slug: 'ankara', il: 'Ankara', sayfa: 1 });
+  assert.deepEqual(sehirAdresiniCoz('/staj-ilanlari/izmir/sayfa/2'), { slug: 'izmir', il: 'İzmir', sayfa: 2 });
   assert.deepEqual(sehirAdresiniCoz('/staj-ilanlari/istanbul'), { slug: 'istanbul', il: 'İstanbul', sayfa: 1 });
   assert.deepEqual(sehirAdresiniCoz('/staj-ilanlari/istanbul/sayfa/2'), { slug: 'istanbul', il: 'İstanbul', sayfa: 2 });
   assert.deepEqual(sehirAdresiniCoz('/staj-ilanlari/istanbul/sayfa/1'), { yonlendir: '/staj-ilanlari/istanbul' });
   assert.deepEqual(sehirAdresiniCoz('/staj-ilanlari/istanbul/'), { yonlendir: '/staj-ilanlari/istanbul' });
   assert.deepEqual(sehirAdresiniCoz('/staj-ilanlari/istanbul/sayfa/3/'), { yonlendir: '/staj-ilanlari/istanbul/sayfa/3' });
   for (const yol of [
-    '/staj-ilanlari/ankara',
-    '/staj-ilanlari/izmir/sayfa/2',
+    '/staj-ilanlari/antalya',
+    '/staj-ilanlari/manisa/sayfa/2',
     '/staj-ilanlari/sayfa/2',
     '/staj-ilanlari/istanbul/sayfa/0',
     '/staj-ilanlari/istanbul/sayfa/02',
@@ -84,7 +87,7 @@ test('adres: yalnız İstanbul; /sayfa/1 ve sondaki eğik çizgi kanoniğe; biç
   for (const y of ['/staj-ilanlari/istanbul', '/staj-ilanlari/istanbul/', '/staj-ilanlari/istanbul/sayfa/0', '/staj-ilanlari/istanbul/x/y']) {
     assert.equal(sehirOnekindeMi(y), true, y);
   }
-  for (const y of ['/staj-ilanlari', '/staj-ilanlari/istanbulx', '/staj-ilanlari/ankara/sayfa/0', '/staj-ilanlari/sayfa/2', '/staj-ilanlari/constructor', '/rehber/istanbul']) {
+  for (const y of ['/staj-ilanlari', '/staj-ilanlari/istanbulx', '/staj-ilanlari/antalya/sayfa/0', '/staj-ilanlari/sayfa/2', '/staj-ilanlari/constructor', '/rehber/istanbul']) {
     assert.equal(sehirOnekindeMi(y), false, y);
   }
 });
@@ -133,7 +136,7 @@ test('sayfalama: 30 ilan; son sayfa kalanı; aralık dışı null; /sayfa/1 bağ
   assert.equal(s1.adet, 65);
   assert.equal(sehirSayfasi({ slug: 'istanbul', sayfa: 4, ilanlar, etiketler, bugun: BUGUN }), null);
   assert.equal(sehirSayfasi({ slug: 'istanbul', sayfa: 0, ilanlar, etiketler, bugun: BUGUN }), null);
-  assert.equal(sehirSayfasi({ slug: 'ankara', sayfa: 1, ilanlar, etiketler, bugun: BUGUN }), null);
+  assert.equal(sehirSayfasi({ slug: 'antalya', sayfa: 1, ilanlar, etiketler, bugun: BUGUN }), null);
   /* Sayfalar kesişmiyor, toplam = adet. */
   const hepsi = [...s1.dilim, ...s2.dilim, ...s3.dilim].map((i) => i.id);
   assert.equal(new Set(hepsi).size, 65);
@@ -215,7 +218,7 @@ test('kenar: 200 kendine canonical; /sayfa/1 301; aralık dışı 404; bilinmeye
   assert.match(s3.html, /<link rel="canonical" href="https:\/\/stajimvar\.com\/staj-ilanlari\/istanbul\/sayfa\/3" \/>/);
   assert.deepEqual(await coz('/staj-ilanlari/istanbul/sayfa/1', getir), { tur: 301, konum: '/staj-ilanlari/istanbul' });
   assert.deepEqual(await coz('/staj-ilanlari/istanbul/sayfa/4', getir), { tur: 404 });
-  assert.deepEqual(await coz('/staj-ilanlari/ankara', getir), { tur: 'gec' });
+  assert.deepEqual(await coz('/staj-ilanlari/antalya', getir), { tur: 'gec' });
   /* Sorgu: yalnız yayındaki ilanlar, tamamı (sayfa sınırı yok), anonim seçim. */
   assert.match(istekler[0], /\/rest\/v1\/listings\?status=eq\.published&select=/);
   assert.doesNotMatch(istekler[0], /limit=/);
@@ -353,7 +356,7 @@ test('ara katman: 200 / 301 / 404 / bilinmeyen şehir 404; yalnız 200 kenarda t
   assert.equal(disi.cevap.headers.get('cache-control'), 'no-store');
   assert.equal(ONBELLEK.size, 0, '404 kenarda tutuldu');
 
-  for (const yol of ['/staj-ilanlari/ankara', '/staj-ilanlari/izmir/sayfa/2', '/staj-ilanlari/istanbul/baska']) {
+  for (const yol of ['/staj-ilanlari/antalya', '/staj-ilanlari/manisa/sayfa/2', '/staj-ilanlari/istanbul/baska']) {
     const s = await istek(araKatman, `${SITE}${yol}`, { veri: null, env: ENV });
     assert.equal(s.cevap.status, 404, yol);
     assert.equal(s.supabaseIstekleri.length, 0, `${yol}: veritabanına gidildi`);
@@ -443,10 +446,15 @@ test('ilk HTML, kenar ve uygulama aynı seçim kuralı; /staj-ilanlari bağlant�
   assert.match(bilesen, /\.select\(SEHIR_ILAN_SECIMI\)\s*\.eq\('status', 'published'\)/);
   assert.match(bilesen, /setIlanlar\(sehirIlanlari\(\(data \?\? \[\]\) as unknown\[\], tanim\?\.il\) as SadeIlan\[\]\);/);
   assert.match(bilesen, /ARSIV_SAYFA_BOYU/);
-  assert.match(oku('src/App.tsx'), /temizYol\.match\(\/\^\\\/staj-ilanlari\\\/\(istanbul\)\(\?:\\\/sayfa\\\/\(\[1-9\]\\d\{0,3\}\)\)\?\$\/\)/);
+  /* Uygulama rotası şehir listesinden: bilinmeyen slug şehir sayfası çizmiyor (23 Kasım 2026). */
+  assert.match(oku('src/App.tsx'), /if \(sehirEslesmesi && Object\.hasOwn\(SEHIR_SAYFALARI, sehirEslesmesi\[1\]\)\) \{/);
   assert.match(oku('src/components/StajIlanlariIcerik.tsx'), /<Bag href="\/staj-ilanlari\/istanbul" onNavigate=\{onNavigate\} className=\{BAG\}>\s*İstanbul staj ilanları/);
   const onbellek = oku('src/lib/onbellek-politikasi.mjs');
-  assert.match(onbellek, /export const BELGE_BOLUMLERI = \['\/ilan', '\/bolum', '\/rehber', '\/staj-ilanlari\/istanbul'\];/);
+  /* Önbellek kapsamı dar: şehir sayfaları evet, /staj-ilanlari ve arşiv hayır. */
+  const basla = onbellek.indexOf('export const BELGE_BOLUMLERI');
+  const belge = onbellek.slice(basla, onbellek.indexOf('];', basla));
+  for (const slug of Object.keys(SEHIR_SAYFALARI)) assert.ok(belge.includes(`'/staj-ilanlari/${slug}'`), slug);
+  assert.ok(!belge.includes("'/staj-ilanlari'") && !belge.includes("'/staj-ilanlari/sayfa"));
   const ara = oku('functions/_middleware.ts');
   assert.match(ara, /if \(okuma && sehirAdresiniCoz\(istekYolu\)\) \{/);
   assert.match(ara, /if \(yedekTazeMi\(damga\)\) \{/);
