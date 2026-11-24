@@ -141,3 +141,22 @@ test('1 Kasım: iki şirket, kimlik + ad + korumalı koşul; dosyalar 128 × 128
     assert.equal(dosya.readUInt32BE(20), 128);
   }
 });
+
+/*
+  25 KASIM 2026 — yayında ilanı olup logosu boş 11 şirket. Dokuzu yeni
+  dosya; DHL Group ve Siemens AG depodaki logoları yeniden kullanıyor.
+*/
+const GOC_KASIM_25 = oku('supabase/migrations/20270121010000_eksik_sirket_logolari_3.sql');
+
+test('25 Kasım: on bir şirket, kimlik + ad + boş logo koşulu; dosyalar 128 × 128 PNG', () => {
+  const satirlar = kod(GOC_KASIM_25).split(/;\s*/).filter(Boolean);
+  assert.equal(satirlar.length, 11);
+  for (const s of satirlar) {
+    assert.match(s, /^update public\.companies set logo_url = 'https:\/\/stajimvar\.com\/isveren-logolari\/[a-z0-9-]+\.png'\nwhere id = '[0-9a-f-]{36}' and name = '[^']+' and nullif\(btrim\(logo_url\), ''\) is null$/);
+    const ad = s.match(/isveren-logolari\/([a-z0-9-]+\.png)/)[1];
+    const dosya = readFileSync(path.join(KOK, 'public', 'isveren-logolari', ad));
+    assert.equal(dosya.subarray(1, 4).toString('latin1'), 'PNG');
+    assert.equal(dosya.readUInt32BE(16), 128);
+    assert.equal(dosya.readUInt32BE(20), 128);
+  }
+});
