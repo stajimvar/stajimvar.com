@@ -49,7 +49,7 @@ test('BELİRSİZ KAYNAKLAR AYRI İŞARETLİ VE DOĞRULANMIŞLARLA KARIŞMIYOR', 
   const belirsiz = liste.filter((k) => k.aciklik_dogrulanmadi && k.country === 'DE');
   const ilanSayisi = belirsiz.reduce((a, k) => a + k.urls.length, 0);
 
-  assert.equal(ilanSayisi, 13, 'açıklığı belirsiz 13 Almanya ilanı (24 Kasım 2026: kapanan BMW 195753 ve 190132 çıktı; BMW 180706 ve Siemens 500403 girdi)');
+  assert.equal(ilanSayisi, 15, 'açıklığı belirsiz 15 Almanya ilanı (25 Kasım 2026: Porsche 17959 ve 17962 eklendi)');
   for (const k of liste.filter((x) => x.aciklik_dogrulanmadi)) {
     assert.equal(k.type, 'resmi_ilan_sayfasi', `${k.id} ayrı adaptörü kullanmalı`);
     assert.ok(['DE', 'TR'].includes(k.country), `${k.id} ülkesi`);
@@ -57,13 +57,13 @@ test('BELİRSİZ KAYNAKLAR AYRI İŞARETLİ VE DOĞRULANMIŞLARLA KARIŞMIYOR', 
     for (const u of k.urls) assert.match(u, /^https:\/\//, `${k.id} resmî bağlantı`);
   }
 
-  /* Doğrulanmış 54 ilan bu işaretten etkilenmiyor (24 Kasım 2026: kapanan Mercedes-Benz 243767 çıktı; +13 — Mercedes-Benz x3, Bosch x2, Allianz GI, DHL, Doctolib, Langdock, Prophet, CRA, Enter, Mercanis). */
+  /* Doğrulanmış 71 ilan bu işaretten etkilenmiyor (25 Kasım 2026: ikinci parti +17; 24 Kasım 2026: kapanan Mercedes-Benz 243767 çıktı; +13 — Mercedes-Benz x3, Bosch x2, Allianz GI, DHL, Doctolib, Langdock, Prophet, CRA, Enter, Mercanis). */
   const dogrulanmis = liste.filter((k) => k.country === 'DE' && !k.aciklik_dogrulanmadi);
   const dogrulanmisAdet = dogrulanmis.reduce(
     (a, k) => a + (k.dogrulanmis_ilanlar ?? k.urls ?? []).length,
     0
   );
-  assert.equal(dogrulanmisAdet, 54);
+  assert.equal(dogrulanmisAdet, 71);
 });
 
 /*

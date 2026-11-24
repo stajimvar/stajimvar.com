@@ -575,7 +575,9 @@
       "dogrulanmis_ilanlar": [
         "744000149315349",
         "744000162242514",
-        "744000162495259"
+        "744000162495259",
+        "744000162480485",
+        "744000162666905"
       ]
     },
     {
@@ -959,7 +961,9 @@
         "https://jobs.porsche.com/index.php?ac=jobad&id=18107",
         "https://jobs.porsche.com/index.php?ac=jobad&id=18498",
         "https://jobs.porsche.com/index.php?ac=jobad&id=18113",
-        "https://jobs.porsche.com/index.php?ac=jobad&id=19450"
+        "https://jobs.porsche.com/index.php?ac=jobad&id=19450",
+        "https://jobs.porsche.com/index.php?ac=jobad&id=17959",
+        "https://jobs.porsche.com/index.php?ac=jobad&id=17962"
       ]
     },
     {
@@ -1628,7 +1632,8 @@
         "https://jobs.mercedes-benz.com/intern-project-management-customer-experience-digital-solutions-mandatory-internship--244546-MER00049ZR",
         "https://jobs.mercedes-benz.com/en/praktikantin-direktmarketing-pflicht-praktikum-247803-mer0004apb",
         "https://jobs.mercedes-benz.com/praktikant-in-international-sales-financial-services-mercedes-benz-cars-pflicht-praktikum--247415-MER0004AOO",
-        "https://jobs.mercedes-benz.com/praktikant-in-e-learning-training-pflicht-praktikum--247394-MER0004AND"
+        "https://jobs.mercedes-benz.com/praktikant-in-e-learning-training-pflicht-praktikum--247394-MER0004AND",
+        "https://jobs.mercedes-benz.com/en/praktikantin-ideation-247976-mer00049qe"
       ],
       "_not": "24 Kasım 2026: 243767 nicht-mehr-verfuegbar sayfasına (403) yönleniyordu ve tüm kaynağı düşürüyordu, çıkarıldı."
     },
@@ -1858,6 +1863,183 @@
       "domain": "de",
       "dogrulanmis_ilanlar": [
         "451014"
+      ]
+    },
+    {
+      "id": "brunswick-greenhouse-de",
+      "name": "Brunswick Group (Almanya)",
+      "type": "greenhouse",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Brunswick Group",
+      "careers_url": "https://job-boards.greenhouse.io/brunswickgroup",
+      "board_token": "brunswickgroup",
+      "dogrulanmis_ilanlar": [
+        "8479278002"
+      ],
+      "logo_url": "https://stajimvar.com/isveren-logolari/brunswick-group.png"
+    },
+    {
+      "id": "via-greenhouse-de",
+      "name": "Via (Almanya)",
+      "type": "greenhouse",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Via",
+      "careers_url": "https://job-boards.greenhouse.io/via",
+      "board_token": "via",
+      "dogrulanmis_ilanlar": [
+        "8863961002"
+      ],
+      "logo_url": "https://stajimvar.com/isveren-logolari/via.png"
+    },
+    {
+      "id": "projecta-greenhouse-de",
+      "name": "Project A (Almanya)",
+      "type": "greenhouse",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Project A",
+      "careers_url": "https://job-boards.greenhouse.io/projectaservicesgmbhcokg",
+      "board_token": "projectaservicesgmbhcokg",
+      "dogrulanmis_ilanlar": [
+        "8729468002"
+      ],
+      "logo_url": "https://stajimvar.com/isveren-logolari/project-a.png"
+    },
+    {
+      "id": "taxforce-ashby-de",
+      "name": "Taxforce (Almanya)",
+      "type": "ashby",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Taxforce",
+      "careers_url": "https://jobs.ashbyhq.com/taxforce",
+      "job_board": "taxforce",
+      "dogrulanmis_ilanlar": [
+        "c5e82304-3841-4ae9-8dfc-08a2bea2a824"
+      ]
+    },
+    {
+      "id": "andercore-ashby-de",
+      "name": "Andercore (Almanya)",
+      "type": "ashby",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Andercore",
+      "careers_url": "https://jobs.ashbyhq.com/andercore",
+      "job_board": "andercore",
+      "dogrulanmis_ilanlar": [
+        "1c400aca-d835-49f7-b11c-643b829d8b03"
+      ],
+      "logo_url": "https://stajimvar.com/isveren-logolari/andercore.png"
+    },
+    {
+      "id": "proximafusion-ashby-de",
+      "name": "Proxima Fusion (Almanya)",
+      "type": "ashby",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Proxima Fusion",
+      "careers_url": "https://jobs.ashbyhq.com/proxima-fusion",
+      "job_board": "proxima-fusion",
+      "dogrulanmis_ilanlar": [
+        "d3baea8a-fcf2-4df7-8fbd-c70d293ac76c"
+      ]
+    },
+    {
+      "id": "liqid-ashby-de",
+      "name": "LIQID (Almanya)",
+      "type": "ashby",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "LIQID",
+      "careers_url": "https://jobs.ashbyhq.com/liqid-lig",
+      "job_board": "liqid-lig",
+      "dogrulanmis_ilanlar": [
+        "71c56fc1-51d5-4a64-86b0-4dca1d8bad24"
+      ]
+    },
+    {
+      "id": "dryft-ashby-de",
+      "name": "Dryft (Almanya)",
+      "type": "ashby",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Dryft",
+      "careers_url": "https://jobs.ashbyhq.com/dryft",
+      "job_board": "dryft",
+      "dogrulanmis_ilanlar": [
+        "df0bd5c0-4549-4cfa-a3e8-28be83df1453",
+        "9ec28c47-92b7-48a0-8544-af41052d813e"
+      ]
+    },
+    {
+      "id": "sap-smartrecruiters-de",
+      "name": "SAP (Almanya)",
+      "type": "smartrecruiters",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "SAP",
+      "careers_url": "https://jobs.smartrecruiters.com/SAPITBusinessSysteme",
+      "company_identifier": "SAPITBusinessSysteme",
+      "logo_url": "https://stajimvar.com/isveren-logolari/sap.png",
+      "dogrulanmis_ilanlar": [
+        "744000162005368"
+      ]
+    },
+    {
+      "id": "sap-jsonld-de",
+      "name": "SAP Careers (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "SAP",
+      "careers_url": "https://jobs.sap.com",
+      "logo_url": "https://stajimvar.com/isveren-logolari/sap.png",
+      "urls": [
+        "https://jobs.sap.com/en/jobs/744000157428451/sap-mee-strategy-transformation-ixp-intern-fmd-strategic-project-management-officer/"
+      ]
+    },
+    {
+      "id": "analysysmason-smartrecruiters-de",
+      "name": "Analysys Mason (Almanya)",
+      "type": "smartrecruiters",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Analysys Mason",
+      "careers_url": "https://jobs.smartrecruiters.com/AnalysysMason1",
+      "company_identifier": "AnalysysMason1",
+      "website": "analysysmason.com",
+      "dogrulanmis_ilanlar": [
+        "744000154377421"
+      ]
+    },
+    {
+      "id": "allianzim-jsonld-de",
+      "name": "Allianz Investment Management (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Allianz Investment Management",
+      "careers_url": "https://careers.allianz.com",
+      "logo_url": "https://stajimvar.com/isveren-logolari/allianz-global-investors.png",
+      "urls": [
+        "https://careers.allianz.com/th/en/job/110169/Intern-m-f-d-in-Sustainable-Investing"
+      ]
+    },
+    {
+      "id": "etribes-personio-de",
+      "name": "Etribes (Almanya)",
+      "type": "personio",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Etribes",
+      "careers_url": "https://etribes-connect.jobs.personio.de",
+      "tenant": "etribes-connect",
+      "domain": "de",
+      "dogrulanmis_ilanlar": [
+        "84652"
       ]
     }
   ],
