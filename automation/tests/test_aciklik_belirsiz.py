@@ -158,7 +158,8 @@ class KaynakKaydi(unittest.TestCase):
         tr = [k for k in self.belirsiz if k.get("country") == "TR"]
         # 14 Kasım 2026: Amazon 10554701 eklendi (13).
         # 24 Kasım 2026: kapanan BMW 195753/190132 çıktı; BMW 180706, Siemens 500403 girdi (13).
-        self.assertEqual(sum(len(k["urls"]) for k in de), 13)
+        # 25 Kasım 2026: Porsche 17959 ve 17962 eklendi (15).
+        self.assertEqual(sum(len(k["urls"]) for k in de), 15)
         # 14 Kasım 2026: Baykar 2027 yaz stajları (8) eklendi.
         # 17 Kasım 2026: Logo, Opet, Anadolu Ajansı (2), Fergani 2027 yaz (12) eklendi.
         self.assertEqual(sum(len(k["urls"]) for k in tr), 34)
@@ -169,7 +170,7 @@ class KaynakKaydi(unittest.TestCase):
         dogrulanmis = [k for k in self.kaynaklar
                        if k.get("country") == "DE" and not k.get("aciklik_dogrulanmadi")]
         # 24 Kasım 2026: kapanan Mercedes-Benz 243767 çıktı, 21 Almanya teslimi +13.
-        self.assertEqual(sum(len(k.get("dogrulanmis_ilanlar") or k.get("urls") or []) for k in dogrulanmis), 54)
+        self.assertEqual(sum(len(k.get("dogrulanmis_ilanlar") or k.get("urls") or []) for k in dogrulanmis), 71)  # 25 Kasım 2026: ikinci parti +17
 
     def test_kapanma_isaretli_ve_verisiz_sayfalar_yok(self):
         """UBS sayfasında "expired"/"no longer" geçiyor; Audi ve EF
