@@ -49,7 +49,7 @@ test('BELİRSİZ KAYNAKLAR AYRI İŞARETLİ VE DOĞRULANMIŞLARLA KARIŞMIYOR', 
   const belirsiz = liste.filter((k) => k.aciklik_dogrulanmadi && k.country === 'DE');
   const ilanSayisi = belirsiz.reduce((a, k) => a + k.urls.length, 0);
 
-  assert.equal(ilanSayisi, 13, 'açıklığı belirsiz 13 Almanya ilanı (14 Kasım 2026: Amazon 10554701 eklendi)');
+  assert.equal(ilanSayisi, 13, 'açıklığı belirsiz 13 Almanya ilanı (24 Kasım 2026: kapanan BMW 195753 ve 190132 çıktı; BMW 180706 ve Siemens 500403 girdi)');
   for (const k of liste.filter((x) => x.aciklik_dogrulanmadi)) {
     assert.equal(k.type, 'resmi_ilan_sayfasi', `${k.id} ayrı adaptörü kullanmalı`);
     assert.ok(['DE', 'TR'].includes(k.country), `${k.id} ülkesi`);
@@ -57,13 +57,13 @@ test('BELİRSİZ KAYNAKLAR AYRI İŞARETLİ VE DOĞRULANMIŞLARLA KARIŞMIYOR', 
     for (const u of k.urls) assert.match(u, /^https:\/\//, `${k.id} resmî bağlantı`);
   }
 
-  /* Doğrulanmış 42 ilan bu işaretten etkilenmiyor (14 Kasım 2026: +8 — Databricks, PUMA x2, HUGO BOSS x3, Mercedes-Benz x2). */
+  /* Doğrulanmış 54 ilan bu işaretten etkilenmiyor (24 Kasım 2026: kapanan Mercedes-Benz 243767 çıktı; +13 — Mercedes-Benz x3, Bosch x2, Allianz GI, DHL, Doctolib, Langdock, Prophet, CRA, Enter, Mercanis). */
   const dogrulanmis = liste.filter((k) => k.country === 'DE' && !k.aciklik_dogrulanmadi);
   const dogrulanmisAdet = dogrulanmis.reduce(
     (a, k) => a + (k.dogrulanmis_ilanlar ?? k.urls ?? []).length,
     0
   );
-  assert.equal(dogrulanmisAdet, 42);
+  assert.equal(dogrulanmisAdet, 54);
 });
 
 /*
@@ -103,8 +103,8 @@ test('TÜRKİYE KAYNAKLARI BU HATTA YALNIZ ADIYLA GİRİYOR', () => {
 
 test('başlık title önekinden: h1 site adıysa ilan adı <title>dan alınıyor (Baykar, 14 Kasım 2026)', () => {
   const s = oku('automation/scraper.py');
-  assert.match(s, /def ilan_sayfasi_basligi\(html: str, title_oneki: str \| None = None\)/);
-  assert.match(s, /ilan_sayfasi_basligi\(yanit\.text, config\.get\("baslik_title_oneki"\)\)/);
+  assert.match(s, /def ilan_sayfasi_basligi\(html: str, title_oneki: str \| None = None, title_kullan: bool = False\)/);
+  assert.match(s, /ilan_sayfasi_basligi\(\s*yanit\.text, config\.get\("baslik_title_oneki"\), config\.get\("baslik_title_kullan"\) is True\s*\)/);
   const ham = JSON.parse(oku('automation/sources.json'));
   const baykar = Object.values(ham)[0].find((k) => k.id === 'baykar-tr-ilan-sayfasi');
   assert.equal(baykar.baslik_title_oneki, 'Baykar Kariyer |');

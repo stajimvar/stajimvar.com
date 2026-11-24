@@ -297,7 +297,8 @@ class KaynakKaydi(unittest.TestCase):
               if k.get("country") == "DE" and not k.get("aciklik_dogrulanmadi")]
         adet = sum(len(k.get("dogrulanmis_ilanlar") or k.get("urls") or []) for k in de)
         # 14 Kasım 2026: +8 (Databricks, PUMA x2, HUGO BOSS x3, Mercedes-Benz x2).
-        self.assertEqual(adet, 42)
+        # 24 Kasım 2026: kapanan Mercedes-Benz 243767 çıktı, 21 Almanya teslimi +13.
+        self.assertEqual(adet, 54)
 
     def test_kanitsiz_ya_da_ulkesi_belirsiz_kaynak_yok(self):
         """Hiçbir hatta girmeyenler: ülkesi kanıtlanamayan (Trade Republic,

@@ -54,3 +54,11 @@ def test_teslim_kaynaklari_dogru_kipte_ve_tekrarsiz():
     assert len(adresler) == len(set(adresler))
     # 404 dönen eski BAT adresi kaynağı düşürmesin diye çıkarıldı.
     assert not any("44671289984" in u for u in kimlik["bat-official-jsonld"]["urls"])
+
+
+def test_baslik_title_kullan_h1_etiketini_atliyor():
+    # BMW (jobs.bmwgroup.com, 24 Kasım 2026): ilk h1 "Job Title:" etiketi.
+    html = ("<html><head><title>Intern Integration of AI Agents in Vehicle Systems (f/m/x) Job Details | BMW Group"
+            "</title></head><body><h1>Job Title:</h1></body></html>")
+    assert scraper.ilan_sayfasi_basligi(html) == "Job Title:"
+    assert scraper.ilan_sayfasi_basligi(html, title_kullan=True) == "Intern Integration of AI Agents in Vehicle Systems (f/m/x)"

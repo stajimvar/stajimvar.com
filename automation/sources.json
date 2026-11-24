@@ -573,7 +573,9 @@
       "careers_url": "https://jobs.smartrecruiters.com/BoschGroup",
       "company_identifier": "BoschGroup",
       "dogrulanmis_ilanlar": [
-        "744000149315349"
+        "744000149315349",
+        "744000162242514",
+        "744000162495259"
       ]
     },
     {
@@ -935,12 +937,14 @@
       "enabled": true,
       "country": "DE",
       "company_name": "BMW Group",
-      "careers_url": "https://www.bmwgroup.jobs/de/de/jobfinder.html",
+      "careers_url": "https://jobs.bmwgroup.com/",
       "aciklik_dogrulanmadi": true,
       "urls": [
-        "https://www.bmwgroup.jobs/de/de/jobfinder/job-description.195753.html",
-        "https://www.bmwgroup.jobs/de/de/jobfinder/job-description.190132.html"
-      ]
+        "https://jobs.bmwgroup.com/job/Intern-Integration-of-AI-Agents-in-Vehicle-Systems-%28fmx%29/180706-en_US/"
+      ],
+      "baslik_title_kullan": true,
+      "_not": "24 Kasım 2026: bmwgroup.jobs 195753 ve 190132 job-no-longer-available sayfasına yönleniyordu, çıkarıldı. jobs.bmwgroup.com sayfasında h1 \"Job Title:\" etiketi; başlık <title>dan.",
+      "city_hint": "München"
     },
     {
       "id": "porsche-ilan-sayfasi-de",
@@ -1621,9 +1625,12 @@
       "company_name": "Mercedes-Benz Group AG",
       "careers_url": "https://jobs.mercedes-benz.com",
       "urls": [
-        "https://jobs.mercedes-benz.com/en/internship-digital-product-management-mbos-mandatory-internship-243767-mer00049r6",
-        "https://jobs.mercedes-benz.com/intern-project-management-customer-experience-digital-solutions-mandatory-internship--244546-MER00049ZR"
-      ]
+        "https://jobs.mercedes-benz.com/intern-project-management-customer-experience-digital-solutions-mandatory-internship--244546-MER00049ZR",
+        "https://jobs.mercedes-benz.com/en/praktikantin-direktmarketing-pflicht-praktikum-247803-mer0004apb",
+        "https://jobs.mercedes-benz.com/praktikant-in-international-sales-financial-services-mercedes-benz-cars-pflicht-praktikum--247415-MER0004AOO",
+        "https://jobs.mercedes-benz.com/praktikant-in-e-learning-training-pflicht-praktikum--247394-MER0004AND"
+      ],
+      "_not": "24 Kasım 2026: 243767 nicht-mehr-verfuegbar sayfasına (403) yönleniyordu ve tüm kaynağı düşürüyordu, çıkarıldı."
     },
     {
       "id": "baykar-tr-ilan-sayfasi",
@@ -1732,6 +1739,125 @@
         "https://kariyer.ferganispace.com/tr/basvuru/acik-pozisyonlar/2027-yaz-donemi-staj-teknik-proje-muhendisi",
         "https://kariyer.ferganispace.com/tr/basvuru/acik-pozisyonlar/2027-yaz-donemi-staj-uydu-sistemleri-gelistirme",
         "https://kariyer.ferganispace.com/tr/basvuru/acik-pozisyonlar/2027-yaz-donemi-staj-yorunge-yonelim-belirleme-ve-"
+      ]
+    },
+    {
+      "id": "siemens-ilan-sayfasi-de",
+      "name": "Siemens (Almanya, açıklık belirsiz)",
+      "type": "resmi_ilan_sayfasi",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Siemens AG",
+      "careers_url": "https://jobs.siemens.com/en_US/externaljobs",
+      "aciklik_dogrulanmadi": true,
+      "urls": [
+        "https://jobs.siemens.com/en_US/externaljobs/JobDetail/500403"
+      ],
+      "_not": "24 Kasım 2026 kullanıcı teslimi (21 Almanya ilanı); bağlantı resmî kaynaktan doğrulandı. Avature sayfası JobPosting vermiyor; konum Munich, Germany.",
+      "city_hint": "München"
+    },
+    {
+      "id": "allianzgi-jsonld-de",
+      "name": "Allianz Global Investors (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Allianz Global Investors",
+      "careers_url": "https://careers.allianz.com",
+      "urls": [
+        "https://careers.allianz.com/global/en/job/110114/Intern-m-f-d-Private-Equity-Fund-Investments"
+      ]
+    },
+    {
+      "id": "dhl-jsonld-de",
+      "name": "DHL Group (Almanya)",
+      "type": "official_jsonld",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "DHL Group",
+      "careers_url": "https://careers.dhl.com/eu/de",
+      "urls": [
+        "https://careers.dhl.com/eu/de/job/DPDHGLOBALAV374900DEEUEXTERNAL/Internship-in-Global-Belonging-Engagement-Team-m-f-d"
+      ]
+    },
+    {
+      "id": "doctolib-ashby-de",
+      "name": "Doctolib (Almanya)",
+      "type": "ashby",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Doctolib",
+      "careers_url": "https://jobs.ashbyhq.com/doctolib",
+      "job_board": "doctolib",
+      "dogrulanmis_ilanlar": [
+        "dda0530c-043e-4ee5-8e82-f1e98c944af4"
+      ]
+    },
+    {
+      "id": "langdock-ashby-de",
+      "name": "Langdock (Almanya)",
+      "type": "ashby",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Langdock",
+      "careers_url": "https://jobs.ashbyhq.com/langdock",
+      "job_board": "langdock",
+      "dogrulanmis_ilanlar": [
+        "6e9e2672-851a-40e9-9c4e-0fb6cf351474"
+      ]
+    },
+    {
+      "id": "prophet-greenhouse-de",
+      "name": "Prophet (Almanya)",
+      "type": "greenhouse",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Prophet",
+      "careers_url": "https://job-boards.greenhouse.io/prophet",
+      "board_token": "prophet",
+      "dogrulanmis_ilanlar": [
+        "4745104005"
+      ]
+    },
+    {
+      "id": "cra-greenhouse-de",
+      "name": "Charles River Associates (Almanya)",
+      "type": "greenhouse",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Charles River Associates",
+      "careers_url": "https://job-boards.greenhouse.io/charlesriverassociates",
+      "board_token": "charlesriverassociates",
+      "dogrulanmis_ilanlar": [
+        "5174914"
+      ]
+    },
+    {
+      "id": "enter-personio-de",
+      "name": "Enter (Almanya)",
+      "type": "personio",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Enter (Baupal GmbH)",
+      "careers_url": "https://baupal-gmbh.jobs.personio.de",
+      "tenant": "baupal-gmbh",
+      "domain": "de",
+      "dogrulanmis_ilanlar": [
+        "1853576"
+      ]
+    },
+    {
+      "id": "mercanis-personio-de",
+      "name": "Mercanis (Almanya)",
+      "type": "personio",
+      "enabled": true,
+      "country": "DE",
+      "company_name": "Mercanis",
+      "careers_url": "https://mercanis.jobs.personio.de",
+      "tenant": "mercanis",
+      "domain": "de",
+      "dogrulanmis_ilanlar": [
+        "451014"
       ]
     }
   ],

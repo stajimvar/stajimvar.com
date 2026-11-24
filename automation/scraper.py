@@ -1053,7 +1053,7 @@ KAPANMA_ISARETLERI = re.compile(
 # Ayraçlı tekil ek de atılıyor: Siemens <title>'ı "… - Job Detail".
 BASLIK_EKLERI = re.compile(r"\s*[-–|]?\s*(?:stellendetails|stellenangebot|stellenanzeige|job details?|job description)\s*$", re.I)
 
-def ilan_sayfasi_basligi(html: str, title_oneki: str | None = None) -> str | None:
+def ilan_sayfasi_basligi(html: str, title_oneki: str | None = None, title_kullan: bool = False) -> str | None:
     """Önce h1, yoksa <title>. Hiçbiri yoksa None — başlık uydurulmuyor.
 
     `title_oneki` (kaynakta `baslik_title_oneki`, 14 Kasım 2026): bazı resmî
@@ -1061,6 +1061,10 @@ def ilan_sayfasi_basligi(html: str, title_oneki: str | None = None) -> str | Non
     <title>'da: "Baykar Kariyer | 2027 Yaz Dönemi Staj | Web Yazılım
     Geliştirme". Önek verilirse başlık <title>'dan, önek atılarak alınır ve
     kalan bölümler " — " ile birleştirilir. Önek tutmazsa None (uydurma yok).
+
+    `title_kullan` (kaynakta `baslik_title_kullan`, 24 Kasım 2026): BMW'nin
+    SuccessFactors sayfasında ilk h1 "Job Title:" etiketi; ilan adı yalnız
+    <title>'da ("… (f/m/x) Job Details | BMW Group"). Verilirse h1 atlanır.
     """
     if title_oneki:
         eslesme = re.search(r"<title[^>]*>(.*?)</title>", html, re.S | re.I)
@@ -1071,7 +1075,7 @@ def ilan_sayfasi_basligi(html: str, title_oneki: str | None = None) -> str | Non
         return " — ".join(parcalar) or None
     okuyucu = _GorunurMetin()
     okuyucu.feed(html)
-    if okuyucu.baslik:
+    if okuyucu.baslik and not title_kullan:
         return okuyucu.baslik
     eslesme = re.search(r"<title[^>]*>(.*?)</title>", html, re.S | re.I)
     if not eslesme:
@@ -1121,7 +1125,9 @@ def resmi_ilan_sayfasi(config: dict[str, Any]) -> Iterable[Job]:
         if KAPANMA_ISARETLERI.search(okuyucu.metin):
             continue
 
-        baslik = ilan_sayfasi_basligi(yanit.text, config.get("baslik_title_oneki"))
+        baslik = ilan_sayfasi_basligi(
+            yanit.text, config.get("baslik_title_oneki"), config.get("baslik_title_kullan") is True
+        )
         # `baslik_soneki` (17 Kasım 2026): bazı portallar h1'e site imzası
         # ekliyor ("… Staj Programı, İstanbul | Koç Kariyerim"). Yalnız tam
         # bu sonekle bitiyorsa atılır; tutmazsa başlık olduğu gibi kalır.
