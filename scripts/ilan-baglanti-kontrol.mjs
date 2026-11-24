@@ -35,6 +35,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 import { acikKaniti, kapanmaSebebi, yenidenAcmaKaniti } from '../src/lib/ilan-kapanma.mjs';
+import { PLANLI_KAPANIS_SEBEBI, planliKapanisGeldiMi, planliKapandiMi } from '../src/lib/planli-kapanis.mjs';
+import { istanbulBugun } from '../src/lib/seo/ilan-sayfasi.mjs';
 
 const KOK = path.resolve(import.meta.dirname, '..');
 
@@ -115,7 +117,37 @@ const kuru = process.argv.includes('--kuru');
   tek ifadede sıralamak yerine aşağıda JS ile yapıyoruz, çünkü
   "yaklaşan" göreli bir eşik ve PostgREST'te okunaklı olmuyor.
 */
-const { data: ilanlar, error } = await db
+/*
+  PLANLI KAPANIŞ (25 Kasım 2026, lib/planli-kapanis)
+
+  Otomasyonun kontrol edemediği (Workday 429) elle eklenmiş ilanlar
+  `raw.planli_kapanis` gününde kapanıyor. Bağlantı kontrolünden ÖNCE
+  çalışıyor; kapanan ilan aşağıdaki listeden de çıkarılıyor ki sayfası
+  açık görünse bile yeniden yayına alınmasın.
+*/
+{
+  const bugun = istanbulBugun();
+  const { data: planlilar, error: planliHata } = await db
+    .from('listings')
+    .select('id, title, status, raw')
+    .in('status', ['published', 'draft'])
+    .not('raw->>planli_kapanis', 'is', null);
+  if (planliHata) {
+    console.error('Planlı kapanışlar okunamadı:', planliHata.message);
+  } else {
+    for (const ilan of (planlilar || []).filter((x) => planliKapanisGeldiMi(x, bugun))) {
+      console.log(`PLANLI KAPANIŞ  ${ilan.title}  (${ilan.raw.planli_kapanis})`);
+      if (kuru) continue;
+      const { error: e } = await db
+        .from('listings')
+        .update({ status: 'closed', closed_at: new Date().toISOString(), closure_reason: PLANLI_KAPANIS_SEBEBI, source_status: 'kapali' })
+        .eq('id', ilan.id);
+      if (e) console.error('  kapatılamadı:', e.message);
+    }
+  }
+}
+
+const { data: ilanlarHam, error } = await db
   .from('listings')
   .select(
     'id, title, apply_url, source_url, status, origin, posted_at, ' +
@@ -128,6 +160,8 @@ if (error) {
   console.error('İlanlar okunamadı:', error.message);
   process.exit(1);
 }
+/* Planlı kapanışla kapanan ilan gezilmiyor: yeniden açma kanıtı onu geri getirmesin. */
+const ilanlar = ilanlarHam.filter((x) => !planliKapandiMi(x));
 
 /*
   SON BAŞVURUSU YAKLAŞAN İLANLAR ÖNE
