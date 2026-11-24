@@ -27,7 +27,8 @@ const BAG = '<a href="/staj-ilanlari/istanbul">İstanbul staj ilanları</a>';
 const TEMEL = {
   id: 'abcdef12-0000-4000-8000-000000000001',
   title: 'Pazarlama Stajyeri',
-  description: 'Pazarlama ekibinde kampanya hazırlığına destek.',
+  /* 50 kelimeyi aşıyor: ince ilan kuralına (24 Kasım 2026) takılmasın, test şehir bağlantısını ölçüyor. */
+  description: 'Pazarlama ekibinde kampanya hazırlığına destek. Ekip; sosyal medya planı, rakip analizi, haftalık raporlar ve etkinlik organizasyonu üzerinde çalışıyor. Stajyer, kampanya takvimini hazırlamaya, içerik taslaklarını yazmaya, ölçüm sonuçlarını tabloya geçirmeye ve ekip toplantılarında not tutmaya katkı verecek. Excel ve sunum araçlarını kullanabilen, yazılı iletişimi güçlü, öğrenmeye açık adaylar tercih edilir; staj boyunca bir mentor eşlik eder.',
   responsibilities: ['Rapor hazırlamak'],
   required_skills: ['Excel'],
   posted_at: '2026-10-01T09:00:00Z',

@@ -69,7 +69,7 @@ test('ön render ve detay sayfası aynı kuralı kullanıyor; tek satırlıda es
   assert.match(onrender, /const kapananlar = hepsi\.filter\(\(f\) => firsatSuresiGectiMi\(f\) && aciklamaYapili\(f\.description\)\);/);
   assert.match(onrender, /if \(kapandi\) notlar\.push\('Başvuru dönemi kapandı'\);/);
   /* noindex kuralı DEĞİŞMEDİ. */
-  assert.match(onrender, /const firsatInce = !duzMetin\(f\.description\) && !duzMetin\(f\.eligibility\);/);
+  assert.match(onrender, /const firsatInce = firsatInceMi\(f\);/);
   assert.match(onrender, /dizinDisi: firsatInce,/);
   const sayfa = oku('src/components/OpportunityDetailPage.tsx');
   assert.match(sayfa, /aciklamaYapili\(item\.description\) \? \(\s*<YapiliAciklama/);

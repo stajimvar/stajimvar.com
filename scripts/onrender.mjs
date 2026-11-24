@@ -47,7 +47,7 @@ import { kunye, YAZAR } from '../src/lib/rehber-kunye.mjs';
 import { kacir, duzMetin, ozetle, ilanYolu as ortakIlanYolu } from '../src/lib/seo/metin.mjs';
 import { STAJ_ILANLARI_METNI } from '../src/lib/staj-ilanlari-metni.mjs';
 import { aciklamaYapili, aciklamaHtml } from '../src/lib/firsat-aciklama.mjs';
-import { seritFirsatlari as seritFirsatlariSec, ANASAYFA_BOLUMLERI, ANASAYFA_ILK_KART, anaSayfaSehirBaglantisi } from '../src/lib/anasayfa-baglantilari.mjs';
+import { firsatInceMi, seritFirsatlari as seritFirsatlariSec, ANASAYFA_BOLUMLERI, ANASAYFA_ILK_KART, anaSayfaSehirBaglantisi } from '../src/lib/anasayfa-baglantilari.mjs';
 import { ilanSayfasi, ILAN_SECIMI, istanbulBugun, benzerIlanlariSec } from '../src/lib/seo/ilan-sayfasi.mjs';
 import { sayfaHtml } from '../src/lib/seo/sayfa-html.mjs';
 import { ARSIV_SAYFA_BOYU, acikIlanMi, arsivSirasi, arsivYolu, arsivSayfaBasligi, arsivSayfaNumaralari } from '../src/lib/seo/ilan-arsivi.mjs';
@@ -58,6 +58,7 @@ import { sirketSayfaBasligi, sirketYedekAciklamasi } from '../src/lib/seo/sirket
 import { SABLON_DEGISIKLIKLERI, enYeniTarih } from '../src/lib/seo/sablon-tarihleri.mjs';
 import { stajIlanlariBasligi, ANA_SAYFA_BASLIGI } from '../src/lib/seo/staj-ilanlari-basligi.mjs';
 import { ilanKartlariHtml } from '../src/lib/seo/ilan-karti-html.mjs';
+import { aracMetni } from '../src/lib/seo/arac-metinleri.mjs';
 import { SEHIR_SAYFALARI, sehirSayfasi, sehirYolu } from '../src/lib/seo/sehir-ilanlari.mjs';
 
 const kok = path.dirname(path.dirname(url.fileURLToPath(import.meta.url)));
@@ -1564,7 +1565,8 @@ async function main() {
   const EK_JSONLD = { '/isveren': isverenSssJsonLd };
 
   for (const [yol, baslik, aciklama, h1] of sabitler) {
-    const ek = EK_LISTE[yol] || '';
+    /* Araç sayfaları: hesaplayıcı yalnız tarayıcıda çiziliyor; ilk HTML'e ne yaptığı ve örneği (lib/seo/arac-metinleri). */
+    const ek = (EK_LISTE[yol] || '') + aracMetni(yol);
     sayfaYaz(yol, {
       baslik,
       aciklama,
@@ -1958,7 +1960,7 @@ async function main() {
       altMetin: [i.companies?.name, i.city ? konumEtiketi(i.city) : ''].filter(Boolean).join(' · '),
     });
 
-    if (suresiGecti) HARITADAN_DISLANAN.add(yol);
+    if (suresiGecti || s.dizinDisi) HARITADAN_DISLANAN.add(yol);
     sayfaYaz(yol, { ...s, lastmod: String(i.updated_at || i.posted_at || i.created_at || '').slice(0, 10) || null });
     sayac++;
   }
@@ -2057,7 +2059,8 @@ async function main() {
       sayfa kendiliğinden haritaya giriyor — kural içeriğe bakıyor,
       kaydın kendisine değil.
     */
-    const firsatInce = !duzMetin(f.description) && !duzMetin(f.eligibility);
+    /* 24 Kasım 2026: kelime eşiği; kural ana sayfa şeridiyle ortak (lib/anasayfa-baglantilari → firsatInceMi). */
+    const firsatInce = firsatInceMi(f);
     if (firsatInce) HARITADAN_DISLANAN.add(firsatYolu);
 
     sayfaYaz(firsatYolu, {
@@ -2195,7 +2198,13 @@ async function main() {
       Sayfa SİLİNMİYOR: adres 200 dönüyor, ilan sayfalarından ve iç
       bağlantılardan erişiliyor. Yalnız "bunu da dizine al" demiyoruz.
     */
-    const sirketInce = s.ilanlar.length < 3;
+    /*
+      24 Kasım 2026: AdSense ikinci retti. Üç ilanlı sayfa da ölçüldü:
+      80-150 kelime (Porsche, beş ilan: 80). Liste tek başına içerik
+      değil; şirketin kendi tanıtımı (`description`) olmayan sayfa da
+      dizine girmiyor.
+    */
+    const sirketInce = s.ilanlar.length < 3 || !duzMetin(s.description || '');
     if (sirketInce) HARITADAN_DISLANAN.add(`/sirket/${slug}`);
 
     sayfaYaz(`/sirket/${slug}`, {

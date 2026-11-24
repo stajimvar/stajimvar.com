@@ -376,6 +376,86 @@ export function benzerIlanlariSec(ilan, adaylar, { adet = BENZER_ADET, simdi = D
   return uygun.sort((a, b) => grup(a) - grup(b) || yeniOnce(a, b)).slice(0, adet);
 }
 
+/*
+  İNCE İLAN DİZİNE GİRMİYOR (24 Kasım 2026)
+
+  AdSense siteyi ikinci kez "düşük değere sahip içerik" diye reddetti.
+  Ölçüldü: yayındaki 270 ilanın açıklaması (açıklama + sorumluluklar +
+  nitelikler) ortanca 80 kelime; 64'ünde 50 kelimenin altında — sayfa
+  başlık, şirket adı ve tek cümleden ibaret. Bu sayfalar DURUYOR (200,
+  başvuru bağlantısı çalışıyor) ama `noindex` alıyor ve haritaya girmiyor.
+  Kural metne bakıyor: açıklama dolduğu anda ilan kendiliğinden dizine
+  giriyor.
+*/
+export const INCE_ILAN_ESIGI = 50;
+
+export function ilanKelimeSayisi(ilan) {
+  const metin = [ilan.description, ...dizi(ilan.responsibilities), ...dizi(ilan.required_skills)]
+    .map((x) => duzMetin(x || ''))
+    .join(' ');
+  return metin.split(/\s+/).filter(Boolean).length;
+}
+
+export const ilanInceMi = (ilan) => ilanKelimeSayisi(ilan) < INCE_ILAN_ESIGI;
+
+/*
+  BAŞVURMADAN ÖNCE — STAJIMVAR'IN KENDİ BÖLÜMÜ (24 Kasım 2026)
+
+  İlan metni şirketin kaynağından geliyor; AdSense bunu özgün içerik
+  saymıyor. Bu bölüm ilanın KENDİ verisinden türüyor — ülkesi, ücret
+  bilgisi, süresi, son başvuru tarihi — ve öğrenciyi o duruma uyan araç
+  ve rehbere götürüyor. Veri olmayan madde yazılmıyor; uydurma yok.
+*/
+export function basvurmadanOnce(ilan, simdi = Date.now()) {
+  const ulke = String(ilan.country_code || '').toUpperCase();
+  const turkiye = ulke === 'TR';
+  const yurtdisi = Boolean(ulke) && !turkiye;
+  const maddeler = [];
+
+  if (ilan.is_paid === true) {
+    maddeler.push(
+      'İlanda stajın <strong>ücretli</strong> olduğu yazıyor' +
+        (ilan.stipend_text ? ` (${kacir(duzMetin(ilan.stipend_text))})` : '') +
+        '.'
+    );
+  } else if (turkiye) {
+    maddeler.push(
+      'İlanda ücret bilgisi yok. Okulunun zorunlu tuttuğu stajda işletmenin ödemesi gereken en düşük tutarı ' +
+        '<a href="/araclar/staj-ucreti-hesaplama">staj ücreti hesaplama</a> aracında görebilirsin.'
+    );
+  }
+
+  if (turkiye) {
+    maddeler.push(
+      'Zorunlu stajın için başvuruyorsan, kabul aldıktan sonra okulunun staj birimine bildir: staj sigortası okul üzerinden yapılıyor. ' +
+        'Adımlar <a href="/rehber/zorunlu-staj-rehberi">zorunlu staj rehberinde</a>.'
+    );
+    maddeler.push(
+      'Okulun belirli bir iş günü istiyorsa stajının hangi gün biteceğini tatilleri düşerek ' +
+        '<a href="/araclar/staj-gunu-hesaplama">staj günü hesaplama</a> aracında bulabilirsin.'
+    );
+  }
+
+  if (yurtdisi) {
+    maddeler.push(
+      'Bu staj yurt dışında. Vize ya da çalışma izni, konaklama ve Erasmus+ staj hareketliliği hibesi gibi konular ' +
+        '<a href="/rehber/yurtdisinda-staj">yurt dışında staj rehberinde</a>.'
+    );
+  }
+
+  const durum = sonBasvuruDurumu(ilan, simdi);
+  if (!durum.suresiGecti && durum.metin) {
+    maddeler.push(`Son başvuru: <strong>${kacir(durum.metin)}</strong>. Başvurunu son güne bırakma; bazı şirketler ilanı erken kapatıyor.`);
+  }
+
+  maddeler.push(
+    'Deneyimin yoksa CV’nde okul projelerini ve gönüllü işlerini öne çıkar: <a href="/rehber/staj-cv-nasil-yazilir">staj CV’si rehberi</a>. ' +
+      'Görüşmeye çağrılırsan <a href="/rehber/staj-mulakati">staj mülakatı rehberine</a> göz at.'
+  );
+
+  return '<h2>Başvurmadan önce</h2><ul class="sv-once">' + maddeler.map((m) => `<li>${m}</li>`).join('') + '</ul>';
+}
+
 export function ilanGorunurGovde(ilan, konumEtiketi, simdi = Date.now(), { sirketSayfasiVar = true, benzerler = [] } = {}) {
   const sirket = ilan.companies || {};
   /* Şirket sayfası yoksa bağlantı verilmiyor (kırık iç bağlantı olmasın). */
@@ -435,6 +515,7 @@ export function ilanGorunurGovde(ilan, konumEtiketi, simdi = Date.now(), { sirke
     bolum('Sorumluluklar', dizi(ilan.responsibilities)) +
     bolum('Aranan nitelikler', dizi(ilan.required_skills)) +
     basvuru +
+    (durum.suresiGecti ? '' : basvurmadanOnce(ilan, simdi)) +
     benzerBolumu +
     '<p class="sv-baglantilar"><a href="/staj-ilanlari">Tüm staj ilanları</a>' +
     (sehirBag ? ` · <a href="${kacir(sehirBag.yol)}">${kacir(sehirBag.metin)}</a>` : '') +
@@ -463,6 +544,7 @@ export function ilanSayfasi(ilan, konumEtiketi, simdi = Date.now(), secenek = {}
       gorunurGovde: ilanGorunurGovde(ilan, konumEtiketi, simdi, secenek),
       /* Kırıntı yolu ilanın kendi grafiğinde; genel kırıntı üreticisi devre dışı. */
       kirintiYok: true,
+      dizinDisi: ilanInceMi(ilan),
       jsonLd: { '@context': 'https://schema.org', '@graph': [...(veri ? [veri] : []), ilanKirintisi(ilan)] },
     },
   };
