@@ -16,15 +16,15 @@ export interface KaynakSistemi {
 }
 
 /** Takip edilen toplam şirket kaynağı. */
-export const KAYNAK_TOPLAM = 131;
+export const KAYNAK_TOPLAM = 140;
 
 export const KAYNAK_SISTEMLERI: readonly KaynakSistemi[] = [
-  { ad: 'Şirketin kendi kariyer sayfası', adet: 72 },
-  { ad: 'Greenhouse', adet: 14 },
+  { ad: 'Şirketin kendi kariyer sayfası', adet: 75 },
+  { ad: 'Greenhouse', adet: 16 },
   { ad: 'Lever', adet: 13 },
   { ad: 'Workable', adet: 12 },
-  { ad: 'Ashby', adet: 9 },
+  { ad: 'Ashby', adet: 11 },
   { ad: 'Workday', adet: 5 },
+  { ad: 'Personio', adet: 4 },
   { ad: 'SmartRecruiters', adet: 4 },
-  { ad: 'Personio', adet: 2 },
 ];
