@@ -50,6 +50,7 @@ test('Workday göçü: tarih son başvuru alanında değil, raw.planli_kapanis i
   for (const e of ekler) {
     assert.doesNotMatch(e.split('select')[0], /application_deadline/);
     assert.match(e, /"planli_kapanis": "2026-12-31"/);
-    assert.match(e, /where not exists \(select 1 from public\.listings where canonical_url = '/);
+    /* Şirket kaydı yoksa (boş test veritabanı) hiçbir şey eklenmiyor. */
+    assert.match(e, /from public\.companies c\nwhere c\.id = '[0-9a-f-]{36}'\n  and not exists \(select 1 from public\.listings where canonical_url = '/);
   }
 });
