@@ -162,7 +162,8 @@ class KaynakKaydi(unittest.TestCase):
         self.assertEqual(sum(len(k["urls"]) for k in de), 15)
         # 14 Kasım 2026: Baykar 2027 yaz stajları (8) eklendi.
         # 17 Kasım 2026: Logo, Opet, Anadolu Ajansı (2), Fergani 2027 yaz (12) eklendi.
-        self.assertEqual(sum(len(k["urls"]) for k in tr), 34)
+        # 25 Kasım 2026: Siemens'te 5 kapanan çıktı, 3 yeni girdi (32).
+        self.assertEqual(sum(len(k["urls"]) for k in tr), 32)
         self.assertEqual(len(de) + len(tr), len(self.belirsiz))
         self.assertTrue(all(k["type"] == "resmi_ilan_sayfasi" for k in self.belirsiz))
 
