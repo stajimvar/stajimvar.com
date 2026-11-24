@@ -98,7 +98,8 @@ test('TÜRKİYE KAYNAKLARI BU HATTA YALNIZ ADIYLA GİRİYOR', () => {
       assert.notEqual(k.type, 'resmi_ilan_sayfasi');
     }
   }
-  assert.equal(trIlan, 34);
+  /* 25 Kasım 2026: Siemens'te 5 kapanan çıktı, 3 yeni girdi. */
+  assert.equal(trIlan, 32);
 });
 
 test('başlık title önekinden: h1 site adıysa ilan adı <title>dan alınıyor (Baykar, 14 Kasım 2026)', () => {

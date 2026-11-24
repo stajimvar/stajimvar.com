@@ -88,7 +88,9 @@ def email(text: str) -> str | None:
 # ve radar onu zaten staj kanıtı sayıyordu; yalnız bu ilk süzgeç
 # tanımıyordu ve Siemens'in yarı zamanlı öğrenci ilanları kapıya hiç
 # ulaşmıyordu. İki kural artık aynı.
-EARLY_CAREER = re.compile(r"\b(staj(?:yer)?|intern(?:ship)?|summer\s+intern|winter\s+intern|trainee|co-op|working\s+student)\b", re.I)
+# 25 Kasım 2026: çoğullar da (PwC "Long Term Trainees", "Internships") —
+# kelime sınırı yüzünden "Trainees" eşleşmiyordu.
+EARLY_CAREER = re.compile(r"\b(staj(?:yer)?|intern(?:ship)?s?|summer\s+intern|winter\s+intern|trainees?|co-op|working\s+student)\b", re.I)
 # TURKIYE KONUM FILTRESI
 #
 # Once yalnizca alti sehir taniniyordu: istanbul, ankara, izmir, bursa,
@@ -780,17 +782,29 @@ def workday(config: dict[str, Any]) -> Iterable[Job]:
     endpoint = f"https://{host}/wday/cxs/{tenant}/{site}/jobs"
     detay_hakki = WORKDAY_DETAY_UST_SINIRI
     for offset in range(0, 200, 20):
-        response = requests.post(endpoint, json={"limit":20,"offset":offset,"searchText":"intern"}, timeout=25, headers={"User-Agent":"StajimVarJobs/1.0"}); response.raise_for_status()
+        # `arama` (25 Kasım 2026): bazı şirketler stajı "trainee" diye yazıyor
+        # (PwC); varsayılan "intern" değişmedi.
+        response = requests.post(endpoint, json={"limit":20,"offset":offset,"searchText":config.get("arama") or "intern"}, timeout=25, headers={"User-Agent":"StajimVarJobs/1.0"}); response.raise_for_status()
         postings = response.json().get("jobPostings", [])
         if not postings: break
         for item in postings:
             title=clean(item.get("title", "")); location=item.get("locationsText") or ""; path=item.get("externalPath")
             if not path or not erken_kariyer_mi(config, title, ""): continue
             if not konum_eslesiyor(config, location):
-                if kaynak_ulkesi(config) == "TR" or detay_hakki <= 0: continue
+                # Türkiye profilinde detay yalnız DOĞRULANMIŞ kipte soruluyor
+                # (25 Kasım 2026): Bentley'nin ilanı "2 Locations" diyor,
+                # ülke yalnız detayda. Pano taramasının davranışı aynı.
+                if (kaynak_ulkesi(config) == "TR" and "dogrulanmis_ilanlar" not in config) or detay_hakki <= 0: continue
                 detay_hakki -= 1
-                if not konum_eslesiyor(config, None, _workday_detay_ulkesi(host, tenant, site, path)): continue
-            yield Job(config["name"], workday_ilan_adresi(host, site, path), title, config.get("company_name"), location, mode(item.get("timeType", "")), "", country_code=ulke_etiketi(config))
+                detay_ulkesi = _workday_detay_ulkesi(host, tenant, site, path)
+                if kaynak_ulkesi(config) == "TR":
+                    # Genel Türkiye süzgeci yapısal ülkeyi bilerek okumuyor;
+                    # burada yalnız tek tek doğrulanmış ilanın detayına bakılıyor.
+                    if structured_country_code(detay_ulkesi) != "TR": continue
+                elif not konum_eslesiyor(config, None, detay_ulkesi): continue
+            # "4 Locations" bir şehir değil; şehir alanına yazılmıyor.
+            sehir = None if re.fullmatch(r"\d+ Locations?", location.strip()) else location
+            yield Job(config["name"], workday_ilan_adresi(host, site, path), title, config.get("company_name"), sehir, mode(item.get("timeType", "")), "", country_code=ulke_etiketi(config))
         if len(postings) < 20: break
 
 def _workday_detay_ulkesi(host: str, tenant: str, site: str, path: str) -> str | None:

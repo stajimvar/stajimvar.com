@@ -1549,16 +1549,14 @@
       "logo_url": "https://upload.wikimedia.org/wikipedia/commons/3/3c/Siemens_AG_logo.svg",
       "fallback_logo_url": "https://logo.clearbit.com/siemens.com",
       "urls": [
-        "https://jobs.siemens.com/en_US/externaljobs/JobDetail/522625",
-        "https://jobs.siemens.com/en_US/externaljobs/JobDetail/527260",
         "https://jobs.siemens.com/en_US/externaljobs/JobDetail/527065",
-        "https://jobs.siemens.com/en_US/externaljobs/JobDetail/525914",
         "https://jobs.siemens.com/en_US/externaljobs/JobDetail/524655",
-        "https://jobs.siemens.com/en_US/externaljobs/JobDetail/524645",
         "https://jobs.siemens.com/en_US/externaljobs/JobDetail/522797",
-        "https://jobs.siemens.com/en_US/externaljobs/JobDetail/511354"
+        "https://jobs.siemens.com/en_US/externaljobs/JobDetail/530560",
+        "https://jobs.siemens.com/en_US/externaljobs/JobDetail/530219",
+        "https://jobs.siemens.com/en_US/externaljobs/JobDetail/528487"
       ],
-      "_not": "1 Kasım 2026 kullanıcı JSON teslimi. Avature sayfaları makine-okunur JobPosting vermiyor; sayfa ayakta, konum Türkiye (Gebze/Kocaeli/İstanbul/Kartal), başvuru düğmesi var. Açıklık doğrulanamadığı için TASLAK. Kapanan Siemens ilanı /externaljobs/Error'a 403 ile yönleniyor (513581, 511920, 517447 bu yüzden alınmadı)."
+      "_not": "1 Kasım 2026 kullanıcı JSON teslimi. Avature sayfaları makine-okunur JobPosting vermiyor; sayfa ayakta, konum Türkiye (Gebze/Kocaeli/İstanbul/Kartal), başvuru düğmesi var. Açıklık doğrulanamadığı için TASLAK. Kapanan Siemens ilanı /externaljobs/Error'a 403 ile yönleniyor (513581, 511920, 517447 bu yüzden alınmadı). 25 Kasım 2026: 522625, 527260, 525914, 524645, 511354 kapandı (403 → Error) ve kaynağı tümden durduruyordu, çıkarıldı; 530560, 530219, 528487 eklendi."
     },
     {
       "id": "amazon-tr-ilan-sayfasi",
@@ -2041,6 +2039,69 @@
       "domain": "de",
       "dogrulanmis_ilanlar": [
         "84652"
+      ]
+    },
+    {
+      "id": "pwc-workday-tr",
+      "name": "PwC Türkiye (Türkiye)",
+      "type": "workday",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "PwC Türkiye",
+      "careers_url": "https://pwc.wd3.myworkdayjobs.com/Global_Campus_Careers",
+      "host": "pwc.wd3.myworkdayjobs.com",
+      "tenant": "pwc",
+      "site": "Global_Campus_Careers",
+      "logo_url": "https://stajimvar.com/isveren-logolari/pwc.png",
+      "dogrulanmis_ilanlar": [
+        "768147WD"
+      ],
+      "arama": "Audit Services Long Term Trainees"
+    },
+    {
+      "id": "bentley-workday-tr",
+      "name": "Bentley Systems (Türkiye)",
+      "type": "workday",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Bentley Systems",
+      "careers_url": "https://bentleysystems.wd5.myworkdayjobs.com/bentley",
+      "host": "bentleysystems.wd5.myworkdayjobs.com",
+      "tenant": "bentleysystems",
+      "site": "bentley",
+      "logo_url": "https://stajimvar.com/isveren-logolari/bentley-systems.png",
+      "dogrulanmis_ilanlar": [
+        "R62"
+      ]
+    },
+    {
+      "id": "signify-workday-tr",
+      "name": "Signify (Türkiye)",
+      "type": "workday",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Signify",
+      "careers_url": "https://lighting.wd3.myworkdayjobs.com/jobs-and-careers",
+      "host": "lighting.wd3.myworkdayjobs.com",
+      "tenant": "lighting",
+      "site": "jobs-and-careers",
+      "logo_url": "https://stajimvar.com/isveren-logolari/signify.png",
+      "dogrulanmis_ilanlar": [
+        "366943"
+      ]
+    },
+    {
+      "id": "sezzle-greenhouse-tr",
+      "name": "Sezzle (Türkiye)",
+      "type": "greenhouse",
+      "enabled": true,
+      "country": "TR",
+      "company_name": "Sezzle",
+      "careers_url": "https://job-boards.greenhouse.io/sezzle",
+      "board_token": "sezzle",
+      "logo_url": "https://stajimvar.com/isveren-logolari/sezzle.png",
+      "dogrulanmis_ilanlar": [
+        "8198862003"
       ]
     }
   ],
