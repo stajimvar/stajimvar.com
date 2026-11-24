@@ -79,6 +79,8 @@ const ilan = (title, alanlar, ek = {}) => ({
   application_deadline: null,
   status: 'published',
   companies: { name: `Şirket ${sira}`, logo_url: null },
+  /* İnce ilan kuralı (24 Kasım 2026, 50 kelime): test verisi ince sayılmasın. */
+  description: 'Stajyer ekiple birlikte günlük işlere katılacak. '.repeat(10),
   ...ek,
 });
 
@@ -190,7 +192,7 @@ test('uygulama: bölüm sayfası aynı kuralı kullanıyor; dolgu ilan yok; rehb
   assert.match(oku('src/components/SadeIlanKarti.tsx'), /className="!h-20 !w-20 !rounded-xl !p-2 !text-2xl"/);
   /* Sorgu derlemeyle aynı sırada ve aynı alanlarla. */
   const sorgu = oku('src/lib/queries/index.ts');
-  assert.match(sorgu, /\.select\('id, title, city, country_code, work_type, application_deadline, alan_idleri, companies \( name, logo_url \)'\)/);
+  assert.match(sorgu, /\.select\('id, title, city, country_code, work_type, application_deadline, alan_idleri, description, responsibilities, required_skills, companies \( name, logo_url \)'\)/);
   assert.match(sorgu, /\.order\('posted_at', \{ ascending: false, nullsFirst: false \}\)\s*\.order\('id', \{ ascending: true \}\)/);
   /* Rehber sayfaları kendi bloğunu kullanmaya devam ediyor. */
   assert.match(oku('src/components/GuidePages.tsx'), /<RehberdeIlanlar baslik=\{rehber\.baslik\}/);

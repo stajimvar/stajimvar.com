@@ -1,6 +1,6 @@
 import { bolumunAlani } from './bolum-eslestirme.mjs';
 import { alanaUyuyorMu } from './ilan-alan-suzgeci.mjs';
-import { sonBasvuruDurumu } from './seo/ilan-sayfasi.mjs';
+import { sonBasvuruDurumu, ilanInceMi } from './seo/ilan-sayfasi.mjs';
 
 /**
  * BÖLÜM SAYFASINDA GÜNCEL STAJ İLANLARI (14 Ekim 2026)
@@ -183,6 +183,8 @@ export function bolumIlanlari({ bolumSlug, ilanlar, sektorler, simdi = Date.now(
     if (!alanaUyuyorMu(birincil, [alan.id])) continue;
     if (!baslikAlaniSoyluyor(ilan.title, alan.slug)) continue;
     if (sonBasvuruDurumu(ilan, simdi).suresiGecti) continue;
+    /* İnce ilan noindex (24 Kasım 2026): dizine açık bölüm sayfası ona bağlanmıyor. */
+    if (ilanInceMi(ilan)) continue;
     const imza = `${sade(ilan.companies?.name)}|${sade(ilan.title)}`;
     if (kimlikler.has(ilan.id) || imzalar.has(imza)) continue;
     kimlikler.add(ilan.id);

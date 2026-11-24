@@ -139,7 +139,8 @@ test('dağıtılan harita ile üretilen sayfalar birebir örtüşüyor', () => {
   const gerekcesizDusen = haritadaOlmayanSayfa.filter((s) => {
     const html = readFileSync(path.join(klasor, `${s}.html`), 'utf8');
     if (html.includes('Başvuru dönemi kapandı')) return false;
-    const ince = !html.includes('Kimler başvurabilir') && gorunurKelime(html) < 60;
+    /* 24 Kasım 2026: ince fırsatın tanımı firsatInceMi (120 kelime); sayfa bunu noindex olarak taşıyor. */
+    const ince = html.includes('<meta name="robots" content="noindex, follow" />') || (!html.includes('Kimler başvurabilir') && gorunurKelime(html) < 60);
     return !ince;
   });
   assert.deepEqual(
