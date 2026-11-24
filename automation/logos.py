@@ -175,6 +175,115 @@ def kurator_adaylari(config: dict) -> list[str]:
     return adaylar
 
 
+# İLAN SİSTEMİNİN ŞİRKET LOGOSU (25 Kasım 2026)
+#
+# Almanya teslimiyle gelen kaynakların `website` alanı yoktu ve bu adım
+# onları "atlandı" diye geçiyordu: yayındaki 13 ilan logosuz kaldı, elle
+# tamamlandı (20270121010000). Oysa logo kaynağın kendi panosunda duruyordu.
+# Pano adresi kaynakta küratörün yazdığı kimlikten (job_board, tenant,
+# board_token, site) kuruluyor; logo yalnız o sistemin KENDİ görsel
+# sunucusundan kabul ediliyor — panoya şirketin koyduğu başka bir adres
+# (ör. emnify'ın kendi sitesi) aday sayılmıyor.
+_ATS_PANOLARI = {
+    "ashby": ("job_board", "https://jobs.ashbyhq.com/{}", (
+        r"https://app\.ashbyhq\.com/api/images/org-theme-logo/[A-Za-z0-9/._-]+",
+        r"https://app\.ashbyhq\.com/api/images/org-theme-wordmark/[A-Za-z0-9/._-]+",
+    )),
+    "personio": ("tenant", "https://{}.jobs.personio.{domain}", (
+        r"https://assets\.cdn\.personio\.de/logos/\d+/[A-Za-z0-9/._-]+\.(?:png|jpe?g)",
+    )),
+    "greenhouse": ("board_token", "https://job-boards.greenhouse.io/{}", (
+        r"https://[a-z0-9-]*recruiting\.cdn\.greenhouse\.io/external_greenhouse_job_boards/logos/[A-Za-z0-9/._%-]+\.(?:png|jpe?g)(?:\?\d+)?",
+    )),
+    # Workable panosu betikle çiziliyor; hesap API'si logoyu açıkça veriyor.
+    "workable": ("account", "https://apply.workable.com/api/v1/accounts/{}", (
+        r"https://workablehr\.s3\.amazonaws\.com/uploads/account/logo/\d+/logo",
+    )),
+    "lever": ("site", "https://jobs.lever.co/{}", (
+        r"https://lever-client-logos\.s3\.[a-z0-9-]+\.amazonaws\.com/[A-Za-z0-9._-]+\.(?:png|jpe?g)",
+    )),
+}
+
+
+def ats_pano_adresi(config: dict) -> str | None:
+    pano = _ATS_PANOLARI.get(config.get("type"))
+    kimlik = str(config.get(pano[0]) or "").strip() if pano else ""
+    if not pano or not re.fullmatch(r"[A-Za-z0-9_.-]+", kimlik):
+        return None
+    return pano[1].format(kimlik, domain=config.get("domain") or "de")
+
+
+def ats_logo_adaylari(config: dict, html: str) -> list[str]:
+    """Pano sayfasındaki logo adresleri, sistemin tercih sırasıyla."""
+    pano = _ATS_PANOLARI.get(config.get("type"))
+    if not pano:
+        return []
+    adaylar: list[str] = []
+    for desen in pano[2]:
+        for adres in re.findall(desen, html):
+            if adres not in adaylar:
+                adaylar.append(adres)
+    return adaylar
+
+
+def logo_normallestir(data: bytes) -> bytes | None:
+    """Kenar boşluğunu kırpıp öteki işveren logoları gibi 128 × 128 şeffaf PNG yapar.
+
+    Personio logoyu 1170 × 658 paylaşım kartının ortasında veriyor; kırpılmazsa
+    kartta toz kadar görünürdü. Görünür pikselleri neredeyse beyaz olan logo
+    (CRA'nın Greenhouse logosu "CRA-short-white.png", koyu zemin için) beyaz
+    kartta kaybolur: None döner, sıradaki adaya geçilir.
+    """
+    from PIL import Image
+
+    try:
+        gorsel = Image.open(io.BytesIO(data)).convert("RGBA")
+    except Exception:
+        return None
+    zemin = Image.new("RGBA", gorsel.size, (255, 255, 255, 255))
+    duz = Image.alpha_composite(zemin, gorsel).convert("L")
+    # Görünür = saydam değil VE beyaz zeminden ayrışıyor.
+    maske = Image.eval(duz, lambda p: 255 if p < 235 else 0)
+    alfa = gorsel.getchannel("A").point(lambda a: 255 if a > 16 else 0)
+    gorunur = Image.composite(maske, Image.new("L", gorsel.size, 0), alfa)
+    kutu = gorunur.getbbox()
+    if not kutu:
+        return None
+    kirpik = gorsel.crop(kutu)
+    kirpik.thumbnail((116, 116), Image.LANCZOS)
+    sonuc = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+    sonuc.paste(kirpik, ((128 - kirpik.width) // 2, (128 - kirpik.height) // 2), kirpik)
+    cikti = io.BytesIO()
+    sonuc.save(cikti, "PNG", optimize=True)
+    return cikti.getvalue()
+
+
+def ats_logosu(config: dict) -> tuple[tuple[bytes, str], str] | None:
+    pano = ats_pano_adresi(config)
+    if not pano:
+        return None
+    try:
+        sayfa = requests.get(pano, headers=HEADERS, timeout=20)
+        sayfa.raise_for_status()
+    except Exception:
+        return None
+    for aday in ats_logo_adaylari(config, sayfa.text)[:3]:
+        # İçerik türüne bakılmıyor: Lever'ın S3 kovası logoyu
+        # application/octet-stream diye veriyor. Görseli Pillow açabiliyorsa
+        # görseldir; açamazsa logo_normallestir None döner.
+        try:
+            yanit = requests.get(aday, headers=HEADERS, timeout=20)
+            yanit.raise_for_status()
+        except Exception:
+            continue
+        if not 200 <= len(yanit.content) <= MAX_BYTES:
+            continue
+        png = logo_normallestir(yanit.content)
+        if png:
+            return (png, "png"), aday
+    return None
+
+
 def upload_logo(slug: str, data: bytes, ext: str) -> str:
     """Supabase Storage'a yükler ve herkese açık adresi döndürür."""
     url = os.environ["SUPABASE_URL"].rstrip("/")
@@ -235,9 +344,16 @@ def main() -> None:
             if result:
                 downloaded, used_url = result, candidate
                 break
+        kaynak = "küratör"
+        # Küratör adresi yoksa ya da inmediyse ilan sisteminin şirket logosu.
+        if not downloaded:
+            bulunan = ats_logosu(config)
+            if bulunan:
+                downloaded, used_url = bulunan
+                kaynak = f"{config['type']} panosu"
         if downloaded:
             if args.dry_run:
-                print(f"  {company_name:<28} OK (küratör) -> {used_url[:66]}")
+                print(f"  {company_name:<28} OK ({kaynak}) -> {used_url[:66]}")
                 ok += 1
                 continue
             data, ext = downloaded
@@ -249,7 +365,7 @@ def main() -> None:
                 failed += 1
                 continue
             db.table("companies").update({"logo_url": public_url}).eq("id", company["id"]).execute()
-            print(f"  {company_name:<28} OK (küratör, {len(data) // 1024} KB, .{ext})")
+            print(f"  {company_name:<28} OK ({kaynak}, {len(data) // 1024} KB, .{ext})")
             ok += 1
             continue
 

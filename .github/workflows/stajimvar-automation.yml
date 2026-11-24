@@ -153,6 +153,15 @@ jobs:
         run: python discover.py ${{ inputs.dry_run && '--dry-run' || '' }}
         working-directory: automation
 
+      # Logosuz ilan yayına çıkmıyor (promote.py, 25 Kasım 2026). Yeni
+      # şirketin kaydı tarama adımında açılıyor; logosu burada, yayından
+      # ÖNCE tamamlanıyor ki ilan aynı koşuda logosuyla çıksın.
+      - name: Logoları tamamla (yayından önce)
+        if: ${{ !inputs.dry_run }}
+        run: python logos.py
+        working-directory: automation
+        continue-on-error: true
+
       # Keşif havuzundan yayına geçiş. Bu adım olmadan bulunan ilanlar
       # raw_listings içinde birikir ve sitede hiç görünmezdi.
       - name: Yayına al

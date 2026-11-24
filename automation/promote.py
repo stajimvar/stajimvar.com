@@ -266,6 +266,11 @@ def reject(db, row_id: str, reason: str, *, run_source: str, dry: bool) -> None:
     )
 
 
+def sirket_logosu_var(db, company_id: str) -> bool:
+    kayit = db.table("companies").select("logo_url").eq("id", company_id).limit(1).execute().data
+    return bool(kayit and str(kayit[0].get("logo_url") or "").strip())
+
+
 def promote_one(db, raw: dict, source: dict, *, dry: bool) -> str:
     """Tek keşif kaydını değerlendirir. Sonuç etiketini döndürür."""
     raw_id = raw["id"]
@@ -347,7 +352,17 @@ def promote_one(db, raw: dict, source: dict, *, dry: bool) -> str:
             ).eq("id", raw_id).execute()
             return "duplicate"
 
-    # 7. Yayınla
+    # 7. Logosu var mı? (25 Kasım 2026, kullanıcı: "logosuz eklemesin")
+    #
+    # Logosu boş şirketin ilanı yayına ÇIKMIYOR. Kayıt keşif havuzunda
+    # olduğu gibi kalıyor; iş akışı yayından önce logos.py'yi koşturuyor,
+    # logo gelince sonraki koşu ilanı yayınlıyor. Taslak (açıklığı
+    # doğrulanmamış) ilan zaten yayında değil; onu bekletmek yöneticiden
+    # saklamak olurdu.
+    if not dry and ilan_durumu(raw) == "published" and not sirket_logosu_var(db, company_id):
+        return "logo_bekliyor"
+
+    # 8. Yayınla
     # Yer tutucu ya da boş açıklama None: uydurma metin yazılmıyor.
     aciklama = ilan_aciklamasi(raw.get("description"))
     description = aciklama or ""
