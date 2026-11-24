@@ -136,7 +136,7 @@ export async function fetchBolumIlanVerisi(): Promise<{
   const [ilan, sektor] = await Promise.all([
     supabase
       .from('listings')
-      .select('id, title, city, country_code, work_type, application_deadline, alan_idleri, companies ( name, logo_url )')
+      .select('id, title, city, country_code, work_type, application_deadline, alan_idleri, description, responsibilities, required_skills, companies ( name, logo_url )')
       .eq('status', 'published')
       .order('posted_at', { ascending: false, nullsFirst: false })
       .order('id', { ascending: true }),

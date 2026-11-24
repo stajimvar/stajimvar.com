@@ -12,15 +12,22 @@ import { sehirBaglantisi } from './seo/sehir-sayfalari.mjs';
 /* ---------------------------------------------------------- fırsat şeridi */
 
 /**
- * Fırsat sayfası "ince" mi — ön render'ın noindex koşulunun AYNISI.
+ * Fırsat sayfası "ince" mi — ön render'ın noindex koşulu TEK KAYNAK burada.
  *
- * scripts/onrender.mjs: `const firsatInce = !duzMetin(f.description) &&
- * !duzMetin(f.eligibility);` → `dizinDisi: firsatInce`. Kural orada
- * değiştirilmedi; burada yalnız okunuyor. tests/anasayfa-baglantilari
- * iki ifadenin aynı kaldığını denetliyor.
+ * scripts/onrender.mjs: `const firsatInce = firsatInceMi(f);` →
+ * `dizinDisi: firsatInce`. Ana sayfa şeridi de bunu çağırıyor; iki yer
+ * ayrışamıyor.
+ *
+ * 24 Kasım 2026: "boş değil" yetmiyordu. AdSense ikinci kez "düşük
+ * değerli içerik" dedi; KYK kredi sayfası açıklamalıydı ama görünür
+ * metni 59 kelimeydi. Açıklama ve koşullar birlikte FIRSAT_INCE_ESIGI
+ * kelimenin altındaysa sayfa ince.
  */
+export const FIRSAT_INCE_ESIGI = 120;
+
 export function firsatInceMi(f) {
-  return !duzMetin(f?.description) && !duzMetin(f?.eligibility);
+  const metin = `${duzMetin(f?.description) || ''} ${duzMetin(f?.eligibility) || ''}`;
+  return metin.split(/\s+/).filter(Boolean).length < FIRSAT_INCE_ESIGI;
 }
 
 /** Şeritte en çok kaç fırsat. */

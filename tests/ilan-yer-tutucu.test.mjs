@@ -91,17 +91,18 @@ test('açıklama eksikse sahte metin üretilmiyor; mevcut eksik alan kuralı ayn
   assert.doesNotMatch(JSON.stringify(sayfa.s), /Bu ilanın ayrıntıları şirketin kendi kariyer sayfasında/);
 });
 
-test('ön render yolu: yer tutucu ilanın sayfası dizine açık, BreadcrumbList var, JobPosting yok', () => {
+test('ön render yolu: yer tutucu ilanın sayfası noindex (ince ilan, 24 Kasım 2026), BreadcrumbList var, JobPosting yok', () => {
   const sayfa = ilanSayfasi({ ...TEMEL, description: YER_TUTUCU, responsibilities: [], required_skills: [] }, etiket, SIMDI);
   assert.deepEqual(jsonLdTipleri(sayfa.s), ['BreadcrumbList']);
-  assert.ok(!sayfa.s.dizinDisi, 'sayfa noindex yapılmamalı');
+  /* AdSense ikinci ret (24 Kasım 2026): 50 kelimenin altındaki ilan dizine girmiyor. */
+  assert.ok(sayfa.s.dizinDisi, 'ince ilan noindex olmalı');
   assert.ok(sayfa.eksik.includes('description (yer tutucu metin)'));
   assert.equal(sayfa.yol, ilanYolu(TEMEL));
   /* Geçerli ilan: JobPosting + BreadcrumbList, değişmedi. */
   assert.deepEqual(jsonLdTipleri(ilanSayfasi(TEMEL, etiket, SIMDI).s), ['JobPosting', 'BreadcrumbList']);
 });
 
-test('kenar yolu: yer tutucu ilan 200, noindex yok, JobPosting yok; geçerli ilan JobPosting taşıyor', async () => {
+test('kenar yolu: yer tutucu ilan 200, noindex (ince), JobPosting yok; geçerli ilan JobPosting taşıyor', async () => {
   const KABUK =
     '<!doctype html><html lang="tr"><head><title>StajımVar</title><meta name="description" content="" />' +
     '<meta property="og:title" content="" /><meta property="og:description" content="" />' +
@@ -120,7 +121,7 @@ test('kenar yolu: yer tutucu ilan 200, noindex yok, JobPosting yok; geçerli ila
   assert.equal(yt.tur, 200);
   assert.doesNotMatch(yt.html, /"@type":"JobPosting"/);
   assert.match(yt.html, /"@type":"BreadcrumbList"/);
-  assert.doesNotMatch(yt.html, /<meta name="robots" content="[^"]*noindex/);
+  assert.match(yt.html, /<meta name="robots" content="noindex, follow"/);
   const gecerli = await coz(TEMEL);
   assert.equal(gecerli.tur, 200);
   assert.match(gecerli.html, /"@type":"JobPosting"/);
@@ -143,7 +144,7 @@ test('otomasyon: yer tutucuyu yazmıyor; iki taraf aynı cümleleri tanıyor', (
 });
 
 const DIST = path.join(KOK, 'dist', 'ilan');
-test('dist: hiçbir JobPosting yer tutucu açıklama taşımıyor; o ilanların sayfası dizine açık', { skip: !fs.existsSync(DIST) }, () => {
+test('dist: hiçbir JobPosting yer tutucu açıklama taşımıyor; o ilanların sayfası noindex (ince)', { skip: !fs.existsSync(DIST) }, () => {
   let yerTutucuSayfa = 0;
   for (const f of fs.readdirSync(DIST)) {
     const h = fs.readFileSync(path.join(DIST, f), 'utf8');
@@ -156,7 +157,7 @@ test('dist: hiçbir JobPosting yer tutucu açıklama taşımıyor; o ilanların 
     if (/Bu ilanın ayrıntıları şirketin kendi kariyer sayfasında/.test(h)) {
       yerTutucuSayfa++;
       assert.doesNotMatch(h, /"@type":"JobPosting"/, `${f}: JobPosting var`);
-      assert.doesNotMatch(h, /<meta name="robots" content="[^"]*noindex/, `${f}: noindex yapıldı`);
+      assert.match(h, /<meta name="robots" content="noindex, follow"/, `${f}: ince ilan noindex değil`);
     }
   }
   /* Bilgi: canlı veride bugün 7 ilan; geriye dönük düzeltme ayrı ve onaylı bir iş. */

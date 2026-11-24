@@ -15,7 +15,7 @@ import { istanbulGunBaslangici } from '../lib/kontrol-nabzi.mjs';
 import { ilanHedefi } from '../lib/ilan-hedefi.mjs';
 import { tarihMetni } from '../lib/tarih.mjs';
 import { sayfaMetaAyarla } from '../lib/sayfa-meta';
-import { ilanSayfaBasligi, ilanMetaAciklamasi } from '../lib/seo/ilan-sayfasi.mjs';
+import { ilanSayfaBasligi, ilanMetaAciklamasi, basvurmadanOnce, sonBasvuruDurumu } from '../lib/seo/ilan-sayfasi.mjs';
 import { ilanYolu } from '../lib/seo/metin.mjs';
 import { ilanSehirBaglantisi } from '../lib/seo/sehir-sayfalari.mjs';
 import { sonKontrolMetni } from '../lib/zaman';
@@ -849,6 +849,28 @@ export const ListingPage: React.FC<ListingPageProps> = ({
                 </p>
               )}
             </div>
+
+            {/*
+              BAŞVURMADAN ÖNCE (24 Kasım 2026)
+
+              İlk HTML'deki bölümün AYNISI: tek kaynak lib/seo/ilan-sayfasi →
+              basvurmadanOnce. İlan verisinden (ülke, ücret, son başvuru)
+              türeyen, öğrenciyi uygun araç ve rehbere götüren StajımVar
+              metni. HTML bizim üretimimiz; dış veri fonksiyonda kaçışlı.
+            */}
+            {!sonBasvuruDurumu({ application_deadline: listing.applicationDeadline }).suresiGecti && (
+              <div
+                className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-7 text-[15px] sm:text-base text-gray-800 leading-7 [&_h2]:text-xl [&_h2]:sm:text-2xl [&_h2]:font-extrabold [&_h2]:tracking-tight [&_h2]:text-gray-950 [&_ul]:mt-4 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-2 [&_a]:font-semibold [&_a]:text-blue-700 [&_a:hover]:underline"
+                dangerouslySetInnerHTML={{
+                  __html: basvurmadanOnce({
+                    country_code: listing.countryCode,
+                    is_paid: listing.stipend?.isPaid ?? null,
+                    stipend_text: listing.stipend?.amountText,
+                    application_deadline: listing.applicationDeadline,
+                  }),
+                }}
+              />
+            )}
 
           </div>
           <aside

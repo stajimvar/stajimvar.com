@@ -23,24 +23,29 @@ const kodu = (s) => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\{\/\*[\s\S]*?\*
 
 /* ---------------------------------------------------------- fırsat şeridi */
 
+/* firsatInceMi 120 kelime istiyor (24 Kasım 2026). */
+const UZUN = 'Ayrıntılı açıklama. ' + 'kelime '.repeat(125);
+
 const firsat = (slug, ek = {}) => ({
   slug,
   title: slug,
   status: 'published',
   application_deadline: null,
-  description: 'Ayrıntılı açıklama.',
+  description: UZUN,
   eligibility: '',
   ...ek,
 });
 
 test('ince fırsat kuralı ön render\'ın noindex koşuluyla aynı; noindex kuralı değişmedi', () => {
   const r = oku('scripts/onrender.mjs');
-  assert.match(r, /const firsatInce = !duzMetin\(f\.description\) && !duzMetin\(f\.eligibility\);/);
+  assert.match(r, /const firsatInce = firsatInceMi\(f\);/);
   assert.match(r, /dizinDisi: firsatInce,/);
   assert.equal(firsatInceMi({ description: '', eligibility: '' }), true);
   assert.equal(firsatInceMi({ description: '<p> </p>', eligibility: null }), true);
-  assert.equal(firsatInceMi({ description: '', eligibility: 'Lisans öğrencileri' }), false);
-  assert.equal(firsatInceMi({ description: 'Burs', eligibility: '' }), false);
+  /* 24 Kasım 2026: kısa açıklama da ince (AdSense ikinci ret, 120 kelime eşiği). */
+  assert.equal(firsatInceMi({ description: 'Burs', eligibility: '' }), true);
+  assert.equal(firsatInceMi({ description: UZUN, eligibility: '' }), false);
+  assert.equal(firsatInceMi({ description: '', eligibility: UZUN }), false);
 });
 
 test('şerit yalnız dizine açık, güncel ve yayındaki fırsatlar; ince olanla doldurulmuyor', () => {
@@ -58,7 +63,7 @@ test('şerit yalnız dizine açık, güncel ve yayındaki fırsatlar; ince olanl
   /* Uygun fırsat yoksa şerit boş — noindex sayfayla doldurulmuyor. */
   assert.deepEqual(seritFirsatlari([firsat('a', { description: '' }), firsat('b', { description: '' })], bugun), []);
   /* En çok 8; uygulamanın camelCase biçimi de okunuyor. */
-  const cok = Array.from({ length: 12 }, (_, n) => ({ slug: `f${n}`, description: 'x', applicationDeadline: `2026-11-${String(n + 10)}` }));
+  const cok = Array.from({ length: 12 }, (_, n) => ({ slug: `f${n}`, description: UZUN, applicationDeadline: `2026-11-${String(n + 10)}` }));
   assert.equal(SERIT_ADEDI, 8);
   assert.deepEqual(seritFirsatlari(cok, bugun).map((f) => f.slug), ['f0', 'f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7']);
   /*

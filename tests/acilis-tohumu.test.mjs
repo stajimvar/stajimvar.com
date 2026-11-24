@@ -143,7 +143,9 @@ test('görünür her ilan site haritasında', () => {
   const acikSayfalar = sayfalar.filter((yol) => {
     const dosya = path.join(DIST, `${yol.slice(1)}.html`);
     if (!fs.existsSync(dosya)) return true;
-    return !fs.readFileSync(dosya, 'utf8').includes('Başvuru dönemi kapandı');
+    const h = fs.readFileSync(dosya, 'utf8');
+    /* İnce ilan (24 Kasım 2026, ilanInceMi) noindex taşıyor ve bilerek haritada değil. */
+    return !h.includes('Başvuru dönemi kapandı') && !h.includes('<meta name="robots" content="noindex, follow" />');
   });
   const eksik = acikSayfalar.filter(
     (yol) => !xml.includes(`<loc>https://stajimvar.com${yol}</loc>`)

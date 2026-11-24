@@ -21,7 +21,8 @@ const KABUK =
 const ILAN = {
   id: '5805e24e-1111-4222-8333-944444444444',
   title: 'IT Support / IT Operations Intern',
-  description: 'Yardım masası ve cihaz kurulumlarında ekibe destek.',
+  /* 50 kelimeyi aşıyor: ince ilan kuralına (24 Kasım 2026) takılmasın. */
+  description: 'Yardım masası ve cihaz kurulumlarında ekibe destek. Ekip; şirket içindeki bilgisayar, yazıcı ve ağ cihazlarının kurulumunu, kullanıcı hesaplarının açılmasını ve gelen destek taleplerinin kaydını yürütüyor. Stajyer, talepleri sıraya koymaya, basit arızaları gidermeye, envanter tablosunu güncel tutmaya ve kullanım kılavuzlarını yazmaya katkı verecek. Temel ağ bilgisi olan, düzenli çalışan ve kullanıcılarla iletişimi iyi adaylar tercih edilir.',
   responsibilities: ['Kullanıcı taleplerini karşılamak'],
   required_skills: ['Windows'],
   posted_at: '2026-10-07T20:50:00Z',

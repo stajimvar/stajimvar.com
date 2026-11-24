@@ -36,7 +36,7 @@
  * Bilinmeyen adresler ana sayfaya YÖNLENDİRİLMİYOR.
  */
 import { ilanAdresiniCoz, ilanYolu, kacir } from './metin.mjs';
-import { ILAN_SECIMI, BENZER_SECIMI, benzerIlanlariSec, ilanSayfasi, sonBasvuruDurumu } from './ilan-sayfasi.mjs';
+import { ILAN_SECIMI, BENZER_SECIMI, benzerIlanlariSec, ilanSayfasi, sonBasvuruDurumu, ilanInceMi } from './ilan-sayfasi.mjs';
 import { sayfaHtml } from './sayfa-html.mjs';
 import { zorunluVeriGetir } from './veri-kaynagi.mjs';
 
@@ -140,7 +140,7 @@ export async function ilanHaritasiUret({ ayar, getir, site = 'https://stajimvar.
       kaynak: 'ilan haritası',
       taban: ayar.taban,
       anahtar: ayar.anahtar,
-      yol: '/rest/v1/listings?status=eq.published&select=id,title,updated_at,application_deadline&order=id.asc',
+      yol: '/rest/v1/listings?status=eq.published&select=id,title,updated_at,application_deadline,description,responsibilities,required_skills&order=id.asc',
       zamanAsimiMs: 5000,
       deneme: 2,
       getir,
@@ -149,7 +149,8 @@ export async function ilanHaritasiUret({ ayar, getir, site = 'https://stajimvar.
     return null;
   }
   const satir = satirlar
-    .filter((i) => !sonBasvuruDurumu(i, simdi).suresiGecti)
+    /* İnce ilan (lib/seo/ilan-sayfasi → ilanInceMi) noindex; haritaya da girmiyor. */
+    .filter((i) => !sonBasvuruDurumu(i, simdi).suresiGecti && !ilanInceMi(i))
     .map((i) => {
       const lastmod = String(i.updated_at || '').slice(0, 10);
       return `  <url><loc>${kacir(site + ilanYolu(i))}</loc>${/^\d{4}-\d{2}-\d{2}$/.test(lastmod) ? `<lastmod>${lastmod}</lastmod>` : ''}</url>`;

@@ -88,10 +88,11 @@ test('gerçek açıklamalı ilanın meta açıklaması eski kuralla birebir ayn�
   assert.ok(ilanMetaAciklamasi({ ...ILAN, description: karisik }, etiket).startsWith('München. Gerçek açıklama metni.'));
 });
 
-test('ön render yolu: sayfa meta açıklaması yedekten geliyor, noindex yok', () => {
+test('ön render yolu: sayfa meta açıklaması yedekten geliyor; açıklamasız ilan noindex (24 Kasım 2026)', () => {
   const { s } = ilanSayfasi(ILAN, etiket, SIMDI);
   yeterliYedek(s.aciklama, ILAN);
-  assert.ok(!s.dizinDisi);
+  /* AdSense ikinci ret: 50 kelimenin altındaki ilan dizine girmiyor (ilanInceMi). */
+  assert.ok(s.dizinDisi);
 });
 
 test('kenar yolu: description NULL ilanın HTML meta ve og açıklaması yedek cümle', async () => {
@@ -114,7 +115,8 @@ test('kenar yolu: description NULL ilanın HTML meta ve og açıklaması yedek c
   const coz = (x) => x.replace(/&#39;|&apos;/g, "'").replace(/&amp;/g, '&');
   yeterliYedek(coz(meta), ILAN);
   assert.equal(coz(og), coz(meta));
-  assert.doesNotMatch(r.html, /<meta name="robots" content="[^"]*noindex/);
+  /* Açıklamasız ilan ince: noindex (24 Kasım 2026, ilanInceMi). */
+  assert.match(r.html, /<meta name="robots" content="noindex, follow"/);
 });
 
 test('React yolu: ListingPage aynı fonksiyonu, kaynağın verdiği alanlarla çağırıyor', () => {
