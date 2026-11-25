@@ -489,6 +489,33 @@ const ORNEK_BASVURULAR = [
     },
   },
   /*
+    SEYREK VERİ — CANLIDAKİ ÇOĞUNLUK (25 Kasım 2026)
+
+    Canlıdaki başvuruların çoğunda kopyada yalnız okul, bölüm ve CV var:
+    yetenek, proje, dil, ön eleme, bağlantı yok. Fikstürde yalnız dolu
+    adaylar olunca kartın seyrek veride boş kalması burada görünmüyordu.
+    Üç kayıt bu biçimde; biri şehirsiz ve sınıfsız.
+  */
+  ...[
+    ['test-11', 'Aday J', 'Örnek Üniversitesi', 'İşletme', '3. Sınıf', 'İstanbul', 1],
+    ['test-12', 'Aday K', 'Örnek Teknik Üniversitesi', 'Bilgisayar Mühendisliği', '4. Sınıf', 'Ankara', 3],
+    ['test-13', 'Aday L', 'Örnek Güzel Sanatlar Üniversitesi', 'Grafik Tasarım', null, null, 5],
+  ].map(([id, ad, universite, bolum, sinif, sehir, gun]) => ({
+    id: id as string,
+    updated_at: GUN_ONCE(gun as number),
+    atanan_uye: null,
+    status: 'submitted',
+    applied_at: GUN_ONCE(gun as number),
+    match_score: 12,
+    listing_id: 'ilan-1',
+    ilanBasligi: 'Yazılım Stajyeri',
+    application_method: 'internal',
+    contact_share_consent_at: GUN_ONCE(gun as number),
+    cv_path: null,
+    cv_snapshot_path: `00000000-0000-4000-8000-00000000000c/basvurular/${id}.pdf`,
+    profile_snapshot: { ad, universite, bolum, sinif, sehir, yetenekler: [], rozetler: [], projeler: [] },
+  })),
+  /*
     ÖĞRENCİNİN KARAR VERDİĞİ İKİ DURUM
 
     Şirket bu iki değeri yazamıyor (politika reddediyor), dolayısıyla
