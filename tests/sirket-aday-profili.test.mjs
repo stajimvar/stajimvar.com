@@ -44,9 +44,13 @@ test('avatar ortak kaynaktan, yeni alan acilmadi', () => {
   }
 });
 
-test('mobilde avatar 56-64 px ve yuvarlak', () => {
-  assert.ok(KART.includes('h-14 w-14 shrink-0 rounded-full sm:h-16 sm:w-16'),
-            'kartta 56 px, sm ustunde 64 px, yuvarlak');
+test('mobilde avatar 64-80 px ve yuvarlak', () => {
+  /*
+    25 Kasim 2026: kart izgarasinda fotograf Basvuranlar oyuncu kartiyla
+    (AdayKarti.tsx) ayni olcuye cikti -- telefonda 64, sm ustunde 80 px.
+  */
+  assert.ok(KART.includes('h-16 w-16 shrink-0 rounded-full sm:h-20 sm:w-20'),
+            'kartta 64 px, sm ustunde 80 px, yuvarlak');
 });
 
 test('etiketler en fazla uc, fazlasi +N', () => {
@@ -129,7 +133,8 @@ test('alt bilgi metni kisaldi', () => {
 test('sekmeler ve sayac mantigi degismedi', () => {
   assert.ok(KART.includes("veri?.stajArayan"), 'staj sayaci durmali');
   assert.ok(KART.includes("veri?.isArayan"), 'is sayaci durmali');
-  assert.ok(KART.includes('grid grid-cols-2 gap-2'), 'iki esit sekme durmali');
+  const i = KART.indexOf('aria-label="Arayış türü"');
+  assert.ok(/\bgrid\b[^"]*\bgrid-cols-2\b/.test(KART.slice(i - 200, i)), 'iki esit sekme durmali');
 });
 
 test('sinif olarak yazilmiyor -- deger zaten "2. Sinif"', () => {

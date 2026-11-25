@@ -73,10 +73,15 @@ test('basvuranlar gorunumunun her cikisi once basligi ciziyor', () => {
   });
 });
 
-test('aday ekraninda iki sekme satiri dolduruyor', () => {
+test('aday ekraninda iki sekme esit iki sutun (segment kontrol)', () => {
   /*
     Icerik genisligindeyken sagda genis bir bosluk kaliyordu ve iki esit
     kutu olmasi gereken sey iki kucuk dugme gibi duruyordu.
+
+    25 Kasim 2026 (kart izgarasi): sekmeler basligin yanina kompakt bir
+    segmente indi. Korunan kural ESITLIK: iki secenek grid-cols-2 ile ayni
+    genislikte ve dugme hucreyi dolduruyor. Telefonda segment satiri
+    dolduruyor (w-full), sm ustunde icerik kadar (sm:w-auto).
   */
   const ADAYLAR2 = oku('src/sirket/SirketAdaylar.tsx');
   /*
@@ -86,7 +91,8 @@ test('aday ekraninda iki sekme satiri dolduruyor', () => {
   const i = ADAYLAR2.indexOf('aria-label="Arayış türü"');
   assert.ok(i > 0, 'sekme satiri bulunmali');
   const satir = ADAYLAR2.slice(i - 200, i + 60);
-  assert.ok(satir.includes('grid grid-cols-2 gap-2'), 'sekmeler esit iki sutun olmali');
+  assert.ok(/\bgrid\b[^"]*\bgrid-cols-2\b/.test(satir), 'sekmeler esit iki sutun olmali');
+  assert.ok(satir.includes('w-full') && satir.includes('sm:w-auto'), 'telefonda satiri doldurmali');
   assert.ok(!satir.includes('flex flex-wrap'), 'sekmeler icerik genisliginde kalmamali');
   assert.ok(ADAYLAR2.includes('w-full cursor-pointer items-center justify-center'),
             'sekme dugmesi hucreyi doldurmali');
