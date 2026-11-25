@@ -826,7 +826,7 @@ saltOkunur ? (
           daire, dokununca büyüyor. Fotoğraf yoksa baş harfler; önyargısız
           incelemede kalkan simgesi.
         */}
-        <div className="flex items-center gap-3 sm:gap-4">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
           <AdayFotografi
             ad={kart.ad}
             fotoYolu={kart.fotoYolu}
@@ -849,6 +849,49 @@ saltOkunur ? (
               </p>
             )}
           </div>
+          {/*
+            CV BAŞLIKTA (25 Kasım 2026, kullanıcı isteği)
+
+            Düğme gövdenin en altındaki bağlantılar bölümündeydi; kullanıcı
+            aşağı kaydırmadan bulamadığını söyledi. İşverenin bu ekrandaki
+            en sık eylemi belgeyi açmak olduğu için birincil (mavi) düğme
+            olarak başlığa çıktı; Kapat çerçeveli ikincil kalıyor, ikisi
+            karışmıyor. Aynı eylem gövdede ikinci kez çizilmiyor.
+
+            Telefonda ad + Kapat + CV aynı satıra sığmıyor (ad sıkışıyordu):
+            düğme `order-last basis-full` ile ad satırının altına tam
+            genişlik iniyor; sm ve üstünde Kapat'ın solunda duruyor.
+
+            Kova gizli olduğu için public adres üretilmiyor — her tıklamada
+            kısa ömürlü imzalı adres alınıyor ve adresi üretebilmek dosyayı
+            OKUYABİLMEYİ gerektiriyor. Yani kapı burada değil, depolama
+            politikasında: yalnızca doğrulanmış şirket, yalnızca kendi
+            ilanına gelen başvurunun belgesi.
+
+            Gösterilen dosya başvuru anının kopyası; öğrenci bugün CV'sini
+            değiştirmiş olsa bile burada değişmiyor.
+          */}
+          {kart.cvYolu && (
+            <button
+              type="button"
+              onClick={() => {
+                /* Önyargısız kipte önce sor; normal kipte doğrudan aç. */
+                if (kart.gizli) setCvOnayi(true);
+                else void cvAc();
+              }}
+              aria-expanded={kart.gizli ? cvOnayi : undefined}
+              disabled={cvAciliyor}
+              className={`${BIRINCIL_DUGME} order-last basis-full sm:order-none sm:basis-auto`}
+              style={birincilStil}
+            >
+              {cvAciliyor ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+              ) : (
+                <FileText className="h-4 w-4" aria-hidden />
+              )}
+              CV'yi aç
+            </button>
+          )}
           <button
             type="button"
             onClick={onKapat}
@@ -858,6 +901,58 @@ saltOkunur ? (
             <X className="h-4 w-4" aria-hidden />
             Kapat
           </button>
+          {/*
+            Onay ve hata satırları düğmenin hemen altında, başlık alanında:
+            soru gövdede açılsaydı başlıktan basan kişi onu görmezdi.
+            `order-last basis-full` ikisini her genişlikte ad satırının
+            altına (telefonda düğmenin de altına) yerleştiriyor.
+          */}
+          {kart.gizli && cvOnayi && kart.cvYolu && (
+            <div
+              role="alertdialog"
+              aria-labelledby="aday-cv-uyari-basligi"
+              aria-describedby="aday-cv-uyari-metni"
+              className="order-last basis-full rounded-2xl border p-3.5"
+              style={{ borderColor: '#FCD34D', background: '#FEF3C7' }}
+            >
+              <p id="aday-cv-uyari-basligi" className="text-sm font-extrabold" style={{ color: '#78350F' }}>
+                CV önyargısız incelemeyi bozabilir
+              </p>
+              <p id="aday-cv-uyari-metni" className="mt-1 text-xs leading-relaxed" style={{ color: '#78350F' }}>
+                CV dosyası adayın adını, fotoğrafını ve iletişim bilgilerini içerebilir; açarsan
+                önyargısız inceleme bu aday için geçerliliğini yitirir.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCvOnayi(false);
+                    void cvAc();
+                  }}
+                  className={`${IKINCIL_DUGME} bg-white`}
+                  style={ikincilStil}
+                >
+                  <FileText className="h-4 w-4" aria-hidden />
+                  CV'yi yine de aç
+                </button>
+                <button
+                  type="button"
+                  /* Güvenli seçenek odakta: Enter dosyayı açmıyor. */
+                  autoFocus
+                  onClick={() => setCvOnayi(false)}
+                  className={`${IKINCIL_DUGME} bg-white`}
+                  style={ikincilStil}
+                >
+                  Vazgeç
+                </button>
+              </div>
+            </div>
+          )}
+          {cvHatasi && (
+            <p role="alert" className="order-last basis-full text-xs font-semibold" style={{ color: '#991B1B' }}>
+              {cvHatasi}
+            </p>
+          )}
         </div>
 
         {/*
@@ -1453,7 +1548,7 @@ saltOkunur ? (
                             : ''
                         }. Aday paylaşımı açık tuttuğu sürece görünür.`
                       : `Başvuru anındaki paylaşılan kopya${basvuruTarihi ? ` (${basvuruTarihi})` : ''}; profil sonradan değişse de bu görünüm değişmiyor.`}
-                    {kart.cvYolu ? ' Adayın yüklediği PDF aşağıda.' : ''}
+                    {kart.cvYolu ? " Adayın yüklediği PDF'yi başlıktaki «CV'yi aç» düğmesi açar." : ''}
                   </p>
                   {guncelCv && (
                     <div
@@ -1602,9 +1697,9 @@ saltOkunur ? (
                 </section>
               )}
 
-              {(baglantilar.length > 0 || baglantiGizlendi || kart.cvYolu) && (
+              {(baglantilar.length > 0 || baglantiGizlendi) && (
                 <section>
-                  <Baslik degisti={bolumDegisti('baglantilar')}>Bağlantılar ve yüklenen CV</Baslik>
+                  <Baslik degisti={bolumDegisti('baglantilar')}>Bağlantılar</Baslik>
                   <div className="flex flex-wrap gap-2">
                     {baglantilar.map((b: { tur: string; etiket: string; adres: string }) => (
                       <a
@@ -1625,91 +1720,10 @@ saltOkunur ? (
                         {b.etiket}
                       </a>
                     ))}
-                    {/*
-                      CV ARTIK AÇILABİLİYOR
-
-                      Burada yalnızca "CV başvuruya ekli" yazan ölü bir etiket
-                      vardı; dosyayı açmanın hiçbir yolu yoktu. Kova gizli
-                      olduğu için public adres üretilmiyor — her tıklamada kısa
-                      ömürlü imzalı adres alınıyor ve adresi üretebilmek
-                      dosyayı OKUYABİLMEYİ gerektiriyor. Yani kapı burada
-                      değil, depolama politikasında: yalnızca doğrulanmış
-                      şirket, yalnızca kendi ilanına gelen başvurunun belgesi.
-
-                      Gösterilen dosya başvuru anının kopyası; öğrenci bugün
-                      CV'sini değiştirmiş olsa bile burada değişmiyor.
-                    */}
-                    {kart.cvYolu && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          /* Önyargısız kipte önce sor; normal kipte doğrudan aç. */
-                          if (kart.gizli) setCvOnayi(true);
-                          else void cvAc();
-                        }}
-                        aria-expanded={kart.gizli ? cvOnayi : undefined}
-                        disabled={cvAciliyor}
-                        className={IKINCIL_DUGME}
-                        style={ikincilStil}
-                      >
-                        {cvAciliyor ? (
-                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-                        ) : (
-                          <FileText className="h-4 w-4" aria-hidden />
-                        )}
-                        Yüklediği PDF CV'yi aç
-                      </button>
-                    )}
                   </div>
-                  {kart.gizli && cvOnayi && kart.cvYolu && (
-                    <div
-                      role="alertdialog"
-                      aria-labelledby="aday-cv-uyari-basligi"
-                      aria-describedby="aday-cv-uyari-metni"
-                      className="mt-3 rounded-2xl border p-3.5"
-                      style={{ borderColor: '#FCD34D', background: '#FEF3C7' }}
-                    >
-                      <p id="aday-cv-uyari-basligi" className="text-sm font-extrabold" style={{ color: '#78350F' }}>
-                        CV önyargısız incelemeyi bozabilir
-                      </p>
-                      <p id="aday-cv-uyari-metni" className="mt-1 text-xs leading-relaxed" style={{ color: '#78350F' }}>
-                        CV dosyası adayın adını, fotoğrafını ve iletişim bilgilerini içerebilir; açarsan
-                        önyargısız inceleme bu aday için geçerliliğini yitirir.
-                      </p>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCvOnayi(false);
-                            void cvAc();
-                          }}
-                          className={`${IKINCIL_DUGME} bg-white`}
-                          style={ikincilStil}
-                        >
-                          <FileText className="h-4 w-4" aria-hidden />
-                          CV'yi yine de aç
-                        </button>
-                        <button
-                          type="button"
-                          /* Güvenli seçenek odakta: Enter dosyayı açmıyor. */
-                          autoFocus
-                          onClick={() => setCvOnayi(false)}
-                          className={`${IKINCIL_DUGME} bg-white`}
-                          style={ikincilStil}
-                        >
-                          Vazgeç
-                        </button>
-                      </div>
-                    </div>
-                  )}
                   {baglantiGizlendi && (
                     <p className="mt-2 text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
                       Önyargısız incelemede bağlantılar gösterilmiyor.
-                    </p>
-                  )}
-                  {cvHatasi && (
-                    <p role="alert" className="mt-2 text-xs font-semibold" style={{ color: '#991B1B' }}>
-                      {cvHatasi}
                     </p>
                   )}
                 </section>
