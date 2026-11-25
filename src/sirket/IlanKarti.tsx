@@ -1,9 +1,11 @@
 import React from 'react';
-import { BarChart3, Bookmark, Eye, MapPin, Pencil, Plus, Users } from 'lucide-react';
+import { BarChart3, CalendarClock, MapPin, Pencil, Plus, Users } from 'lucide-react';
 import { IlanIstatistikAyrintisi } from './IlanIstatistikAyrintisi';
 import { donusumOrani, oranMetni } from '../lib/ilan-istatistik.mjs';
 import {
+  BIRINCIL_RENK,
   IKINCIL_DUGME,
+  SIRKET_KENAR,
   SIRKET_METIN,
   SIRKET_METIN_IKINCIL,
   SIRKET_ODAK,
@@ -27,6 +29,7 @@ import {
   yoneticiKarariMi,
 } from '../lib/ilan-kontrol-gorunumu.mjs';
 import { daysUntilDeadline } from '../lib/opportunity-domain.mjs';
+import { tarihMetni } from '../lib/tarih.mjs';
 
 /**
  * İlan kartı — Genel ve İlanlar sekmesinin ORTAK kartı.
@@ -39,20 +42,20 @@ import { daysUntilDeadline } from '../lib/opportunity-domain.mjs';
  * diğerinde unutulurdu. Fark yalnız sağdaki eylem kümesinde; o da
  * dışarıdan geliyor.
  *
- * ÜÇ BÖLÜM, AYNI ÖLÇÜ
- * -------------------
- * Sol: başlık, şehir, durum rozeti. Orta: yeni başvuranların avatar
- * şeridi ve sayısı. Sağ: eylemler. Orta bölüm geniş kapta sabit
- * genişlikte ki alt alta duran kartların sütunları hizalansın; dar
- * kapta üç bölüm alt alta iniyor. "Geniş" EKRANIN değil KARTIN
- * genişliği — gerekçesi satırın üstünde.
+ * DÖRT KAT, YUKARIDAN AŞAĞI (25 Kasım 2026)
+ * ----------------------------------------
+ * Kimlik (logo, başlık, rozetler, konum, son başvuru) → kontrol notu →
+ * stat satırı (büyük rakam + küçük büyük-harf etiket, Başvuranlar
+ * kartıyla aynı) → eylemler. Kart ızgara hücresi; eşit boy ve eylemler
+ * dipte. Eski yatay üç bölümün neden kalktığı kartın üstünde.
  *
  * SAHTE SAYI YOK
  * --------------
- * Görüntülenme sayısı veri modelinde yok, o yüzden yazılmıyor. Yeni
- * başvuran sayısı gerçek `submitted` satırlarından. Kademe kartları
- * görmüyorsa (RLS veri vermiyor) şerit yerine tek satır açıklama var;
- * "0 yeni" yazmak, göremediği bir şeyi yok sanmasına yol açardı.
+ * BAŞVURU ve YENİ gerçek `applications` satırlarından; GÖRÜNTÜLENME,
+ * KAYDETME, DÖNÜŞÜM ölçülen istatistikten (20270101010000) ve yalnız o
+ * okuma geldiyse. Kademe kartları görmüyorsa (RLS veri vermiyor) rakam
+ * yerine tek satır açıklama var; "0 yeni" yazmak, göremediği bir şeyi
+ * yok sanmasına yol açardı.
  */
 
 /** Başvuran kartından (lib/aday-kart.mjs) şeridin ihtiyacı kadarı. */
@@ -265,6 +268,40 @@ const Avatar: React.FC<{ aday: AdayOzeti }> = ({ aday }) => (
 /** Kart istatistik satırı (20270101010000); `basvuru` dönüşüm oranı için. */
 type IlanKartIstatistigi = { goruntulenme: number; sonYediGun: number; kaydeden: number; basvuru?: number };
 
+/*
+  Kartın birincil düğmesi. Paneldeki BIRINCIL_DUGME 48 px ve `font-black`;
+  sayfada tek olan "İlan oluştur" için. Her kartta tekrar eden birincil
+  eylem o ağırlıkta altı kartlık ızgarada başlıkla yarışırdı. Burada
+  ikincil düğmeyle AYNI kutu (44 px, `font-bold`), yalnız renk birincil:
+  satırdaki öteki düğmelerle aynı hizada duruyor.
+*/
+const KART_BIRINCIL =
+  'inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold ' +
+  `transition-[background-color] duration-150 ${BIRINCIL_RENK} ${SIRKET_ODAK}`;
+
+/** Stat satırının tek kalemi — Başvuranlar kartındaki (AdayKarti) ölçüler. */
+const Stat: React.FC<{ deger: string; etiket: string; vurgu?: boolean; children?: React.ReactNode }> = ({
+  deger,
+  etiket,
+  vurgu,
+  children,
+}) => (
+  <span className="flex items-center gap-2">
+    {children}
+    <span className="flex items-baseline gap-1.5">
+      <span
+        className="text-lg font-extrabold leading-none tabular-nums"
+        style={{ color: vurgu ? SIRKET_VURGU_KOYU : SIRKET_METIN }}
+      >
+        {deger}
+      </span>
+      <span className="text-[11px] font-bold uppercase tracking-wide" style={{ color: SIRKET_METIN_IKINCIL }}>
+        {etiket}
+      </span>
+    </span>
+  </span>
+);
+
 export const IlanKarti: React.FC<{
   ilan: Record<string, unknown>;
   /**
@@ -275,9 +312,9 @@ export const IlanKarti: React.FC<{
   onNavigate: (yol: string) => void;
   /** İlanlar sekmesinin ek eylemleri (Kapat / Yayınla, taşma menüsü). */
   ekEylemler?: React.ReactNode;
-  /** Başlık satırına eklenen rozet (ör. "Kariyer sayfasından"). */
+  /** Rozet satırına eklenen rozet (ör. "Kariyer sayfasından"). */
   ekRozet?: React.ReactNode;
-  /** Sol bölümün altına düşen içerik (ör. inceleme notu). */
+  /** Kimlik bloğunun altına, kartın tam genişliğine düşen içerik (ör. inceleme notu). */
   altNot?: React.ReactNode;
   /**
    * Kartın sahibi şirketin adı ve logosu — herkese açık ilan kartındaki
@@ -288,8 +325,8 @@ export const IlanKarti: React.FC<{
   logoUrl?: string | null;
   simdi?: Date;
   /**
-   * Ölçülen görüntülenme ve kaydetme (20270101010000). Verilmezse satır
-   * çizilmiyor; taslakta da yok (öğrenciye görünmüyor).
+   * Ölçülen görüntülenme ve kaydetme (20270101010000). Verilmezse
+   * kalemler çizilmiyor; taslakta da yok (öğrenciye görünmüyor).
    */
   istatistik?: IlanKartIstatistigi;
 }> = ({ ilan, basvurular, onNavigate, ekEylemler, ekRozet, altNot, sirketAdi, logoUrl, simdi, istatistik }) => {
@@ -304,142 +341,160 @@ export const IlanKarti: React.FC<{
      normalleştiriliyor, çalışma biçimi varsa ekleniyor. */
   const calisma = calismaEtiketi(ilan.work_type as string | null | undefined);
   const konum = [konumEtiketi(sehir), calisma].filter(Boolean).join(' · ');
+  /* Son başvuru yalnız girilmişse; `tarihMetni` boş girdide null döndürüyor. */
+  const sonBasvuru = tarihMetni(ilan.application_deadline as string | null | undefined);
 
   const yeni = basvurular ? basvurular.filter((b) => b.durum === 'submitted') : [];
   const toplam = basvurular ? basvurular.length : 0;
   const gosterilen = yeni.slice(0, SERIT_UST_SINIR);
   const fazla = yeni.length - gosterilen.length;
+  const olcum = istatistik && !taslak ? istatistik : null;
+  const donusum = olcum && olcum.basvuru !== undefined ? donusumOrani(olcum.basvuru, olcum.goruntulenme) : null;
 
   return (
-    <li className="@container rounded-2xl border p-4 shadow-xs sm:p-5" style={kutuStil}>
+    /*
+      IZGARA HÜCRESİ, EŞİT BOY (25 Kasım 2026, Başvuranlar ve Adaylar
+      ekranlarıyla aynı kalite)
+
+      Kart 1440 px'te 1360 px genişliğinde, 122 px yüksekliğinde tek bir
+      satırdı (ölçüldü): başlık solda, avatar şeridi ortada, dört düğme
+      sağda, aralarında yüzlerce piksel boşluk. Göz her ilan için satırı
+      soldan sağa taramak zorundaydı. Artık dikey kart: kimlik → not →
+      stat satırı → eylemler. Liste geniş ekranda iki sütun (GenelBakis);
+      kartlar satır içinde aynı boyda (`h-full flex-col`), eylemler
+      `mt-auto` ile kartın dibinde, yan yana iki kartta aynı y'de.
+
+      @container KALKTI: dizilişi kap genişliğine göre değişen bir satır
+      artık yok (kart hep dikey). Kap sorgusu li'ye düzen sınırlaması
+      getiriyordu; o da taşma menüsünün `fixed inset-0` kapatma katmanını
+      kartın içine hapsediyor ve alttaki kartın açık menüyü örtmesine yol
+      açıyordu — kart ızgaraya girince menü bir alt satıra taşıyor.
+    */
+    <li className="flex h-full min-w-0 flex-col rounded-2xl border p-4 shadow-xs sm:p-5" style={kutuStil}>
       {/*
-        YAN YANA DÜZEN KARTIN GENİŞLİĞİNE BAĞLI, EKRANINKİNE DEĞİL
-        (container sorgusu; depoda ilk kullanım)
+        LOGO + BİLGİ — HERKESE AÇIK İLAN KARTIYLA AYNI (kullanıcı isteği,
+        28 Eylül 2026)
 
-        Satır eskiden `sm:flex-row` ile 640 px EKRANDA yan yana diziliyordu.
-        Aynı kart /sirket/profil'de üç sütunlu sayfanın ortasında ~750 px'lik
-        bir kapta duruyor; 1919 px ekranda `sm:` açık, kap dar. Logo (80 px)
-        eklenince metin sütununa hiç yer kalmadı: fikstürde 750 px kapta
-        dört eylemli kartın metin sütunu 0 px ölçüldü, başlık 0 px genişlikte,
-        şirket adı satırı 360 px yüksekliğinde harf harf alt alta (canlıdaki
-        "Ogulsize" görüntüsü). Ekran kırılımı bu kartın gerçek yerini
-        bilemiyor; kartın kendi genişliği biliyor.
+        Ölçüler `InternshipCard` ile BİREBİR: 80×80 logo, `rounded-xl`,
+        konumda aynı `MapPin`. Kopyalanan şey BİLEŞENİN KENDİSİ
+        (`ListingLogo`); logo standardı orada tek yerde duruyor.
 
-        Eşik 60 rem (960 px, kartın İÇ genişliği). Yan yana düzenin en kötü
-        hâli ölçüldü: logo 80 + 12 + metin 192 (12 rem alt sınır) + 16 +
-        orta 224 + 16 + dört eylem 367 (Adaylar 108, Düzenle 111, Yayınla 80,
-        menü 44, aralar 3×8) = 907 px. Eşiğin hemen üstünde metin sütunu
-        en kötü hâlde 246 px ölçüldü; yazı tipi farkına ~50 px pay.
-        Tailwind'in hazır `@4xl` (896) eşiği bu toplamın altında kalıyor,
-        `@5xl` (1024) ise İlanlar sekmesini 1100 px ekranda (kartın iç
-        genişliği 979 ölçüldü, dört eylemde metin 264 px) gereksiz yere
-        alt alta dizerdi.
+        METİN SÜTUNU 12 REM'İN ALTINA İNMİYOR: `min-w-48` + `flex-wrap`;
+        logo ile metin 80 + 12 + 192 = 284 px'e sığmıyorsa (320 px ekranda
+        kartın iç genişliği 239 ölçüldü) metin logonun ALTINA iniyor.
+        Daralan bir sütun adı harf harf kırıyordu (canlıdaki "Ogulsize").
       */}
-      <div className="flex flex-col gap-3 @min-[60rem]:flex-row @min-[60rem]:items-center @min-[60rem]:gap-4">
-        {/* ------------------------------------------------------ sol */}
-        {/*
-          LOGO + BİLGİ — HERKESE AÇIK İLAN KARTIYLA AYNI (kullanıcı isteği,
-          28 Eylül 2026)
-
-          Şirket kendi ilanını panelinde logosuz, çıplak bir başlık olarak
-          görüyordu; aynı ilan herkese açık listede logolu kartla
-          duruyordu. "İlan listesindeki gibi gözüksün, logom falan."
-
-          Ölçüler `InternshipCard` ile BİREBİR: 80×80 logo, `rounded-xl`,
-          aynı başlık ve şirket adı satırı, konumda aynı `MapPin`.
-          Kopyalanan şey ölçüler değil BİLEŞENİN KENDİSİ (`ListingLogo`);
-          logo standardı orada tek yerde duruyor ve iki kart birlikte
-          değişiyor.
-
-          Ad ya da logo verilmediyse blok hiç çizilmiyor: `ListingLogo`
-          adsız çağrılırsa baş harf üretemez ve boş bir daire kalırdı.
-        */}
-        {/*
-          METİN SÜTUNU 12 REM'İN ALTINA İNMİYOR
-
-          `min-w-48` + `flex-wrap`: logo ile metin aynı satıra 80 + 12 + 192
-          = 284 px'ten azında sığmıyorsa (320 px ekranda kartın iç genişliği
-          239 ölçüldü) metin logonun ALTINA iniyor. Daralan bir metin sütunu
-          başlığı `truncate` ile görünmez kılıyor, adı harf harf kırıyordu;
-          logonun üstte tek başına durması ondan iyi.
-        */}
-        <div className="flex min-w-0 items-start gap-3 flex-wrap @min-[60rem]:flex-1">
-          {sirketAdi && (
-            <div className="shrink-0" title={sirketAdi}>
-              <ListingLogo
-                name={sirketAdi}
-                logoUrl={logoUrl || undefined}
-                className="!h-20 !w-20 !rounded-xl !p-2 !text-2xl"
-              />
-            </div>
-          )}
-          <div className="min-w-48 flex-1">
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <h3 className="min-w-0 truncate text-base font-bold" style={{ color: SIRKET_METIN }}>
-                {String(ilan.title ?? '')}
-              </h3>
+      <div className="flex min-w-0 items-start gap-3 flex-wrap">
+        {sirketAdi && (
+          <div className="shrink-0" title={sirketAdi}>
+            <ListingLogo
+              name={sirketAdi}
+              logoUrl={logoUrl || undefined}
+              className="!h-20 !w-20 !rounded-xl !p-2 !text-2xl"
+            />
+          </div>
+        )}
+        <div className="min-w-48 flex-1">
+          {/*
+            BAŞLIK KESİLMİYOR: eskiden `truncate` idi ve 375 px'te
+            "İnsan Kaynakları Stajyeri (kaynaktan)" üç noktayla bitiyordu
+            (ölçüldü, 25 Kasım 2026). İlan adı kartın kimliği; satır kırıyor.
+          */}
+          <h3 className="break-words text-[17px] font-extrabold leading-snug" style={{ color: SIRKET_METIN }}>
+            {String(ilan.title ?? '')}
+          </h3>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <span
+              className="inline-flex shrink-0 items-center rounded-lg px-2 py-0.5 text-[11px] font-bold"
+              style={rozet.stil}
+            >
+              {rozet.etiket}
+            </span>
+            {/*
+              YAYINDA + BEKLEYEN DEĞİŞİKLİK: ana rozet "Yayında" kalıyor
+              (ilan gerçekten yayında); değişikliğin durumu ikinci, ayrı
+              bir rozette. Tek rozet ya ilanı ya değişikliği yanlış anlatırdı.
+            */}
+            {degisiklik && (
               <span
                 className="inline-flex shrink-0 items-center rounded-lg px-2 py-0.5 text-[11px] font-bold"
-                style={rozet.stil}
+                style={
+                  degisiklik.durum === 'duzeltme_gerekiyor'
+                    ? ROZET_HATA
+                    : degisiklik.durum === 'inceleme_gerekiyor'
+                      ? ROZET_UYARI
+                      : ROZET_SESSIZ
+                }
               >
-                {rozet.etiket}
+                {DEGISIKLIK_ROZETI[degisiklik.durum]}
               </span>
-              {/*
-                YAYINDA + BEKLEYEN DEĞİŞİKLİK: ana rozet "Yayında" kalıyor
-                (ilan gerçekten yayında); değişikliğin durumu ikinci, ayrı
-                bir rozette. Tek rozet ya ilanı ya değişikliği yanlış anlatırdı.
-              */}
-              {degisiklik && (
-                <span
-                  className="inline-flex shrink-0 items-center rounded-lg px-2 py-0.5 text-[11px] font-bold"
-                  style={
-                    degisiklik.durum === 'duzeltme_gerekiyor'
-                      ? ROZET_HATA
-                      : degisiklik.durum === 'inceleme_gerekiyor'
-                        ? ROZET_UYARI
-                        : ROZET_SESSIZ
-                  }
-                >
-                  {DEGISIKLIK_ROZETI[degisiklik.durum]}
-                </span>
-              )}
-              {ekRozet}
-            </div>
-            {sirketAdi && (
-              <p className="mt-0.5 break-words text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
-                {sirketAdi}
-              </p>
             )}
-            {/*
-              Konum satırı herkese açık karttaki gibi: simge + il, çalışma
-              biçimi varsa nokta ile ekleniyor. Biçim BİLİNMİYORSA
-              yazılmıyor — varsayılan uydurulmuyor (aynı kural
-              `InternshipCard` içinde de yazılı).
-
-              Şehir boşsa satırın tamamı çizilmiyor; `konumEtiketi` boş
-              girdide "Konum belirtilmemiş" döndürüyor ve şirketin kendi
-              panelinde bu, girmediği bir alanı doldurulmuş göstermek olurdu.
-            */}
-            {sehir && (
-              <p
-                className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 text-sm"
-                style={{ color: SIRKET_METIN_IKINCIL }}
-              >
-                <MapPin aria-hidden className="h-4 w-4 shrink-0 text-gray-400" />
-                <span className="min-w-0 break-words">{konum}</span>
-              </p>
-            )}
-            {altNot}
+            {ekRozet}
           </div>
-        </div>
+          {sirketAdi && (
+            <p className="mt-1.5 break-words text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
+              {sirketAdi}
+            </p>
+          )}
+          {/*
+            META SATIRI: konum ve son başvuru, ikisi de ikonlu VE metinli.
+            Çalışma biçimi BİLİNMİYORSA yazılmıyor — varsayılan uydurulmuyor
+            (`InternshipCard` ile aynı kural). Süre yazılmıyor: panelin
+            ilan okuması `duration` kolonunu almıyor.
 
-        {/* ----------------------------------------------------- orta */}
-        <div className="min-w-0 @min-[60rem]:w-56 @min-[60rem]:shrink-0">
+            Şehir boşsa konum kalemi çizilmiyor; `konumEtiketi` boş girdide
+            "Konum belirtilmemiş" döndürüyor ve şirketin kendi panelinde bu,
+            girmediği bir alanı doldurulmuş göstermek olurdu.
+          */}
+          {(sehir || sonBasvuru) && (
+            <div
+              className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-sm"
+              style={{ color: SIRKET_METIN_IKINCIL }}
+            >
+              {sehir && (
+                <p className="flex min-w-0 items-center gap-1.5">
+                  <MapPin aria-hidden className="h-4 w-4 shrink-0 text-gray-400" />
+                  <span className="min-w-0 break-words">{konum}</span>
+                </p>
+              )}
+              {sonBasvuru && (
+                <p className="flex min-w-0 items-center gap-1.5">
+                  <CalendarClock aria-hidden className="h-4 w-4 shrink-0 text-gray-400" />
+                  <span className="min-w-0 break-words">Son başvuru {sonBasvuru}</span>
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Kontrol notu ve eylem sonucu kartın tam genişliğinde: gerekçe uzun olabiliyor. */}
+      {altNot}
+
+      {/*
+        STAT SATIRI — Başvuranlar kartıyla aynı dil: büyük rakam, küçük
+        büyük-harf etiket. Her rakam gerçek bir kaynaktan: BAŞVURU ve YENİ
+        `applications` satırlarından, GÖRÜNTÜLENME / KAYDETME / DÖNÜŞÜM
+        `sirket_ilan_istatistikleri`nden. Ölçüm gelmediyse o kalemler yok.
+
+        Başvuru sıfırsa "0 BAŞVURU" yerine durum cümlesi: kart görebilen
+        şirkette "Henüz başvuru yok", taslakta "Yayınlanınca başvuru alır".
+        Kademe kartları görmüyorsa (RLS veri vermiyor) rakam HİÇ yok;
+        "0" yazmak, göremediği bir şeyi yok sanmasına yol açardı.
+
+        İKİ KAT, BİLEREK: üstte başvurular (`applications`), altta ölçülen
+        ziyaret (istatistik). Tek satırda beş kalem + avatar şeridi 632
+        px'lik kartta (1440 px, iki sütun) iki satıra rastgele kırılıyordu
+        ve yan yana kartlarda farklı yerden kırılıyordu (ölçüldü). İki kat
+        her kartta aynı yerde duruyor; ölçüm yoksa alt kat hiç yok.
+      */}
+      <div className="mt-3 min-w-0 border-y" style={{ borderColor: SIRKET_KENAR }}>
+        <div className="flex min-h-12 min-w-0 flex-wrap items-center gap-x-5 gap-y-2 py-2">
           {basvurular === null ? (
             /*
               Kademe kart görmüyor. Utandırmayan tek satır: ne yapılınca
-              açılacağı yazıyor, "yükselt" baskısı yok. Doğrulama Şirket
-              sekmesinde olduğu için satır oraya götürüyor.
+              açılacağı yazıyor. Doğrulama Şirket sekmesinde; satır oraya
+              götürüyor.
             */
             <button
               type="button"
@@ -449,111 +504,108 @@ export const IlanKarti: React.FC<{
             >
               Adayları görmek için doğrulama gerekiyor
             </button>
-          ) : yeni.length > 0 ? (
-            <div className="flex items-center gap-3">
-              <ul className="flex -space-x-2" aria-hidden>
-                {gosterilen.map((a) => (
-                  <li key={a.id}>
-                    <Avatar aday={a} />
-                  </li>
-                ))}
-                {fazla > 0 && (
-                  <li>
-                    <span
-                      className="flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-black ring-2 ring-white"
-                      style={{ background: '#F3F4F6', color: SIRKET_METIN_IKINCIL }}
-                    >
-                      +{fazla}
-                    </span>
-                  </li>
-                )}
-              </ul>
-              <p className="text-sm font-bold" style={{ color: SIRKET_METIN }}>
-                {yeni.length} yeni
-              </p>
-            </div>
           ) : toplam > 0 ? (
-            <p className="text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
-              {toplam} başvuru · yeni yok
-            </p>
-          ) : taslak ? (
+            <>
+              <Stat deger={String(toplam)} etiket="Başvuru" />
+              {yeni.length > 0 && (
+                <Stat deger={String(yeni.length)} etiket="Yeni" vurgu>
+                  {/* Avatar şeridi kimin beklediğinin yüzü; sayı yanında metin olarak. */}
+                  <ul className="flex -space-x-2" aria-hidden>
+                    {gosterilen.map((a) => (
+                      <li key={a.id}>
+                        <Avatar aday={a} />
+                      </li>
+                    ))}
+                    {fazla > 0 && (
+                      <li>
+                        <span
+                          className="flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-black ring-2 ring-white"
+                          style={{ background: '#F3F4F6', color: SIRKET_METIN_IKINCIL }}
+                        >
+                          +{fazla}
+                        </span>
+                      </li>
+                    )}
+                  </ul>
+                </Stat>
+              )}
+            </>
+          ) : (
             /* Taslak öğrenciye görünmüyor; "başvuru yok" değil, "henüz alamaz". */
             <p className="text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
-              Yayınlanınca başvuru alır
-            </p>
-          ) : (
-            <p className="text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
-              Henüz başvuru yok
+              {taslak ? 'Yayınlanınca başvuru alır' : 'Henüz başvuru yok'}
             </p>
           )}
-          {istatistik && !taslak && (
-            <p
-              className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs"
-              style={{ color: SIRKET_METIN_IKINCIL }}
-              title="İlan sayfasını açan farklı ziyaretçi sayısı; şirket ekibinin kendi bakışları sayılmıyor."
-            >
-              <span className="inline-flex items-center gap-1">
-                <Eye aria-hidden className="h-3.5 w-3.5" />
-                {istatistik.goruntulenme} görüntülenme
-                {istatistik.sonYediGun > 0 && ` · son 7 günde ${istatistik.sonYediGun}`}
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <Bookmark aria-hidden className="h-3.5 w-3.5" />
-                {istatistik.kaydeden} kaydeden
-              </span>
-              {istatistik.basvuru !== undefined && donusumOrani(istatistik.basvuru, istatistik.goruntulenme) !== null && (
-                <span>dönüşüm {oranMetni(donusumOrani(istatistik.basvuru, istatistik.goruntulenme))}</span>
-              )}
-              <button
-                type="button"
-                onClick={() => setAyrintiAcik((a) => !a)}
-                aria-expanded={ayrintiAcik}
-                className="inline-flex min-h-11 cursor-pointer items-center gap-1 font-bold underline-offset-2 hover:underline"
-                style={{ color: SIRKET_METIN }}
-              >
-                <BarChart3 aria-hidden className="h-3.5 w-3.5" />
-                {ayrintiAcik ? 'Ayrıntıyı gizle' : 'Günlük ayrıntı'}
-              </button>
-            </p>
-          )}
-          {istatistik && !taslak && ayrintiAcik && <IlanIstatistikAyrintisi ilanId={String(ilan.id)} />}
         </div>
-
-        {/* ------------------------------------------------------ sağ */}
         {/*
-          Alt genişlik 232 px = "Adaylar" + "Düzenle" (ölçüldü 109 + 8 + 109);
-          yalnız "Düzenle" kalan satırda da orta sütun aynı x'te dursun.
+          ÖLÇÜM KATI. Ölçümün ne saydığı ipucu balonunda DEĞİL (panel
+          telefonda okunuyor): "Günlük ayrıntı" açılınca özet cümlesinde
+          yazıyor. "Son 7 gün" kartta yok: sayfa başındaki özet şeridinde ve
+          günlük ayrıntıda var; kartta altıncı kalem katı ikiye kırıyordu.
+          Başvurusu olmayan ilanda dönüşüm yazılmıyor: "%0" üst kattaki
+          "Henüz başvuru yok"u tekrar ederdi.
         */}
-        <div className="flex flex-wrap items-center gap-2 @min-[60rem]:min-w-[232px] @min-[60rem]:shrink-0 @min-[60rem]:justify-end">
-          {/*
-            "Adaylar" yalnız gidilecek bir şey varsa: kart görülüyor ve
-            en az bir başvuru var. Başvuranlar sekmesi bu ilana süzülmüş
-            açılıyor.
-          */}
-          {basvurular !== null && toplam > 0 && (
+        {olcum && (
+          <div
+            className="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-1 border-t py-1"
+            style={{ borderColor: SIRKET_KENAR }}
+          >
+            <Stat deger={String(olcum.goruntulenme)} etiket="Görüntülenme" />
+            <Stat deger={String(olcum.kaydeden)} etiket="Kaydetme" />
+            {donusum !== null && donusum > 0 && <Stat deger={oranMetni(donusum)} etiket="Dönüşüm" />}
             <button
               type="button"
-              onClick={() => onNavigate(`/sirket/basvuranlar?ilan=${encodeURIComponent(id)}`)}
-              className={IKINCIL_DUGME}
-              style={ikincilStil}
+              onClick={() => setAyrintiAcik((a) => !a)}
+              aria-expanded={ayrintiAcik}
+              className={`ml-auto inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-lg text-sm font-bold underline-offset-2 hover:underline ${SIRKET_ODAK}`}
+              style={{ color: SIRKET_VURGU_KOYU }}
             >
-              <Users className="h-4 w-4" aria-hidden />
-              Adaylar
+              <BarChart3 className="h-4 w-4" aria-hidden />
+              {ayrintiAcik ? 'Ayrıntıyı gizle' : 'Günlük ayrıntı'}
             </button>
-          )}
-          {eylem.duzenlenebilir && (
-            <button
-              type="button"
-              onClick={() => onNavigate(`/sirket/ilan/${id}/duzenle`)}
-              className={IKINCIL_DUGME}
-              style={ikincilStil}
-            >
-              <Pencil className="h-4 w-4" aria-hidden />
-              Düzenle
-            </button>
-          )}
-          {ekEylemler}
-        </div>
+          </div>
+        )}
+      </div>
+      {olcum && ayrintiAcik && <IlanIstatistikAyrintisi ilanId={String(ilan.id)} />}
+
+      {/*
+        EYLEMLER KARTIN DİBİNDE (`mt-auto`): aynı satırdaki iki kartın
+        düğmeleri aynı y'de. DOM sırası görsel sırayla aynı (klavye de öyle
+        gezer): birincil "Başvuranları gör", ikinciller, taşma menüsü en
+        sağda (GenelBakis `ml-auto` veriyor).
+
+        Telefonda birincil düğme kendi satırında tam genişlik, ikinciller
+        alttaki satırda. Eskiden dört düğme aynı `flex-wrap`te kırılıyor
+        ve 375 px'te "⋯" menüsü tek başına bir satıra düşüyordu (ölçüldü).
+      */}
+      <div className="mt-auto flex flex-wrap items-center gap-2 pt-3">
+        {/*
+          "Başvuranları gör" yalnız gidilecek bir şey varsa: kart görülüyor
+          ve en az bir başvuru var. Başvuranlar sekmesi bu ilana süzülmüş
+          açılıyor.
+        */}
+        {basvurular !== null && toplam > 0 && (
+          <button
+            type="button"
+            onClick={() => onNavigate(`/sirket/basvuranlar?ilan=${encodeURIComponent(id)}`)}
+            className={`w-full sm:w-auto ${KART_BIRINCIL}`}
+          >
+            <Users className="h-4 w-4" aria-hidden />
+            Başvuranları gör
+          </button>
+        )}
+        {eylem.duzenlenebilir && (
+          <button
+            type="button"
+            onClick={() => onNavigate(`/sirket/ilan/${id}/duzenle`)}
+            className={IKINCIL_DUGME}
+            style={ikincilStil}
+          >
+            <Pencil className="h-4 w-4" aria-hidden />
+            Düzenle
+          </button>
+        )}
+        {ekEylemler}
       </div>
     </li>
   );

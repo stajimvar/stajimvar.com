@@ -223,6 +223,7 @@ import { PAYLASIM_SURUMU } from '../lib/basvuru-durumu.mjs';
 import type {
   AdayGuncelProfili,
   AdayPaylasimi,
+  IlanIstatistigi,
   IlanKontrolDurumu,
   IlanKontrolSonucu,
   SirketProfilDegeri,
@@ -867,6 +868,34 @@ const ALTI_ILAN = [
     application_method: 'external',
   }),
 ];
+
+/*
+  İLAN İSTATİSTİKLERİ — KURGU, YALNIZ FİKSTÜR
+
+  Üretimde `sirket_ilan_istatistikleri` RPC'si; fikstürde oturum yok ve
+  okuma boş dönüyordu, kartın GÖRÜNTÜLENME / KAYDETME / DÖNÜŞÜM kalemleri
+  tarayıcıda hiç görülemiyordu. Sayılar yalnız yerleşimi ölçmek için ve
+  `basvuru` alanı senaryodaki başvuru sayısıyla tutarlı (dönüşüm doğru
+  hesaplansın). Taslak (5) bilerek yok: taslak öğrenciye görünmüyor.
+  Modül düzeyinde: GenelBakis okuyucuyu etki bağımlılığında tutuyor;
+  her çizimde yeni bir işlev, okumayı sonsuz döngüye sokardı.
+*/
+const ALTI_ILAN_ISTATISTIGI: Record<string, IlanIstatistigi> = Object.fromEntries(
+  (
+    [
+      [1, 140, 22, 9, 3],
+      [2, 61, 0, 4, 1],
+      [3, 210, 0, 15, 7],
+      [4, 388, 57, 31, 12],
+      [6, 95, 12, 6, 0],
+    ] as const
+  ).map(([n, goruntulenme, sonYediGun, kaydeden, basvuru]) => [
+    `2d7aa946-0000-4000-8000-00000000000${n}`,
+    { goruntulenme, sonYediGun, kaydeden, basvuru },
+  ]),
+);
+const fiksturIstatistikleri = async () => ALTI_ILAN_ISTATISTIGI;
+const bosIstatistik = async (): Promise<Record<string, IlanIstatistigi>> => ({});
 
 /*
   Senaryoya göre başvuru satırları. Tek ilan: 3 yeni. Altı ilan: ilan
@@ -1563,6 +1592,8 @@ export const SirketPanelDevFixture: React.FC = () => {
           (window as unknown as Record<string, unknown>).__sonAtama = { id, uyeId, beklenen };
         }}
         ilanlar={ilanlar}
+        /* Yalnız altı ilanlı senaryoda; öteki senaryolar ölçümsüz kartı gösteriyor. */
+        onIlanIstatistikleri={senaryo === 'alti' ? fiksturIstatistikleri : bosIstatistik}
         basvurular={ekran.tur === 'basvuranlar' ? kartlar : ilanBasvurulari}
         profil={profil}
         onNavigate={git}

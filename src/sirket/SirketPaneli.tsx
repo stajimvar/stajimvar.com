@@ -59,6 +59,7 @@ import {
   sirketIlanlari,
   sirketProfiliOku,
   type BekleyenAday,
+  type IlanIstatistigi,
   type IlanKontrolSonucu,
   type SirketBaglami,
   type SirketProfilDegeri,
@@ -736,6 +737,8 @@ export const SirketIlanlarSekmesi: React.FC<{
     geçirerek onay diyaloğunu ve okuma hatasını sınayabiliyor.
   */
   onBekleyenAdaylar?: (ilanId: string) => Promise<BekleyenAday[]>;
+  /** İlan istatistiği okuyucusu; yalnız fikstür veriyor (GenelBakis'te gerekçe). */
+  onIlanIstatistikleri?: (companyId: string) => Promise<Record<string, IlanIstatistigi>>;
   /*
     Aday ayrıntısı başarıyla açıldı → görüntülenme kaydı. Üretimde
     verilmiyor (gerçek RPC varsayılan); fikstür çağrıları kaydedip
@@ -773,6 +776,7 @@ export const SirketIlanlarSekmesi: React.FC<{
   onPaylasimlar,
   yerelGorselAdresi,
   onBekleyenAdaylar,
+  onIlanIstatistikleri,
   onGoruntulendi = basvuruGoruntulendi,
   onNot,
   acilacakAday,
@@ -868,18 +872,39 @@ export const SirketIlanlarSekmesi: React.FC<{
             <DurumRozeti baglam={baglam} />
           </p>
         )}
+        {/*
+          BAŞLIK BAŞVURANLAR VE ADAYLAR İLE AYNI ÖLÇÜDE (25 Kasım 2026):
+          `sm:text-3xl` başlık, yanında gerçek ilan sayısı rozet olarak.
+          Eskiden sayı alt satırdaki düz metindeydi ve başlık öteki iki
+          sekmeden bir kademe küçüktü; sekmeler arasında geçerken başlık
+          zıplıyordu.
+
+          DURUM SÜZGECİ YOK, EKLENMEDİ: bu ekranda hiç olmadı ve yeni bir
+          çip satırı istenmiyor (süzgeç çipi kararı). Durum her kartın
+          rozetinde.
+        */}
         <div className="flex items-end justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: SIRKET_METIN }}>
-              İlanlarım
-            </h1>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl" style={{ color: SIRKET_METIN }}>
+                İlanlarım
+              </h1>
+              {ilanlar.length > 0 && (
+                <span
+                  className="rounded-full px-3 py-1 text-sm font-bold"
+                  style={{ background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }}
+                >
+                  {ilanlar.length} ilan
+                </span>
+              )}
+            </div>
             {/*
               Alt satır gerçek sayılar. Başvuru sayısı yalnız kart görebilen
               kademede ve sıfırdan büyükse — "0 yeni başvuru" bilgi değil.
             */}
-            <p className="mt-0.5 text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
-              {ilanlar.length > 0
-                ? `${ilanlar.length} ilan${yeniToplam > 0 ? ` · ${yeniToplam} yeni başvuru` : ''}`
+            <p className="mt-1 text-sm" style={{ color: SIRKET_METIN_IKINCIL }}>
+              {ilanlar.length > 0 && yeniToplam > 0
+                ? `${yeniToplam} yeni başvuru incelenmeyi bekliyor`
                 : 'Şirketinizin staj ilanlarını buradan yönetin.'}
             </p>
           </div>
@@ -899,6 +924,7 @@ export const SirketIlanlarSekmesi: React.FC<{
 
       <GenelBakis
         onBekleyenAdaylar={onBekleyenAdaylar}
+        onIlanIstatistikleri={onIlanIstatistikleri}
         baglam={baglam}
         ilanlar={ilanlar}
         basvurular={basvurular as AdayOzeti[]}

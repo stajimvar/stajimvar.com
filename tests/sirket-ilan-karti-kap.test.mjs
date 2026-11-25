@@ -12,9 +12,9 @@ import path from 'node:path';
   görünmedi, şirket adı harf harf alt alta yazıldı. Fikstürde 750 px
   kapta aynı tablo ölçüldü.
 
-  Bu testler yerleşimin EKRAN kırılımına geri dönmesini ve metin
-  sütununun alt sınırının kaybolmasını yakalıyor. Eşiğin sayısı
-  (60 rem) gerekçesiyle birlikte bileşenin yorumunda.
+  O hatayı yaratan yatay satır 25 Kasım 2026'da kalktı (aşağıda). Bu
+  testler metin sütununun alt sınırını ve dikey ızgara kartının
+  kurallarını koruyor.
 */
 
 const KOK = path.resolve(import.meta.dirname, '..');
@@ -29,27 +29,36 @@ const kart = kodu(oku('src/sirket/IlanKarti.tsx'));
 /* Yalnız `IlanKarti`; altındaki `YeniIlanKarti` bu yerleşimin parçası değil. */
 const ilanKarti = kart.slice(kart.indexOf('export const IlanKarti'), kart.indexOf('export const YeniIlanKarti'));
 
-test('kartın kabı container; satır kap kırılımıyla yan yana iniyor', () => {
-  assert.match(ilanKarti, /<li className="@container /);
-  assert.match(
-    ilanKarti,
-    /<div className="flex flex-col gap-3 @min-\[60rem\]:flex-row @min-\[60rem\]:items-center @min-\[60rem\]:gap-4">/,
-  );
+/*
+  25 KASIM 2026: KART DİKEY, LİSTE IZGARA
+
+  Yatay üç bölümlü satır kalktı; kart her genişlikte dikey (kimlik → not
+  → stat → eylemler) ve GenelBakis'te 1/2 sütunlu ızgaranın hücresi. Kap
+  sorgusu (@container) da kalktı: dizilişi kap genişliğine bağlı bir
+  satır yok, ve li'ye getirdiği düzen sınırlaması taşma menüsünün
+  `fixed inset-0` katmanını kartın içine hapsediyordu. Aşağıdaki iddialar
+  4 Ekim'deki "metin sütunu 0 px" hatasının geri dönmesini yakalamaya
+  devam ediyor: metin sütununun 12 rem alt sınırı ve sarma kuralı duruyor.
+*/
+
+test('kart ızgara hücresi: eşit boy, eylemler dipte; kap sorgusu yok', () => {
+  assert.match(ilanKarti, /<li className="flex h-full min-w-0 flex-col /);
+  assert.ok(!ilanKarti.includes('@container'), 'li düzen sınırlaması menüyü hapsediyor');
+  assert.match(ilanKarti, /<div className="mt-auto flex flex-wrap items-center gap-2 pt-3">/);
 });
 
-test('satırın yerleşim sınıflarında EKRAN kırılımı kalmadı', () => {
-  /*
-    Kartın kendi dolgusu (`sm:p-5`) ekrana bakabilir; dizilişi belirleyen
-    sınıflar bakamaz. Kart dar bir sütunda dururken ekran geniş olabiliyor.
-  */
-  for (const sinif of ['sm:flex-row', 'sm:flex-1', 'sm:w-56', 'sm:shrink-0', 'sm:min-w-[232px]', 'sm:justify-end']) {
-    assert.ok(!ilanKarti.includes(sinif), `${sinif} kap kırılımına çevrilmeli`);
-  }
-  assert.match(ilanKarti, /@min-\[60rem\]:w-56 @min-\[60rem\]:shrink-0/);
-  assert.match(ilanKarti, /@min-\[60rem\]:min-w-\[232px\] @min-\[60rem\]:shrink-0 @min-\[60rem\]:justify-end/);
+test('başlık kesilmiyor; bilgi üç noktaya kalmıyor', () => {
+  assert.ok(!/<h3[^>]*truncate/.test(ilanKarti), 'başlık truncate olmamalı');
+  assert.match(ilanKarti, /<h3 className="break-words /);
 });
 
 test('metin sütunu 12 rem altına inmiyor, sığmazsa logonun altına sarıyor', () => {
-  assert.match(ilanKarti, /<div className="flex min-w-0 items-start gap-3 flex-wrap @min-\[60rem\]:flex-1">/);
+  assert.match(ilanKarti, /<div className="flex min-w-0 items-start gap-3 flex-wrap">/);
   assert.match(ilanKarti, /<div className="min-w-48 flex-1">/);
+});
+
+test("liste ızgarası telefonda tek, xl'de iki sütun; menü eylem satırının sağında", () => {
+  const genel = kodu(oku('src/sirket/GenelBakis.tsx'));
+  assert.match(genel, /<ul className="grid grid-cols-1 gap-3 xl:grid-cols-2">/);
+  assert.match(genel, /<div className="relative ml-auto">/);
 });
