@@ -5,8 +5,9 @@ import { SayfaAramaSaglayici } from '../lib/sayfa-aramasi';
 import { SirketIlanlarSekmesi, sirketEkrani } from '../sirket/SirketPaneli';
 import { SirketAgimBos, SirketProfilSekmesi } from '../sirket/SirketKimlikKarti';
 import { IlanFormu } from '../sirket/IlanFormu';
+import { SirketAdaylar } from '../sirket/SirketAdaylar';
 import { OnaySayfasi } from '../components/yonetim/OnaySayfasi';
-import type { OnayKuyrugu } from '../lib/queries';
+import type { ArayanListesi, ArayanOgrenci, OnayKuyrugu } from '../lib/queries';
 import { basvuruKopyasi } from '../lib/basvuru-kopyasi.mjs';
 import { ORNEK_OGRENCI } from './ornek-ogrenci';
 
@@ -1095,6 +1096,111 @@ const BEKLEYEN_SONUCU: Record<Exclude<YayinSonucu, 'hata' | 'yayinda'>, Record<s
 
 type Senaryo = 'sifir' | 'bir' | 'alti' | 'kontrol';
 
+/*
+  ADAYLAR (/sirket/adaylar) — KURGU ARAYANLAR
+
+  Gerçek ekran `fetchArayanOgrenciler` RPC'sine bağlı ve doğrulanmış
+  şirket oturumu istiyor; fikstür `yukleyici` ile ızgarayı oturumsuz
+  çiziyor. Satırlar uç durumları kapsıyor: uzun okul/bölüm adı, "Yüksek
+  Lisans / Mezun" sınıf değeri, beceri taşması (+N), kullanıcı adı yok
+  (mesaj düğmesi çizilmiyor), hiç beceri yok (kısa kart, düğmeler yine
+  alta hizalı), açılamayan bağlantı (`javascript:` → gösterge yok).
+  Sayaçlar listenin kendi uzunluğu; uydurma bir toplam yok.
+*/
+const ARAYAN = (n: string, alan: Partial<ArayanOgrenci>): ArayanOgrenci => ({
+  id: `a0000000-0000-4000-8000-00000000000${n}`,
+  ad: `Aday ${n}`,
+  eposta: null,
+  avatarYolu: null,
+  kullaniciAdi: `aday-${n.toLowerCase()}`,
+  okul: null,
+  fakulte: null,
+  bolum: null,
+  sinif: null,
+  sehir: null,
+  mezuniyet: null,
+  beceriler: null,
+  hedefRoller: null,
+  cvVar: false,
+  tanitim: null,
+  linkedin: null,
+  github: null,
+  portfolyo: null,
+  acildi: null,
+  ...alan,
+});
+const FIKSTUR_ARAYANLAR: Record<'staj' | 'is', ArayanOgrenci[]> = {
+  staj: [
+    ARAYAN('A', {
+      okul: 'Örnek Üniversitesi',
+      bolum: 'Bilgisayar Mühendisliği',
+      sinif: '3. Sınıf',
+      sehir: 'İstanbul',
+      mezuniyet: 2028,
+      beceriler: ['React', 'TypeScript', 'SQL', 'Figma', 'Git'],
+      hedefRoller: ['Yazılım Stajyeri', 'Ön Yüz Geliştirici'],
+      cvVar: true,
+      github: 'ornek-aday',
+      linkedin: 'https://www.linkedin.com/in/ornek-aday',
+      acildi: '2026-11-02T09:00:00Z',
+    }),
+    ARAYAN('B', {
+      okul: 'Örnek Teknik Üniversitesi Mühendislik ve Doğa Bilimleri Fakültesi',
+      bolum: 'Endüstri Mühendisliği (İngilizce)',
+      sinif: 'Yüksek Lisans / Mezun',
+      sehir: 'Ankara',
+      beceriler: ['Python', 'Veri Analizi'],
+      cvVar: true,
+      portfolyo: 'javascript:alert(1)',
+      acildi: '2026-06-15T09:00:00Z',
+    }),
+    ARAYAN('C', {
+      okul: 'Örnek Üniversitesi',
+      bolum: 'Grafik Tasarım',
+      sinif: '2. Sınıf',
+      sehir: 'İzmir',
+      kullaniciAdi: null,
+      acildi: '2026-10-20T09:00:00Z',
+    }),
+    ARAYAN('D', {
+      okul: 'Örnek Üniversitesi',
+      bolum: 'İşletme',
+      sinif: '4. Sınıf',
+      sehir: 'İstanbul',
+      mezuniyet: 2027,
+      beceriler: ['Excel', 'Pazarlama', 'Sunum'],
+      hedefRoller: ['Pazarlama Stajyeri'],
+      portfolyo: 'https://ornek.com/aday-d',
+      acildi: '2026-09-01T09:00:00Z',
+    }),
+  ],
+  is: [
+    ARAYAN('E', {
+      okul: 'Örnek Üniversitesi',
+      bolum: 'Bilgisayar Mühendisliği',
+      sinif: 'Yüksek Lisans / Mezun',
+      sehir: 'İstanbul',
+      beceriler: ['Go', 'PostgreSQL'],
+      cvVar: true,
+      acildi: '2026-11-10T09:00:00Z',
+    }),
+  ],
+};
+/* Modül düzeyinde: her çizimde yeni işlev olsaydı ekranın etkisi döngüye girerdi. */
+const fiksturArayanlar = (tur: 'staj' | 'is'): Promise<ArayanListesi> =>
+  new Promise((coz) => {
+    window.setTimeout(
+      () =>
+        coz({
+          tur,
+          stajArayan: FIKSTUR_ARAYANLAR.staj.length,
+          isArayan: FIKSTUR_ARAYANLAR.is.length,
+          ogrenciler: FIKSTUR_ARAYANLAR[tur],
+        }),
+      300,
+    );
+  });
+
 export const SirketPanelDevFixture: React.FC = () => {
   const [kademe, setKademe] = React.useState<number>(KADEME.DOGRULANMIS);
   /*
@@ -1290,6 +1396,19 @@ export const SirketPanelDevFixture: React.FC = () => {
       <SirketAgimBos />
     ) : yol === '/rehber' ? (
       <GuideHub onBack={() => git('/sirket/ilanlar')} onNavigate={git} sirketHesabi />
+    ) : yol === '/sirket/adaylar' ? (
+      <SirketAdaylar
+        onNavigate={git}
+        yukleyici={fiksturArayanlar}
+        ilanlar={ilanlar
+          .filter((i) => i.status === 'published')
+          .map((i) => ({
+            id: String(i.id),
+            title: String(i.title ?? ''),
+            city: (i.city as string | null) ?? null,
+            work_type: (i.work_type as string | null) ?? null,
+          }))}
+      />
     ) : ekran.tur === 'form' ? (
       <IlanFormu
         kademe={kademe}
@@ -1602,6 +1721,7 @@ export const SirketPanelDevFixture: React.FC = () => {
         >
           <option value="/sirket/ilanlar">/sirket/ilanlar</option>
           <option value="/sirket/basvuranlar">/sirket/basvuranlar</option>
+          <option value="/sirket/adaylar">/sirket/adaylar</option>
           <option value="/sirket/ilan/yeni">/sirket/ilan/yeni</option>
           <option value="/agim">/agim</option>
           <option value="/rehber">/rehber</option>
