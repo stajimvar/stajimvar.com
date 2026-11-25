@@ -280,6 +280,8 @@ const ADAY_A_KOPYASI = {
   diller: ['İngilizce (B1)'],
   rozetler: ['quiz-react'],
   projeler: [{ baslik: 'Örnek proje', aciklama: 'Test açıklaması', adres: 'https://ornek.test/proje' }],
+  /* Kartın stat satırı (DENEYİM n) bu listenin uzunluğunu sayıyor. */
+  deneyimler: [{ pozisyon: 'Yarı zamanlı geliştirici', kurum: 'Örnek Ajans', baslangic: '2025-06', devam: true }],
   /*
     CV alanı YOK: 11 Ekim 2026'dan önce yapılmış bir başvurunun kopyası.
     CV alanları adayın GÜNCEL profilinde (aşağıda `GUNCEL_CV`): işveren
@@ -335,6 +337,11 @@ const ORNEK_BASVURULAR = [
     /* Paylaşım izni VAR: inceleme ekranında ızgara ve görüntüleyici. */
     paylasim_izni_at: '2026-08-20T09:00:00Z',
     cover_letter: 'Bu bir test ön yazısıdır.',
+    /* İki sorudan biri boş: kart "ÖN ELEME 1/2" yazmalı, oran değil. */
+    on_eleme_cevaplari: [
+      { soru: 'Haftada kaç gün ofise gelebilirsin?', cevap: 'Üç gün' },
+      { soru: 'Staj başlangıç tarihin?', cevap: '' },
+    ],
     profile_snapshot: ADAY_A_KOPYASI,
   },
   {
@@ -375,7 +382,8 @@ const ORNEK_BASVURULAR = [
       bolum: 'Endüstri Mühendisliği',
       sinif: '2. Sınıf',
       sehir: 'Ankara',
-      yetenekler: ['Excel', 'Python'],
+      /* Beş yetenek: kart ilk dördünü ve "+1" yazmalı. */
+      yetenekler: ['Excel', 'Python', 'SQL', 'Power BI', 'Minitab'],
       rozetler: [],
       projeler: [],
     },
