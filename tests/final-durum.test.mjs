@@ -99,12 +99,12 @@ test('final durumlarda uyum skoru gösterilmiyor', () => {
     final durumda gizleme kuralı artık listede hiçbir durumda göstermemek.
   */
   /*
-    25 Kasım 2026: uyum bandı yatay kartla listeye döndü; kural korunuyor —
-    süreç kapanmış başvuruda (kabul, ret, vazgeçme) uyum rozeti çizilmiyor.
+    25 Kasım 2026: uyum bandı yatay kartla bir günlüğüne listeye dönmüştü;
+    canlıda her kartta "Düşük uyum" yazdı ve kullanıcı onayıyla yeniden
+    kalktı. Liste kartında HİÇBİR durumda uyum yok — final durum kuralı
+    bunun özel hâli.
   */
-  assert.match(koddan(kart), /const uyumEtiketi = uyumBandi && !surecKapandi\(kart\.durum\) \? UYUM_ETIKETI\[uyumBandi\] : null;/);
-  /* Profili paylaşılmamış başvuruda da uyum rozeti yok (25 Kasım 2026 kararı). */
-  assert.match(koddan(kart), /const uyum = uyumEtiketi && kart\.paylasildi \? uyumEtiketi : null;/);
+  assert.doesNotMatch(koddan(kart), /UYUM_ETIKETI|kart\.band|uyumBandi/);
   assert.doesNotMatch(koddan(kart), /uyumGoster|kart\.puan/);
 });
 

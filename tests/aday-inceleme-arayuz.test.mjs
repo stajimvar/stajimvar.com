@@ -76,21 +76,20 @@ test('tüm satır tek düğme; iç içe düğme yok', () => {
   assert.match(kart, /onClick=\{onAc\}/);
 });
 
-test('yatay kart yalnız gerçek alanları çiziyor; puan sayısı, yüzde, stat çubuğu yok', () => {
+test('kart yalnız gerçek alanları çiziyor; puan sayısı, yüzde, stat çubuğu yok', () => {
   /*
-    25 Kasım 2026: sade satır yerine yatay oyuncu kartı (kullanıcı
-    kararı). Şehir, sınıf, yetenek, uyum bandı ve belge göstergeleri
-    karta döndü; KURAL aynı kaldı — uydurma sayı yok.
+    25 Kasım 2026: yatay oyuncu kartı yerine Adaylar kartının dili
+    (kullanıcı kararı). Okul, bölüm, şehir, sınıf, yetenek ve belge
+    göstergeleri kartta; KURAL aynı kaldı — uydurma sayı yok.
   */
-  assert.match(kart, /\[kart\.universite, kart\.bolum\]/);
+  assert.match(kart, /kart\.universite/);
+  assert.match(kart, /kart\.bolum/);
   assert.match(kart, /kart\.sinif/);
   assert.match(kart, /kart\.sehir/);
   assert.match(kart, /durumRozeti\(kart\.durum\)/);
   assert.match(kart, /tarihYaz\(kart\.tarih\)/);
-  /* Uyumun SAYISI yazılmıyor, yalnız bandı; puanı olmayan başvuruda rozet yok. */
   assert.doesNotMatch(kart, /kart\.puan/);
   assert.doesNotMatch(kart, /%|overall|progress|<meter/i);
-  assert.doesNotMatch(kart, /UYUM_ETIKETI\.bilinmiyor|UYUM_ETIKETI\[kart\.band\]/);
   /* Stat satırı sayım: liste uzunlukları ve cevaplanan ön eleme sorusu. */
   assert.match(kart, /kart\.projeler\?\.length/);
   assert.match(kart, /kart\.deneyimler\?\.length/);
@@ -100,6 +99,33 @@ test('yatay kart yalnız gerçek alanları çiziyor; puan sayısı, yüzde, stat
   /* Bağlantı göstergeleri inceleme ekranıyla aynı güvenli süzgeçten; kartta <a> yok. */
   assert.match(kart, /adayBaglantilari\(kart\)/);
   assert.doesNotMatch(kart, /<a\s|href=/);
+  /* Beceriler Adaylar kartıyla aynı sınır: üç hap + "+N". */
+  assert.match(kart, /const ETIKET_SINIRI = 3;/);
+  assert.match(kart, /slice\(0, ETIKET_SINIRI\)/);
+});
+
+test('liste kartında uyum rozeti ve bandı yok', () => {
+  /*
+    25 Kasım 2026 (kullanıcı onayı): canlıda her kartta "Düşük uyum"
+    yazıyordu; ayırt etmeyen bir etiket. Uyum yalnız inceleme
+    çekmecesinde kalıyor.
+  */
+  assert.doesNotMatch(kart, /UYUM_ETIKETI|kart\.band|uyumBandi|surecKapandi/);
+  assert.doesNotMatch(kart, /\{uyum\}|uyum\s*,\s*$/m);
+  assert.doesNotMatch(kart, />\s*(Yüksek|Orta|Düşük) uyum\s*</);
+});
+
+test('ızgara telefonda 1, md 2, xl 3 sütun; seçim kutusu kart düğmesinin kardeşi', () => {
+  assert.match(izgara, /<ul aria-label="Başvurular" className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">/);
+  assert.match(izgara, /<li key=\{k\.id\} className="relative min-w-0">/);
+  /* Kutu mutlak konumlu, 44 px; kartın yanında ayrı sütun açmıyor. */
+  assert.match(izgara, /absolute left-0 top-0 z-10 flex h-11 w-11/);
+  assert.doesNotMatch(izgara, /flex h-11 w-9 shrink-0/);
+  /* Eşit boy kart ve hizalı alt şerit. */
+  assert.match(kart, /flex h-full w-full min-w-0 cursor-pointer flex-col/);
+  assert.match(kart, /mt-auto block pt-3/);
+  /* "İncele" görünüm; ikinci bir düğme değil. */
+  assert.match(kart, /aria-hidden\s+className="mt-3 flex min-h-11 w-full/);
 });
 
 test('mavi çerçeve yalnız gerçekten seçili satırda', () => {

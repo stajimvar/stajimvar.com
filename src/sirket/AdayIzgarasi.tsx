@@ -19,6 +19,7 @@ import {
   SIRKET_KENAR_VURGU,
   SIRKET_METIN,
   SIRKET_METIN_IKINCIL,
+  SIRKET_ODAK,
   SIRKET_ROZET,
   SIRKET_VURGU_KOYU,
   alanStil,
@@ -854,26 +855,22 @@ export const AdayIzgarasi: React.FC<{
           </div>
         )}
         {/*
-          KART IZGARASI (25 Kasım 2026): her başvuru kendi çerçevesi olan
-          yatay bir kart (AdayKarti). Geniş ekranda iki sütun, telefonda
-          tek. Toplu seçim kutusu kartın İÇİNE değil YANINA giriyor: kart
-          tek düğme ve içine ikinci bir denetim konamaz.
+          KART IZGARASI (25 Kasım 2026, kullanıcı kararı: "her satırı 3
+          kişi yap"): telefonda 1, md'de 2, xl'de 3 sütun — Adaylar
+          sayfasıyla aynı kırılımlar. Kartlar `h-full` ile satırda eşit
+          boyda (AdayKarti).
+
+          TOPLU SEÇİM KUTUSU kartın sol üst köşesinde, kartın İÇİNDE
+          görünüyor ama DOM'da kart düğmesinin KARDEŞİ: kart tek
+          <button>, içine ikinci bir denetim koymak iç içe etkileşim
+          olurdu. Eskiden kutu kartın yanında 36 piksellik ayrı bir sütun
+          açıyordu; üç sütunlu ızgarada her kartı daraltırdı. `li`
+          `relative`, etiket mutlak konumlu, 44 × 44 dokunma alanı, kart
+          düğmesinin üstünde (`z-10`).
         */}
-        <ul aria-label="Başvurular" className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-4">
+        <ul aria-label="Başvurular" className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {gosterilen.map((k, i) => (
-            <li key={k.id} className="flex min-w-0 items-stretch gap-1">
-              {topluAcik && k.durum !== 'withdrawn' && (
-                <label className="flex h-11 w-9 shrink-0 cursor-pointer items-center justify-center">
-                  <input
-                    type="checkbox"
-                    checked={seciliMi(k.id)}
-                    onChange={() => secimDegistir(k.id)}
-                    aria-label={`${k.ad ?? 'Aday'} için toplu işlem seçimi`}
-                    className="h-4 w-4 cursor-pointer accent-[#2563EB]"
-                  />
-                </label>
-              )}
-              <div className="min-w-0 flex-1">
+            <li key={k.id} className="relative min-w-0">
               <AdayKarti
                 kart={k as any}
                 secili={k.id === secili}
@@ -883,7 +880,17 @@ export const AdayIzgarasi: React.FC<{
                   adayiAc(k.id);
                 }}
               />
-              </div>
+              {topluAcik && k.durum !== 'withdrawn' && (
+                <label className="absolute left-0 top-0 z-10 flex h-11 w-11 cursor-pointer items-center justify-center">
+                  <input
+                    type="checkbox"
+                    checked={seciliMi(k.id)}
+                    onChange={() => secimDegistir(k.id)}
+                    aria-label={`${k.ad ?? 'Aday'} için toplu işlem seçimi`}
+                    className={`h-[18px] w-[18px] cursor-pointer rounded bg-white accent-[#2563EB] shadow-[0_0_0_2px_#fff] ${SIRKET_ODAK}`}
+                  />
+                </label>
+              )}
             </li>
           ))}
         </ul>
