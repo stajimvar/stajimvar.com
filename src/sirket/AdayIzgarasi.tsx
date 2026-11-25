@@ -853,13 +853,15 @@ export const AdayIzgarasi: React.FC<{
             </button>
           </div>
         )}
-        <ul
-          aria-label="Başvurular"
-          className="divide-y overflow-hidden rounded-2xl border p-1.5"
-          style={{ ...kutuStil, borderColor: SIRKET_KENAR }}
-        >
+        {/*
+          KART IZGARASI (25 Kasım 2026): her başvuru kendi çerçevesi olan
+          yatay bir kart (AdayKarti). Geniş ekranda iki sütun, telefonda
+          tek. Toplu seçim kutusu kartın İÇİNE değil YANINA giriyor: kart
+          tek düğme ve içine ikinci bir denetim konamaz.
+        */}
+        <ul aria-label="Başvurular" className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-4">
           {gosterilen.map((k, i) => (
-            <li key={k.id} className="flex items-center gap-1 py-0.5" style={{ borderColor: SIRKET_KENAR }}>
+            <li key={k.id} className="flex min-w-0 items-stretch gap-1">
               {topluAcik && k.durum !== 'withdrawn' && (
                 <label className="flex h-11 w-9 shrink-0 cursor-pointer items-center justify-center">
                   <input

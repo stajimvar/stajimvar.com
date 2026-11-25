@@ -76,12 +76,30 @@ test('tüm satır tek düğme; iç içe düğme yok', () => {
   assert.match(kart, /onClick=\{onAc\}/);
 });
 
-test('satırda yalnız onaylı alanlar: şehir, yetenek ve uyum listeden çıktı', () => {
-  assert.doesNotMatch(kart, /kart\.sehir|kart\.yetenekler|UYUM_ETIKETI|uyumGoster|kart\.cvYolu/);
-  assert.match(kart, /kart\.universite/);
-  assert.match(kart, /\[kart\.bolum, kart\.sinif\]/);
+test('yatay kart yalnız gerçek alanları çiziyor; puan sayısı, yüzde, stat çubuğu yok', () => {
+  /*
+    25 Kasım 2026: sade satır yerine yatay oyuncu kartı (kullanıcı
+    kararı). Şehir, sınıf, yetenek, uyum bandı ve belge göstergeleri
+    karta döndü; KURAL aynı kaldı — uydurma sayı yok.
+  */
+  assert.match(kart, /\[kart\.universite, kart\.bolum\]/);
+  assert.match(kart, /kart\.sinif/);
+  assert.match(kart, /kart\.sehir/);
   assert.match(kart, /durumRozeti\(kart\.durum\)/);
   assert.match(kart, /tarihYaz\(kart\.tarih\)/);
+  /* Uyumun SAYISI yazılmıyor, yalnız bandı; puanı olmayan başvuruda rozet yok. */
+  assert.doesNotMatch(kart, /kart\.puan/);
+  assert.doesNotMatch(kart, /%|overall|progress|<meter/i);
+  assert.doesNotMatch(kart, /UYUM_ETIKETI\.bilinmiyor|UYUM_ETIKETI\[kart\.band\]/);
+  /* Stat satırı sayım: liste uzunlukları ve cevaplanan ön eleme sorusu. */
+  assert.match(kart, /kart\.projeler\?\.length/);
+  assert.match(kart, /kart\.deneyimler\?\.length/);
+  assert.match(kart, /kart\.diller\?\.length/);
+  assert.match(kart, /\$\{cevaplanan\}\/\$\{onEleme\.length\}/);
+  assert.match(kart, /\.filter\(\(s\) => s\.var\)/, 'sıfır olan kalem çizilmemeli');
+  /* Bağlantı göstergeleri inceleme ekranıyla aynı güvenli süzgeçten; kartta <a> yok. */
+  assert.match(kart, /adayBaglantilari\(kart\)/);
+  assert.doesNotMatch(kart, /<a\s|href=/);
 });
 
 test('mavi çerçeve yalnız gerçekten seçili satırda', () => {

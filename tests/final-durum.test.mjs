@@ -98,7 +98,14 @@ test('final durumlarda uyum skoru gösterilmiyor', () => {
     6 Ekim 2026: uyum bilgisi listeden TAMAMEN çıktı (onaylı sade satır);
     final durumda gizleme kuralı artık listede hiçbir durumda göstermemek.
   */
-  assert.doesNotMatch(koddan(kart), /UYUM_ETIKETI|kart\.band|uyumGoster/);
+  /*
+    25 Kasım 2026: uyum bandı yatay kartla listeye döndü; kural korunuyor —
+    süreç kapanmış başvuruda (kabul, ret, vazgeçme) uyum rozeti çizilmiyor.
+  */
+  assert.match(koddan(kart), /const uyumEtiketi = uyumBandi && !surecKapandi\(kart\.durum\) \? UYUM_ETIKETI\[uyumBandi\] : null;/);
+  /* Profili paylaşılmamış başvuruda da uyum rozeti yok (25 Kasım 2026 kararı). */
+  assert.match(koddan(kart), /const uyum = uyumEtiketi && kart\.paylasildi \? uyumEtiketi : null;/);
+  assert.doesNotMatch(koddan(kart), /uyumGoster|kart\.puan/);
 });
 
 test('süreç kapandı dört terminal durumu kapsıyor', async () => {
