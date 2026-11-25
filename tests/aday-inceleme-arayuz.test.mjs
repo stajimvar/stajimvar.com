@@ -275,7 +275,11 @@ test('önyargısız kipte CV açılmadan önce soruluyor', () => {
     cekmece,
     /CV dosyası adayın adını, fotoğrafını ve iletişim bilgilerini içerebilir; açarsan\s*önyargısız inceleme bu aday için geçerliliğini yitirir\./,
   );
-  const panelUyari = cekmece.slice(cekmece.indexOf('role="alertdialog"'), cekmece.indexOf('{baglantiGizlendi && ('));
+  /* Onay kutusu başlıkta, düğmenin hemen altında; gövdede ikinci kopyası yok. */
+  assert.equal((cekmece.match(/role="alertdialog"/g) ?? []).length, 1);
+  const baslikBolgesi = cekmece.slice(cekmece.indexOf('id="aday-inceleme-basligi"'), cekmece.indexOf('BAŞVURDUĞU İLAN'));
+  assert.match(baslikBolgesi, /role="alertdialog"/);
+  const panelUyari = cekmece.slice(cekmece.indexOf('role="alertdialog"'), cekmece.indexOf('{cvHatasi && ('));
   assert.match(panelUyari, /setCvOnayi\(false\);\s*void cvAc\(\);/);
   assert.match(panelUyari, /CV'yi yine de aç/);
   assert.match(panelUyari, /autoFocus[\s\S]*Vazgeç/);
@@ -356,13 +360,21 @@ test('önyargısız kipte GitHub/LinkedIn/portfolyo ve proje bağlantıları giz
   /* Adresler (LinkedIn yolu, GitHub kullanıcı adı) çoğunlukla adı taşıyor. */
   assert.match(cekmece, /const baglantilar = kart\.gizli \? \[\] : adayBaglantilari\(kart\);/);
   assert.match(cekmece, /const baglantiGizlendi = Boolean\(kart\.gizli\) && adayBaglantilari\(kart\)\.length > 0;/);
-  assert.match(cekmece, /\{\(baglantilar\.length > 0 \|\| baglantiGizlendi \|\| kart\.cvYolu\) && \(/);
+  /* Bölüm yalnız bağlantılar için; yalnız CV varsa çizilmiyor (CV başlıkta). */
+  assert.match(cekmece, /\{\(baglantilar\.length > 0 \|\| baglantiGizlendi\) && \(/);
+  assert.match(cekmece, /<Baslik degisti=\{bolumDegisti\('baglantilar'\)\}>Bağlantılar<\/Baslik>/);
   assert.match(cekmece, /\{baglantiGizlendi && \(\s*<p[^>]*>\s*Önyargısız incelemede bağlantılar gösterilmiyor\.\s*<\/p>/);
   /* Düğmeler yalnız `baglantilar` listesinden çiziliyor; başka bir yoldan href yok. */
   assert.match(cekmece, /\{baglantilar\.map\(/);
   assert.equal((cekmece.match(/adayBaglantilari\(kart\)/g) ?? []).length, 2);
-  /* CV düğmesi koşulsuz: yalnız `kart.cvYolu`na bağlı. */
+  /* CV düğmesi koşulsuz: yalnız `kart.cvYolu`na bağlı; tek yerde, başlıkta. */
   assert.match(cekmece, /\{kart\.cvYolu && \(\s*<button/);
+  assert.equal((cekmece.match(/\{kart\.cvYolu && \(\s*<button/g) ?? []).length, 1);
+  const baslikBolgesi = cekmece.slice(cekmece.indexOf('id="aday-inceleme-basligi"'), cekmece.indexOf('BAŞVURDUĞU İLAN'));
+  assert.match(baslikBolgesi, /\{kart\.cvYolu && \(\s*<button[\s\S]*?CV'yi aç\s*<\/button>/);
+  assert.match(baslikBolgesi, /className=\{`\$\{BIRINCIL_DUGME\} order-last basis-full sm:order-none sm:basis-auto`\}/);
+  assert.match(baslikBolgesi, /\{cvHatasi && \(/);
+  assert.doesNotMatch(cekmece, /Yüklediği PDF CV'yi aç|Bağlantılar ve yüklenen CV/);
   /* Projeyi aç: kopyada da farkta da önyargısız kipte adres yok; başlık ve açıklama duruyor. */
   /* Proje bağlantısı CV'de; önyargısız kipte orada da yok. */
   assert.match(oku('src/lib/aday-cv.mjs'), /const adres = gizli \? null : guvenliDisAdres\(p\?\.adres\);/);
