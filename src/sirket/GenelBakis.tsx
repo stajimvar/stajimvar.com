@@ -140,6 +140,13 @@ export const GenelBakis: React.FC<{
     hiç görülemiyordu.
   */
   onBekleyenAdaylar?: (ilanId: string) => Promise<BekleyenAday[]>;
+  /*
+    İSTATİSTİK OKUYUCUSU DA DIŞARIDAN VERİLEBİLİYOR: varsayılan gerçek
+    RPC. Fikstürde oturum yok ve okuma `{}` dönüyordu; kartın stat
+    satırındaki GÖRÜNTÜLENME / KAYDETME / DÖNÜŞÜM kalemleri tarayıcıda
+    hiç ölçülemiyordu. Üretimde verilmiyor.
+  */
+  onIlanIstatistikleri?: (companyId: string) => Promise<Record<string, IlanIstatistigi>>;
 }> = ({
   baglam,
   ilanlar,
@@ -152,6 +159,7 @@ export const GenelBakis: React.FC<{
   simdi,
   siralama,
   onBekleyenAdaylar = ilanBekleyenAdaylar,
+  onIlanIstatistikleri = sirketIlanIstatistikleri,
 }) => {
   const kartAcik = adayGorebilir(baglam.kademe);
   const eksikler = profilEksikleri(profil);
@@ -162,11 +170,11 @@ export const GenelBakis: React.FC<{
   React.useEffect(() => {
     if (!baglam.companyId || ilanSayisi === 0) return;
     let iptal = false;
-    void sirketIlanIstatistikleri(baglam.companyId).then((s) => !iptal && setIstatistik(s));
+    void onIlanIstatistikleri(baglam.companyId).then((s) => !iptal && setIstatistik(s));
     return () => {
       iptal = true;
     };
-  }, [baglam.companyId, ilanSayisi]);
+  }, [baglam.companyId, ilanSayisi, onIlanIstatistikleri]);
 
   /* Yanlışlıkla basmaya açık olmasın: kaldırma iki adımda. */
   const [kaldirilacak, setKaldirilacak] = React.useState<{
@@ -426,17 +434,28 @@ export const GenelBakis: React.FC<{
           ...(o.donusum !== null ? [['Dönüşüm', oranMetni(o.donusum)] as [string, string]] : []),
         ];
         return (
-          <section aria-label="İlan özeti" className="rounded-2xl border bg-white p-4" style={{ borderColor: SIRKET_KENAR }}>
-            <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          /*
+            TEK ŞERİT (25 Kasım 2026): dört sütunluk ızgarada çoğu zaman iki
+            kutu doluyordu ve 1440 px'te 1360 x 150 px'lik kutunun yarısı
+            boştu (ölçüldü). Rakamlar artık kart stat satırıyla aynı dilde
+            (büyük rakam + küçük büyük-harf etiket) yan yana; "en çok başvuru
+            alan" aynı şeridin sağında, telefonda alt satırda.
+          */
+          <section
+            aria-label="İlan özeti"
+            className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-2xl border bg-white px-4 py-3"
+            style={{ borderColor: SIRKET_KENAR }}
+          >
+            <dl className="flex flex-wrap items-center gap-x-6 gap-y-2">
               {kutular.map(([etiket, deger]) => (
-                <div key={etiket} className="min-w-0">
-                  <dt className="text-xs font-bold" style={{ color: SIRKET_METIN_IKINCIL }}>{etiket}</dt>
-                  <dd className="text-2xl font-extrabold tabular-nums" style={{ color: SIRKET_METIN }}>{deger}</dd>
+                <div key={etiket} className="flex min-w-0 flex-row-reverse items-baseline gap-1.5">
+                  <dt className="text-[11px] font-bold uppercase tracking-wide" style={{ color: SIRKET_METIN_IKINCIL }}>{etiket}</dt>
+                  <dd className="text-2xl font-extrabold leading-none tabular-nums" style={{ color: SIRKET_METIN }}>{deger}</dd>
                 </div>
               ))}
             </dl>
             {o.enCok && (
-              <p className="mt-3 border-t pt-3 text-sm" style={{ borderColor: SIRKET_KENAR, color: SIRKET_METIN_IKINCIL }}>
+              <p className="min-w-0 text-sm sm:ml-auto" style={{ color: SIRKET_METIN_IKINCIL }}>
                 En çok başvuru alan:{' '}
                 <button
                   type="button"
@@ -457,7 +476,16 @@ export const GenelBakis: React.FC<{
           {uzatmaSonucu}
         </p>
       )}
-      <ul className="space-y-3">
+      {/*
+        IZGARA: telefonda ve 1280 px altında tek sütun, xl'de iki (25 Kasım
+        2026). Kart dikey ve eylemleri dipte (IlanKarti); iki sütunda bir
+        kartın iç genişliği 1440 px'te 632, 1280 px'te 552 px. Eşik xl:
+        lg'de (1024) iki sütunun iç genişliği ~432 px kalıyor ve
+        "Başvuranları gör + Düzenle + Yeniden yayınla + ⋯" (~484 px) iki
+        satıra kırılıyordu. Satır içindeki kartlar ızgaranın varsayılan
+        `stretch`iyle aynı boyda.
+      */}
+      <ul className="grid grid-cols-1 gap-3 xl:grid-cols-2">
         {ilanlar.map((ilan) => {
           const id = String(ilan.id);
           const yayinda = ilan.status === 'published';
@@ -578,7 +606,8 @@ export const GenelBakis: React.FC<{
                   */}
                   {(
 
-                    <div className="relative">
+                    /* `ml-auto`: menü eylem satırının sağ ucunda; telefonda tek başına bir satıra düşmüyor. */
+                    <div className="relative ml-auto">
                       <button
                         type="button"
                         onClick={() => setAcikMenu((m) => (m === id ? null : id))}

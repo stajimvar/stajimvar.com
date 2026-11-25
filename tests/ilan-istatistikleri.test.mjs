@@ -18,8 +18,16 @@ test('istatistik yalnız şirket üyesine; şirketin kendi bakışları sayılm�
 
 test('kart: okunamazsa ve taslakta satır yok; sayı uydurulmuyor', () => {
   const k = oku('src/sirket/IlanKarti.tsx');
-  assert.match(k, /\{istatistik && !taslak && \(/);
-  assert.match(k, /\{istatistik\.goruntulenme\} görüntülenme/);
+  /*
+    25 Kasım 2026: satır, büyük rakam + etiketli stat katına döndü. Kural
+    aynı: ölçüm yalnız okuma geldiyse ve ilan taslak değilse (`olcum`);
+    kat da `olcum` yokken hiç çizilmiyor.
+  */
+  assert.match(k, /const olcum = istatistik && !taslak \? istatistik : null;/);
+  assert.match(k, /\{olcum && \(\s*<div/);
+  assert.match(k, /<Stat deger=\{String\(olcum\.goruntulenme\)\} etiket="Görüntülenme" \/>/);
+  /* Kademe kartı görmüyorsa başvuru rakamı yok; "0" uydurulmuyor. */
+  assert.match(k, /\{basvurular === null \? \(/);
   const v = oku('src/lib/sirket-veri.ts');
   assert.match(v, /if \(error \|\| !data\) return \{\};/);
   assert.match(oku('src/sirket/GenelBakis.tsx'), /istatistik=\{istatistik\[id\]\}/);
