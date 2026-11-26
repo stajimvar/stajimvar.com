@@ -22,7 +22,7 @@ export type CorporateSlug =
   | 'ilan-kurallari'
   | 'ilan-bildir';
 
-export type YasalSlug = 'gizlilik' | 'cerez-politikasi' | 'kvkk-aydinlatma-metni';
+export type YasalSlug = 'gizlilik' | 'cerez-politikasi' | 'kvkk-aydinlatma-metni' | 'guvenlik';
 
 /** Yasal ve kurumsal sayfalar aynı kabuğu paylaşıyor. */
 export type LegalSlug = YasalSlug | CorporateSlug;
@@ -47,5 +47,6 @@ export const LEGAL_ROUTES: Record<string, LegalSlug> = {
   '/gizlilik': 'gizlilik',
   '/cerez-politikasi': 'cerez-politikasi',
   '/kvkk-aydinlatma-metni': 'kvkk-aydinlatma-metni',
+  '/guvenlik': 'guvenlik',
   ...CORPORATE_ROUTES,
 };

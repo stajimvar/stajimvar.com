@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, BookOpen, CalendarDays, Cookie, FileText, Flag, Info, Mail, MessageCircle, Scale, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, BookOpen, CalendarDays, Cookie, FileText, Flag, Info, Lock, Mail, MessageCircle, Scale, ShieldCheck } from 'lucide-react';
 import { ODAK_HALKASI } from '../lib/renk-token';
 import { BuSayfada, MetinBolumu, SayfaGezintisi } from './kurumsal/KurumsalKabuk';
 import { Logo } from './Logo';
@@ -63,6 +63,8 @@ const GUNCELLEME: Partial<Record<LegalSlug, string>> = {
   // artık doğru değildi.
   gizlilik: '24 Kasım 2026',
   'kvkk-aydinlatma-metni': '24 Kasım 2026',
+  // 26 Kasım 2026: Güven Merkezi ilk kez yayımlandı.
+  guvenlik: '26 Kasım 2026',
 };
 
 const guncellemeTarihi = (slug: LegalSlug) => GUNCELLEME[slug] || TEMEL_GUNCELLEME;
@@ -80,6 +82,7 @@ const YASAL_BASLIK: Record<string, string> = {
   gizlilik: 'Gizlilik Politikası',
   'cerez-politikasi': 'Çerez Politikası',
   'kvkk-aydinlatma-metni': 'KVKK Aydınlatma Metni',
+  guvenlik: 'Güven Merkezi',
 };
 
 /** Başlık alanındaki tek cümlelik özet; metnin yerine geçmiyor. */
@@ -92,6 +95,7 @@ const SAYFA_OZETI: Record<LegalSlug, string> = {
   gizlilik: 'Hangi verileri neden işlediğimiz ve nasıl koruduğumuz.',
   'cerez-politikasi': 'Sitede kullanılan çerezler ve ziyaret ölçümü.',
   'kvkk-aydinlatma-metni': '6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında aydınlatma metni.',
+  guvenlik: 'Verileriniz nerede duruyor, kim görebiliyor ve nasıl korunuyor — tek sayfada.',
 };
 
 const IKON = 'h-7 w-7';
@@ -104,6 +108,7 @@ const SAYFA_IKONU: Record<LegalSlug, React.ReactNode> = {
   gizlilik: <ShieldCheck className={IKON} />,
   'cerez-politikasi': <Cookie className={IKON} />,
   'kvkk-aydinlatma-metni': <Scale className={IKON} />,
+  guvenlik: <Lock className={IKON} />,
 };
 
 export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
@@ -499,6 +504,182 @@ export const LegalPage: React.FC<LegalPageProps> = ({ slug, onBack }) => {
               geçerli olduğunu aramaya itiyor. Tek maddede birleşti; oradaki
               tek yeni bilgi (Google reklam ayarları) yukarı taşındı.
             */}
+          </>
+        )}
+
+        {/*
+          GÜVEN MERKEZİ (26 Kasım 2026)
+
+          Bir kariyer merkezi görüşmesinde "öğrenci verileri nasıl
+          saklanıyor ve korunuyor, satılıyor mu?" soruldu. Cevap gizlilik
+          ve KVKK metinlerine dağılmıştı; bu sayfa tek yerde topluyor.
+
+          YALNIZ DOĞRULANMIŞ İDDİA: her cümlenin karşılığı kodda ya da
+          veritabanında var (RLS politikaları, `basvuru_iletisimi_acik`,
+          kapalı `cvs` kovası, CV_IMZA_OMRU = 600 sn, HesapSilmePenceresi).
+          Kendi sertifikamız ya da bağımsız denetimimiz YOK; sertifikalar
+          altyapı sağlayıcılarına ait ve öyle yazılıyor. Yönetici erişimi
+          gizlenmiyor. Yeni bir işleme ya da aktarım eklenirse gizlilik ve
+          KVKK metinleriyle birlikte bu sayfa da güncellenmeli.
+        */}
+        {slug === 'guvenlik' && (
+          <>
+            <Section title="Kısa özet">
+              <p>
+                <strong>Öğrenci verisi satmıyoruz</strong> ve pazarlama amacıyla kimseyle
+                paylaşmıyoruz. Verileriniz Avrupa Birliği&apos;ndeki (Frankfurt) sunucularda,
+                şifreli olarak saklanıyor. Bir şirket bilginizi yalnızca onun ilanına
+                başvurduğunuzda görüyor; telefon, e-posta ve özgeçmişiniz ise yalnızca siz o
+                başvuru için ayrıca onay verirseniz açılıyor.
+              </p>
+              <p>
+                Bu sayfa nasıl çalıştığımızı sade bir dille anlatıyor. Hukuki metinler{' '}
+                <a href="/kvkk-aydinlatma-metni" className="font-semibold text-blue-700 hover:underline">
+                  KVKK Aydınlatma Metni
+                </a>{' '}
+                ve{' '}
+                <a href="/gizlilik" className="font-semibold text-blue-700 hover:underline">
+                  Gizlilik Politikası
+                </a>
+                &apos;dır; ikisi arasında fark olursa onlar geçerlidir.
+              </p>
+            </Section>
+
+            <Section title="Verileriniz nerede saklanıyor">
+              <p>
+                Hesap, profil, başvuru ve özgeçmiş dosyaları <strong>Supabase</strong>{' '}
+                altyapısında, Almanya&apos;daki (Frankfurt, AB) sunucularda tutuluyor. Site{' '}
+                <strong>Cloudflare</strong> üzerinden yayınlanıyor. Bildirim e-postalarını{' '}
+                <strong>Resend</strong> (ABD), giriş ve kimlik e-postalarını{' '}
+                <strong>Google Workspace</strong> gönderiyor. Bu sağlayıcılar veriyi yalnızca
+                bizim adımıza ve bu hizmet için işliyor.
+              </p>
+              <p>
+                Veriler sitenizle sunucu arasında taşınırken (HTTPS) ve sunucuda saklanırken
+                şifreleniyor. Şifreler düz metin olarak tutulmuyor; Google ya da Microsoft
+                hesabıyla girerseniz şifreniz hiç bize gelmiyor.
+              </p>
+              <p>
+                Altyapı sağlayıcılarımız bağımsız denetimlerden geçiyor: Supabase&apos;in SOC 2
+                Type II raporu, Cloudflare&apos;in ISO 27001 sertifikası var. Ayrıntılar
+                sağlayıcıların kendi sayfalarında:{' '}
+                <a
+                  href="https://supabase.com/security"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-blue-700 hover:underline"
+                >
+                  Supabase güvenlik
+                </a>
+                ,{' '}
+                <a
+                  href="https://www.cloudflare.com/trust-hub/compliance-resources/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-blue-700 hover:underline"
+                >
+                  Cloudflare uyumluluk
+                </a>
+                . Bu sertifikalar sağlayıcılara aittir; StajımVar&apos;ın kendi adına aldığı bir
+                sertifika ya da bağımsız denetim raporu henüz yok.
+              </p>
+            </Section>
+
+            <Section title="Kim neyi görebiliyor">
+              <p>
+                <strong>Siz:</strong> kendi hesabınızdaki her bilgiyi görür, değiştirir ve
+                silebilirsiniz.
+              </p>
+              <p>
+                <strong>Şirketler:</strong> yalnızca StajımVar&apos;da açtıkları ilana başvuran
+                öğrencinin başvurusunu görür. Başka şirkete yaptığınız başvuruyu ya da
+                profilinizin tamamını göremez. Şirketin bunun için tarafımızdan doğrulanmış
+                olması gerekir; doğrulanmamış bir şirket yalnızca başvuru sayısını görür.
+              </p>
+              <p>
+                <strong>Telefon, e-posta ve özgeçmiş:</strong> yalnızca siz o başvuru için
+                paylaşım onayı verirseniz şirkete açılır. Onayı geri çektiğinizde erişim de
+                kapanır. Şirket içinde yalnızca görüntüleme yetkisi olan çalışanlar telefon ve
+                e-postanızı göremez.
+              </p>
+              <p>
+                <strong>Şirket sitesinden derlenen ilanlar:</strong> bu ilanlarda başvuru
+                bizden geçmez; sizi şirketin kendi sayfasına yönlendiririz ve o başvuruya ait
+                hiçbir veri bizde oluşmaz.
+              </p>
+              <p>
+                <strong>StajımVar yöneticisi:</strong> platformu işleten kişi olarak verilere
+                teknik erişimimiz var. Bu erişimi yalnızca hizmeti çalıştırmak, şirketleri
+                doğrulamak, hataları gidermek ve sizin taleplerinizi yanıtlamak için
+                kullanıyoruz.
+              </p>
+            </Section>
+
+            <Section title="Verilerinizi satmıyoruz">
+              <p>
+                Hesap, profil, özgeçmiş ve başvuru verileriniz <strong>satılmaz</strong> ve
+                pazarlama amacıyla üçüncü taraflara aktarılmaz. Veriniz yalnızca iki yere
+                gider: başvurduğunuz ilanı açan doğrulanmış şirkete (sizin onayınızla) ve
+                yukarıda adı geçen, hizmeti çalıştıran altyapı sağlayıcılarına.
+              </p>
+              <p>
+                <strong>Reklam:</strong> rehber yazılarında Google reklamları gösterilebiliyor.
+                Google reklam gösterdiğinde kendi çerezlerini kullanabilir; bu çerezler
+                Google&apos;a aittir. Profil, özgeçmiş ve başvuru bilgileriniz reklamverenlere ya
+                da Google&apos;a verilmez. Ayrıntılar{' '}
+                <a href="/cerez-politikasi" className="font-semibold text-blue-700 hover:underline">
+                  Çerez Politikası
+                </a>
+                &apos;nda.
+              </p>
+            </Section>
+
+            <Section title="Aldığımız teknik önlemler">
+              <p>
+                <strong>Kurallar veritabanında:</strong> &quot;kim neyi görebilir&quot;
+                kuralları yalnızca ekranda değil, doğrudan veritabanında uygulanıyor. Ekranda
+                bir hata olsa bile yetkisiz kişiye veri dönmüyor.
+              </p>
+              <p>
+                <strong>Kapalı özgeçmiş deposu:</strong> özgeçmiş dosyalarının herkese açık bir
+                adresi yok. Yetkili kişi dosyayı her açtığında yalnızca 10 dakika geçerli,
+                kişiye özel bir bağlantı üretiliyor.
+              </p>
+              <p>
+                <strong>Başvuru anının kopyası:</strong> başvurduğunuzda özgeçmişinizin bir
+                kopyası alınıyor; şirket o başvuruda gönderdiğiniz belgeyi görüyor. Başka bir
+                şirket bu kopyaya erişemiyor.
+              </p>
+              <p>
+                <strong>Otomatik güvenlik testleri:</strong> sitedeki her değişiklik yayına
+                çıkmadan önce, erişim kurallarını sınayan otomatik testlerden geçiyor
+                (örneğin &quot;bir şirket başka şirkete yapılan başvuruyu göremez&quot;,
+                &quot;onay olmadan özgeçmiş açılmaz&quot;). Testlerden biri geçmezse değişiklik
+                yayına alınamıyor.
+              </p>
+            </Section>
+
+            <Section title="Haklarınız">
+              <p>
+                <strong>Hesabınızı kendiniz silebilirsiniz:</strong> profil ayarlarınızdaki
+                &quot;Hesabını sil&quot; adımıyla hesabınız ve ona bağlı veriler kalıcı olarak
+                silinir; bize yazmanız gerekmez.
+              </p>
+              <p>
+                6698 sayılı KVKK&apos;nın 11. maddesi kapsamında verilerinizin işlenip
+                işlenmediğini öğrenme, düzeltilmesini ya da silinmesini isteme gibi
+                haklarınız var. Taleplerinizi aşağıdaki adrese iletebilirsiniz.
+              </p>
+            </Section>
+
+            <Section title="Kurumlar için">
+              <p>
+                Üniversite kariyer merkezi ya da şirket olarak veri güvenliğiyle ilgili ek
+                sorunuz varsa iletisim@stajimvar.com adresine yazın; yazılı olarak
+                yanıtlıyoruz. Okullardan öğrenci listesi ya da öğrenci verisi talep etmiyoruz
+                ve almıyoruz: öğrenciler siteye kendileri kaydoluyor.
+              </p>
+            </Section>
           </>
         )}
 

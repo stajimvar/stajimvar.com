@@ -58,6 +58,7 @@ const GRUPLAR: { baslik: string; sayfalar: { slug: LegalSlug; ad: string; yol: s
       { slug: 'gizlilik', ad: 'Gizlilik Politikası', yol: '/gizlilik' },
       { slug: 'kvkk-aydinlatma-metni', ad: 'KVKK Aydınlatma Metni', yol: '/kvkk-aydinlatma-metni' },
       { slug: 'cerez-politikasi', ad: 'Çerez Politikası', yol: '/cerez-politikasi' },
+      { slug: 'guvenlik', ad: 'Güven Merkezi', yol: '/guvenlik' },
     ],
   },
 ];
