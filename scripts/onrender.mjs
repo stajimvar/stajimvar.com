@@ -508,6 +508,10 @@ const YASAL_BILGI = {
     'KVKK Aydınlatma Metni | StajımVar',
     '6698 sayılı kanun kapsamında veri sorumlusu, işleme amaçları, hukuki sebepler ve ilgili kişinin hakları.',
   ],
+  '/guvenlik': [
+    'Güven Merkezi | StajımVar',
+    'Öğrenci verileri nerede saklanıyor, kim görebiliyor, nasıl korunuyor? Verileri satmıyoruz; önlemlerimiz ve haklarınız.',
+  ],
 };
 
 async function rehberleriCiz() {

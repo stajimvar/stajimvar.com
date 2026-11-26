@@ -118,6 +118,7 @@ const BOTTOM_LINKS: FooterLink[] = [
   { label: "Gizlilik Politikası", href: "/gizlilik" },
   { label: "KVKK Aydınlatma Metni", href: "/kvkk-aydinlatma-metni" },
   { label: "Çerez Politikası", href: "/cerez-politikasi" },
+  { label: "Güven Merkezi", href: "/guvenlik" },
   { label: "Kullanım Koşulları", href: "/kullanim-kosullari" },
 ];
 

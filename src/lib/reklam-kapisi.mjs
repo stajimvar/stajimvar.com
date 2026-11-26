@@ -42,6 +42,7 @@ export const REKLAM_KAPALI_AILELER = [
   '/gizlilik',
   '/kvkk-aydinlatma-metni',
   '/cerez-politikasi',
+  '/guvenlik',
   '/kullanim-kosullari',
   '/hakkimizda',
   '/iletisim',
