@@ -77,13 +77,36 @@ test('işveren rehberi satırları rehber merkeziyle aynı kapağı kullanıyor;
   }
 });
 
-test('işveren rehberi masaüstünde öğrenci rehberiyle aynı 3/6/3 ızgara; sayılar yazılardan', () => {
+test('işveren rehberi stajyer alma yolculuğu: beş adım mevcut yazılarla, çip/süzgeç yok, SSS yazının kendisinden', async () => {
+  /* 26 Kasım 2026: 3/6/3 ızgara, tek seçenekli "Filtreler" radyosu ve telefondaki çip satırı kalktı. */
   const rehber = oku('src/sirket/IsverenRehberi.tsx');
-  assert.match(rehber, /grid grid-cols-1 items-start gap-5 lg:grid-cols-12/);
-  assert.match(rehber, /lg:col-span-3 lg:block" aria-label="Filtreler"/);
-  assert.match(rehber, /<div className="space-y-5 lg:col-span-6">/);
-  assert.match(rehber, /const TOPLAM_DAKIKA = ISVEREN_YAZILARI\.reduce\(\(t, r\) => t \+ rehberOkumaDakika\(r\), 0\);/);
-  /* Telefonda sayfa içi arama ve çipler; masaüstünde üst çubuk. */
+  assert.doesNotMatch(rehber, /aria-label="Filtreler"/);
+  assert.doesNotMatch(rehber, /aria-label="Rehber kapsamı"/);
+  assert.doesNotMatch(rehber, /aria-pressed/);
+  /* Beş adım bu sırayla ve her biri gerçek bir işveren yazısı. */
+  const adimlar = rehber.slice(rehber.indexOf('const ADIMLAR'), rehber.indexOf('const ARACLAR'));
+  const sira = [...adimlar.matchAll(/slug: '([a-z-]+)'/g)].map((m) => m[1]);
+  assert.deepEqual(sira, [
+    'iyi-staj-ilani-nasil-yazilir',
+    'zorunlu-staj-isverenin-yukumlulukleri',
+    'staj-basvurularini-degerlendirme',
+    'stajyerin-ilk-gunu-oryantasyon',
+    'staj-sonu-referans-teklif-geri-bildirim',
+  ]);
+  const { REHBERLER } = await import('../src/data/rehberler.tsx').catch(() => ({ REHBERLER: null }));
+  if (REHBERLER) {
+    const isveren = new Set(REHBERLER.filter((r) => r.kategori === 'isveren').map((r) => r.slug));
+    for (const slug of sira) assert.ok(isveren.has(slug), slug);
+  }
+  /* Kısayollar panelin gerçek rotaları; sayı yok. */
+  assert.match(rehber, /yol: '\/sirket\/ilan\/yeni'/);
+  assert.match(rehber, /yol: '\/sirket\/basvuranlar'/);
+  /* SSS cevabı yazının sss alanından aranıyor; elle cevap yazılmıyor. */
+  assert.match(rehber, /const kayit = yazi\?\.sss\?\.find\(\(s\) => s\.soru === soru\);/);
+  assert.doesNotMatch(rehber, /cevap: '/);
+  /* Öğrenci merkezi silinmedi: en altta tek düğme. */
+  assert.match(rehber, /onClick=\{onTumRehber\}/);
+  /* Telefonda sayfa içi arama; masaüstünde üst çubuk. */
   assert.match(rehber, /<div className="relative lg:hidden">/);
   const kabuk = oku('src/components/GuidePages.tsx');
   assert.match(kabuk, /<SayfaKabugu icerikGenisligi=\{SAYFA_GENISLIGI\} ustBosluk="pt-4 sm:pt-3">\s*<IsverenRehberi/);
