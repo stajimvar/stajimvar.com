@@ -510,3 +510,27 @@ test('CV düğmesi, onay kutusu ve cvAc yalnız paylaşılmış profilde çalı�
   assert.match(kod, /\{kart\.paylasildi && kart\.gizli && cvOnayi && kart\.cvYolu && \(/);
   assert.doesNotMatch(kod, /\n\s*\{kart\.cvYolu && \(/);
 });
+
+/*
+  ÖNYARGISIZ KİPTE İLETİŞİM KUTUSU DA ADI VERMİYOR (26 Kasım 2026)
+
+  Başlık "Aday" diyordu ama İletişim kutusu `iletisim.ad`'ı koşulsuz
+  basıyor, e-posta ve telefon da metin olarak görünüyordu (e-posta
+  adresi çoğu zaman adı taşıyor). Düğmeler duruyor; yalnız metin ve
+  aria-label'lardaki kimlik düşüyor.
+*/
+test('önyargısız kipte iletişim kutusu ad, e-posta ve telefon metni basmıyor; düğmeler kalıyor', () => {
+  assert.match(cekmece, /\{kart\.gizli \? 'Aday' : \(iletisim\.ad \?\? 'Aday'\)\}/);
+  assert.doesNotMatch(cekmece, /\{iletisim\.ad \?\? 'Aday'\}/);
+  assert.match(cekmece, /\{!kart\.gizli && iletisim\.eposta && \(\s*<p[^>]*>\s*\{iletisim\.eposta\}/);
+  assert.match(cekmece, /\{!kart\.gizli && iletisim\.telefon && \(\s*<p[^>]*>\s*\{telefonYaz\(iletisim\.telefon\)\}/);
+  // Metin olarak e-posta/telefon basan tek yer bu kapılı satırlar.
+  assert.equal((cekmece.match(/>\s*\{iletisim\.eposta\}\s*</g) ?? []).length, 1);
+  assert.equal((cekmece.match(/>\s*\{telefonYaz\(iletisim\.telefon\)\}\s*</g) ?? []).length, 1);
+  assert.match(cekmece, /Önyargısız incelemede iletişim bilgileri gizli; düğmeler çalışıyor\./);
+  assert.match(cekmece, /aria-label=\{`\$\{kart\.gizli \? 'Adaya' : \(iletisim\.ad \?\? 'Adaya'\)\} StajımVar'da mesaj gönder`\}/);
+  assert.match(cekmece, /aria-label=\{`\$\{kart\.gizli \? 'Adaya' : \(iletisim\.ad \?\? 'Adaya'\)\} e-posta gönder`\}/);
+  assert.match(cekmece, /aria-label=\{kart\.gizli \? 'Adayı ara' : `\$\{iletisim\.ad \?\? 'Adayı'\} ara — \$\{telefonYaz\(iletisim\.telefon\)\}`\}/);
+  assert.match(cekmece, /href=\{`mailto:\$\{iletisim\.eposta\}`\}/);
+  assert.match(cekmece, /href=\{`tel:\$\{telefonBaglantisi\(iletisim\.telefon\)\}`\}/);
+});
