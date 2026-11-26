@@ -82,4 +82,21 @@
   # panelden kaldırmak gerekiyor.
   ! Access-Control-Allow-Origin
 
-  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'unsafe-inline' https://pagead2.googlesyndication.com https://partner.googleadservices.com https://tpc.googlesyndication.com https://www.googletagservices.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://gdumgdgwlfnohkaucfow.supabase.co wss://gdumgdgwlfnohkaucfow.supabase.co https://pagead2.googlesyndication.com; frame-src https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'
+  # CSP'NİN ZORLANAN ÇEKİRDEĞİ (27 Kasım 2026)
+  #
+  # Tam liste (aşağıda) hâlâ rapor kipinde: AdSense onaylanınca hangi
+  # adreslerden betik ve çerçeve yükleyeceği bugün ölçülemiyor; listeyi
+  # zorlamak reklamı sessizce kırabilirdi. Kaynak listesine bağlı OLMAYAN
+  # korumalar ise bugünden zorlanıyor — sitede dış form, <base> ve
+  # <object>/<embed> kullanımı yok (kaynakta arandı):
+  #   object-src 'none'         eklenti/gömülü nesne yok
+  #   base-uri 'self'           enjekte <base> ile bağlantı kaçırma yok
+  #   form-action 'self'        enjekte form verisi dışarı gönderemez
+  #   frame-ancestors 'self'    tıklama tuzağı (X-Frame-Options ile birlikte)
+  #   upgrade-insecure-requests http alt kaynaklar https'e yükseltilir
+  Content-Security-Policy: object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests
+
+  # 27 Kasım 2026: Cloudflare Web Analytics betiği (static.cloudflareinsights.com,
+  # beacon cloudflareinsights.com) rapor kipinde ihlal veriyordu (canlıda
+  # ölçüldü); listeye eklendi.
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'unsafe-inline' https://pagead2.googlesyndication.com https://partner.googleadservices.com https://tpc.googlesyndication.com https://www.googletagservices.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://gdumgdgwlfnohkaucfow.supabase.co wss://gdumgdgwlfnohkaucfow.supabase.co https://pagead2.googlesyndication.com https://cloudflareinsights.com; frame-src https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'

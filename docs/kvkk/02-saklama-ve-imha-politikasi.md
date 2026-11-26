@@ -32,7 +32,7 @@ saklanmaması ve süresi dolan verinin güvenli biçimde silinmesi.
 | Hesap silinince ziyaret kayıtları | Kullanıcı kimliği kaldırılıyor, kayıt kimliksiz kalıyor (90 gün sonra zaten siliniyor) | Hesap silme işlemi | **Uygulanıyor** |
 | Bot olarak ayrılan ziyaret kayıtları (`site_olaylari_bot_arsivi`) | Öneri: 90 gün | Otomatik silme yok | **Yapılacak** |
 | İlan bildirimleri (`listing_reports`: e-posta, IP özeti) | Öneri: bildirim sonuçlandıktan sonra 1 yıl | Otomatik silme yok | **Yapılacak** |
-| Uzun süre kullanılmayan hesaplar | Öneri: 2 yıl hareketsizlikte önce e-posta uyarısı, sonra silme | Yok | **Karar verilmeli** |
+| Uzun süre kullanılmayan hesaplar | Kullanıcı silene kadar saklanır; hareketsizlik nedeniyle silme yok | — | **Karar: silinmez** (27 Kasım 2026, kullanıcı kararı). Gerekçe: hesap kullanıcıya ait ve istediği an kendisi silebiliyor |
 | Şirket talepleri / davetler (`sirket_talepleri`, `company_claims`, `sirket_davetleri`) | Öneri: sonuçlandıktan sonra 1 yıl | Yok | **Yapılacak** |
 | İş kayıtları (`import_events`, `zamanlanmis_is_kayitlari`) | Kişisel veri içermez | — | — |
 
