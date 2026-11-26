@@ -367,11 +367,11 @@ test('önyargısız kipte GitHub/LinkedIn/portfolyo ve proje bağlantıları giz
   /* Düğmeler yalnız `baglantilar` listesinden çiziliyor; başka bir yoldan href yok. */
   assert.match(cekmece, /\{baglantilar\.map\(/);
   assert.equal((cekmece.match(/adayBaglantilari\(kart\)/g) ?? []).length, 2);
-  /* CV düğmesi koşulsuz: yalnız `kart.cvYolu`na bağlı; tek yerde, başlıkta. */
-  assert.match(cekmece, /\{kart\.cvYolu && \(\s*<button/);
-  assert.equal((cekmece.match(/\{kart\.cvYolu && \(\s*<button/g) ?? []).length, 1);
+  /* CV düğmesi yalnız paylaşılmış profilde (26 Kasım 2026): `kart.paylasildi && kart.cvYolu`; tek yerde, başlıkta. */
+  assert.match(cekmece, /\{kart\.paylasildi && kart\.cvYolu && \(\s*<button/);
+  assert.equal((cekmece.match(/\{kart\.paylasildi && kart\.cvYolu && \(\s*<button/g) ?? []).length, 1);
   const baslikBolgesi = cekmece.slice(cekmece.indexOf('id="aday-inceleme-basligi"'), cekmece.indexOf('BAŞVURDUĞU İLAN'));
-  assert.match(baslikBolgesi, /\{kart\.cvYolu && \(\s*<button[\s\S]*?CV'yi aç\s*<\/button>/);
+  assert.match(baslikBolgesi, /\{kart\.paylasildi && kart\.cvYolu && \(\s*<button[\s\S]*?CV'yi aç\s*<\/button>/);
   assert.match(baslikBolgesi, /className=\{`\$\{BIRINCIL_DUGME\} order-last basis-full sm:order-none sm:basis-auto`\}/);
   assert.match(baslikBolgesi, /\{cvHatasi && \(/);
   assert.doesNotMatch(cekmece, /Yüklediği PDF CV'yi aç|Bağlantılar ve yüklenen CV/);
@@ -495,4 +495,18 @@ test('anahtar yalnız StajımVar üzerinden yapılan başvuruda; eskiler kapalı
 test('App anahtarı RPC\'ye bağlıyor ve sunucunun dönüşünü yazıyor', () => {
   assert.match(app, /onPaylasimIzni=\{async \(id, acik\) => \{\s*const izinAni = await basvuruPaylasimIzni\(id, acik\);/);
   assert.match(app, /paylasimIzniAt: izinAni \?\? undefined/);
+});
+
+/*
+  CV YALNIZ PAYLAŞILMIŞ PROFİLDE (26 Kasım 2026)
+
+  Düğme çekmece başlığına taşınırken eski yerindeki `kart.paylasildi`
+  kapısı düşmüştü: profilini paylaşmamış adayın CV düğmesi görünüyordu.
+*/
+test('CV düğmesi, onay kutusu ve cvAc yalnız paylaşılmış profilde çalışıyor', () => {
+  const kod = oku('src/sirket/AdayCekmecesi.tsx');
+  assert.match(kod, /if \(!kart\?\.paylasildi \|\| !kart\?\.cvYolu\) return;/);
+  assert.match(kod, /\{kart\.paylasildi && kart\.cvYolu && \(/);
+  assert.match(kod, /\{kart\.paylasildi && kart\.gizli && cvOnayi && kart\.cvYolu && \(/);
+  assert.doesNotMatch(kod, /\n\s*\{kart\.cvYolu && \(/);
 });
