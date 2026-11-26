@@ -2308,4 +2308,18 @@ begin
 end;
 $$;
 
+-- ESKİ PROFİL FOTOĞRAFI KOVASI KAPALI (20270125020000)
+do $$
+begin
+  if exists (select 1 from storage.buckets where id = 'avatars' and public) then
+    raise exception 'GUVENLIK REGRESYONU BASARISIZ: avatars kovasi herkese acik';
+  end if;
+  if exists (select 1 from pg_policies where schemaname = 'storage' and tablename = 'objects'
+               and cmd = 'SELECT' and qual ~ 'avatars' and qual !~ 'auth\.uid\(\)') then
+    raise exception 'GUVENLIK REGRESYONU BASARISIZ: avatars kovasini sahibi disinda okutan politika var';
+  end if;
+  raise notice 'gecti: eski avatar kovasi kapali, yalniz sahibi okuyor';
+end;
+$$;
+
 rollback;
