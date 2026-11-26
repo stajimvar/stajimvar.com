@@ -57,6 +57,12 @@
   # mikrofon, konum ya da ödeme kullanmıyor.
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()
 
+  # TIKLAMA TUZAĞI KORUMASI (26 Kasım 2026): site başka bir sitenin
+  # çerçevesine gömülemiyor. CSP'deki `frame-ancestors 'self'` yalnız rapor
+  # kipinde olduğu için bugüne kadar hiçbir şey engellemiyordu. Aynı köken
+  # (kendi önizlemelerimiz) serbest.
+  X-Frame-Options: SAMEORIGIN
+
   # CSP ÖNCE RAPOR KİPİNDE
   #
   # Doğrudan zorlamak riskli: ihlaller görülmeden uygulanırsa reklam,
