@@ -1179,6 +1179,31 @@ select pg_temp.bekle(pg_temp.yazma_engellendi_mi(
        and name = '00000000-0000-4000-8000-00000000000c/basvurular/snap-a.pdf'$q$),
   'B, baska sirkete giden CV kopyasini silemez');
 
+-- PAYLAŞIM ONAYI YOKSA CV DE YOK (20270124010000)
+-- Arayüzdeki kapı bir kez düştü (#471); veritabanı kuralı tek başına
+-- yetmeli. B'ye giden başvurunun onayı kaldırılınca B o CV'yi göremiyor.
+reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+update public.applications set contact_share_consent_at = null
+ where listing_id = '22222222-bbbb-4000-8000-000000000003'::uuid
+   and student_id = '00000000-0000-4000-8000-00000000000c'::uuid;
+
+select set_config('request.jwt.claims',
+  (select json_build_object('sub', b::text, 'role', 'authenticated')::text from k), true);
+set local role authenticated;
+
+select pg_temp.bekle(
+  (select count(*) = 0 from storage.objects
+    where bucket_id = 'cvs'
+      and name = '00000000-0000-4000-8000-00000000000c/basvurular/snap-b.pdf'),
+  'B, paylasim onayi olmayan basvurunun CV kopyasini goremez');
+
+reset role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+update public.applications set contact_share_consent_at = now()
+ where listing_id = '22222222-bbbb-4000-8000-000000000003'::uuid
+   and student_id = '00000000-0000-4000-8000-00000000000c'::uuid;
+
 -- Doğrulanmamış şirket D: C ONUN ilanına başvurdu ama şirket doğrulanmadı.
 reset role;
 select set_config('request.jwt.claims',

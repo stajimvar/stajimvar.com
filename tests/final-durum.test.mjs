@@ -190,8 +190,9 @@ test('iletişim kartı e-posta ve telefon aksiyonu taşıyor', () => {
 });
 
 test('iletişim aksiyonları anlamlı etiket taşıyor', () => {
-  assert.match(cekmece, /aria-label=\{`\$\{iletisim\.ad \?\? 'Adaya'\} e-posta gönder`\}/);
-  assert.match(cekmece, /aria-label=\{`\$\{iletisim\.ad \?\? 'Adayı'\} ara/);
+  /* Önyargısız kipte (kart.gizli) etiket adı taşımıyor (26 Kasım 2026). */
+  assert.match(cekmece, /aria-label=\{`\$\{kart\.gizli \? 'Adaya' : \(iletisim\.ad \?\? 'Adaya'\)\} e-posta gönder`\}/);
+  assert.match(cekmece, /aria-label=\{kart\.gizli \? 'Adayı ara' : `\$\{iletisim\.ad \?\? 'Adayı'\} ara/);
 });
 
 test('şirket iletişim kapısı ONAYA bağlı, teklife değil', () => {

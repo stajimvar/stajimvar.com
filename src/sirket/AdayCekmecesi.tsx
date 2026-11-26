@@ -710,10 +710,23 @@ saltOkunur ? (
                 </p>
               ) : iletisim ? (
                 <>
+                  {/*
+                    ÖNYARGISIZ İNCELEMEDE İLETİŞİM KUTUSU DA ADI VERMİYOR
+                    (26 Kasım 2026): başlık "Aday" diyordu ama bu kutu adı
+                    büyük harfle basıyor, e-posta adresi de çoğu zaman adı
+                    içeriyordu; gizli kip burada deliniyordu. Ad, e-posta ve
+                    telefon metni (aria-label'lar dahil) yazılmıyor; düğmeler
+                    duruyor çünkü şirketin adaya ulaşabilmesi gerekiyor.
+                  */}
                   <p className="mt-1.5 text-base font-extrabold" style={{ color: SIRKET_METIN }}>
-                    {iletisim.ad ?? 'Aday'}
+                    {kart.gizli ? 'Aday' : (iletisim.ad ?? 'Aday')}
                   </p>
-                  {iletisim.eposta && (
+                  {kart.gizli && (iletisim.eposta || iletisim.telefon) && (
+                    <p className="mt-0.5 text-xs" style={{ color: SIRKET_METIN_IKINCIL }}>
+                      Önyargısız incelemede iletişim bilgileri gizli; düğmeler çalışıyor.
+                    </p>
+                  )}
+                  {!kart.gizli && iletisim.eposta && (
                     <p className="mt-0.5 break-all text-xs" style={{ color: SIRKET_METIN }}>
                       {iletisim.eposta}
                     </p>
@@ -723,7 +736,7 @@ saltOkunur ? (
                     değişmiyor; `tel:` bağlantısı ham rakamları
                     kullanıyor.
                   */}
-                  {iletisim.telefon && (
+                  {!kart.gizli && iletisim.telefon && (
                     <p className="text-xs" style={{ color: SIRKET_METIN }}>
                       {telefonYaz(iletisim.telefon)}
                     </p>
@@ -737,7 +750,7 @@ saltOkunur ? (
                     {iletisim.kullaniciAdi && (
                       <a
                         href={`/mesajlar/${encodeURIComponent(iletisim.kullaniciAdi)}`}
-                        aria-label={`${iletisim.ad ?? 'Adaya'} StajımVar'da mesaj gönder`}
+                        aria-label={`${kart.gizli ? 'Adaya' : (iletisim.ad ?? 'Adaya')} StajımVar'da mesaj gönder`}
                         className={BIRINCIL_DUGME}
                         style={birincilStil}
                       >
@@ -748,7 +761,7 @@ saltOkunur ? (
                     {iletisim.eposta && (
                       <a
                         href={`mailto:${iletisim.eposta}`}
-                        aria-label={`${iletisim.ad ?? 'Adaya'} e-posta gönder`}
+                        aria-label={`${kart.gizli ? 'Adaya' : (iletisim.ad ?? 'Adaya')} e-posta gönder`}
                         className={iletisim.kullaniciAdi ? IKINCIL_DUGME : BIRINCIL_DUGME}
                         style={iletisim.kullaniciAdi ? ikincilStil : birincilStil}
                       >
@@ -760,7 +773,7 @@ saltOkunur ? (
                     {telefonBaglantisi(iletisim.telefon) && (
                       <a
                         href={`tel:${telefonBaglantisi(iletisim.telefon)}`}
-                        aria-label={`${iletisim.ad ?? 'Adayı'} ara — ${telefonYaz(iletisim.telefon)}`}
+                        aria-label={kart.gizli ? 'Adayı ara' : `${iletisim.ad ?? 'Adayı'} ara — ${telefonYaz(iletisim.telefon)}`}
                         className={IKINCIL_DUGME}
                         style={ikincilStil}
                       >
