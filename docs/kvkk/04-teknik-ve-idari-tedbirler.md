@@ -21,7 +21,7 @@
 | Aktarım şifrelemesi | HTTPS zorunlu, HSTS 1 yıl | `public/_headers` |
 | Saklama şifrelemesi | Supabase disk şifrelemesi (AES-256) | Sağlayıcı |
 | Tıklama tuzağı koruması | `X-Frame-Options: SAMEORIGIN` | `public/_headers` |
-| İçerik güvenlik politikası (CSP) | **Rapor kipinde** (henüz zorlanmıyor) | `public/_headers` — yapılacak |
+| İçerik güvenlik politikası (CSP) | Çekirdeği **zorlanıyor** (object-src, base-uri, form-action, frame-ancestors, https yükseltme); betik/kaynak listesi AdSense onayına kadar rapor kipinde | `public/_headers` (27 Kasım 2026) |
 | Otomatik güvenlik testleri | Her değişiklikte, temiz veritabanında; geçmezse yayın yok | `guvenlik_regresyonu` (zorunlu denetim) |
 | Değişiklik denetimi | `main` dalına doğrudan yazma kapalı; her değişiklik PR + zorunlu testler | GitHub ruleset |
 | IP adresi | Ölçümde yazılmıyor; ilan bildiriminde tuzlanmış özet | `site_olayi_yaz`, `functions/api/ilan-bildir.ts` |

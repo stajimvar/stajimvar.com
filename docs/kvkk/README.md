@@ -45,8 +45,8 @@ açık özet: https://stajimvar.com/guvenlik. Hukuki metinler: /gizlilik,
 | # | İş |
 |---|---|
 | A | Bot arşivi (90 gün), ilan bildirimleri ve şirket talepleri (1 yıl) için otomatik silme |
-| B | CSP'yi rapor kipinden zorlama kipine almak (önce ihlal raporlarını incelemek gerekiyor; reklamı bozma riski var) |
-| C | Hareketsiz hesap politikası (öneri: 2 yıl sonra uyarı, sonra silme) — **ürün kararı senin** |
+| B | ~~CSP zorlama~~ — çekirdek zorlandı (27 Kasım 2026); kaynak listesi AdSense onaylanınca ölçülüp zorlanacak |
+| C | ~~Hareketsiz hesap politikası~~ — karar: hareketsiz hesaplar silinmez |
 | D | `pg_net` eklentisini `public` şemasından taşımak (düşük risk, düşük fayda; zamanlanmış işleri bozabileceği için ayrı denenmeli) |
 
 ### Bilinçli olarak bırakılanlar

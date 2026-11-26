@@ -32,3 +32,11 @@ test('anonim işlev kapısı göçü kapsamı ve testi var', () => {
   }
   assert.match(oku('scripts/sql/rls-regresyon-testleri.sql'), /giris gerektiren islevler anonime kapali/);
 });
+
+test('CSP çekirdeği zorlanıyor; tam liste rapor kipinde ve Cloudflare ölçümünü kapsıyor', () => {
+  const h = oku('public/_headers');
+  assert.match(h, /\n  Content-Security-Policy: object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests\n/);
+  const ro = h.match(/\n  Content-Security-Policy-Report-Only: ([^\n]+)/)[1];
+  assert.match(ro, /script-src [^;]*https:\/\/static\.cloudflareinsights\.com/);
+  assert.match(ro, /connect-src [^;]*https:\/\/cloudflareinsights\.com/);
+});
