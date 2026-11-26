@@ -2275,4 +2275,37 @@ begin
 end;
 $$;
 
+-- GİRİŞ GEREKTİREN İŞLEVLER ANONİME KAPALI (20270125010000)
+-- Gövde içi kontrol tek katman kalmasın: bu işlevler anonim rol için
+-- hiç çalıştırılamıyor; oturumlu rol çalıştırabiliyor.
+do $$
+declare
+  imza text;
+  acik text := '';
+begin
+  foreach imza in array array[
+    'public.sirket_dogrula(uuid)',
+    'public.sirket_dogrulamayi_reddet(uuid, text)',
+    'public.resmi_hesap_isaretle(uuid, boolean)',
+    'public.bolum_talebini_karara_bagla(uuid, text, uuid, uuid, text, text)',
+    'public.sosyal_paylasim_baslat(uuid, text, text)',
+    'public.sosyal_profil_kur(text, text, boolean, text, text, text, text)',
+    'public.sirket_ozel_bilgilerim(uuid)',
+    'public.takipcilerim(integer, integer)'
+  ] loop
+    if has_function_privilege('anon', imza, 'execute') then
+      acik := acik || imza || ' ';
+    end if;
+    if not has_function_privilege('authenticated', imza, 'execute') then
+      raise exception 'GUVENLIK REGRESYONU BASARISIZ: oturumlu rol calistiramiyor: %', imza;
+    end if;
+  end loop;
+  if acik <> '' then
+    raise exception 'GUVENLIK REGRESYONU BASARISIZ: anonim calistirabiliyor: %', acik
+      using errcode = 'check_violation';
+  end if;
+  raise notice 'gecti: giris gerektiren islevler anonime kapali';
+end;
+$$;
+
 rollback;
