@@ -2322,4 +2322,37 @@ begin
 end;
 $$;
 
+-- KİŞİSEL VERİ SAKLAMA TEMİZLİĞİ (20270126010000)
+-- Yalnız servis rolü çalıştırabiliyor; süresi dolan kaydı siliyor,
+-- süresi dolmayanı bırakıyor; kuru koşu hiçbir şey silmiyor.
+reset role;
+do $$
+declare
+  r jsonb;
+  kalan int;
+begin
+  if has_function_privilege('anon', 'public.kisisel_veri_saklama_temizligi(boolean)', 'execute')
+     or has_function_privilege('authenticated', 'public.kisisel_veri_saklama_temizligi(boolean)', 'execute') then
+    raise exception 'GUVENLIK REGRESYONU BASARISIZ: saklama temizligi istemciye acik';
+  end if;
+
+  insert into public.site_olaylari_bot_arsivi (id, oturum, tur, yol, olustu_at)
+  values (-901, 'test-eski', 'sayfa', '/', now() - interval '120 days'),
+         (-902, 'test-yeni', 'sayfa', '/', now() - interval '10 days');
+
+  r := public.kisisel_veri_saklama_temizligi(true);
+  select count(*) into kalan from public.site_olaylari_bot_arsivi where id in (-901, -902);
+  if kalan <> 2 or (r->>'bot_arsivi')::int < 1 then
+    raise exception 'GUVENLIK REGRESYONU BASARISIZ: kuru kosu sildi ya da saymadi (%)', r;
+  end if;
+
+  r := public.kisisel_veri_saklama_temizligi(false);
+  if exists (select 1 from public.site_olaylari_bot_arsivi where id = -901)
+     or not exists (select 1 from public.site_olaylari_bot_arsivi where id = -902) then
+    raise exception 'GUVENLIK REGRESYONU BASARISIZ: saklama suresi yanlis uygulandi (%)', r;
+  end if;
+  raise notice 'gecti: saklama temizligi suresi dolan kaydi siliyor, digerini birakiyor';
+end;
+$$;
+
 rollback;

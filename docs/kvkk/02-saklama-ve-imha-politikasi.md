@@ -30,10 +30,10 @@ saklanmaması ve süresi dolan verinin güvenli biçimde silinmesi.
 | Hesap, profil, özgeçmiş, fotoğraf, başvurular (şirkete giden kopyalar dahil), sosyal içerik, mesajlar, bildirimler, kayıtlı aramalar, onay kayıtları | Hesap açık kaldığı sürece | Kullanıcı "Hesabımı sil" ile siler; silme anında kalıcı | **Uygulanıyor** |
 | Ziyaret ölçümü (`site_olaylari`) | 90 gün | `site_olayi_yaz` işlevi ara ara 90 günden eski kayıtları siliyor | **Uygulanıyor** |
 | Hesap silinince ziyaret kayıtları | Kullanıcı kimliği kaldırılıyor, kayıt kimliksiz kalıyor (90 gün sonra zaten siliniyor) | Hesap silme işlemi | **Uygulanıyor** |
-| Bot olarak ayrılan ziyaret kayıtları (`site_olaylari_bot_arsivi`) | Öneri: 90 gün | Otomatik silme yok | **Yapılacak** |
-| İlan bildirimleri (`listing_reports`: e-posta, IP özeti) | Öneri: bildirim sonuçlandıktan sonra 1 yıl | Otomatik silme yok | **Yapılacak** |
+| Bot olarak ayrılan ziyaret kayıtları (`site_olaylari_bot_arsivi`) | 90 gün | `kisisel_veri_saklama_temizligi` — günlük iş akışı | **Uygulanıyor** (27 Kasım 2026) |
+| İlan bildirimleri (`listing_reports`: e-posta, IP özeti) | Kapatıldıktan sonra 1 yıl | `kisisel_veri_saklama_temizligi` — günlük | **Uygulanıyor** (27 Kasım 2026) |
 | Uzun süre kullanılmayan hesaplar | Kullanıcı silene kadar saklanır; hareketsizlik nedeniyle silme yok | — | **Karar: silinmez** (27 Kasım 2026, kullanıcı kararı). Gerekçe: hesap kullanıcıya ait ve istediği an kendisi silebiliyor |
-| Şirket talepleri / davetler (`sirket_talepleri`, `company_claims`, `sirket_davetleri`) | Öneri: sonuçlandıktan sonra 1 yıl | Yok | **Yapılacak** |
+| Şirket talepleri / davetler (`sirket_talepleri`, `company_claims`, `sirket_davetleri`) | Karara bağlandıktan sonra 1 yıl; 1 yıl bekleyen davet de | `kisisel_veri_saklama_temizligi` — günlük | **Uygulanıyor** (27 Kasım 2026) |
 | İş kayıtları (`import_events`, `zamanlanmis_is_kayitlari`) | Kişisel veri içermez | — | — |
 
 ## 4. İmha yöntemleri
@@ -75,4 +75,4 @@ güncellenecek.
 
 | Tarih | Kalem | Silinen kayıt | Yöntem | Yapan |
 |---|---|---|---|---|
-| — | — | — | — | — |
+| 27.11.2026 | Otomatik saklama temizliği devreye alındı | 0 (o gün süresi dolan kayıt yoktu) | Silme | Otomatik (günlük iş akışı); sonraki sayılar iş akışı günlüğünde |
