@@ -40,3 +40,13 @@ test('CSP çekirdeği zorlanıyor; tam liste rapor kipinde ve Cloudflare ölçü
   assert.match(ro, /script-src [^;]*https:\/\/static\.cloudflareinsights\.com/);
   assert.match(ro, /connect-src [^;]*https:\/\/cloudflareinsights\.com/);
 });
+
+test('saklama temizliği günlük iş akışında; hesaplara dokunmuyor', () => {
+  const goc = oku('supabase/migrations/20270126010000_kisisel_veri_saklama_temizligi.sql');
+  assert.match(goc, /revoke all on function public\.kisisel_veri_saklama_temizligi\(boolean\) from public, anon, authenticated;/);
+  for (const tablo of ['profiles', 'student_profiles', 'applications', 'auth.users']) {
+    assert.doesNotMatch(goc, new RegExp(`delete from (public\.)?${tablo.replace('.', '\.')}\b`), tablo);
+  }
+  const is = oku('.github/workflows/ilan-baglanti-kontrolu.yml');
+  assert.match(is, /run: node scripts\/veri-saklama-temizligi\.mjs/);
+});

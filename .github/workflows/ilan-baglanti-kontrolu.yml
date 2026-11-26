@@ -114,3 +114,13 @@ jobs:
       - name: İşveren kariyer sayfalarını kontrol et
         if: always()
         run: node scripts/isveren-kariyer-kontrol.mjs ${{ inputs.kuru && '--kuru' || '' }}
+
+      # KİŞİSEL VERİ SAKLAMA TEMİZLİĞİ (27 Kasım 2026)
+      #
+      # Süresi dolan bot kayıtları (90 gün), kapatılmış ilan bildirimleri,
+      # karara bağlanmış şirket talepleri ve davetler (1 yıl) siliniyor.
+      # Kullanıcı hesaplarına dokunmuyor. Aynı sırlar, aynı günlük ritim;
+      # ayrı cron yok. Kuru koşuda yalnız sayılar.
+      - name: Kişisel veri saklama temizliği
+        if: always()
+        run: node scripts/veri-saklama-temizligi.mjs ${{ inputs.kuru && '--kuru' || '' }}
