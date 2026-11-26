@@ -243,7 +243,11 @@ export const AdayCekmecesi: React.FC<{
   */
   const [cvOnayi, setCvOnayi] = React.useState(false);
   const cvAc = async () => {
-    if (!kart?.cvYolu) return;
+    /*
+      Profil paylaşılmadıysa CV de açılmaz (26 Kasım 2026): düğme başlığa
+      taşınırken eski yerindeki `kart.paylasildi` kapısı düşmüştü.
+    */
+    if (!kart?.paylasildi || !kart?.cvYolu) return;
     setCvHatasi(null);
     setCvAciliyor(true);
     try {
@@ -871,7 +875,7 @@ saltOkunur ? (
             Gösterilen dosya başvuru anının kopyası; öğrenci bugün CV'sini
             değiştirmiş olsa bile burada değişmiyor.
           */}
-          {kart.cvYolu && (
+          {kart.paylasildi && kart.cvYolu && (
             <button
               type="button"
               onClick={() => {
@@ -907,7 +911,7 @@ saltOkunur ? (
             `order-last basis-full` ikisini her genişlikte ad satırının
             altına (telefonda düğmenin de altına) yerleştiriyor.
           */}
-          {kart.gizli && cvOnayi && kart.cvYolu && (
+          {kart.paylasildi && kart.gizli && cvOnayi && kart.cvYolu && (
             <div
               role="alertdialog"
               aria-labelledby="aday-cv-uyari-basligi"
@@ -1548,7 +1552,7 @@ saltOkunur ? (
                             : ''
                         }. Aday paylaşımı açık tuttuğu sürece görünür.`
                       : `Başvuru anındaki paylaşılan kopya${basvuruTarihi ? ` (${basvuruTarihi})` : ''}; profil sonradan değişse de bu görünüm değişmiyor.`}
-                    {kart.cvYolu ? " Adayın yüklediği PDF'yi başlıktaki «CV'yi aç» düğmesi açar." : ''}
+                    {kart.paylasildi && kart.cvYolu ? " Adayın yüklediği PDF'yi başlıktaki «CV'yi aç» düğmesi açar." : ''}
                   </p>
                   {guncelCv && (
                     <div
