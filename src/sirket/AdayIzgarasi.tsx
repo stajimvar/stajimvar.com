@@ -1,7 +1,7 @@
 import React from 'react';
 import type { DegerlendirmeOlcutu } from '../lib/sirket-veri';
 import { SIRALAMALAR, secenekler, sirala, suzgeceUyar } from '../lib/basvuran-suzgecleri.mjs';
-import { Check, Copy, Download, Search, Share2, SlidersHorizontal, Users } from 'lucide-react';
+import { Check, CheckSquare, Copy, Download, Search, Share2, SlidersHorizontal, Users, X } from 'lucide-react';
 import { adaylarCsv, csvDosyaAdi } from '../lib/aday-csv.mjs';
 import { AdayKarti } from './AdayKarti';
 import {
@@ -199,6 +199,19 @@ export const AdayIzgarasi: React.FC<{
   const [topluIsleniyor, setTopluIsleniyor] = React.useState(false);
   const [topluSonuc, setTopluSonuc] = React.useState('');
   const topluAcik = Boolean(onDurum) && !saltOkunur;
+  /*
+    SEÇİM KİPİ (27 Kasım 2026, kullanıcı: "bu kutucuk rahatsız edici").
+    Kutular her kartın sol üstünde, fotoğrafın üstüne binerek duruyordu.
+    Artık varsayılan kapalı: araç satırındaki "Seç" açıyor, kutular kartın
+    SAĞ üst köşesinde çıkıyor. Kip kapanınca seçim de temizleniyor.
+  */
+  const [secimKipi, setSecimKipi] = React.useState(false);
+  const secimKipiniDegistir = () => {
+    setSecimKipi((a) => {
+      if (a) setToplu(new Set());
+      return !a;
+    });
+  };
   const seciliMi = (id: string) => toplu.has(id);
   const secimDegistir = (id: string) =>
     setToplu((o) => {
@@ -611,6 +624,54 @@ export const AdayIzgarasi: React.FC<{
             )}
           </button>
         </div>
+
+        {/*
+          TEK ARAÇ SATIRI (27 Kasım 2026, kullanıcı: "bu boşluklar"). CSV
+          indir kendi satırında, sağda tek başına duruyordu; geniş ekranda
+          arama üst çubukta olduğu için Filtreler'in sağı da boştu. Seç ve
+          CSV artık aynı satırın sağında.
+        */}
+        {gosterilen.length > 0 && (
+          <div className="flex items-stretch gap-2 md:ml-auto md:shrink-0">
+            {topluAcik && (
+              <button
+                type="button"
+                onClick={secimKipiniDegistir}
+                aria-pressed={secimKipi}
+                className={`${IKINCIL_DUGME} flex-1 md:flex-none`}
+                style={
+                  secimKipi
+                    ? { borderColor: SIRKET_KENAR_VURGU, background: SIRKET_ROZET, color: SIRKET_VURGU_KOYU }
+                    : ikincilStil
+                }
+              >
+                {secimKipi ? <X aria-hidden className="h-4 w-4" /> : <CheckSquare aria-hidden className="h-4 w-4" />}
+                {secimKipi ? 'Seçimi kapat' : 'Seç'}
+              </button>
+            )}
+            {/*
+              CSV İNDİR (rakip analizi #10): ekrandaki liste ne ise dosya o —
+              süzgeç, sıralama, önyargısız kip aynen. İletişim bilgisi dosyada yok.
+            */}
+            <button
+              type="button"
+              onClick={() => {
+                const blob = new Blob([adaylarCsv(gosterilen)], { type: 'text/csv;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = csvDosyaAdi();
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+              }}
+              className={`${IKINCIL_DUGME} flex-1 md:flex-none`}
+              style={ikincilStil}
+            >
+              <Download aria-hidden className="h-4 w-4" />
+              CSV indir ({gosterilen.length})
+            </button>
+          </div>
+        )}
       </div>
 
       {filtrelerAcik && (
@@ -730,32 +791,6 @@ export const AdayIzgarasi: React.FC<{
         </div>
       )}
 
-      {/*
-        CSV İNDİR (rakip analizi #10): ekrandaki liste ne ise dosya o —
-        süzgeç, sıralama, önyargısız kip aynen. İletişim bilgisi dosyada yok.
-      */}
-      {gosterilen.length > 0 && (
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={() => {
-              const blob = new Blob([adaylarCsv(gosterilen)], { type: 'text/csv;charset=utf-8' });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = csvDosyaAdi();
-              a.click();
-              setTimeout(() => URL.revokeObjectURL(url), 1000);
-            }}
-            className={IKINCIL_DUGME}
-            style={ikincilStil}
-          >
-            <Download aria-hidden className="h-4 w-4" />
-            CSV indir ({gosterilen.length})
-          </button>
-        </div>
-      )}
-
       {onyargisiz && (
         <p
           className="rounded-xl border px-3 py-2.5 text-xs leading-relaxed"
@@ -815,7 +850,7 @@ export const AdayIzgarasi: React.FC<{
             {topluSonuc}
           </p>
         )}
-        {topluAcik && toplu.size > 0 && (
+        {topluAcik && secimKipi && toplu.size > 0 && (
           <div
             role="region"
             aria-label="Toplu işlem"
@@ -860,7 +895,8 @@ export const AdayIzgarasi: React.FC<{
           sayfasıyla aynı kırılımlar. Kartlar `h-full` ile satırda eşit
           boyda (AdayKarti).
 
-          TOPLU SEÇİM KUTUSU kartın sol üst köşesinde, kartın İÇİNDE
+          TOPLU SEÇİM KUTUSU yalnız seçim kipinde, kartın SAĞ üst köşesinde
+          (27 Kasım 2026; önce sol üstte fotoğrafın üstündeydi), kartın İÇİNDE
           görünüyor ama DOM'da kart düğmesinin KARDEŞİ: kart tek
           <button>, içine ikinci bir denetim koymak iç içe etkileşim
           olurdu. Eskiden kutu kartın yanında 36 piksellik ayrı bir sütun
@@ -880,8 +916,8 @@ export const AdayIzgarasi: React.FC<{
                   adayiAc(k.id);
                 }}
               />
-              {topluAcik && k.durum !== 'withdrawn' && (
-                <label className="absolute left-0 top-0 z-10 flex h-11 w-11 cursor-pointer items-center justify-center">
+              {topluAcik && secimKipi && k.durum !== 'withdrawn' && (
+                <label className="absolute right-1 top-1 z-10 flex h-11 w-11 cursor-pointer items-center justify-center">
                   <input
                     type="checkbox"
                     checked={seciliMi(k.id)}
