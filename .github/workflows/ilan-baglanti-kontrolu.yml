@@ -124,3 +124,16 @@ jobs:
       - name: Kişisel veri saklama temizliği
         if: always()
         run: node scripts/veri-saklama-temizligi.mjs ${{ inputs.kuru && '--kuru' || '' }}
+
+      # ARAMA MOTORU BİLDİRİMİ (28 Kasım 2026)
+      #
+      # Açılan ve kapanan ilanlar Google Indexing API (yalnız JobPosting
+      # sayfaları için resmî yol) ve IndexNow (Bing, Yandex) ile
+      # bildiriliyor. Search Console'da 179 sayfa "keşfedildi, dizine
+      # eklenmedi", İş İlanları raporunda yalnız 1 ilan vardı. Hizmet
+      # hesabı anahtarı yalnız bu adımın ortamında.
+      - name: Arama motorlarına ilan bildirimi
+        if: always()
+        env:
+          GOOGLE_INDEXING_SA_JSON: ${{ secrets.GOOGLE_INDEXING_SA_JSON }}
+        run: node scripts/arama-motoru-bildirimi.mjs ${{ inputs.kuru && '--kuru' || '' }}
