@@ -9,7 +9,7 @@
 
 | Sağlayıcı | Ne için | Verinin konumu | Sözleşme (DPA) | Bağımsız denetim |
 |---|---|---|---|---|
-| Supabase | Veritabanı, dosyalar, kimlik doğrulama | Almanya (Frankfurt) | supabase.com/legal/dpa — panelden imzalanıyor | SOC 2 Type II (supabase.com/security) |
+| Supabase | Veritabanı, dosyalar, kimlik doğrulama | Almanya (Frankfurt) | **Kullanım koşullarına dahil; ayrı imza gerekmiyor** (panel → Organization → Legal Documents, 27 Kasım 2026'da doğrulandı). Aktarım Etki Değerlendirmesi (TIA) Trust Center'da | SOC 2 Type II, ISO 27001 (raporlar Team planında indirilebiliyor) |
 | Cloudflare | Barındırma, CDN | Küresel | Cloudflare DPA, hizmet koşullarına dahil (cloudflare.com/cloudflare-customer-dpa) | ISO 27001, SOC 2 |
 | Resend | Bildirim e-postaları | ABD | resend.com/legal/dpa | Sağlayıcı sayfasından doğrulanmalı |
 | Google Workspace | Kurumsal e-posta, kimlik e-postaları | ABD/AB | Google Cloud veri işleme şartları (Admin Console → Hesap → Hukuki ve uyumluluk) | ISO 27001, SOC 2 |
@@ -32,7 +32,7 @@
 
 | # | İş | Kim | Maliyet |
 |---|---|---|---|
-| 1 | Supabase DPA'yı panelden imzala | Sen (hesap sahibi) | Ücretsiz |
+| 1 | ~~Supabase DPA~~ — gerekmiyor, koşullara dahil (27 Kasım 2026) | — | — |
 | 2 | Resend DPA'yı indir/kabul et | Sen | Ücretsiz |
 | 3 | Cloudflare ve Google DPA'larının hesapta kabul edildiğini kontrol et | Sen | Ücretsiz |
 | 4 | Standart sözleşme ve Kurul bildirimi gerekiyor mu, sağlayıcılar imzalamazsa yol ne? | Avukat | Ücretli (tek seferlik görüşme) |
