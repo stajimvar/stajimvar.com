@@ -39,6 +39,12 @@ export interface KariyerMerkezi {
   url: string;
 }
 
+/*
+  LİSTEDE OLMAYACAK OKULLAR
+  Üsküdar Üniversitesi — 27 Kasım 2026, kurumun e-postayla talebi
+  (protokol olmadan adının yer almaması). Yeniden eklemek için kurumun
+  yazılı izni gerekir; tests/kariyer-merkezleri-disarida.test.mjs.
+*/
 export const KARIYER_MERKEZLERI: KariyerMerkezi[] = [
   {
     universite: 'Çukurova Üniversitesi',
@@ -275,11 +281,6 @@ export const KARIYER_MERKEZLERI: KariyerMerkezi[] = [
     universite: 'Karamanoğlu Mehmetbey Üniversitesi',
     sehir: 'Karaman',
     url: 'https://www.kmu.edu.tr/kariyer',
-  },
-  {
-    universite: 'Üsküdar Üniversitesi',
-    sehir: 'İstanbul',
-    url: 'https://kariyer.uskudar.edu.tr/',
   },
   {
     universite: 'İstanbul Gedik Üniversitesi',
