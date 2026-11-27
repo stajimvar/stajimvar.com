@@ -62,7 +62,8 @@ test('detay <title> kurum adını iki kez yazmıyor', () => {
   const betik = oku('scripts/onrender.mjs');
 
   /* Şablon artık ekleme kararını veren yardımcıdan geçiyor. */
-  assert.match(betik, /baslik: `\$\{firsatBasligi\(f\)\} \| StajımVar`/);
+  /* 28 Kasım 2026: kurum ekli başlık başvuru ekiyle sarılıyor (lib/seo/firsat-meta). */
+  assert.match(betik, /baslik: `\$\{firsatAramaBasligi\(firsatBasligi\(f\)\)\} \| StajımVar`/);
   assert.doesNotMatch(betik, /\$\{f\.title\} — \$\{f\.organization_name\}/);
   /* Karşılaştırma Türkçe küçük harfle: "İ/i" ayrımı olmadan tekrar kaçardı. */
   assert.match(betik, /toLocaleLowerCase\('tr-TR'\)/);
