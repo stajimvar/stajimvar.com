@@ -320,3 +320,14 @@ def test_ulasilamayan_kaynak_basari_anini_degistirmiyor():
     hata_dali = kod[kod.index("except Exception"):kod.index("continue")]
     assert "son_basari_at" not in hata_dali
     assert '"son_kontrol_at": simdi, "son_hata": str(e)[:500]' in hata_dali
+
+
+def test_disarida_tutulan_okul_kesfe_girmiyor():
+    """Üsküdar Üniversitesi içeriğinin gösterilmemesini istedi (27 Kasım 2026)."""
+    from automation import kampus_kesif as kk
+    assert kk.ad_anahtari("Üsküdar Üniversitesi") in kk.DISARIDA
+    kaynak = (pathlib.Path(kk.__file__)).read_text(encoding="utf-8")
+    assert "ad_anahtari(ad) not in DISARIDA" in kaynak
+    assert "if ad_anahtari(yok_adi) in DISARIDA:" in kaynak
+    tohum = (pathlib.Path(kk.__file__).with_name("kampus_kaynaklari.json")).read_text(encoding="utf-8")
+    assert "uskudar" not in tohum.lower() and "üsküdar" not in tohum.lower()
