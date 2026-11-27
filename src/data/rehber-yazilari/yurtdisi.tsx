@@ -216,9 +216,8 @@ export const YURTDISI_REHBERLERI: Rehber[] = [
     ozet: 'Hakkı kazanıyorsun, parasını kendin karşılıyorsun.',
     konu: 'yurtdisi',
     etiketler: ['hibesiz erasmus', 'zero grant', 'kontenjan', 'değişim'],
-    aciklama:
-      'Hibesiz Erasmus nedir? Hibeli Erasmus\'tan farkı, kimler için mantıklı ve ' +
-      'başvuru süreci.',
+    seoBaslik: "Hibesiz Erasmus ne demek? Hibeli Erasmus'tan farkı",
+    aciklama: "Hibesiz Erasmus'ta programa kabul edilirsin ama aylık hibe ödenmez; öğrencilik ve ders denkliği hakların aynı kalır. Kimlere sunulur, mantıklı mı?",
     hizliCevap:
       'Hibesiz Erasmus, programa kabul edilip yurt dışında [ders almanı](/rehber/erasmus-ogrenim-hareketliligi) ya da [staj yapmanı](/rehber/erasmus-staj-hareketliligi) ' +
       'sağlayan ama aylık hibe ödenmeyen katılım biçimidir. Öğrencilik statün, ders denkliğin ve ' +

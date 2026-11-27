@@ -2010,6 +2010,8 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
     slug: 'gonullu-staj-rehberi',
     konu: 'staj',
     etiketler: ['gönüllü staj', 'isteğe bağlı', 'sigorta'],
+    seoBaslik: 'Gönüllü staj: sigortayı kim yapar, zorunludan farkı ne?',
+    aciklama: 'Gönüllü staj okul zorunluluğu olmadan yapılan stajdır. Okul formu vermezse sigorta yükümlülüğü işyerine geçebilir. Ücret, belge ve sigorta farkları.',
     hizliCevap:
       'Gönüllü staj okul zorunluluğu olmadan yapılan stajdır; zorunlu stajdan asıl farkı sigorta ve belge tarafında ortaya çıkıyor. Okulun formu vermediği durumda sigorta yükümlülüğü işyerine geçebiliyor, o yüzden başlamadan önce bunu yazılı netleştir.',
     kaynaklar: [
@@ -2019,9 +2021,6 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
     baslik: 'Gönüllü staj: zorunlu stajdan farkı ne?',
     ozet: 'Sigorta, ücret ve belge tarafı zorunlu stajdan farklı işliyor.',
     kategori: 'ogrenci',
-    aciklama:
-      'Gönüllü (isteğe bağlı) staj nedir, zorunlu stajdan farkı nedir? Sigorta, ' +
-      'ücret ve belge yükümlülükleri nasıl değişiyor.',
     icerik: (
       <>
         <P>
