@@ -26,9 +26,9 @@
 | Değişiklik denetimi | `main` dalına doğrudan yazma kapalı; her değişiklik PR + zorunlu testler | GitHub ruleset |
 | IP adresi | Ölçümde yazılmıyor; ilan bildiriminde tuzlanmış özet | `site_olayi_yaz`, `functions/api/ilan-bildir.ts` |
 | Ziyaret ölçümü saklama | 90 gün otomatik silme | `site_olayi_yaz` |
-| Yedekleme | **Ücretsiz planda geri yüklenebilir otomatik yedek yok** (panelden doğrulanmalı) | Yapılacak — bkz. README |
+| Yedekleme | **Yok** — panel: "Free Plan does not include project backups" (27 Kasım 2026) | Karar bekliyor — bkz. README |
 | Sızdırılmış şifre kontrolü | **Kapalı** (Supabase Pro özelliği) | Yapılacak |
-| E-posta doğrulama kodu süresi | **1 saatten uzun** (Supabase uyarısı) | Yapılacak — panelden ≤ 1 saat |
+| E-posta doğrulama kodu/bağlantı süresi | 1 saat (24 saatten indirildi, 27 Kasım 2026) | Supabase Auth ayarı |
 | Bağımsız sızma testi | Yok | İleride |
 
 ## İdari tedbirler
@@ -44,5 +44,5 @@
 | Yurt dışı aktarım standart sözleşmesi ve Kurul bildirimi | **Hukuki görüş alınacak** — bkz. 05 |
 | VERBİS kaydı | **Muafiyet şirket kurulurken kontrol edilecek** |
 | Erişim yetkisi olan kişiler | Yalnız veri sorumlusu (tek kişi). Çalışan/stajyer eklenirse gizlilik taahhütnamesi imzalatılacak ve yetkiler en aza indirilecek |
-| Yönetici hesaplarında iki adımlı doğrulama | Supabase, GitHub, Cloudflare, Google hesaplarında **açık olduğu doğrulanmalı** |
+| Yönetici hesaplarında iki adımlı doğrulama | Supabase: **kapalı** (27 Kasım 2026; giriş GitHub ile). GitHub, Cloudflare, Google: kontrol edilecek |
 | Düzenli gözden geçirme | 6 ayda bir (Ocak, Temmuz): envanter, saklama, erişim, sağlayıcılar |

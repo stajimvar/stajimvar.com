@@ -33,10 +33,10 @@ açık özet: https://stajimvar.com/guvenlik. Hukuki metinler: /gizlilik,
 
 | # | İş | Nerede | Maliyet |
 |---|---|---|---|
-| 1 | E-posta doğrulama kodu süresini **1 saat veya altına** indir | Supabase → Authentication → Providers → Email → "Email OTP Expiration" | Ücretsiz |
+| 1 | ~~E-posta doğrulama kodu süresi~~ — 1 saate indirildi (27 Kasım 2026) | — | — |
 | 2 | Supabase, GitHub, Cloudflare, Google hesaplarında **iki adımlı doğrulamanın** açık olduğunu kontrol et | Her hesabın güvenlik ayarları | Ücretsiz |
-| 3 | Veri işleme sözleşmelerini (DPA) al: Supabase, Resend; Cloudflare ve Google'da kabul edildiğini kontrol et | Bkz. 05 | Ücretsiz |
-| 4 | **Yedekleme kararı:** ücretsiz planda geri yüklenebilir otomatik yedek yok (panelde Database → Backups'tan doğrula). Seçenekler: Supabase Pro (aylık ~25 $; 7 günlük yedek + sızdırılmış şifre kontrolü) ya da şifreli kendi yedeğimiz | Supabase → Billing | Pro ücretli |
+| 3 | Veri işleme sözleşmeleri: Supabase'inki koşullara dahil (ayrı imza yok). Resend, Cloudflare, Google kontrol edilecek | Bkz. 05 | Ücretsiz |
+| 4 | **Yedekleme kararı:** ücretsiz planda yedek YOK (panelde doğrulandı, 27 Kasım 2026). Seçenekler: Supabase Pro (aylık ~25 $; 7 günlük yedek + sızdırılmış şifre kontrolü) ya da şifreli kendi yedeğimiz | Supabase → Billing | Pro ücretli |
 | 5 | Şirket kurulunca: avukat kontrolü (yurt dışı aktarım standart sözleşmesi, VERBİS muafiyeti, metinler) | Avukat | Ücretli, tek seferlik |
 | 6 | Şirket kurulunca: unvan, MERSİS ve adresi bana ver — metinleri güncellerim | — | Ücretsiz |
 
