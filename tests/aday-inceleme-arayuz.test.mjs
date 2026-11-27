@@ -119,7 +119,9 @@ test('ızgara telefonda 1, md 2, xl 3 sütun; seçim kutusu kart düğmesinin ka
   assert.match(izgara, /<ul aria-label="Başvurular" className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">/);
   assert.match(izgara, /<li key=\{k\.id\} className="relative min-w-0">/);
   /* Kutu mutlak konumlu, 44 px; kartın yanında ayrı sütun açmıyor. */
-  assert.match(izgara, /absolute left-0 top-0 z-10 flex h-11 w-11/);
+  /* 27 Kasım 2026: kutu sağ üstte; sol üstte fotoğrafın üstüne biniyordu. */
+  assert.match(izgara, /absolute right-1 top-1 z-10 flex h-11 w-11/);
+  assert.doesNotMatch(izgara, /absolute left-0 top-0 z-10/);
   assert.doesNotMatch(izgara, /flex h-11 w-9 shrink-0/);
   /* Eşit boy kart ve hizalı alt şerit. */
   assert.match(kart, /flex h-full w-full min-w-0 cursor-pointer flex-col/);
