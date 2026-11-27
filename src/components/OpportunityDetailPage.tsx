@@ -18,6 +18,7 @@ import {
 } from '../lib/opportunity-domain.mjs';
 import { opportunityAmount, ODEME_DONEMI_ETIKETLERI } from '../lib/firsat-degerlendirme.mjs';
 import { firsatDurumu } from '../lib/firsat-kategori.mjs';
+import { firsatAramaBasligi, firsatAramaAciklamasi } from '../lib/seo/firsat-meta.mjs';
 import { bursTarihDurumu, turkiyeGeneliMi } from '../lib/burs-kesif.mjs';
 import { ZamanTupu } from './ZamanTupu';
 import { ScholarshipCover } from './ScholarshipCover';
@@ -219,9 +220,24 @@ export const OpportunityDetailPage: React.FC<{
   */
   React.useEffect(() => {
     if (!item) return;
+    /*
+      ÖN RENDERLA AYNI BAŞLIK VE AÇIKLAMA (28 Kasım 2026). Burada yalnız
+      `item.title` yazılıyordu; Google sayfayı çalıştırınca ön renderdaki
+      başlığın (kurum eki, başvuru eki, son başvuru cümlesi) yerine bunu
+      görüyordu. Kural tek yerde: lib/seo/firsat-meta.
+    */
+    const kurum = (item.organizationName || '').trim();
+    const temel =
+      kurum && !item.title.toLocaleLowerCase('tr-TR').includes(kurum.toLocaleLowerCase('tr-TR'))
+        ? `${item.title} — ${kurum}`
+        : item.title;
     return sayfaMetaAyarla({
-      baslik: `${item.title} | StajımVar`,
-      aciklama: item.shortDescription,
+      baslik: `${firsatAramaBasligi(temel)} | StajımVar`,
+      aciklama: firsatAramaAciklamasi({
+        sonTarih: item.applicationDeadline,
+        suresiGecti: firsatDurumu(item.status, item.applicationDeadline) === 'expired',
+        kisa: item.shortDescription,
+      }),
       yol: `/firsatlar/${item.slug}`,
     });
   }, [item]);

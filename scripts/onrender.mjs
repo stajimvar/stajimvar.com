@@ -33,6 +33,7 @@
  * kabı temizleyip kendi ağacını kuruyor. Yani bu metin kullanıcı için
  * geçici bir ilk kare, tarayıcı için kalıcı içerik.
  */
+import { firsatAramaBasligi, firsatAramaAciklamasi } from '../src/lib/seo/firsat-meta.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import url from 'node:url';
@@ -2071,8 +2072,9 @@ async function main() {
       lastmod: f.updated_at ? String(f.updated_at).slice(0, 10) : null,
       dizinDisi: firsatInce,
       gorsel: `/og/firsat-${f.slug}.png`,
-      baslik: `${firsatBasligi(f)} | StajımVar`,
-      aciklama: ozetle(f.short_description || ''),
+      /* 28 Kasım 2026: aramadaki soruya cevap — lib/seo/firsat-meta. */
+      baslik: `${firsatAramaBasligi(firsatBasligi(f))} | StajımVar`,
+      aciklama: ozetle(firsatAramaAciklamasi({ sonTarih: f.application_deadline, suresiGecti, kisa: f.short_description })),
       govde: govde(
         f.title,
         /*
