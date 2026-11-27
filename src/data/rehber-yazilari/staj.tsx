@@ -25,9 +25,8 @@ export const STAJ_REHBERLERI: Rehber[] = [
     konu: 'staj',
     etiketler: ['sigorta', 'sgk', 'iş kazası', 'zorunlu staj', 'gönüllü staj'],
     oneCikan: true,
-    aciklama:
-      'Staj sigortasını kim yapar? Zorunlu ve gönüllü stajda sigorta yükümlülüğü kimde, ' +
-      'işveren ne ödüyor, öğrenci neye dikkat etmeli.',
+    seoBaslik: 'Staj sigortasını kim yapar? Zorunlu ve gönüllü stajda',
+    aciklama: 'Zorunlu stajda sigortayı genellikle okul yapar ve primi okul öder. Gönüllü stajda yükümlülük işyerine geçebilir. İş güvenliği ve dikkat edilecekler.',
     hizliCevap:
       'Zorunlu stajda sigorta girişini genellikle öğrencinin okulu yapar ve prim okul tarafından ödenir; ' +
       'yani işyerine bu primin MALİYETİ çıkmaz. Ama işverenin iş sağlığı ve güvenliği yükümlülükleri ' +
@@ -359,9 +358,8 @@ export const STAJ_REHBERLERI: Rehber[] = [
     ozet: 'Hangi belge nereden alınır, hangi sırayla toplanır.',
     konu: 'staj',
     etiketler: ['belge', 'evrak', 'öğrenci belgesi', 'transkript', 'staj formu'],
-    aciklama:
-      'Staj başvurusunda hangi belgeler isteniyor? Öğrenci belgesi, transkript, zorunlu staj formu ' +
-      've nüfus belgesi nereden alınır, hangi sırayla toplanır.',
+    seoBaslik: 'Staj için gerekli belgeler: 4 belge, nereden alınır?',
+    aciklama: "Çoğu staj başvurusunda 4 belge yeter: öğrenci belgesi, transkript, zorunlu staj formu ve CV. Hangisi e-Devlet'ten, hangisi okuldan alınır?",
     hizliCevap:
       'Çoğu staj başvurusunda dört belge yeterli: öğrenci belgesi, transkript, zorunlu staj formu ve CV. ' +
       'Öğrenci belgesi ve transkript e-Devlet ya da öğrenci bilgi sisteminden anında alınır; zorunlu staj formu ' +
@@ -648,9 +646,8 @@ export const STAJ_REHBERLERI: Rehber[] = [
     ozet: 'Hangi gün sayılır, hangi gün sayılmaz, rapor ne oluyor.',
     konu: 'staj',
     etiketler: ['izin', 'devamsızlık', 'rapor', 'iş günü'],
-    aciklama:
-      'Stajda izin alınır mı, devamsızlık ne oluyor, hastalık raporu stajı uzatır mı? ' +
-      'İş günü hesabı ve okulun kabul ettiği mazeretler.',
+    seoBaslik: 'Stajda devamsızlık ve izin: hangi günler sayılır?',
+    aciklama: 'Staj iş günüyle sayılır: hafta sonu ve resmî tatil sayılmaz, devamsız gün genellikle stajın sonuna eklenir. Rapor, mazeret ve okul yönergesi.',
     hizliCevap:
       'Staj gün sayısı iş günü üzerinden hesaplanır: hafta sonları ve resmî tatiller sayılmaz, ' +
       'devamsız geçen günler de sayılmaz ve genellikle stajın sonuna eklenerek telafi edilir. ' +

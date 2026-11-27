@@ -1008,9 +1008,8 @@ export const YURT_REHBERLERI: Rehber[] = [
     ozet: 'Kısa süreli kalmak, uzun süreli kiralamadan farklı işliyor.',
     konu: 'yurt',
     etiketler: ['staj', 'barınma', 'kısa süreli', 'yurt', 'kiralık oda'],
-    aciklama:
-      'Yaz stajında başka şehirde nasıl kalınır? Yurt, kısa süreli kiralama, ' +
-      'ev arkadaşlığı ve maliyet hesabı.',
+    seoBaslik: 'Başka şehirde staj: nerede kalınır, maliyet ne tutar?',
+    aciklama: 'İki aylık staj için ev tutmak çoğu zaman en pahalısı. Yurtların yaz konaklaması, üniversite yurtları, kısa süreli oda ve staj ücretiyle maliyet kıyası.',
     hizliCevap:
       'İki ay için ev tutmak çoğu zaman en pahalı seçenek. Sırayla şunlara bak: staj yapılan şehirdeki ' +
       'yurtların yaz dönemi konaklaması, üniversite yurtları, kısa süreli kiralık oda ve tanıdık ağı. ' +

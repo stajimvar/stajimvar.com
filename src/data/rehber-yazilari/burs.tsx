@@ -104,9 +104,8 @@ export const BURS_REHBERLERI: Rehber[] = [
     ozet: 'Bazıları birleşiyor, bazıları birbirini kesiyor.',
     konu: 'burs',
     etiketler: ['çifte burs', 'kyk', 'vakıf bursu', 'koşul'],
-    aciklama:
-      'Aynı anda iki burs alınır mı? KYK ile vakıf bursunun birlikte alınması, ' +
-      'kurumların koşulları ve bildirim yükümlülüğü.',
+    seoBaslik: 'Aynı anda iki burs alınır mı? KYK ve vakıf bursu',
+    aciklama: 'Tek cevap yok: kural bursu veren kurumun koşulunda yazar. Birçok vakıf başka burs almamayı şart koşar; yanlış beyan bursun geri istenmesine yol açar.',
     hizliCevap:
       'Bunun tek bir cevabı yok: kural bursu veren kurumun kendi koşullarında yazıyor. ' +
       'Birçok vakıf bursu "başka bir kurumdan burs almamak" şartı koyuyor, bazıları ' +
@@ -194,15 +193,13 @@ export const BURS_REHBERLERI: Rehber[] = [
       ölür, biriken bağlantılar boşa giderdi. Tarih matrisin hücrelerinde,
       kaynağın yanında duruyor.
     */
-    seoBaslik: 'Hangi burslar aynı anda alınır? KYK, TEV, VGM',
     ozet: 'Sekiz kurum, yirmi sekiz çift, her biri resmî kaynağıyla.',
     konu: 'burs',
     etiketler: ['burs çakışma', 'kyk tev', 'vgm burs', 'çifte burs', 'tübitak 2205', 'birlikte burs'],
     oneCikan: true,
     guncelleme: '2026-09-04',
-    aciklama:
-      'KYK bursu, KYK öğrenim kredisi, TEV, VGM, MEV, TÜBİTAK 2205, belediye ve üniversite ' +
-      'burslarından hangileri birlikte alınır? Her çift, dayandığı resmî belgeyle birlikte.',
+    seoBaslik: 'KYK, TEV, VGM, MEV: hangi burslar aynı anda alınır?',
+    aciklama: "KYK bursu ile KYK kredisi ve KYK ile VGM birlikte alınmaz; TEV 1 Eylül 2026'dan beri KYK'ya izin veriyor. 28 burs çiftinin tablosu, resmî kaynaklarıyla.",
     hizliCevap:
       'Tek bir kural yok; cevap hangi iki bursu sorduğuna bağlı. KYK bursu ile KYK öğrenim kredisi ' +
       'aynı anda alınamıyor, KYK bursu ile VGM bursu da birlikte yürümüyor. TEV ise 1 Eylül 2026 ' +
@@ -359,9 +356,8 @@ export const BURS_REHBERLERI: Rehber[] = [
     ozet: 'Öğrenci belgesi, gelir belgesi ve ikametgâh — en çok istenen üçlü.',
     konu: 'burs',
     etiketler: ['burs belgeleri', 'gelir belgesi', 'ikametgah', 'öğrenci belgesi'],
-    aciklama:
-      'Burs başvurusunda hangi belgeler isteniyor? Gelir durumu, öğrenci belgesi, ' +
-      'transkript ve niyet mektubu nereden alınır.',
+    seoBaslik: 'Burs başvurusu için gerekli belgeler, nereden alınır?',
+    aciklama: "En sık istenenler: öğrenci belgesi, transkript, ikametgâh ve aile gelir belgeleri. Çoğu e-Devlet'ten anında alınır; gelir belgeleri birkaç gün sürebilir.",
     hizliCevap:
       'Burs başvurularında en sık istenen belgeler öğrenci belgesi, transkript, ikametgâh ve ' +
       'ailenin gelir durumunu gösteren belgeler. Bunların çoğu e-Devlet üzerinden anında alınıyor; ' +
@@ -455,8 +451,8 @@ export const BURS_REHBERLERI: Rehber[] = [
     ozet: 'Sorular genellikle üç başlıkta toplanıyor.',
     konu: 'burs',
     etiketler: ['burs mülakatı', 'vakıf', 'görüşme', 'hazırlık'],
-    aciklama:
-      'Burs mülakatında ne sorulur? Hazırlık, sık sorulan sorular ve dikkat edilecekler.',
+    seoBaslik: 'Burs mülakatında ne sorulur? Sık sorulan sorular',
+    aciklama: 'Sorular üç başlıkta toplanır: bursa neden ihtiyacın var, okulda ne yapıyorsun, mezun olunca hedefin ne. Nasıl hazırlanılır, nelere dikkat edilir?',
     hizliCevap:
       'Burs mülakatında sorular genellikle üç başlıkta toplanıyor: neden bu bursa ihtiyacın var, ' +
       'okulunda ve hayatında ne yapıyorsun, mezun olunca ne yapmayı düşünüyorsun. ' +
@@ -804,9 +800,8 @@ export const BURS_REHBERLERI: Rehber[] = [
     konu: 'burs',
     etiketler: ['dolandırıcılık', 'sahte burs', 'güvenlik', 'kişisel veri'],
     oneCikan: true,
-    aciklama:
-      'Sahte burs ilanları nasıl anlaşılır? Başvuru ücreti isteyen ilanlar, kişisel veri ' +
-      'talepleri ve güvenli başvuru yolları.',
+    seoBaslik: 'Burs dolandırıcılığı: sahte burs ilanı nasıl anlaşılır?',
+    aciklama: 'Gerçek burs başvurusu hiçbir aşamada para istemez. Başvuru ücreti, kart bilgisi ya da e-Devlet şifresi isteyen her talep dolandırıcılıktır.',
     hizliCevap:
       'Gerçek bir burs başvurusu senden hiçbir aşamada para istemez: başvuru ücreti, dosya ücreti ' +
       've "kontenjan ayırma" bedeli diye bir şey yoktur. Kart bilgisi, banka şifresi ya da ' +

@@ -194,9 +194,8 @@ export const UNIVERSITE_REHBERLERI: Rehber[] = [
     ozet: 'Teknik olarak mümkün ama takvim çakışması ciddi risk.',
     konu: 'universite',
     etiketler: ['yaz okulu', 'staj', 'takvim', 'devamsızlık'],
-    aciklama:
-      'Yaz okuluyla staj aynı dönemde yapılabilir mi? Takvim çakışması, devamsızlık ' +
-      'riski ve okulun yaklaşımı.',
+    seoBaslik: 'Yaz okulu ve staj aynı anda yapılır mı?',
+    aciklama: 'Yasal engel yok ama pratikte zor: yaz okulu hafta içi gündüz, staj tam zamanlı; iki tarafta da devamsızlık sınırı dar. Tarihleri nasıl ayırırsın?',
     hizliCevap:
       'Yasal bir engel olmasa da pratikte zor: yaz okulu dersleri hafta içi gündüz saatlerinde ' +
       'oluyor, staj da tam zamanlı. Okulların çoğu stajda devamsızlığı kabul etmiyor, yaz okulunda ' +
