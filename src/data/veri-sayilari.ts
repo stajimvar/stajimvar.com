@@ -25,4 +25,4 @@ export const BOLUM_SAYISI = 42;
 export const STAJ_PROGRAMI_SAYISI = 44;
 
 /** `src/data/kariyerMerkezleri.ts` içindeki üniversite sayısı. */
-export const KARIYER_MERKEZI_SAYISI = 60;
+export const KARIYER_MERKEZI_SAYISI = 59;
