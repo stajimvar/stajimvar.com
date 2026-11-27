@@ -47,6 +47,13 @@ YOK_LISTELERI = [
 ]
 YENIDEN_DENEME = timedelta(days=7)
 
+# KAMPÜS VERİSİ ALINMAYACAK OKULLAR (ad anahtarı, `ad_anahtari` kuralıyla).
+# Okul içeriğinin (duyuru, menü) sitede gösterilmemesini istediyse buraya
+# girer; keşif onu öğrenci profilinde görse de kataloğa eklemez, kaynak
+# aramaz. Öğrencinin profilindeki okul adı değişmez — o öğrencinin verisi.
+#   üsküdar üniversitesi — 27 Kasım 2026, kurumun e-postayla talebi
+DISARIDA = frozenset({"uskudar universitesi"})
+
 
 # ------------------------------------------------------------------ adlar
 
@@ -312,12 +319,16 @@ def kos(kuru: bool = False, en_cok: int = 5) -> int:
     katalog = db.table("universiteler").select("id, ad_anahtarlari, kesif_at, dogrulama_kaynagi").execute().data
     bilinen = {a for u in katalog for a in u["ad_anahtarlari"]}
     kesif_zamani = {u["id"]: u.get("kesif_at") for u in katalog}
-    eksik = sorted(ad for ad in okullar(db) if ad_anahtari(ad) not in bilinen)
+    eksik = sorted(
+        ad for ad in okullar(db)
+        if ad_anahtari(ad) not in bilinen and ad_anahtari(ad) not in DISARIDA
+    )
 
     # Katalogda olup kaynağı olmayan, YÖK'ten gelen okullar da yeniden deneniyor.
     tekrar = [
         u for u in katalog
         if u["dogrulama_kaynagi"] == "yok.gov.tr"
+        and not DISARIDA.intersection(u["ad_anahtarlari"])
         and (not u.get("kesif_at") or datetime.fromisoformat(u["kesif_at"]) < datetime.now(UTC) - YENIDEN_DENEME)
     ]
     # Koşu başına sınır: keşif her aday için siteye nazikçe (1 sn arayla)
@@ -335,6 +346,8 @@ def kos(kuru: bool = False, en_cok: int = 5) -> int:
             print(f"ATLA  {ad}: YÖK listesinde birebir karşılığı yok")
             continue
         yok_adi, site = eslesme
+        if ad_anahtari(yok_adi) in DISARIDA:
+            continue
         alan = kayitli_alan(site)
         uid = kimlik(ad)
         if uid in kesif_zamani:
