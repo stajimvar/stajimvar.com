@@ -1581,6 +1581,11 @@ Uygun olursanız kısa bir görüşme yapabilir miyiz?
         cevap:
           'Genellikle staj tekrarı gerekiyor. Bu yüzden teslim etmeden önce tüm sayfaların fotoğrafını çek.',
       },
+      {
+        soru: 'Staj defterini kim imzalar?',
+        cevap:
+          'Defteri stajyer yazar, işyerinde staj sorumlusu olarak atanan kişi imzalar. Staj sonunda işletmenin kaşesi ve yetkilinin imzası da gerekir; bunları staj bitmeden al.',
+      },
     ],
   },
   {
