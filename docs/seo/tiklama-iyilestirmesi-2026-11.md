@@ -26,3 +26,17 @@ başlıyor (yeni iddia yok).
 Karşılaştırma: yayından 28 gün sonra aynı sayfaların TO'su. Google
 başlığı ve açıklamayı yeniden yazabilir; o yüzden yalnız TO değil sıra da
 izlenir.
+
+## Soru-cevap ekleri (28 Kasım 2026)
+
+Search Console'da yazıların karşılığını vermediği aramalar: "staj
+yaptığıma dair belgeyi nereden alabilirim" (sıra 9,9), "zorunlu staj
+belgesi nereden alınır" (8), "staj e devlet" (2), "stajda cumartesi iş
+günü sayılır mı" (1), "yaz stajında devamsızlık hakkı var mı" (4–6),
+"staj defterini kim imzalar" (11). Bu sorular ilgili yazıların `sss`
+listesine eklendi; cevaplar yalnız yazının (ya da işveren rehberinin)
+mevcut metnindeki bilgiden.
+
+- staj-basvurusu-gerekli-belgeler: 3 soru
+- stajda-izin-ve-devamsizlik: 2 soru
+- staj-defteri-nasil-doldurulur: 1 soru

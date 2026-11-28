@@ -487,6 +487,21 @@ export const STAJ_REHBERLERI: Rehber[] = [
         cevap:
           'Öğrenci belgesi ve transkript genellikle güncel tarihli isteniyor. Aylar önce alınmış bir belge yerine başvuru sırasında yeniden indirmek daha güvenli.',
       },
+      {
+        soru: 'Zorunlu staj belgesi nereden alınır?',
+        cevap:
+          'Zorunlu staj formu (bazı okullarda staj başvuru ya da zorunluluk belgesi diye geçer) bölümünün staj biriminden ya da staj komisyonundan alınır. Hazırlanması günler, bazen haftalar sürdüğü için işyerinden olumlu dönüş gelir gelmez başlat.',
+      },
+      {
+        soru: 'Staj yaptığımı gösteren belgeyi nereden alırım?',
+        cevap:
+          'Staj bittiğinde işyerinden imzalı ve kaşeli staj defterini ve değerlendirme formunu alırsın; okul stajı onaylayınca bu, öğrenci bilgi sisteminde görünür. Ayrıca bir yazı gerekirse okulun staj biriminden ya da işyerinin insan kaynaklarından staj yaptığına dair belge isteyebilirsin.',
+      },
+      {
+        soru: "Staj belgesi e-Devlet'ten alınır mı?",
+        cevap:
+          "e-Devlet'ten anında alınan belge öğrenci belgesidir. Zorunlu staj formu okulun staj biriminden, staj bitince verilen belgeler ise işyerinden ve okuldan gelir.",
+      },
     ],
     kaynaklar: [{ etiket: 'e-Devlet Kapısı', adres: 'https://www.turkiye.gov.tr' }],
     sonrakiAdim: {
@@ -754,6 +769,16 @@ export const STAJ_REHBERLERI: Rehber[] = [
         soru: 'Raporlu olduğum gün stajdan sayılır mı?',
         cevap:
           'Çoğu okulda sayılmaz ve telafi edilmesi istenir. Raporun kopyasını hem işyerine hem staj birimine ulaştır.',
+      },
+      {
+        soru: 'Stajda cumartesi iş günü sayılır mı?',
+        cevap:
+          'Genellikle sayılmaz; staj günleri hafta içi üzerinden sayılır. İşyeri cumartesi çalışıyorsa ve okulunun staj yönergesi izin veriyorsa cumartesi de sayılabilir — bunu staja başlamadan staj birimine sor.',
+      },
+      {
+        soru: 'Yaz stajında devamsızlık hakkı var mı?',
+        cevap:
+          'Tek bir cevap yok: sınır okulun staj yönergesinde yazıyor. Devamsız geçen gün staj gününe sayılmaz ve genellikle stajın sonuna eklenerek telafi edilir; bazı okullar belirli bir gün sayısının üstündeki devamsızlıkta stajı geçersiz sayıyor.',
       },
     ],
     kaynaklar: [
